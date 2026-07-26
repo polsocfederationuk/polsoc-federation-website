@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Announcements — Federation of Polish Student Societies in the UK</title>
+  <meta name="description" content="News and announcements from the Federation of Polish Student Societies in the UK — embassy visits, opportunities, internships and more.">
+  <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Manrope:wght@400;500;600;700&family=Instrument+Serif:ital@1&family=Bodoni+Moda:wght@700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="nav-inner">
+    <a class="brand" href="index.html">
+      <img src="assets/logo.svg" alt="Federation of Polish Student Societies in the UK logo">
+      <span class="brand-text" aria-hidden="true"><span>Federation</span><span>of Polish</span><span>Student</span><span>Societies</span><span>in the UK</span></span>
+    </a>
+    <nav aria-label="Main navigation">
+      <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false"><span></span><span></span><span></span></button>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="team.html">Team</a></li>
+        <li><a href="events.html">Events</a></li>
+        <li><a href="announcements.html" class="active">News</a></li>
+        <li><a href="members.html">Members</a></li>
+        <li><a href="contact.html">Contact</a></li>
+        <li><a class="nav-pbf" href="event-business-forum.html" title="Polish Business Forum"><span class="nav-pbf-logo" role="img" aria-label="Polish Business Forum"></span></a></li>
+        <li><a class="nav-lambert" href="https://thelambert.org" target="_blank" rel="noopener">The Lambert</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<section class="page-hero hero-photo">
+  <div class="hero-photo-bg" style="background-image: url('assets/pbf/crowd.jpg'); background-position: center 60%;" aria-hidden="true"></div>
+  <div class="container">
+    <span class="eyebrow">News &amp; opportunities</span>
+    <h1>What's <span class="fancy">new</span></h1>
+    <p class="lead">
+      What the Federation has been up to — embassy visits, appearances at
+      international Polish events, and opportunities for our members, from
+      internships to committee roles. Click any card to read the full story.
+    </p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <!-- Cards are generated from js/announcements-data.js — edit that file to add news -->
+    <div class="ann-grid" id="annGrid"></div>
+  </div>
+</section>
+
+<!-- Expanded announcement modal -->
+<div class="modal" id="annModal" role="dialog" aria-modal="true" aria-label="Announcement">
+  <div class="modal-panel" style="position: relative;">
+    <button class="modal-close" id="annClose" aria-label="Close">✕</button>
+    <div id="annModalPhoto"></div>
+    <div class="modal-content">
+      <span class="ann-date" id="annModalDate"></span>
+      <h2 id="annModalTitle"></h2>
+      <div class="ann-text" id="annModalBody"></div>
+      <div id="annModalExtra"></div>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <img src="assets/logo.svg" alt="">
+        <div>
+          <strong>Federation of Polish Student Societies in the UK</strong>
+          <p>A UK Charity Commission-registered charity uniting Polish student societies across British universities. By students. For students.</p>
+          <p class="charity-no">Charity number: 1166785</p>
+        </div>
+      </div>
+      <div>
+        <h4>Explore</h4>
+        <ul>
+          <li><a href="team.html">Team</a></li>
+          <li><a href="events.html">Events</a></li>
+          <li><a href="announcements.html">News</a></li>
+          <li><a href="members.html">Member societies</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Connect</h4>
+        <ul>
+          <li><a href="mailto:contact@polsocfederation.pl">contact@polsocfederation.pl</a></li>
+          <li><a href="https://www.instagram.com/federac_ja/" target="_blank" rel="noopener">Instagram</a></li>
+          <li><a href="https://www.linkedin.com/company/federation-of-polish-student-societies-in-the-uk" target="_blank" rel="noopener">LinkedIn</a></li>
+          <li><a href="https://www.facebook.com/FederationOfPolishStudentSocietiesUK/" target="_blank" rel="noopener">Facebook</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Federation of Polish Student Societies in the UK. Registered charity in England &amp; Wales.</span>
+      <span>polsocfederation.pl</span>
+    </div>
+  </div>
+</footer>
+
+<script src="js/announcements-data.js"></script>
+<script src="js/main.js"></script>
+<script>
+  // Render announcement cards from ANNOUNCEMENTS (js/announcements-data.js)
+  const grid = document.getElementById("annGrid");
+  const modal = document.getElementById("annModal");
+  const modalPhoto = document.getElementById("annModalPhoto");
+  const modalDate = document.getElementById("annModalDate");
+  const modalTitle = document.getElementById("annModalTitle");
+  const modalBody = document.getElementById("annModalBody");
+
+  const modalExtra = document.getElementById("annModalExtra");
+
+  // item.image null = deliberate no-photo announcement.
+  // item.fit "contain" (optional item.bg) = logo-style cover.
+  // item.imagePos = CSS object-position, e.g. "center top".
+  const photoHTML = (item) => {
+    if (!item.image) return "";
+    const cls = "ph" + (item.fit === "contain" ? " ph-contain" : "");
+    const bg = item.bg ? ` style="background:${item.bg}"` : "";
+    const pos = item.imagePos ? ` style="object-position:${item.imagePos}"` : "";
+    return `<div class="${cls}"${bg}><img src="${item.image}" alt=""${pos}></div>`;
+  };
+
+  ANNOUNCEMENTS.forEach((item, i) => {
+    const card = document.createElement("button");
+    card.className = "ann-card reveal" + (item.image ? "" : " no-photo");
+    card.type = "button";
+    card.innerHTML = `
+      ${photoHTML(item)}
+      <div class="ann-body">
+        <span class="ann-date">${item.date}</span>
+        <h3>${item.title}</h3>
+        <p>${item.subtitle}</p>
+        <span class="ann-more">Read more →</span>
+      </div>`;
+    card.addEventListener("click", () => openModal(item));
+    grid.appendChild(card);
+  });
+
+  function openModal(item) {
+    modalPhoto.innerHTML = photoHTML(item);
+    modalDate.textContent = item.date;
+    modalTitle.textContent = item.title;
+    modalBody.innerHTML = item.body; // authored HTML (links allowed); \n\n kept by white-space: pre-line
+    let extra = "";
+    if (item.closed) extra += `<div class="ann-closed">Sign-ups closed</div>`;
+    if (item.extraImages && item.extraImages.length)
+      extra += `<div class="ann-extra">${item.extraImages.map((s) => `<img src="${s}" alt="">`).join("")}</div>`;
+    if (item.link)
+      extra += `<div class="ann-link"><a class="btn btn-primary" href="${item.link.href}"${item.link.external ? ' target="_blank" rel="noopener"' : ""}>${item.link.text} <span class="arrow">→</span></a></div>`;
+    modalExtra.innerHTML = extra;
+    modal.classList.add("open");
+    document.body.style.overflow = "hidden";
+  }
+  function closeModal() {
+    modal.classList.remove("open");
+    document.body.style.overflow = "";
+  }
+  document.getElementById("annClose").addEventListener("click", closeModal);
+  modal.addEventListener("click", (e) => { if (e.target === modal) closeModal(); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeModal(); });
+
+  // Re-run reveal observation for the cards injected above
+  document.querySelectorAll(".ann-card.reveal").forEach((el, i) => {
+    setTimeout(() => el.classList.add("visible"), 120 + i * 90);
+  });
+
+  // Tilt effect on the injected cards (main.js loads before this script)
+  if (window.applyTilt) window.applyTilt(document.querySelectorAll(".ann-card"));
+</script>
+</body>
+</html>

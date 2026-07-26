@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Member Societies — Federation of Polish Student Societies in the UK</title>
+  <meta name="description" content="Local Polish student societies across the UK — the backbone of the Federation's membership. Find your local society on the map.">
+  <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Manrope:wght@400;500;600;700&family=Instrument+Serif:ital@1&family=Bodoni+Moda:wght@700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="nav-inner">
+    <a class="brand" href="index.html">
+      <img src="assets/logo.svg" alt="Federation of Polish Student Societies in the UK logo">
+      <span class="brand-text" aria-hidden="true"><span>Federation</span><span>of Polish</span><span>Student</span><span>Societies</span><span>in the UK</span></span>
+    </a>
+    <nav aria-label="Main navigation">
+      <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false"><span></span><span></span><span></span></button>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="team.html">Team</a></li>
+        <li><a href="events.html">Events</a></li>
+        <li><a href="announcements.html">News</a></li>
+        <li><a href="members.html" class="active">Members</a></li>
+        <li><a href="contact.html">Contact</a></li>
+        <li><a class="nav-pbf" href="event-business-forum.html" title="Polish Business Forum"><span class="nav-pbf-logo" role="img" aria-label="Polish Business Forum"></span></a></li>
+        <li><a class="nav-lambert" href="https://thelambert.org" target="_blank" rel="noopener">The Lambert</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<section class="page-hero hero-photo">
+  <div class="hero-photo-bg" style="background-image: url('assets/pbf/networking-hero.jpg'); background-position: center 45%;" aria-hidden="true"></div>
+  <div class="container">
+    <span class="eyebrow">Our network</span>
+    <h1>Member <span class="fancy">societies</span></h1>
+    <p class="lead">
+      Local Polish societies are the backbone of our membership and are, in one
+      way or another, involved in everything we do in the Federation. They serve
+      as local community hubs for Polish students in the UK, and enrich their
+      experience by connecting Polish students and engaging them with Polish
+      culture and language. The Federation works closely with our member
+      organisations to support them, and organise with them on a national level.
+    </p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow">Find your society</span>
+      <h2 class="section-title">Across the whole of the UK</h2>
+      <p class="lead">
+        Polish student societies at universities the length of the country. Click
+        a pin for a society's details, or pick one from the list below the map.
+      </p>
+    </div>
+    <!-- Pins come from js/societies-data.js — edit that file to add or update societies -->
+    <div id="map" class="reveal" aria-label="Map of member societies in the UK"></div>
+    <!-- Index of societies — click one to fly the map to its pin -->
+    <div class="soc-grid" id="socGrid"></div>
+  </div>
+</section>
+
+<!-- ============================ JOINING FAQ ============================ -->
+<section class="section section-cream">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow">Joining the Federation</span>
+      <h2 class="section-title">Common <span class="fancy">questions</span></h2>
+    </div>
+    <div class="reveal" style="max-width: 820px;">
+      <details class="acc">
+        <summary>How does our society become a member?</summary>
+        <div class="acc-body">
+          Drop us a message through the <a href="contact.html">contact page</a> with your society's name,
+          university and a contact person. We'll get in touch to introduce the Federation, answer questions
+          and add you to our national network — and to the map above.
+        </div>
+      </details>
+      <details class="acc">
+        <summary>Does membership cost anything?</summary>
+        <div class="acc-body">
+          No — membership is free. The Federation is a registered charity run by student volunteers,
+          and our goal is to support local Polish societies, not to charge them.
+        </div>
+      </details>
+      <details class="acc">
+        <summary>What does the Federation do for member societies?</summary>
+        <div class="acc-body">
+          We connect you with Polish societies at other universities, promote your events to a national
+          audience, share sponsorship and partnership opportunities, and represent your members' interests
+          before public and private bodies in the UK, Poland and the EU.
+        </div>
+      </details>
+      <details class="acc">
+        <summary>Our society's details on the map are out of date — how do we update them?</summary>
+        <div class="acc-body">
+          Email <a href="mailto:contact@polsocfederation.pl">contact@polsocfederation.pl</a> with the
+          updated name, links or committee contact and we'll refresh your pin.
+        </div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<section class="section" style="padding-top: 0;">
+  <div class="container">
+    <div class="cta-band reveal">
+      <h2>Society not on the map?</h2>
+      <p>If your Polish society would like to join the Federation — or your pin needs updating — drop us a message and we'll get you added.</p>
+      <a class="btn btn-light" href="contact.html">Join the Federation <span class="arrow">→</span></a>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <img src="assets/logo.svg" alt="">
+        <div>
+          <strong>Federation of Polish Student Societies in the UK</strong>
+          <p>A UK Charity Commission-registered charity uniting Polish student societies across British universities. By students. For students.</p>
+          <p class="charity-no">Charity number: 1166785</p>
+        </div>
+      </div>
+      <div>
+        <h4>Explore</h4>
+        <ul>
+          <li><a href="team.html">Team</a></li>
+          <li><a href="events.html">Events</a></li>
+          <li><a href="announcements.html">News</a></li>
+          <li><a href="members.html">Member societies</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Connect</h4>
+        <ul>
+          <li><a href="mailto:contact@polsocfederation.pl">contact@polsocfederation.pl</a></li>
+          <li><a href="https://www.instagram.com/federac_ja/" target="_blank" rel="noopener">Instagram</a></li>
+          <li><a href="https://www.linkedin.com/company/federation-of-polish-student-societies-in-the-uk" target="_blank" rel="noopener">LinkedIn</a></li>
+          <li><a href="https://www.facebook.com/FederationOfPolishStudentSocietiesUK/" target="_blank" rel="noopener">Facebook</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Federation of Polish Student Societies in the UK. Registered charity in England &amp; Wales.</span>
+      <span>polsocfederation.pl</span>
+    </div>
+  </div>
+</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="js/societies-data.js"></script>
+<script src="js/main.js"></script>
+<script>
+  // UK map with a pin per society (data in js/societies-data.js)
+  // zoomSnap 0 lets fitBounds land on a fractional zoom, so the UK fills the
+  // frame instead of being floored to the next integer zoom (a lot of ocean)
+  const map = L.map("map", { scrollWheelZoom: false, maxBoundsViscosity: 1, zoomSnap: 0 });
+
+  L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+    attribution:
+      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    maxZoom: 19,
+  }).addTo(map);
+
+  // Keep the view on the UK: fit the isles, then forbid zooming or panning further out
+  const UK = L.latLngBounds([49.7, -8.8], [59.6, 2.0]);
+  const lockToUK = () => {
+    map.setMinZoom(0).setMaxBounds(null);
+    map.fitBounds(UK, { animate: false });
+    map.setMinZoom(map.getZoom());
+    map.setMaxBounds(UK.pad(0.12));
+  };
+  lockToUK();
+  window.addEventListener("resize", () => {
+    // Re-derive the floor when the container changes size, keeping the current centre
+    const z = map.getZoom(), c = map.getCenter();
+    map.setMinZoom(0).setMaxBounds(null);
+    map.fitBounds(UK, { animate: false });
+    const floor = map.getZoom();
+    map.setMinZoom(floor).setMaxBounds(UK.pad(0.12));
+    map.setView(c, Math.max(z, floor), { animate: false });
+  });
+
+  const pinIcon = L.divIcon({
+    className: "",
+    html: '<div class="soc-pin"></div>',
+    iconSize: [26, 26],
+    iconAnchor: [13, 26],
+    popupAnchor: [0, -26],
+  });
+
+  const socGrid = document.getElementById("socGrid");
+  const mailIcon =
+    '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4.5" width="19" height="15" rx="2.5"/><path d="m3 6.5 9 6 9-6"/></svg>';
+  const igIcon =
+    '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none"/></svg>';
+
+  const igURL = (s) => `https://www.instagram.com/${s.instagram}/`;
+
+  // Alphabetical, so the list below the map reads like an index
+  const ordered = [...SOCIETIES].sort((a, b) => a.name.localeCompare(b.name, "en"));
+
+  ordered.forEach((s) => {
+    const links =
+      (s.email ? `<a href="mailto:${s.email}">${mailIcon} Email</a>` : "") +
+      `<a href="${igURL(s)}" target="_blank" rel="noopener">${igIcon} Instagram</a>`;
+
+    const marker = L.marker([s.lat, s.lng], { icon: pinIcon }).addTo(map).bindPopup(`
+      <div class="soc-popup">
+        <div class="soc-pop-head">
+          <img class="soc-logo" src="assets/polsocs/${s.logo}" alt="">
+          <div><h3>${s.name}</h3><div class="soc-uni">${s.uni}</div></div>
+        </div>
+        <div class="soc-links">${links}</div>
+      </div>`);
+
+    // Index card below the map — clicking the body flies the map to its pin
+    const card = document.createElement("div");
+    card.className = "soc-card";
+    card.innerHTML = `
+      <button class="soc-head" type="button">
+        <img class="soc-logo" src="assets/polsocs/${s.logo}" alt="">
+        <div><h3>${s.name}</h3><span class="soc-uni">${s.uni}</span></div>
+      </button>
+      <div class="soc-actions">
+        ${s.email ? `<a href="mailto:${s.email}" aria-label="Email ${s.name}" title="${s.email}">${mailIcon}</a>` : ""}
+        <a href="${igURL(s)}" target="_blank" rel="noopener" aria-label="${s.name} on Instagram" title="@${s.instagram}">${igIcon}</a>
+      </div>`;
+    card.querySelector(".soc-head").addEventListener("click", () => {
+      document.getElementById("map").scrollIntoView({ behavior: "smooth", block: "center" });
+
+      let opened = false;
+      const open = () => { if (!opened) { opened = true; marker.openPopup(); } };
+
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        map.setView([s.lat, s.lng], 15, { animate: false });
+        open();
+        return;
+      }
+      map.once("moveend", open);
+      map.flyTo([s.lat, s.lng], 15, { duration: 1.1 });
+      // Safety net: if the fly animation can't run (background tab, stalled rAF), jump
+      setTimeout(() => {
+        if (map.getZoom() < 14.9) map.setView([s.lat, s.lng], 15, { animate: false });
+        open();
+      }, 1400);
+    });
+    socGrid.appendChild(card);
+  });
+
+  // Enable scroll zoom only after the user clicks the map (prevents page-scroll traps)
+  map.on("click", () => map.scrollWheelZoom.enable());
+</script>
+</body>
+</html>
