@@ -2671,3 +2671,21 @@ body { background: var(--warm-white); }
   letter-spacing: 0.06em;
   color: rgba(255, 255, 255, 0.62);
 }
+
+/* --------------------------------------------------------------------------
+   404 page — the existing .card surface used as a link
+   -------------------------------------------------------------------------- */
+
+a.card { display: block; color: inherit; }
+a.card h3 { color: var(--ink); transition: color 0.25s; }
+a.card:hover h3 { color: var(--red); }
+.card-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.86rem;
+  color: var(--red);
+}
