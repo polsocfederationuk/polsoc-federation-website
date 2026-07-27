@@ -1,0 +1,33 @@
+# Netlify configuration — Federation of Polish Student Societies in the UK
+#
+# The site is plain static HTML/CSS/JS with NO build step. The repository root
+# is published as-is. Do not add a `command` here unless a real build is
+# introduced; adding one would make Netlify run it on every deploy.
+#
+# The production branch (`main`) is set in the Netlify UI, not here — Netlify
+# takes the production branch from site settings, so declaring it in this file
+# would have no effect.
+
+[build]
+  publish = "."
+
+# ---------------------------------------------------------------------------
+# Polish 404
+#
+# Netlify serves the root /404.html automatically, but it has no concept of a
+# per-directory 404. Without this rule a visitor who mistypes a Polish URL gets
+# the ENGLISH 404 page.
+#
+# This is deliberately NOT `force = true`. Netlify applies redirect rules only
+# after it has failed to find a matching static file, so every real page under
+# /pl/ (pl/index.html, pl/events.html, …) is served normally and this rule only
+# catches genuine misses. Adding `force = true` would intercept the whole Polish
+# site and break it.
+#
+# `status = 404` makes Netlify return the page with a real 404 status rather
+# than redirecting, so search engines see a not-found response, not a 200.
+# ---------------------------------------------------------------------------
+[[redirects]]
+  from = "/pl/*"
+  to = "/pl/404.html"
+  status = 404

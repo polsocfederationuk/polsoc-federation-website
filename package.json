@@ -1,0 +1,14 @@
+{
+  "name": "polsoc-federation-website",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Static bilingual website for the Federation of Polish Student Societies in the UK. This package.json exists only to run local validation — the site itself has no build step and is deployed as plain static files.",
+  "scripts": {
+    "validate": "node scripts/validate.js",
+    "serve": "python -m http.server 8000"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "UNLICENSED"
+}
