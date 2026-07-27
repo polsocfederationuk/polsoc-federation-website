@@ -362,10 +362,12 @@ h1, h2, h3, h4 {
 /* Stats */
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  /* minmax(0, ...) not a bare 1fr: the implicit min-content floor let the longer
+     Polish stat labels push the grid wider than a 320px screen */
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 22px;
 }
-@media (max-width: 900px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 900px) { .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
 .stat {
   background: rgba(255, 255, 255, 0.08);
@@ -382,6 +384,7 @@ h1, h2, h3, h4 {
   font-weight: 700;
 }
 .stat-label {
+  overflow-wrap: break-word;
   font-size: 0.86rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -2749,4 +2752,42 @@ a.card:hover h3 { color: var(--red); }
 /* Only below this does a two-up grid genuinely stop working */
 @media (max-width: 300px) {
   .team-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* --------------------------------------------------------------------------
+   Language switcher — "PL | EN" in the header, both languages always visible.
+   Black / white / Federation red only; no flags. Sits top-right on desktop and
+   mobile alike (it is narrow enough to share the bar with the burger).
+   -------------------------------------------------------------------------- */
+
+.lang-switch {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.82rem;
+  letter-spacing: 0.06em;
+}
+.lang-switch a {
+  padding: 5px 7px;
+  border-radius: 7px;
+  color: var(--gray);
+  transition: color 0.2s, background 0.2s;
+}
+.lang-switch a:hover { color: var(--red); background: var(--cream); }
+.lang-switch a[aria-current] { color: var(--ink); }
+.lang-switch a[aria-current]:hover { color: var(--ink); background: transparent; cursor: default; }
+.lang-switch .sep { color: var(--line); font-weight: 500; }
+.lang-switch a:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
+
+/* Three flex children now, so the brand takes the slack and the nav + switcher
+   stay grouped on the right exactly as before. */
+.nav-inner > .brand { margin-right: auto; }
+
+@media (max-width: 900px) {
+  .nav-inner { gap: 10px; }
+  .lang-switch { font-size: 0.78rem; gap: 4px; }
+  .lang-switch a { padding: 5px 5px; }
 }

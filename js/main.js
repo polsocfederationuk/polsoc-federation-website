@@ -1,5 +1,25 @@
 /* Shared behaviour: sticky header, mobile nav, scroll-reveal, stat counters */
 
+/* ---------------------------------------------------------------------------
+   Interface strings created by this script. The page's <html lang> picks the
+   language, so one main.js serves both /  (en) and /pl/ (pl).
+   --------------------------------------------------------------------------- */
+const UI = {
+  en: {
+    backToTop: "Back to top",
+    copied: "Copied: ",
+    copyFailed: "Could not copy — please select it manually",
+    quote: "Quote ",
+  },
+  pl: {
+    backToTop: "Powrót na górę",
+    copied: "Skopiowano: ",
+    copyFailed: "Nie udało się skopiować — zaznacz tekst ręcznie",
+    quote: "Cytat ",
+  },
+}[document.documentElement.lang === "pl" ? "pl" : "en"];
+
+
 // Header shadow on scroll
 const header = document.querySelector(".site-header");
 const onScroll = () => header.classList.toggle("scrolled", window.scrollY > 10);
@@ -78,7 +98,7 @@ document.body.appendChild(progressBar);
 // Back-to-top button
 const toTop = document.createElement("button");
 toTop.className = "to-top";
-toTop.setAttribute("aria-label", "Back to top");
+toTop.setAttribute("aria-label", UI.backToTop);
 toTop.textContent = "↑";
 toTop.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
 document.body.appendChild(toTop);
@@ -186,8 +206,8 @@ document.querySelectorAll("[data-copy]").forEach((btn) => {
   btn.addEventListener("click", () => {
     navigator.clipboard
       .writeText(btn.dataset.copy)
-      .then(() => showToast("Copied: " + btn.dataset.copy))
-      .catch(() => showToast("Could not copy — please select it manually"));
+      .then(() => showToast(UI.copied + btn.dataset.copy))
+      .catch(() => showToast(UI.copyFailed));
   });
 });
 
@@ -215,7 +235,7 @@ if (quotesEl) {
   slides.forEach((_, i) => {
     const d = document.createElement("button");
     d.className = "quote-dot" + (i === 0 ? " active" : "");
-    d.setAttribute("aria-label", "Quote " + (i + 1));
+    d.setAttribute("aria-label", UI.quote + (i + 1));
     d.addEventListener("click", () => goQuote(i));
     dotsWrap.appendChild(d);
   });
