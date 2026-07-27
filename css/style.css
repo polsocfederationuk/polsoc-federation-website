@@ -781,25 +781,34 @@ h1, h2, h3, h4 {
    Contact
    -------------------------------------------------------------------------- */
 
+/* minmax(0, 1fr) not 1fr: a bare `1fr` track has an implicit min-content floor,
+   so the card refused to shrink below the width of its longest unbreakable
+   string and forced the grid wider than the page. */
 .contact-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 26px;
 }
-@media (max-width: 820px) { .contact-grid { grid-template-columns: 1fr; } }
+@media (max-width: 820px) { .contact-grid { grid-template-columns: minmax(0, 1fr); } }
 
 .contact-card {
   background: #fff;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   padding: 36px;
+  min-width: 0;               /* grid items default to min-width: auto */
   transition: transform 0.35s var(--ease), box-shadow 0.35s;
 }
+/* Email addresses and postal lines are long unbreakable runs on narrow screens */
+.contact-card address { overflow-wrap: anywhere; }
 .contact-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); }
 .contact-card h3 { font-size: 1.3rem; margin-bottom: 16px; display: flex; align-items: center; gap: 12px; }
 .contact-card address { font-style: normal; color: var(--ink-soft); line-height: 1.9; }
 
-.social-list { list-style: none; display: grid; gap: 12px; }
+/* Same implicit-min-content trap as .contact-grid: the row is a nowrap flex line
+   ending in a long handle ("FederationOfPolishStudentSocietiesUK"), so the
+   auto-sized track grew to 409px inside a 253px card. */
+.social-list { list-style: none; display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
 .social-list a {
   display: flex;
   align-items: center;
@@ -809,6 +818,7 @@ h1, h2, h3, h4 {
   background: var(--cream);
   color: var(--ink);
   font-weight: 600;
+  min-width: 0;
   transition: background 0.25s, color 0.25s, transform 0.25s var(--ease);
 }
 .social-list a:hover { background: var(--red); color: #fff; transform: translateX(6px); }
@@ -2154,10 +2164,20 @@ body { background: var(--warm-white); }
   justify-content: center;
   margin-top: 54px;
 }
+.insta-embed { max-width: 100%; }
 .insta-embed blockquote {
-  min-width: 300px !important;
+  /* A flat 300px min-width overflowed a 320px screen (the column is only ~261px
+     there). min() keeps the 300px floor wherever it fits and yields to the
+     container when it doesn't. */
+  min-width: min(300px, 100%) !important;
   max-width: 540px;
   width: 100%;
+}
+/* Instagram's script swaps the blockquote for an iframe carrying its own
+   min-width, so it needs the same treatment. */
+.insta-embed iframe {
+  min-width: 0 !important;
+  max-width: 100% !important;
 }
 
 /* Logos inside the hero facts bar (e.g. co-organisers) */
@@ -2512,11 +2532,21 @@ body { background: var(--warm-white); }
    triangular gaps at either edge
    -------------------------------------------------------------------------- */
 
+/* The stripe has to be wider than the page so its rotated ends fall outside the
+   frame, otherwise the tilt leaves a wedge of background at each corner. The
+   wrapper clips that overhang HORIZONTALLY ONLY — the stripe must keep spilling
+   vertically to cover the section seam. `clip` (not `hidden`) is deliberate: it
+   allows overflow-y to stay visible and creates no block formatting context, so
+   the negative vertical margins still overlap the neighbouring sections. */
+.ticker-clip { overflow-x: clip; }
+
 .ticker {
   position: relative;
   z-index: 3;
-  width: 112vw;
-  margin-left: -6vw;
+  width: calc(100% + 48px);   /* was 112vw + -6vw margin: on a 375px phone that
+                                 pushed the stripe 23px past the viewport and set
+                                 the document scrollWidth to 399px */
+  margin-left: -24px;
   margin-top: -18px;
   margin-bottom: -18px;
   padding: 32px 0;
@@ -2688,4 +2718,35 @@ a.card:hover h3 { color: var(--red); }
   font-weight: 700;
   font-size: 0.86rem;
   color: var(--red);
+}
+
+/* ==========================================================================
+   Mobile responsive fixes
+   ========================================================================== */
+
+/* Contact cards: 36px of padding each side eats a 320px screen, and the long
+   social handles need somewhere to go once the row can no longer sit on one line. */
+@media (max-width: 600px) {
+  .contact-card { padding: 24px 20px; }
+  .social-list a { flex-wrap: wrap; gap: 8px 12px; padding: 12px 14px; }
+  .social-list .handle {
+    margin-left: 0;              /* was margin-left:auto, which pinned it to the far right */
+    flex: 1 0 100%;              /* drop the handle onto its own line */
+    overflow-wrap: anywhere;     /* and let a 36-character handle break */
+  }
+}
+
+/* Team: two people per row on phones. The base grid is
+   repeat(auto-fill, minmax(240px, 1fr)), which only ever fits one 240px column
+   in a 327px container, so every card sat on its own row. */
+@media (max-width: 600px) {
+  .team-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .member-body { padding: 13px 13px 15px; }
+  .member h3 { font-size: 0.95rem; margin: 5px 0 7px; line-height: 1.25; }
+  .member-role { font-size: 0.62rem; letter-spacing: 0.08em; line-height: 1.4; }
+  .member-links { margin-top: 11px; gap: 8px; }   /* buttons stay 36px: tap target */
+}
+/* Only below this does a two-up grid genuinely stop working */
+@media (max-width: 300px) {
+  .team-grid { grid-template-columns: minmax(0, 1fr); }
 }

@@ -26,9 +26,9 @@
 
   <!-- Icons & manifest -->
   <link rel="icon" href="/favicon.ico" sizes="any">
-  <link rel="icon" type="image/svg+xml" href="/assets/logo.svg">
-  <link rel="icon" type="image/png" sizes="16x16" href="/assets/icons/favicon-16x16.png">
+  <link rel="icon" type="image/png" sizes="48x48" href="/assets/icons/favicon-48x48.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/icons/favicon-16x16.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/assets/icons/apple-touch-icon.png">
   <link rel="manifest" href="/site.webmanifest">
   <meta name="theme-color" content="#d7282f">
@@ -47,7 +47,7 @@
     "Federation of Polish Student Societies in the United Kingdom"
   ],
   "url": "https://polsocfederation.pl/",
-  "logo": "https://polsocfederation.pl/assets/logo.svg",
+  "logo": "https://polsocfederation.pl/assets/icons/icon-512.png",
   "image": "https://polsocfederation.pl/assets/photos/christmas-dinner-group.jpg",
   "description": "A UK Charity Commission-registered charity uniting Polish student societies across British universities, representing and supporting Polish students in the United Kingdom.",
   "email": "contact@polsocfederation.pl",
@@ -129,11 +129,13 @@
   </div>
 </section>
 
-<!-- Marquee ticker -->
-<div class="ticker" aria-hidden="true">
-  <div class="ticker-track">
-    <span>By students <span class="dot"></span> For students <span class="dot"></span> Est. 2013 <span class="dot"></span> Uniting Polish societies across the UK <span class="dot"></span></span>
-    <span>By students <span class="dot"></span> For students <span class="dot"></span> Est. 2013 <span class="dot"></span> Uniting Polish societies across the UK <span class="dot"></span></span>
+<!-- Marquee ticker (wrapper clips the stripe's overhang so it can't widen the page) -->
+<div class="ticker-clip">
+  <div class="ticker" aria-hidden="true">
+    <div class="ticker-track">
+      <span>By students <span class="dot"></span> For students <span class="dot"></span> Est. 2013 <span class="dot"></span> Uniting Polish societies across the UK <span class="dot"></span></span>
+      <span>By students <span class="dot"></span> For students <span class="dot"></span> Est. 2013 <span class="dot"></span> Uniting Polish societies across the UK <span class="dot"></span></span>
+    </div>
   </div>
 </div>
 
