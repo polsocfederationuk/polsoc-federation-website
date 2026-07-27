@@ -672,17 +672,169 @@ if (!exists("dist")) {
       }
     })("dist");
 
-    const shadowing = distFiles.filter((f) => !f.startsWith("build-test/"));
-    assert(shadowing.length === 0,
-      `dist/ contains only build-test output (${distFiles.length} files) — nothing shadows a public file`,
-      "dist/ contains output outside build-test/", shadowing);
+    // Generated HTML must live only under build-test/. Phase 3 additionally
+    // passes through a small set of shared assets so the chrome pages can load
+    // the real stylesheet and script when dist/ is served standalone — those
+    // are copies, checked below, not new pages.
+    const generatedHtml = distFiles.filter((f) => f.endsWith(".html"));
+    const strayHtml = generatedHtml.filter((f) => !f.startsWith("build-test/"));
+    assert(strayHtml.length === 0,
+      `all ${generatedHtml.length} generated HTML files are under build-test/ — no public URL is generated`,
+      "generated HTML outside build-test/", strayHtml);
 
-    const collides = distFiles.filter((f) => exists(f));
-    assert(collides.length === 0,
-      "no generated file collides with an existing public file",
-      "generated files would overwrite public files if dist/ were published", collides);
+    const htmlCollides = generatedHtml.filter((f) => exists(f));
+    assert(htmlCollides.length === 0,
+      "no generated HTML file collides with an existing public page",
+      "generated HTML would overwrite a public page if dist/ were published", htmlCollides);
+
+    // Passthrough assets must be byte-identical copies. If one ever differs,
+    // the build has modified a shared asset rather than copying it.
+    const crypto = require("crypto");
+    const hash = (p) => crypto.createHash("sha256")
+      .update(fs.readFileSync(path.join(ROOT, p))).digest("hex");
+    const copied = distFiles.filter((f) => !f.endsWith(".html"));
+    const altered = copied.filter((f) => !exists(f) || hash("dist/" + f) !== hash(f));
+    assert(altered.length === 0,
+      `all ${copied.length} passthrough assets are byte-identical copies of the originals`,
+      "passthrough assets differ from their source files", altered);
   }
 }
+
+/* =================================================================== 13. shared chrome */
+
+section("13. Shared chrome (Phase 3)");
+
+const CHROME = {
+  en: "dist/build-test/chrome/index.html",
+  pl: "dist/build-test/chrome/pl/index.html",
+};
+
+if (!exists("dist")) {
+  ok("dist/ absent — chrome checks skipped (run `npm run build` to enable them)");
+} else {
+  const missingChrome = Object.values(CHROME).filter((p) => !exists(p));
+  assert(missingChrome.length === 0,
+    "both English and Polish chrome pages were generated",
+    "chrome pages missing after build", missingChrome);
+
+  if (missingChrome.length === 0) {
+    const en = read(CHROME.en);
+    const pl = read(CHROME.pl);
+    const TEST = { en: "/build-test/chrome/", pl: "/build-test/chrome/pl/" };
+
+    assert(/<html lang="en">/.test(en), 'English chrome page uses lang="en"',
+      "English chrome page has the wrong <html lang>");
+    assert(/<html lang="pl">/.test(pl), 'Polish chrome page uses lang="pl"',
+      "Polish chrome page has the wrong <html lang>");
+
+    // Self-referencing canonicals on the TEST urls (never a public URL).
+    for (const [code, html] of [["en", en], ["pl", pl]]) {
+      const c = (html.match(/<link rel="canonical" href="([^"]+)">/) || [])[1];
+      assert(c === SITE + TEST[code],
+        `${code} chrome canonical is self-referencing (${TEST[code]})`,
+        `${code} chrome canonical is wrong`, [`got ${c}`, `want ${SITE + TEST[code]}`]);
+    }
+
+    // Reciprocal hreflang, identical on both pages, x-default = English.
+    const wantAlt = [
+      `<link rel="alternate" hreflang="en" href="${SITE}${TEST.en}">`,
+      `<link rel="alternate" hreflang="pl" href="${SITE}${TEST.pl}">`,
+      `<link rel="alternate" hreflang="x-default" href="${SITE}${TEST.en}">`,
+    ];
+    const altMissing = [];
+    for (const [code, html] of [["en", en], ["pl", pl]]) {
+      wantAlt.forEach((tag) => { if (!html.includes(tag)) altMissing.push(`${code}: ${tag}`); });
+    }
+    assert(altMissing.length === 0,
+      "chrome hreflang is reciprocal on both pages, x-default points at English",
+      "chrome hreflang problems", altMissing);
+
+    assert(/<meta property="og:locale" content="en_GB">/.test(en) &&
+           /<meta property="og:locale:alternate" content="pl_PL">/.test(en),
+      'English chrome page uses og:locale="en_GB" with pl_PL alternate',
+      "English chrome og:locale is wrong");
+    assert(/<meta property="og:locale" content="pl_PL">/.test(pl) &&
+           /<meta property="og:locale:alternate" content="en_GB">/.test(pl),
+      'Polish chrome page uses og:locale="pl_PL" with en_GB alternate',
+      "Polish chrome og:locale is wrong");
+
+    // aria-current must sit on the CURRENT language, not the other one.
+    const activeLang = (html) => {
+      const m = html.match(/<a href="[^"]*"\s+hreflang="([a-z]{2})"\s+lang="[a-z]{2}"\s+aria-current="true">/);
+      return m ? m[1] : null;
+    };
+    assert(activeLang(en) === "en", 'English chrome page marks EN with aria-current="true"',
+      "English chrome page marks the wrong active language", [`got ${activeLang(en)}`]);
+    assert(activeLang(pl) === "pl", 'Polish chrome page marks PL with aria-current="true"',
+      "Polish chrome page marks the wrong active language", [`got ${activeLang(pl)}`]);
+
+    // Navigation labels must come out in the right language.
+    const EN_LABELS = ["Home", "Team", "Events", "News", "Members", "Contact"];
+    const PL_LABELS = ["Start", "Zespół", "Wydarzenia", "Aktualności", "Członkowie", "Kontakt"];
+    const navOf = (html) => {
+      const ul = html.slice(html.indexOf('<ul class="nav-links">'), html.indexOf("</ul>"));
+      return [...ul.matchAll(/>([^<>]+)<\/a>/g)].map((m) => m[1].trim());
+    };
+    const enNav = navOf(en), plNav = navOf(pl);
+    assert(EN_LABELS.every((l) => enNav.includes(l)),
+      `English chrome navigation labels are correct (${EN_LABELS.join(", ")})`,
+      "English chrome navigation labels are wrong", enNav);
+    assert(PL_LABELS.every((l) => plNav.includes(l)),
+      `Polish chrome navigation labels are correct (${PL_LABELS.join(", ")})`,
+      "Polish chrome navigation labels are wrong", plNav);
+
+    // Required chrome structures, shared CSS/JS, and no SVG favicon.
+    const STRUCT = [
+      ["header", /<header class="site-header">/],
+      ["nav-inner", /<div class="nav-inner">/],
+      ["brand + 5 wordmark rows", /<span class="brand-text" aria-hidden="true">(?:<span>[^<]*<\/span>){5}<\/span>/],
+      ["burger with aria-expanded", /<button class="nav-toggle"[^>]*aria-expanded="false">/],
+      ["nav list", /<ul class="nav-links">/],
+      ["language switcher", /<nav class="lang-switch" aria-label="[^"]+">/],
+      ["footer", /<footer class="site-footer">/],
+      ["footer grid", /<div class="footer-grid">/],
+      ["shared stylesheet", /<link rel="stylesheet" href="\/css\/style\.css">/],
+      ["shared script", /<script src="\/js\/main\.js"><\/script>/],
+      ["favicon.ico", /<link rel="icon" href="\/favicon\.ico" sizes="any">/],
+      ["manifest", /<link rel="manifest" href="\/site\.webmanifest">/],
+    ];
+    const structMissing = [];
+    for (const [code, html] of [["en", en], ["pl", pl]]) {
+      STRUCT.forEach(([n, re]) => { if (!re.test(html)) structMissing.push(`${code}: ${n}`); });
+    }
+    assert(structMissing.length === 0,
+      `required header/nav/footer/asset structures present on both chrome pages (${STRUCT.length} each)`,
+      "chrome structure problems", structMissing);
+
+    const svgFavicon = [["en", en], ["pl", pl]]
+      .filter(([, h]) => /rel="icon"[^>]*image\/svg\+xml/.test(h)).map(([c]) => c);
+    assert(svgFavicon.length === 0,
+      "chrome pages declare no SVG favicon",
+      "an SVG favicon was reintroduced", svgFavicon);
+
+    assert(!locs.some((l) => /chrome/.test(l)),
+      "chrome test pages are absent from sitemap.xml",
+      "a chrome test page appears in sitemap.xml");
+
+    // --- semantic comparison against the live pages -------------------------
+    const cmp = require("./compare-chrome.js").run();
+    const cmpBad = cmp.filter((r) => !r.ok);
+    assert(cmpBad.length === 0,
+      `generated chrome matches the live pages (${cmp.length} normalised comparisons vs events.html / pl/events.html)`,
+      "generated chrome differs from the live pages",
+      cmpBad.map((r) => r.label + (r.detail ? " — " + [].concat(r.detail).join(" | ") : "")));
+  }
+}
+
+/* -- chrome test pages must not be referenced from the public site ---------- */
+
+const chromeRefs = [];
+for (const [rel] of ALL) {
+  if (/build-test\/chrome/.test(stripNonMarkup(read(rel)))) chromeRefs.push(rel);
+}
+assert(chromeRefs.length === 0,
+  "no public page links to the chrome test pages",
+  "public pages referencing the chrome test pages", chromeRefs);
 
 /* =================================================================== summary */
 

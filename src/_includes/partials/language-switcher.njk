@@ -1,0 +1,26 @@
+{#
+  Language switcher — "PL | EN", top right of the header.
+
+  PAGE-AWARE: both destinations are derived from the page's own `urlPattern`,
+  so the switcher always lands on the SAME page in the other language rather
+  than dumping the visitor on the homepage.
+      /events.html            <-> /pl/events.html
+      /event-business-forum.html <-> /pl/event-business-forum.html
+
+  Preserved exactly from the live pages:
+    - both languages are real <a> elements (works without JS, and with a
+      keyboard and a screen reader)
+    - destinations are ROOT-RELATIVE, so the same markup is correct at any depth
+    - aria-current="true" marks the active language; the CSS uses that attribute
+      for the active styling, so removing it changes the appearance
+    - the separator is aria-hidden
+    - no flags: a flag is a country, not a language
+#}
+    <nav class="lang-switch" aria-label="{{ t.changeLanguageLabel }}">
+{%- for l in locales | reverse %}
+      <a href="{{ urlPattern | urlFor(l) }}" hreflang="{{ l.code }}" lang="{{ l.code }}"{% if l.code == locale.code %} aria-current="true"{% endif %}>{{ l.label }}</a>
+  {%- if not loop.last %}
+      <span class="sep" aria-hidden="true">|</span>
+  {%- endif %}
+{%- endfor %}
+    </nav>

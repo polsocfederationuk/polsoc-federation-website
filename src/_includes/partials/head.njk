@@ -1,0 +1,92 @@
+{#
+  Shared <head> — reproduces the metadata block used by every live public page.
+
+  Tag ORDER matches the live pages: charset, viewport, title, description,
+  canonical, hreflang trio, Open Graph, Twitter, icons, manifest, theme-colour,
+  font preconnects, stylesheets, then the page-specific head slot.
+
+  Required values (title, description) are pushed through the `required` filter
+  so a page that forgets them FAILS THE BUILD instead of shipping an empty tag.
+
+  Deliberately NOT here:
+    - JSON-LD. Structured data differs by page type (Organization on the
+      homepage, Event on event pages, none elsewhere), so it goes in the
+      `extraHead` slot below.
+    - an SVG favicon. It was removed on purpose: Google does not use SVG for
+      search-result favicons and, being typed and later in <head>, it took
+      priority over the ICO. Do not reintroduce it.
+#}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ pageTitle | required("pageTitle") }}</title>
+  <meta name="description" content="{{ pageDescription | required("pageDescription") }}">
+{%- if noindex %}
+  <meta name="robots" content="noindex, follow">
+{%- else %}
+
+  {#- Self-referencing canonical, then the identical alternate trio on both
+      pages of a pair. x-default always points at English (locales[0]). -#}
+  <link rel="canonical" href="{{ site.domain }}{{ urlPattern | urlFor(locale) }}">
+  {%- for l in locales %}
+  <link rel="alternate" hreflang="{{ l.code }}" href="{{ site.domain }}{{ urlPattern | urlFor(l) }}">
+  {%- endfor %}
+  <link rel="alternate" hreflang="x-default" href="{{ site.domain }}{{ urlPattern | urlFor(locales[0]) }}">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="{{ ogType | default("website") }}">
+  <meta property="og:site_name" content="{{ site.shortName }}">
+  <meta property="og:locale" content="{{ locale.ogLocale }}">
+  {%- for l in locales %}{% if l.code != locale.code %}
+  <meta property="og:locale:alternate" content="{{ l.ogLocale }}">
+  {%- endif %}{% endfor %}
+  <meta property="og:title" content="{{ ogTitle | default(pageTitle) }}">
+  <meta property="og:description" content="{{ ogDescription | default(pageDescription) }}">
+  <meta property="og:url" content="{{ site.domain }}{{ urlPattern | urlFor(locale) }}">
+  <meta property="og:image" content="{{ site.domain }}{{ ogImage | default(site.defaultOgImage) }}">
+  {#- The extended image fields are emitted ONLY when the page supplies real
+      dimensions. Three live pages have them (they share the 1200x630 banner);
+      the rest use page-specific photos whose dimensions were never measured.
+      Inventing numbers here would be worse than omitting them. -#}
+  {%- if ogImageWidth and ogImageHeight %}
+  <meta property="og:image:secure_url" content="{{ site.domain }}{{ ogImage | default(site.defaultOgImage) }}">
+  <meta property="og:image:type" content="{{ ogImageType | default("image/png") }}">
+  <meta property="og:image:width" content="{{ ogImageWidth }}">
+  <meta property="og:image:height" content="{{ ogImageHeight }}">
+  {%- endif %}
+  <meta property="og:image:alt" content="{{ ogImageAlt | required("ogImageAlt") }}">
+
+  <!-- Twitter / X -->
+  <meta name="twitter:card" content="{{ twitterCard | default("summary_large_image") }}">
+  <meta name="twitter:title" content="{{ twitterTitle | default(ogTitle | default(pageTitle)) }}">
+  <meta name="twitter:description" content="{{ twitterDescription | default(ogDescription | default(pageDescription)) }}">
+  <meta name="twitter:image" content="{{ site.domain }}{{ twitterImage | default(ogImage | default(site.defaultOgImage)) }}">
+  <meta name="twitter:image:alt" content="{{ twitterImageAlt | default(ogImageAlt) }}">
+{%- endif %}
+
+  <!-- Icons & manifest -->
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="48x48" href="/assets/icons/favicon-48x48.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/icons/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/icons/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <meta name="theme-color" content="{{ site.themeColor }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="{{ site.fontsHref }}" rel="stylesheet">
+{#- CASCADE ORDER MATTERS and the live pages differ:
+      members.html loads Leaflet CSS BEFORE style.css
+      event-business-forum.html loads pbf.css AFTER style.css (it overrides it)
+    so there are two slots, not one. -#}
+{%- for sheet in stylesheetsBefore | default([]) %}
+  <link rel="stylesheet" href="{{ sheet }}">
+{%- endfor %}
+  <link rel="stylesheet" href="/css/style.css">
+{%- for sheet in stylesheetsAfter | default([]) %}
+  <link rel="stylesheet" href="{{ sheet }}">
+{%- endfor %}
+{%- if extraHead %}
+
+  {#- Page-specific head markup: JSON-LD, page-only meta, etc. -#}
+{{ extraHead | safe }}
+{%- endif %}

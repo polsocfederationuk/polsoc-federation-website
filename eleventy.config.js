@@ -58,6 +58,59 @@ module.exports = function (eleventyConfig) {
     String(pattern).replace("{prefix}", (locale && locale.urlPrefix) || "")
   );
 
+  // Navigation/footer link for a page file, in a given locale.
+  //
+  //   linkMode "relative" (default) — "team.html". Matches the live pages
+  //     exactly: an English page links to "team.html", and a Polish page links
+  //     to "team.html" too, which resolves inside /pl/. That relative form is
+  //     what keeps each language routed to its own pages.
+  //   linkMode "root" — "/pl/team.html". Needed only by 404 pages, which the
+  //     server may return from any URL depth, so relative links would break.
+  eleventyConfig.addFilter("navHref", (file, locale, linkMode) => {
+    if (linkMode === "root") {
+      return "/" + ((locale && locale.urlPrefix) || "") + file;
+    }
+    return file;
+  });
+
+  // Fails the BUILD when required page metadata is absent, rather than quietly
+  // emitting an empty tag. The brief is explicit: required metadata must fail,
+  // not fall back to something broad and wrong.
+  eleventyConfig.addFilter("required", (value, fieldName) => {
+    if (value === undefined || value === null || String(value).trim() === "") {
+      throw new Error(
+        `Missing required page metadata: "${fieldName}". ` +
+        `Set it in the page's front matter — the shared head partial will not ` +
+        `invent a default for it.`
+      );
+    }
+    return value;
+  });
+
+  // ---------------------------------------------------------------------
+  // Shared assets, copied (not moved, not modified) into dist/ so the chrome
+  // comparison pages can load the REAL stylesheet and script when dist/ is
+  // served standalone. Without these the responsive test would be meaningless:
+  // an unstyled page cannot demonstrate that the header fits a 320px viewport.
+  //
+  // This is a deliberately MINIMAL list — only what the shared chrome touches.
+  // Nothing is renamed or relocated; the originals stay exactly where they are
+  // and remain the files the live site serves.
+  // ---------------------------------------------------------------------
+  eleventyConfig.addPassthroughCopy({ "css/style.css": "css/style.css" });
+  eleventyConfig.addPassthroughCopy({ "js/main.js": "js/main.js" });
+  eleventyConfig.addPassthroughCopy({ "favicon.ico": "favicon.ico" });
+  eleventyConfig.addPassthroughCopy({ "site.webmanifest": "site.webmanifest" });
+  eleventyConfig.addPassthroughCopy({ "assets/logo.svg": "assets/logo.svg" });
+  eleventyConfig.addPassthroughCopy({ "assets/icons": "assets/icons" });
+  // Referenced by css/style.css for the .nav-pbf-logo mask swap.
+  eleventyConfig.addPassthroughCopy({
+    "assets/pbf/pbf-logo-nav-navy.png": "assets/pbf/pbf-logo-nav-navy.png",
+  });
+  eleventyConfig.addPassthroughCopy({
+    "assets/pbf/pbf-logo-nav-white.png": "assets/pbf/pbf-logo-nav-white.png",
+  });
+
   return {
     dir: {
       input: "src",

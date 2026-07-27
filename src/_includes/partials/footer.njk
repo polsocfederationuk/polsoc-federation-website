@@ -1,0 +1,47 @@
+{#
+  Site footer — identical on all eight indexable pages in each language
+  (verified by normalised comparison; only 404.html differs, and only in its
+  link form). Contact-page-specific content is deliberately NOT pulled in here.
+
+  Localised: organisation name, blurb, charity line, both column headings and
+  the copyright sentence (all from ui[locale].footer).
+  Invariant: the e-mail address and the three social URLs (from site.json).
+
+  The brand <img> carries alt="" on purpose — it is decorative, because the
+  organisation name sits directly beside it as text.
+#}
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <img src="{{ site.logo }}" alt="">
+        <div>
+          <strong>{{ t.footer.orgName }}</strong>
+          <p>{{ t.footer.blurb }}</p>
+          <p class="charity-no">{{ t.footer.charityLine }}</p>
+        </div>
+      </div>
+      <div>
+        <h4>{{ t.footer.exploreHeading }}</h4>
+        <ul>
+{%- for item in nav.footerExplore %}
+          <li><a href="{{ item.file | navHref(locale, linkMode) }}">{{ t.nav[item.key] }}</a></li>
+{%- endfor %}
+        </ul>
+      </div>
+      <div>
+        <h4>{{ t.footer.connectHeading }}</h4>
+        <ul>
+          <li><a href="mailto:{{ site.email }}">{{ site.email }}</a></li>
+          <li><a href="{{ site.social.instagram }}" target="_blank" rel="noopener">Instagram</a></li>
+          <li><a href="{{ site.social.linkedin }}" target="_blank" rel="noopener">LinkedIn</a></li>
+          <li><a href="{{ site.social.facebook }}" target="_blank" rel="noopener">Facebook</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>{{ t.footer.copyright | safe }}</span>
+      <span>polsocfederation.pl</span>
+    </div>
+  </div>
+</footer>

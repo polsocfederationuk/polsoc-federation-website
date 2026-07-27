@@ -1,0 +1,32 @@
+{
+  "_comment": "Primary navigation and footer 'Explore' column, defined once. Labels are NOT here — they live per-locale in ui.json and are looked up by `key`. Order matches the live site exactly.",
+
+  "primary": [
+    { "key": "home",     "file": "index.html" },
+    { "key": "team",     "file": "team.html" },
+    { "key": "events",   "file": "events.html" },
+    { "key": "news",     "file": "announcements.html" },
+    { "key": "members",  "file": "members.html" },
+    { "key": "contact",  "file": "contact.html" },
+    {
+      "key": "pbf",
+      "file": "event-business-forum.html",
+      "variant": "pbf",
+      "_comment": "Renders as the masked PBF logo, not a text label. title/aria come from ui.nav.pbf."
+    },
+    {
+      "key": "lambert",
+      "url": "https://thelambert.org",
+      "variant": "lambert",
+      "external": true,
+      "_comment": "The Lambert is a brand name and stays in English in both locales."
+    }
+  ],
+
+  "footerExplore": [
+    { "key": "team",            "file": "team.html" },
+    { "key": "events",          "file": "events.html" },
+    { "key": "news",            "file": "announcements.html" },
+    { "key": "memberSocieties", "file": "members.html" }
+  ]
+}

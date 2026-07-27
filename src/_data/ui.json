@@ -1,0 +1,57 @@
+{
+  "_comment": "Every visible or assistive string in the shared chrome, per locale. Copied VERBATIM from the current live pages — see docs/SHARED_CHROME_MIGRATION.md for the source of each. Do not reword: these are the live site's strings.",
+
+  "en": {
+    "logoAlt": "Federation of Polish Student Societies in the UK logo",
+    "brandRows": ["Federation", "of Polish", "Student", "Societies", "in the UK"],
+    "mainNavLabel": "Main navigation",
+    "toggleMenuLabel": "Toggle menu",
+    "changeLanguageLabel": "Change language",
+    "nav": {
+      "home": "Home",
+      "team": "Team",
+      "events": "Events",
+      "news": "News",
+      "members": "Members",
+      "contact": "Contact",
+      "memberSocieties": "Member societies",
+      "pbf": "Polish Business Forum",
+      "lambert": "The Lambert"
+    },
+    "footer": {
+      "orgName": "Federation of Polish Student Societies in the UK",
+      "blurb": "A UK Charity Commission-registered charity uniting Polish student societies across British universities. By students. For students.",
+      "charityLine": "Charity number: 1166785",
+      "exploreHeading": "Explore",
+      "connectHeading": "Connect",
+      "copyright": "© 2026 Federation of Polish Student Societies in the UK. Registered charity in England &amp; Wales."
+    }
+  },
+
+  "pl": {
+    "logoAlt": "Logo Federacji Polskich Stowarzyszeń Studenckich w Wielkiej Brytanii",
+    "brandRows": ["Federacja", "Polskich", "Stowarzyszeń", "Studenckich", "w Wielkiej Brytanii"],
+    "mainNavLabel": "Nawigacja główna",
+    "toggleMenuLabel": "Przełącz menu",
+    "changeLanguageLabel": "Zmień język",
+    "nav": {
+      "home": "Start",
+      "team": "Zespół",
+      "events": "Wydarzenia",
+      "news": "Aktualności",
+      "members": "Członkowie",
+      "contact": "Kontakt",
+      "memberSocieties": "Stowarzyszenia członkowskie",
+      "pbf": "Polish Business Forum",
+      "lambert": "The Lambert"
+    },
+    "footer": {
+      "orgName": "Federacja Polskich Stowarzyszeń Studenckich w Wielkiej Brytanii",
+      "blurb": "Organizacja charytatywna zarejestrowana w brytyjskiej Charity Commission, zrzeszająca polskie stowarzyszenia studenckie na uczelniach w Wielkiej Brytanii. Przez studentów. Dla studentów.",
+      "charityLine": "Numer organizacji charytatywnej: 1166785",
+      "exploreHeading": "Poznaj",
+      "connectHeading": "Śledź nas",
+      "copyright": "© 2026 Federacja Polskich Stowarzyszeń Studenckich w Wielkiej Brytanii. Organizacja charytatywna zarejestrowana w Anglii i Walii."
+    }
+  }
+}

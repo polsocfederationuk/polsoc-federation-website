@@ -1,0 +1,79 @@
+---
+layout: layouts/base.njk
+
+pagination:
+  data: locales
+  size: 1
+  alias: locale
+
+# Emitted as .html files at an exact path — Eleventy's default directory URLs
+# are explicitly not used. See docs/BUILD_ARCHITECTURE.md §10.
+permalink: "build-test/chrome/{{ locale.urlPrefix }}index.html"
+
+eleventyExcludeFromCollections: true
+
+# The page's address, stated once. Canonical, hreflang and the language
+# switcher are all derived from it.
+urlPattern: "/build-test/chrome/{prefix}"
+
+# Chrome-specific: pretend this page is "events" so the active nav state is
+# visible in the comparison.
+activeNav: events
+
+ogImageAlt: "Architectural chrome comparison page"
+ogImageWidth: 1200
+ogImageHeight: 630
+
+eleventyComputed:
+  pageTitle: "{% if locale.code == 'pl' %}Test chrome{% else %}Chrome comparison{% endif %} — build-test"
+  pageDescription: "{% if locale.code == 'pl' %}Izolowana strona testowa architektury, używająca prawdziwego wspólnego szablonu.{% else %}Isolated architectural test page using the real shared chrome.{% endif %}"
+---
+
+<section class="section">
+  <div class="container">
+
+    <div style="border: 3px solid #d7282f; padding: 1rem 1.25rem; margin-bottom: 2rem; background: #fff5f5;">
+      <strong>ARCHITECTURAL TEST PAGE — NOT PART OF THE PUBLIC WEBSITE</strong>
+      <p style="margin: 0.5rem 0 0;">
+        Generated into <code>dist/build-test/chrome/</code>. Not in the sitemap,
+        not linked from any public page, not deployed. Everything above and
+        below this box is the <em>real</em> shared chrome, rendered from
+        <code>src/_includes/partials/</code>. The content of this box is the
+        only page-specific markup.
+      </p>
+    </div>
+
+    <h1>Shared chrome comparison ({{ locale.code }})</h1>
+
+    <p>
+      This page exists so the extracted header, navigation, language switcher
+      and footer can be compared against the live pages and tested responsively.
+      It deliberately does not reproduce any real page's layout or copy.
+    </p>
+
+    <h2>What is rendered from partials</h2>
+    <table style="border-collapse: collapse; width: 100%;">
+      <tr><th style="border:1px solid #ddd;padding:.4rem .6rem;text-align:left;">Region</th><th style="border:1px solid #ddd;padding:.4rem .6rem;text-align:left;">Partial</th></tr>
+      <tr><td style="border:1px solid #ddd;padding:.4rem .6rem;"><code>&lt;head&gt;</code> + SEO</td><td style="border:1px solid #ddd;padding:.4rem .6rem;"><code>partials/head.njk</code></td></tr>
+      <tr><td style="border:1px solid #ddd;padding:.4rem .6rem;">Header + brand lockup</td><td style="border:1px solid #ddd;padding:.4rem .6rem;"><code>partials/header.njk</code></td></tr>
+      <tr><td style="border:1px solid #ddd;padding:.4rem .6rem;">Desktop + mobile nav</td><td style="border:1px solid #ddd;padding:.4rem .6rem;"><code>partials/navigation.njk</code></td></tr>
+      <tr><td style="border:1px solid #ddd;padding:.4rem .6rem;">Language switcher</td><td style="border:1px solid #ddd;padding:.4rem .6rem;"><code>partials/language-switcher.njk</code></td></tr>
+      <tr><td style="border:1px solid #ddd;padding:.4rem .6rem;">Footer</td><td style="border:1px solid #ddd;padding:.4rem .6rem;"><code>partials/footer.njk</code></td></tr>
+      <tr><td style="border:1px solid #ddd;padding:.4rem .6rem;">Scripts</td><td style="border:1px solid #ddd;padding:.4rem .6rem;"><code>partials/scripts.njk</code></td></tr>
+    </table>
+
+    <h2>Responsive checks to run here</h2>
+    <p>
+      Resize to 320px, 390px, 768px and desktop. The header must stay inside the
+      viewport, the burger must open and close the drawer, the
+      <code>PL | EN</code> switcher must stay visible and usable, and nothing
+      may scroll sideways.
+    </p>
+
+    <p style="margin-top: 2rem;">
+      <a class="btn btn-primary" href="{{ urlPattern | urlFor(locales[0]) }}">English test page <span class="arrow">&rarr;</span></a>
+      <a class="btn btn-ghost" href="{{ urlPattern | urlFor(locales[1]) }}">Polish test page</a>
+    </p>
+
+  </div>
+</section>

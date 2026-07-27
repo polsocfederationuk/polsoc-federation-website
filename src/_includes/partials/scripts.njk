@@ -1,0 +1,22 @@
+{#
+  Shared scripts.
+
+  js/main.js is last on every live page and is the only script all pages share.
+  Pages that need more load them BEFORE it — announcements.html loads its data
+  file first, members.html loads Leaflet then its data file — because main.js
+  reads the DOM those scripts help build. `scriptsBefore` preserves that order.
+
+  main.js is language-aware on its own: it reads document.documentElement.lang
+  and picks its four UI strings from an internal dictionary, so there is no
+  per-locale script to swap here.
+#}
+{#- Note: members.html's Leaflet <script> also carries integrity/crossorigin.
+    When that page migrates, `scriptsBefore` entries become objects rather than
+    bare strings so those attributes survive. Bare strings suffice for now. -#}
+{%- for src in scriptsBefore | default([]) %}
+<script src="{{ src }}"></script>
+{%- endfor %}
+<script src="/js/main.js"></script>
+{%- for src in scriptsAfter | default([]) %}
+<script src="{{ src }}"></script>
+{%- endfor %}

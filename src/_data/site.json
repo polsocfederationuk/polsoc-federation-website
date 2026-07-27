@@ -1,17 +1,26 @@
 {
+  "_comment": "Site-wide invariants. Values are identical in both languages; anything that differs per locale lives in ui.json.",
+
   "domain": "https://polsocfederation.pl",
-  "name": {
-    "en": "Federation of Polish Student Societies in the UK",
-    "pl": "Federacja Polskich Stowarzyszeń Studenckich w Wielkiej Brytanii"
-  },
   "shortName": "Federation of Polish Student Societies UK",
   "logo": "/assets/logo.svg",
   "email": "contact@polsocfederation.pl",
   "charityNumber": "1166785",
   "currentAcademicYear": "2026/27",
+  "themeColor": "#d7282f",
+
+  "fontsHref": "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Manrope:wght@400;500;600;700&family=Instrument+Serif:ital@1&family=Bodoni+Moda:wght@700;900&display=swap",
+
+  "_defaultOgImage": "The shared Federation banner, 1200x630. Pages with their own photo override ogImage and omit the width/height fields.",
+  "defaultOgImage": "/assets/social/og-image.png",
+  "defaultOgImageWidth": 1200,
+  "defaultOgImageHeight": 630,
+
   "social": {
     "instagram": "https://www.instagram.com/federac_ja/",
     "linkedin": "https://www.linkedin.com/company/federation-of-polish-student-societies-in-the-uk",
     "facebook": "https://www.facebook.com/FederationOfPolishStudentSocietiesUK/"
-  }
+  },
+
+  "lambertUrl": "https://thelambert.org"
 }

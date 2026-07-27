@@ -1,0 +1,19 @@
+{#
+  Site header — the brand lockup plus the two navs.
+
+  The five <span> rows inside .brand-text are load-bearing: CSS sizes them so
+  the wordmark block is exactly as tall as the badge, driven by --badge-h.
+  Collapsing them into one span breaks that alignment. The wrapper is
+  aria-hidden because the adjacent <img alt> already names the organisation,
+  and without it a screen reader would announce the name twice.
+#}
+<header class="site-header">
+  <div class="nav-inner">
+    <a class="brand" href="{{ "index.html" | navHref(locale, linkMode) }}">
+      <img src="{{ site.logo }}" alt="{{ t.logoAlt }}">
+      <span class="brand-text" aria-hidden="true">{% for row in t.brandRows %}<span>{{ row }}</span>{% endfor %}</span>
+    </a>
+{% include "partials/navigation.njk" %}
+{% include "partials/language-switcher.njk" %}
+  </div>
+</header>

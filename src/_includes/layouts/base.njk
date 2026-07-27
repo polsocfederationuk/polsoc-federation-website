@@ -1,67 +1,41 @@
 {#
-  Shared base layout — ARCHITECTURAL PROOF ONLY (Phase 2).
+  Base layout — the complete document shell for every generated page.
 
-  This deliberately does NOT reproduce the live site's chrome. Its job is to
-  prove that one layout can serve both languages: `lang`, `og:locale` and the
-  hreflang pair are all derived from the `locale` object supplied by pagination,
-  not hard-coded per page.
+  Configurable per page (front matter):
+    lang / locale ......... supplied by pagination over `locales`
+    pageTitle ............. REQUIRED (build fails without it)
+    pageDescription ....... REQUIRED
+    urlPattern ............ REQUIRED — "/{prefix}events.html". Drives canonical,
+                            the hreflang trio, og:url and the language switcher,
+                            so a page's address is stated exactly once.
+    ogType, ogTitle, ogDescription, ogImage, ogImageAlt,
+    ogImageWidth/Height/Type ........ Open Graph overrides
+    twitterCard/Title/Description/Image/ImageAlt ... Twitter overrides
+    bodyClass ............. e.g. "pbf-page"
+    activeNav ............. nav item key, e.g. "events"
+    linkMode .............. "relative" (default) or "root" (404 pages only)
+    stylesheetsBefore/After ......... extra CSS either side of style.css
+    extraHead ............. page-specific head markup (JSON-LD goes here)
+    scriptsBefore/After ... extra scripts around main.js
+    noindex ............... suppresses canonical/hreflang/OG/Twitter
 
-  When the public pages migrate, this file grows into the real base layout and
-  the partials below are replaced with the site's real header/nav/footer.
-#}<!DOCTYPE html>
+  `t` is the current locale's UI strings; it is set once here so every partial
+  can use it without re-deriving the locale.
+#}
+{%- set t = ui[locale.code] -%}
+<!DOCTYPE html>
 <html lang="{{ locale.htmlLang }}">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{ pageTitle }}</title>
-  <meta name="description" content="{{ pageDescription }}">
-
-  {# Test pages must never be indexed, even if dist/ is ever served by accident. #}
-  <meta name="robots" content="noindex, nofollow">
-
-  {# --- SEO/hreflang generation, driven entirely by data -------------------
-     Every URL below derives from the single `urlPattern` the page declares.
-     The canonical is always self-referencing; the alternates are identical on
-     both pages of a pair; x-default always points at English (locales[0]).
-     This is the rule the public pages already follow by hand. #}
-  <link rel="canonical" href="{{ site.domain }}{{ urlPattern | urlFor(locale) }}">
-  {%- for l in locales %}
-  <link rel="alternate" hreflang="{{ l.code }}" href="{{ site.domain }}{{ urlPattern | urlFor(l) }}">
-  {%- endfor %}
-  <link rel="alternate" hreflang="x-default" href="{{ site.domain }}{{ urlPattern | urlFor(locales[0]) }}">
-
-  <meta property="og:type" content="website">
-  <meta property="og:locale" content="{{ locale.ogLocale }}">
-  {%- for l in locales %}{% if l.code != locale.code %}
-  <meta property="og:locale:alternate" content="{{ l.ogLocale }}">
-  {%- endif %}{% endfor %}
-  <meta property="og:title" content="{{ pageTitle }}">
-  <meta property="og:description" content="{{ pageDescription }}">
-  <meta property="og:url" content="{{ site.domain }}{{ urlPattern | urlFor(locale) }}">
-  <meta property="og:image" content="{{ site.domain }}{{ site.logo | asset }}">
-
-  {# Root-relative, and therefore identical on the English page (depth 0) and
-     the Polish page (depth 1). This is the property that matters. #}
-  <link rel="icon" href="{{ '/favicon.ico' | asset }}" sizes="any">
-
-  <style>
-    /* Intentionally minimal. The proof pages must not look like the live site,
-       so nobody mistakes them for a redesign. */
-    body { font-family: system-ui, sans-serif; max-width: 46rem; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; }
-    code { background: #f4f4f4; padding: 0.1em 0.35em; border-radius: 3px; }
-    table { border-collapse: collapse; width: 100%; }
-    td, th { border: 1px solid #ddd; padding: 0.4rem 0.6rem; text-align: left; font-size: 0.95rem; }
-  </style>
+{% include "partials/head.njk" %}
 </head>
-<body>
+<body{% if bodyClass %} class="{{ bodyClass }}"{% endif %}>
 
-{% include "partials/test-banner.njk" %}
+{% include "partials/header.njk" %}
 
-<main>
 {{ content | safe }}
-</main>
 
-{% include "partials/build-footer.njk" %}
+{% include "partials/footer.njk" %}
 
+{% include "partials/scripts.njk" %}
 </body>
 </html>

@@ -1,0 +1,27 @@
+{#
+  Primary navigation — structure copied verbatim from the live pages.
+
+  Labels come from ui[locale].nav via the shared nav.json definition, so they
+  are declared once rather than duplicated into every page.
+
+  Preserved exactly: the <nav aria-label>, the burger button with its three
+  spans and aria-expanded="false" (js/main.js toggles it), the .nav-links list
+  order, the .active class on the current page, and the two special items —
+  .nav-pbf (masked logo, no text label) and .nav-lambert (external, new tab).
+
+  `activeNav` is the nav item's `key`, supplied by the page.
+#}
+    <nav aria-label="{{ t.mainNavLabel }}">
+      <button class="nav-toggle" aria-label="{{ t.toggleMenuLabel }}" aria-expanded="false"><span></span><span></span><span></span></button>
+      <ul class="nav-links">
+{%- for item in nav.primary %}
+  {%- if item.variant == "pbf" %}
+        <li><a class="nav-pbf" href="{{ item.file | navHref(locale, linkMode) }}" title="{{ t.nav[item.key] }}"><span class="nav-pbf-logo" role="img" aria-label="{{ t.nav[item.key] }}"></span></a></li>
+  {%- elif item.variant == "lambert" %}
+        <li><a class="nav-lambert" href="{{ item.url }}" target="_blank" rel="noopener">{{ t.nav[item.key] }}</a></li>
+  {%- else %}
+        <li><a href="{{ item.file | navHref(locale, linkMode) }}"{% if activeNav == item.key %} class="active"{% endif %}>{{ t.nav[item.key] }}</a></li>
+  {%- endif %}
+{%- endfor %}
+      </ul>
+    </nav>
