@@ -557,6 +557,133 @@ assert(exists("robots.txt") && !/Disallow/.test(read("robots.txt")),
 assert(read("robots.txt").includes(`${SITE}/sitemap.xml`),
   "robots.txt points at the sitemap", "robots.txt does not declare the sitemap");
 
+/* =================================================================== 12. build architecture */
+
+section("12. Build architecture (Phase 2)");
+
+// --- source / output separation --------------------------------------------
+
+const gitignore = exists(".gitignore") ? read(".gitignore") : "";
+const ignored = (entry) =>
+  gitignore.split("\n").map((l) => l.trim()).includes(entry);
+
+assert(ignored("dist/"), "dist/ is listed in .gitignore (generated output is never committed)",
+  "dist/ must be listed in .gitignore");
+assert(ignored("node_modules/"), "node_modules/ is listed in .gitignore",
+  "node_modules/ must be listed in .gitignore");
+
+assert(exists("eleventy.config.js"), "eleventy.config.js exists", "eleventy.config.js is missing");
+if (exists("eleventy.config.js")) {
+  const cfg = read("eleventy.config.js");
+  // Containment is the whole safety story: with input scoped to src/, the build
+  // physically cannot read or rewrite the public HTML at the repository root.
+  assert(/input:\s*"src"/.test(cfg) && /output:\s*"dist"/.test(cfg),
+    "Eleventy input is src/ and output is dist/ — the build cannot touch the repository root",
+    "Eleventy input/output directories are not scoped to src/ and dist/");
+}
+
+const SRC_DIRS = [
+  "src", "src/_data", "src/_includes", "src/_includes/layouts",
+  "src/_includes/partials", "src/build-test",
+  "content", "content/events", "content/announcements",
+  "content/team", "content/societies", "content/settings",
+];
+const missingDirs = SRC_DIRS.filter((d) => !exists(d));
+assert(missingDirs.length === 0,
+  `source tree present (${SRC_DIRS.length} directories)`,
+  "source directories are missing", missingDirs);
+
+// Phase 2 must not migrate content. Each collection should still be empty.
+const populated = ["events", "announcements", "team", "societies", "settings"]
+  .filter((c) => fs.readdirSync(path.join(ROOT, "content", c))
+    .some((f) => /\.(ya?ml|json|md)$/i.test(f)));
+assert(populated.length === 0,
+  "content collections are still empty (no content migrated in this phase)",
+  "content has been migrated — that belongs to a later phase", populated);
+
+// --- generated output must not leak into the public site --------------------
+
+assert(!locs.some((l) => /build-test/.test(l)),
+  "build-test pages are not listed in sitemap.xml",
+  "a build-test page appears in sitemap.xml", locs.filter((l) => /build-test/.test(l)));
+
+const testLinks = [];
+for (const [rel] of ALL) {
+  if (/build-test/.test(stripNonMarkup(read(rel)))) testLinks.push(rel);
+}
+assert(testLinks.length === 0,
+  "no public page links to or mentions build-test",
+  "public pages referencing build-test", testLinks);
+
+// --- generated output is not treated as source ------------------------------
+
+let tracked = "";
+try {
+  tracked = require("child_process")
+    .execSync("git ls-files dist", { cwd: ROOT, encoding: "utf8" }).trim();
+} catch (e) {
+  tracked = ""; // not a git checkout, or git unavailable — skip rather than fail
+}
+assert(tracked === "",
+  "no file under dist/ is tracked by git (output is not source)",
+  "generated files are tracked by git", tracked.split("\n").filter(Boolean));
+
+// --- proof pages, only if a build has been run ------------------------------
+
+const PROOF = ["dist/build-test/index.html", "dist/build-test/pl/index.html"];
+
+if (!exists("dist")) {
+  // Not a failure: validate must work on a clean checkout before any build.
+  ok("dist/ absent — build-output checks skipped (run `npm run build` to enable them)");
+} else {
+  const missingProof = PROOF.filter((p) => !exists(p));
+  assert(missingProof.length === 0,
+    "both proof pages were generated",
+    "proof pages missing after build", missingProof);
+
+  if (missingProof.length === 0) {
+    const en = read(PROOF[0]);
+    const pl = read(PROOF[1]);
+
+    assert(/<html lang="en">/.test(en), "English proof page declares lang=\"en\"",
+      "English proof page has the wrong <html lang>");
+    assert(/<html lang="pl">/.test(pl), "Polish proof page declares lang=\"pl\"",
+      "Polish proof page has the wrong <html lang>");
+
+    // Both pages sit at different depths (0 and 1). A root-relative asset URL
+    // must therefore be the IDENTICAL string in both — that is the property
+    // that stops the /pl/assets/… class of bug.
+    const assetOf = (s) => (s.match(/<link rel="icon" href="([^"]+)"/) || [])[1];
+    assert(assetOf(en) && assetOf(en) === assetOf(pl) && assetOf(en).startsWith("/"),
+      `root-relative asset URL identical at both depths (${assetOf(en)})`,
+      "asset URLs differ between the English and Polish proof pages",
+      [`en: ${assetOf(en)}`, `pl: ${assetOf(pl)}`]);
+
+    assert(/noindex/.test(en) && /noindex/.test(pl),
+      "proof pages are noindex", "proof pages are missing a noindex robots tag");
+
+    // A build must never emit anything that would shadow a public file.
+    const distFiles = [];
+    (function walk(d) {
+      for (const e of fs.readdirSync(path.join(ROOT, d), { withFileTypes: true })) {
+        const p = d + "/" + e.name;
+        if (e.isDirectory()) walk(p);
+        else distFiles.push(p.replace(/^dist\//, ""));
+      }
+    })("dist");
+
+    const shadowing = distFiles.filter((f) => !f.startsWith("build-test/"));
+    assert(shadowing.length === 0,
+      `dist/ contains only build-test output (${distFiles.length} files) — nothing shadows a public file`,
+      "dist/ contains output outside build-test/", shadowing);
+
+    const collides = distFiles.filter((f) => exists(f));
+    assert(collides.length === 0,
+      "no generated file collides with an existing public file",
+      "generated files would overwrite public files if dist/ were published", collides);
+  }
+}
+
 /* =================================================================== summary */
 
 console.log("\n" + "=".repeat(64));

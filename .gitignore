@@ -1,3 +1,16 @@
 .claude/
 .DS_Store
 Thumbs.db
+
+# Build tooling (Phase 2). Development-only: nothing here is served to
+# visitors, and Netlify still publishes the repository root.
+node_modules/
+
+# Generated output — NEVER edit these files by hand, and never commit them.
+# Everything in dist/ is produced by `npm run build` and discarded by
+# `npm run clean`. The source of truth is src/ and content/.
+dist/
+
+# Eleventy caches
+.cache/
+.eleventy.cache/

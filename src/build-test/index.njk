@@ -1,0 +1,128 @@
+---
+layout: layouts/base.njk
+
+# One source template -> one page per locale. This is the mechanism the real
+# pages will use, so a page is authored once and both languages fall out of it.
+pagination:
+  data: locales
+  size: 1
+  alias: locale
+
+# URL CONTROL: permalink is written out in full, so the generator emits exactly
+# the paths we ask for. English at the root, Polish under /pl/, .html extension
+# preserved. Eleventy's default would have been /build-test/ and /build-test/pl/
+# (directory URLs) — which is precisely what we must NOT do to the public pages.
+permalink: "build-test/{{ locale.urlPrefix }}index.html"
+
+# The proof pages are not real content and must never appear in a collection,
+# a feed or a generated sitemap.
+eleventyExcludeFromCollections: true
+
+# The page states its own URL shape exactly once. Canonical, hreflang and
+# og:url in the layout are all derived from it.
+urlPattern: "/build-test/{prefix}"
+
+# NOTE: eleventyComputed values written in YAML front matter are rendered as
+# TEMPLATE STRINGS, so they can only produce strings. Assigning the record
+# object here would stringify it to "[object Object]" — the object is selected
+# with {% set %} in the body instead.
+eleventyComputed:
+  pageTitle: "{{ records.buildTest[0][locale.code].title }}"
+  pageDescription: "{{ records.buildTest[0][locale.code].summary }}"
+---
+{%- set item = records.buildTest[0] -%}
+{%- set t = item[locale.code] -%}
+
+<h1>{{ t.title }}</h1>
+
+<p>{{ t.summary }}</p>
+
+<p><em>{{ t.body_note }}</em></p>
+
+<p><a href="{{ '/docs/BUILD_ARCHITECTURE.md' | asset }}">{{ t.cta_label }} &rarr;</a></p>
+
+<h2>What this page proves</h2>
+
+<table>
+  <tr>
+    <th>Property</th>
+    <th>Value on this page</th>
+  </tr>
+  <tr>
+    <td>Locale</td>
+    <td><code>{{ locale.code }}</code> &rarr; <code>&lt;html lang="{{ locale.htmlLang }}"&gt;</code></td>
+  </tr>
+  <tr>
+    <td>Generated path</td>
+    <td><code>dist/build-test/{{ locale.urlPrefix }}index.html</code></td>
+  </tr>
+  <tr>
+    <td>Shared layout</td>
+    <td><code>src/_includes/layouts/base.njk</code></td>
+  </tr>
+  <tr>
+    <td>Shared partials</td>
+    <td><code>partials/test-banner.njk</code>, <code>partials/build-footer.njk</code></td>
+  </tr>
+  <tr>
+    <td>Content record</td>
+    <td><code>{{ item._source }}</code></td>
+  </tr>
+  <tr>
+    <td>Shared invariant &mdash; slug</td>
+    <td><code>{{ item.slug }}</code></td>
+  </tr>
+  <tr>
+    <td>Shared invariant &mdash; academic year</td>
+    <td><code>{{ item.academic_year }}</code></td>
+  </tr>
+  <tr>
+    <td>Shared invariant &mdash; start date</td>
+    <td>
+      <code>{{ item.start_date | isoDate }}</code>
+      &mdash; rendered through the <code>isoDate</code> filter. Printing the raw
+      YAML value would emit the local timezone name and make the build
+      non-deterministic across machines.
+    </td>
+  </tr>
+  <tr>
+    <td>Shared invariant &mdash; image</td>
+    <td><code>{{ item.image | asset }}</code></td>
+  </tr>
+  <tr>
+    <td>Root-relative asset check</td>
+    <td>
+      <code>{{ site.logo | asset }}</code> &mdash; identical string on both the
+      English page (depth&nbsp;0) and the Polish page (depth&nbsp;1). A relative
+      path would resolve differently at each depth and break under
+      <code>/pl/</code>.
+    </td>
+  </tr>
+</table>
+
+<h2>Language pair</h2>
+<ul>
+  {%- for l in locales %}
+  <li>
+    <code>{{ l.code }}</code>:
+    <a href="{{ '/build-test/' + l.urlPrefix }}">/build-test/{{ l.urlPrefix }}</a>
+    {%- if l.code == locale.code %} &larr; you are here{% endif %}
+  </li>
+  {%- endfor %}
+</ul>
+
+<h2>URL preservation demonstration</h2>
+<p>
+  With the same <code>permalink</code> mechanism, the real pages will keep their
+  current addresses exactly:
+</p>
+<ul>
+  <li><code>{{ "index.html" | localeUrl(locales[0]) }}</code> and <code>{{ "index.html" | localeUrl(locales[1]) }}</code></li>
+  <li><code>{{ "events.html" | localeUrl(locales[0]) }}</code> and <code>{{ "events.html" | localeUrl(locales[1]) }}</code></li>
+  <li><code>{{ "team.html" | localeUrl(locales[0]) }}</code> and <code>{{ "team.html" | localeUrl(locales[1]) }}</code></li>
+  <li><code>{{ "event-business-forum.html" | localeUrl(locales[0]) }}</code> and <code>{{ "event-business-forum.html" | localeUrl(locales[1]) }}</code></li>
+</ul>
+<p>
+  No <code>/events/</code>, no <code>/en/</code>, no trailing-slash directory
+  URLs. The <code>.html</code> extension is preserved.
+</p>

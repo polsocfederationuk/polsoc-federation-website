@@ -1,0 +1,18 @@
+[
+  {
+    "code": "en",
+    "htmlLang": "en",
+    "ogLocale": "en_GB",
+    "urlPrefix": "",
+    "isDefault": true,
+    "label": "EN"
+  },
+  {
+    "code": "pl",
+    "htmlLang": "pl",
+    "ogLocale": "pl_PL",
+    "urlPrefix": "pl/",
+    "isDefault": false,
+    "label": "PL"
+  }
+]

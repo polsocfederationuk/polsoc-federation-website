@@ -2,13 +2,20 @@
   "name": "polsoc-federation-website",
   "version": "1.0.0",
   "private": true,
-  "description": "Static bilingual website for the Federation of Polish Student Societies in the UK. This package.json exists only to run local validation — the site itself has no build step and is deployed as plain static files.",
+  "description": "Static bilingual website for the Federation of Polish Student Societies in the UK. The live site is still the hand-written HTML at the repository root; the Eleventy build under src/ + content/ currently generates only architectural proof pages into dist/. See docs/BUILD_ARCHITECTURE.md.",
   "scripts": {
+    "build": "eleventy",
+    "clean": "node scripts/clean.js",
     "validate": "node scripts/validate.js",
-    "serve": "python -m http.server 8000"
+    "serve": "python -m http.server 8000",
+    "serve:dist": "python -m http.server 8001 --directory dist"
   },
   "engines": {
     "node": ">=18"
   },
-  "license": "UNLICENSED"
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "@11ty/eleventy": "^3.1.6",
+    "js-yaml": "^4.3.0"
+  }
 }

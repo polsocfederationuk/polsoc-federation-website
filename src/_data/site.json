@@ -1,0 +1,17 @@
+{
+  "domain": "https://polsocfederation.pl",
+  "name": {
+    "en": "Federation of Polish Student Societies in the UK",
+    "pl": "Federacja Polskich Stowarzyszeń Studenckich w Wielkiej Brytanii"
+  },
+  "shortName": "Federation of Polish Student Societies UK",
+  "logo": "/assets/logo.svg",
+  "email": "contact@polsocfederation.pl",
+  "charityNumber": "1166785",
+  "currentAcademicYear": "2026/27",
+  "social": {
+    "instagram": "https://www.instagram.com/federac_ja/",
+    "linkedin": "https://www.linkedin.com/company/federation-of-polish-student-societies-in-the-uk",
+    "facebook": "https://www.facebook.com/FederationOfPolishStudentSocietiesUK/"
+  }
+}

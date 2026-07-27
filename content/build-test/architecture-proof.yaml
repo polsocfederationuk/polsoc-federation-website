@@ -1,0 +1,42 @@
+# ARCHITECTURAL PROOF RECORD — not real site content.
+#
+# Demonstrates the canonical bilingual shape defined in
+# docs/BUILD_ARCHITECTURE.md §9: ONE record per content item, with invariant
+# fields at the top level and localised fields nested under `en:` and `pl:`.
+#
+# This is the same on-disk shape Decap CMS produces with
+# `i18n: { structure: single_file }`, so the future admin UI can edit these
+# files directly without a migration.
+
+# ---------------------------------------------------------------- invariants
+# Edited once. Identical in both languages by construction — which is exactly
+# the guarantee that hand-maintaining two parallel trees cannot give.
+slug: architecture-proof
+academic_year: 2026/27
+template: build-test
+order: 1
+published: true
+start_date: 2027-03-12
+image: /assets/logo.svg          # root-relative on purpose (see §10)
+
+# ---------------------------------------------------------------- localised
+en:
+  title: Build architecture proof
+  summary: >-
+    This page was generated from a single YAML record, one shared layout and
+    two reusable partials. Its Polish twin was generated from the same sources.
+  body_note: >-
+    Everything above the language divider in the record is shared. Everything
+    below it is translated. Nothing is duplicated between the two languages.
+  cta_label: Read the architecture notes
+
+pl:
+  title: Dowód architektury budowania
+  summary: >-
+    Ta strona została wygenerowana z jednego rekordu YAML, jednego wspólnego
+    układu i dwóch komponentów wielokrotnego użytku. Jej angielski odpowiednik
+    powstał z tych samych źródeł.
+  body_note: >-
+    Wszystko powyżej podziału językowego w rekordzie jest wspólne. Wszystko
+    poniżej jest tłumaczone. Nic nie jest duplikowane między językami.
+  cta_label: Przeczytaj notatki o architekturze

@@ -1,0 +1,15 @@
+{#
+  Reusable partial #2 — reads SHARED INVARIANT data (src/_data/site.json) and
+  renders the same values into both language builds. The organisation name is
+  the one localised value here, selected by `locale.code`.
+#}
+<footer style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #ddd; font-size: 0.9rem; color: #555;">
+  <p>
+    <strong>{{ site.name[locale.code] }}</strong><br>
+    {{ site.email }} &middot; Charity number: {{ site.charityNumber }}
+  </p>
+  <p>
+    Shared invariants come from <code>src/_data/site.json</code>;
+    localised text comes from <code>content/build-test/architecture-proof.yaml</code>.
+  </p>
+</footer>
