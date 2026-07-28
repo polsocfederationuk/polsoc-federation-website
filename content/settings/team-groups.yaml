@@ -1,0 +1,59 @@
+# Ordered team-group definition — the single source of truth for BOTH the
+# filter controls and the section headings on the team page.
+#
+# Group names and labels are deliberately NOT stored on individual member
+# records; a member only references a group by `key`.
+#
+# `order` sets the section order on the page and the filter order in the bar.
+# Headings and filter labels are transcribed verbatim from the live pages.
+#
+# `count_label` is the "5 members" / "5 osób" text beside each heading. Polish
+# needs three plural forms (1 osoba / 2-4 osoby / 5+ osób), so the correct form
+# is chosen by the `plural` map rather than by string concatenation.
+
+groups:
+  - key: trustees
+    order: 1
+    en: { heading: "Trustees", filter_label: "Trustees" }
+    pl: { heading: "Powiernicy", filter_label: "Powiernicy" }
+
+  - key: partnerships
+    order: 2
+    en: { heading: "Partnerships Officers", filter_label: "Partnerships" }
+    pl: { heading: "Zespół ds. partnerstw", filter_label: "Partnerstwa" }
+
+  - key: events
+    order: 3
+    en: { heading: "Events Officers", filter_label: "Events" }
+    pl: { heading: "Zespół ds. wydarzeń", filter_label: "Wydarzenia" }
+
+  - key: marketing
+    order: 4
+    en: { heading: "Marketing Officers", filter_label: "Marketing" }
+    pl: { heading: "Zespół ds. marketingu", filter_label: "Marketing" }
+
+  - key: legal
+    order: 5
+    en: { heading: "Legal Officers", filter_label: "Legal" }
+    pl: { heading: "Dział prawny", filter_label: "Dział prawny" }
+
+  - key: regional
+    order: 6
+    en: { heading: "Regional & Operations", filter_label: "Regional & Operations" }
+    pl: { heading: "Region i operacje", filter_label: "Region i operacje" }
+
+# The "show everyone" chip. Not a group: it has no section and no members.
+all_filter:
+  key: all
+  en: { filter_label: "Everyone" }
+  pl: { filter_label: "Wszyscy" }
+
+# Plural forms for the member count beside each heading.
+plural:
+  en:
+    one: "1 member"
+    other: "{n} members"
+  pl:
+    one: "1 osoba"
+    few: "{n} osoby"      # 2-4
+    many: "{n} osób"      # 0, 5+

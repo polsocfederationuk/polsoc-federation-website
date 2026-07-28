@@ -1,0 +1,29 @@
+# Team member — 2025/26 committee.
+# Generated from the live pages during the Phase 4 migration; edit freely.
+# Fields above the `en:` block are shared and must be identical in both
+# languages by construction. Fields under `en:`/`pl:` are translated.
+
+slug: dominika-kaczmarczyk
+academic_year: "2025/26"
+group: events
+order: 2
+published: true
+
+name: "Dominika Kaczmarczyk"
+photo: "/assets/team/dominika-kaczmarczyk.jpg"
+email: "dominika.kaczmarczyk@polsocfederation.pl"
+linkedin: "https://www.linkedin.com/in/dominika-kaczmarczyk-90b2223a5/"
+
+# Names used inside the link aria-labels, transcribed verbatim. Stored rather
+# than derived because the live pages disambiguate the two people called
+# Maksymilian on LinkedIn but not on e-mail.
+aria_name_email: "Dominika"
+aria_name_linkedin: "Dominika"
+
+en:
+  role: "Events Officer"
+  photo_alt: "Dominika Kaczmarczyk"
+
+pl:
+  role: "Specjalista ds. wydarzeń"
+  photo_alt: "Dominika Kaczmarczyk"

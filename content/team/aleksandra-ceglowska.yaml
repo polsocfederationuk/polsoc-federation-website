@@ -1,0 +1,29 @@
+# Team member — 2025/26 committee.
+# Generated from the live pages during the Phase 4 migration; edit freely.
+# Fields above the `en:` block are shared and must be identical in both
+# languages by construction. Fields under `en:`/`pl:` are translated.
+
+slug: aleksandra-ceglowska
+academic_year: "2025/26"
+group: partnerships
+order: 3
+published: true
+
+name: "Aleksandra Cegłowska"
+photo: "/assets/team/aleksandra-ceglowska.jpg"
+email: "aleksandra.ceglowska@polsocfederation.pl"
+linkedin: "https://www.linkedin.com/in/aleksandraceglowska/"
+
+# Names used inside the link aria-labels, transcribed verbatim. Stored rather
+# than derived because the live pages disambiguate the two people called
+# Maksymilian on LinkedIn but not on e-mail.
+aria_name_email: "Aleksandra"
+aria_name_linkedin: "Aleksandra"
+
+en:
+  role: "Partnerships Officer"
+  photo_alt: "Aleksandra Cegłowska"
+
+pl:
+  role: "Specjalista ds. partnerstw"
+  photo_alt: "Aleksandra Cegłowska"

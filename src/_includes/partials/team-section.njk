@@ -1,0 +1,24 @@
+{#
+  One team group: heading, member count, and the grid of cards.
+
+  Expects:
+    group ......... an entry from content/settings/team-groups.yaml
+    groupMembers .. the already-filtered, already-sorted members for that group
+    locale, t ..... supplied by the base layout
+
+  The heading and the filter label both come from the SAME central group
+  definition, so they can never drift apart.
+
+  The member count is generated, not stored. English needs two forms and Polish
+  needs three ("1 osoba" / "4 osoby" / "5 osób"); the `plural` filter picks the
+  right one from the forms in team-groups.yaml.
+#}
+{%- set g = group[locale.code] -%}
+    <div class="team-section" data-group="{{ group.key }}">
+      <h2 class="reveal">{{ g.heading }} <span class="count">{{ groupMembers | length | plural(teamGroups.plural[locale.code], locale.code) }}</span></h2>
+      <div class="team-grid">
+
+{% for member in groupMembers %}{% set revealIndex = loop.index0 %}{% include "partials/team-card.njk" %}
+{% endfor %}
+      </div>
+    </div>

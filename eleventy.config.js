@@ -15,7 +15,27 @@
 
 "use strict";
 
+const fs = require("fs");
+const path = require("path");
 const yaml = require("js-yaml");
+
+/**
+ * Repo-relative paths of every headshot referenced by a team record, sorted and
+ * de-duplicated. Read straight from the YAML so the passthrough list is exactly
+ * "what the generated pages need" and stays that way without maintenance.
+ */
+function teamPhotoPaths() {
+  const dir = path.join(__dirname, "content", "team");
+  if (!fs.existsSync(dir)) return [];
+
+  const paths = new Set();
+  for (const file of fs.readdirSync(dir).sort()) {
+    if (!/\.ya?ml$/i.test(file)) continue;
+    const rec = yaml.load(fs.readFileSync(path.join(dir, file), "utf8")) || {};
+    if (rec.photo) paths.add(String(rec.photo).replace(/^\/+/, ""));
+  }
+  return [...paths].sort();
+}
 
 module.exports = function (eleventyConfig) {
   // Content records are YAML (see BUILD_ARCHITECTURE.md §9). Eleventy reads
@@ -87,6 +107,59 @@ module.exports = function (eleventyConfig) {
     return value;
   });
 
+  // Members of one group, for one academic year, in display order.
+  //
+  // Filtering by academic year here is what lets a 2026/27 committee be added
+  // later WITHOUT deleting the 2025/26 records: old years stay on disk and
+  // simply stop matching.
+  //
+  // The tie-break is a plain `<` on the slug, not localeCompare: collation
+  // depends on the machine's ICU data, which would make the build
+  // non-deterministic across machines. Duplicate `order` values inside a group
+  // are rejected by scripts/validate.js, so the tie-break is a safety net that
+  // should never fire.
+  eleventyConfig.addFilter("teamInGroup", (team, groupKey, academicYear) =>
+    (team || [])
+      .filter(
+        (m) =>
+          m.published === true &&
+          m.academic_year === academicYear &&
+          m.group === groupKey
+      )
+      .sort((a, b) => {
+        if (a.order !== b.order) return a.order - b.order;
+        return String(a.slug) < String(b.slug) ? -1 : 1;
+      })
+  );
+
+  // Stagger classes on the reveal animation, cycling every four cards within a
+  // group: reveal, reveal-d1, reveal-d2, reveal-d3. Matches the live pages.
+  eleventyConfig.addFilter("revealClass", (index) => {
+    const d = Number(index) % 4;
+    return d === 0 ? "member reveal" : `member reveal reveal-d${d}`;
+  });
+
+  // Plural member counts. English needs two forms, Polish three:
+  //   1 osoba · 2-4 osoby · 5+ osób
+  // Forms come from content/settings/team-groups.yaml, so the strings stay in
+  // content and only the SELECTION rule lives in code.
+  eleventyConfig.addFilter("plural", (count, forms, localeCode) => {
+    const n = Number(count);
+    if (!forms) return String(n);
+    let form;
+    if (n === 1 && forms.one) {
+      form = forms.one;
+    } else if (localeCode === "pl") {
+      const mod10 = n % 10;
+      const mod100 = n % 100;
+      const few = mod10 >= 2 && mod10 <= 4 && !(mod100 >= 12 && mod100 <= 14);
+      form = few ? forms.few : forms.many;
+    } else {
+      form = forms.other;
+    }
+    return String(form).replace("{n}", n);
+  });
+
   // ---------------------------------------------------------------------
   // Shared assets, copied (not moved, not modified) into dist/ so the chrome
   // comparison pages can load the REAL stylesheet and script when dist/ is
@@ -110,6 +183,24 @@ module.exports = function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy({
     "assets/pbf/pbf-logo-nav-white.png": "assets/pbf/pbf-logo-nav-white.png",
   });
+
+  // ---------------------------------------------------------------------
+  // Team page assets.
+  // ---------------------------------------------------------------------
+  // The team hero photograph, which doubles as the page's og:image.
+  eleventyConfig.addPassthroughCopy({
+    "assets/pbf/team-steps.jpg": "assets/pbf/team-steps.jpg",
+  });
+  // The filter behaviour. Source-controlled under src/, copied to dist/js/.
+  eleventyConfig.addPassthroughCopy({ "src/js/team-filter.js": "js/team-filter.js" });
+
+  // Headshots — ONLY those a record actually references. The list is derived
+  // from content/team/*.yaml rather than hard-coded, so it can never drift, and
+  // copying the whole directory (which still holds one unreferenced leftover)
+  // is avoided. Members with `photo: null` contribute nothing.
+  for (const photo of teamPhotoPaths()) {
+    eleventyConfig.addPassthroughCopy({ [photo]: photo });
+  }
 
   return {
     dir: {

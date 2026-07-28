@@ -25,6 +25,14 @@
       "exploreHeading": "Explore",
       "connectHeading": "Connect",
       "copyright": "© 2026 Federation of Polish Student Societies in the UK. Registered charity in England &amp; Wales."
+    },
+    "team": {
+      "filterBarLabel": "Filter team by group",
+      "photoPlaceholderLabel": "Headshot",
+      "emailLinkTitle": "Email",
+      "linkedinLinkTitle": "LinkedIn",
+      "emailAriaPattern": "Email {name}",
+      "linkedinAriaPattern": "{name} on LinkedIn"
     }
   },
 
@@ -52,6 +60,15 @@
       "exploreHeading": "Poznaj",
       "connectHeading": "Śledź nas",
       "copyright": "© 2026 Federacja Polskich Stowarzyszeń Studenckich w Wielkiej Brytanii. Organizacja charytatywna zarejestrowana w Anglii i Walii."
+    },
+    "_teamComment": "emailAriaPattern and linkedinAriaPattern are ENGLISH ON PURPOSE. The live pl/team.html carries English aria-labels on all 21 members while translating `title`. That is a pre-existing accessibility defect (see docs/TEAM_MIGRATION.md §15); it is reproduced verbatim here rather than silently corrected. Fixing it later is an edit to these two strings and nothing else.",
+    "team": {
+      "filterBarLabel": "Filtruj zespół według sekcji",
+      "photoPlaceholderLabel": "Zdjęcie",
+      "emailLinkTitle": "E-mail",
+      "linkedinLinkTitle": "LinkedIn",
+      "emailAriaPattern": "Email {name}",
+      "linkedinAriaPattern": "{name} on LinkedIn"
     }
   }
 }

@@ -593,13 +593,18 @@ assert(missingDirs.length === 0,
   `source tree present (${SRC_DIRS.length} directories)`,
   "source directories are missing", missingDirs);
 
-// Phase 2 must not migrate content. Each collection should still be empty.
+// Content is migrated one collection at a time, each in its own reviewed phase.
+// A collection not on this list must still be empty, so an unplanned migration
+// cannot slip in unnoticed alongside a planned one.
+//   Phase 4: team, settings
+const MIGRATED_COLLECTIONS = new Set(["team", "settings"]);
 const populated = ["events", "announcements", "team", "societies", "settings"]
+  .filter((c) => !MIGRATED_COLLECTIONS.has(c))
   .filter((c) => fs.readdirSync(path.join(ROOT, "content", c))
     .some((f) => /\.(ya?ml|json|md)$/i.test(f)));
 assert(populated.length === 0,
-  "content collections are still empty (no content migrated in this phase)",
-  "content has been migrated — that belongs to a later phase", populated);
+  `only the migrated collections hold content (${[...MIGRATED_COLLECTIONS].join(", ")}); the rest are still empty`,
+  "a collection was migrated outside its phase", populated);
 
 // --- generated output must not leak into the public site --------------------
 
@@ -672,30 +677,56 @@ if (!exists("dist")) {
       }
     })("dist");
 
-    // Generated HTML must live only under build-test/. Phase 3 additionally
-    // passes through a small set of shared assets so the chrome pages can load
-    // the real stylesheet and script when dist/ is served standalone — those
-    // are copies, checked below, not new pages.
-    const generatedHtml = distFiles.filter((f) => f.endsWith(".html"));
-    const strayHtml = generatedHtml.filter((f) => !f.startsWith("build-test/"));
-    assert(strayHtml.length === 0,
-      `all ${generatedHtml.length} generated HTML files are under build-test/ — no public URL is generated`,
-      "generated HTML outside build-test/", strayHtml);
+    // Generated HTML is either an architectural test page under build-test/,
+    // or a MIGRATED public page on the explicit allowlist below.
+    //
+    // Phase 2 asserted "everything is under build-test/". Phase 4 migrates the
+    // first real public page, so that wording no longer expresses the intent.
+    // The intent was never "generate nothing public" — it was "never generate
+    // something public by accident". The allowlist keeps that guarantee exact
+    // and makes each migration a deliberate, reviewable edit to this line.
+    const MIGRATED = ["team.html", "pl/team.html"];
 
-    const htmlCollides = generatedHtml.filter((f) => exists(f));
+    const generatedHtml = distFiles.filter((f) => f.endsWith(".html"));
+    const strayHtml = generatedHtml.filter(
+      (f) => !f.startsWith("build-test/") && !MIGRATED.includes(f)
+    );
+    assert(strayHtml.length === 0,
+      `all ${generatedHtml.length} generated HTML files are either under build-test/ or on the migrated allowlist (${MIGRATED.join(", ")})`,
+      "generated HTML that is neither a test page nor an allowlisted migration", strayHtml);
+
+    // A migrated page is EXPECTED to share a path with its live counterpart —
+    // that is what makes it a replacement. Any other collision is an accident.
+    const htmlCollides = generatedHtml.filter((f) => exists(f) && !MIGRATED.includes(f));
     assert(htmlCollides.length === 0,
-      "no generated HTML file collides with an existing public page",
+      "no unplanned generated HTML file collides with an existing public page",
       "generated HTML would overwrite a public page if dist/ were published", htmlCollides);
+
+    // The collision above is only safe while Netlify still publishes the
+    // repository root. This is the check that keeps it safe.
+    if (exists("netlify.toml")) {
+      assert(/publish\s*=\s*"\.?"/.test(read("netlify.toml")),
+        "Netlify still publishes the repository root, so generated pages are not served",
+        "netlify.toml no longer publishes '.' — migrated pages under dist/ would go live unreviewed");
+    }
 
     // Passthrough assets must be byte-identical copies. If one ever differs,
     // the build has modified a shared asset rather than copying it.
+    //
+    // Most originals sit at the repository root at the same relative path.
+    // src/js/team-filter.js is new architecture-owned source with no root
+    // counterpart, so its origin is stated explicitly rather than guessed.
+    const PASSTHROUGH_SOURCE = { "js/team-filter.js": "src/js/team-filter.js" };
     const crypto = require("crypto");
     const hash = (p) => crypto.createHash("sha256")
       .update(fs.readFileSync(path.join(ROOT, p))).digest("hex");
     const copied = distFiles.filter((f) => !f.endsWith(".html"));
-    const altered = copied.filter((f) => !exists(f) || hash("dist/" + f) !== hash(f));
+    const altered = copied.filter((f) => {
+      const source = PASSTHROUGH_SOURCE[f] || f;
+      return !exists(source) || hash("dist/" + f) !== hash(source);
+    });
     assert(altered.length === 0,
-      `all ${copied.length} passthrough assets are byte-identical copies of the originals`,
+      `all ${copied.length} passthrough assets are byte-identical copies of their sources`,
       "passthrough assets differ from their source files", altered);
   }
 }
@@ -835,6 +866,362 @@ for (const [rel] of ALL) {
 assert(chromeRefs.length === 0,
   "no public page links to the chrome test pages",
   "public pages referencing the chrome test pages", chromeRefs);
+
+/* =================================================================== 14. team content */
+
+section("14. Team content records (Phase 4)");
+
+const yaml = require("js-yaml");
+
+const TEAM_DIR = "content/team";
+const CURRENT_YEAR = "2025/26";
+const EXPECTED_GROUPS = {
+  trustees: 5,
+  partnerships: 4,
+  events: 4,
+  marketing: 3,
+  legal: 1,
+  regional: 4,
+};
+const EXPECTED_TOTAL = Object.values(EXPECTED_GROUPS).reduce((a, b) => a + b, 0);
+
+const loadYaml = (rel) => yaml.load(read(rel)) || {};
+
+/* -- central settings ------------------------------------------------------- */
+
+assert(exists("content/settings/academic-year.yaml"),
+  "content/settings/academic-year.yaml exists (single source of truth for the year)",
+  "the central academic-year setting is missing");
+assert(exists("content/settings/team-groups.yaml"),
+  "content/settings/team-groups.yaml exists (single source of truth for groups)",
+  "the central group definition is missing");
+
+// The Phase 2 placeholder in site.json contradicted the roster. It must not
+// come back: two sources for one fact is the bug this architecture prevents.
+assert(!("currentAcademicYear" in JSON.parse(read("src/_data/site.json"))),
+  "src/_data/site.json declares no competing academic year",
+  "site.json has reintroduced currentAcademicYear — the year belongs in content/settings/");
+
+const groupsCfg = exists("content/settings/team-groups.yaml")
+  ? loadYaml("content/settings/team-groups.yaml") : {};
+const yearCfg = exists("content/settings/academic-year.yaml")
+  ? loadYaml("content/settings/academic-year.yaml") : {};
+
+assert(yearCfg.current === CURRENT_YEAR,
+  `the configured current academic year is ${CURRENT_YEAR}`,
+  `the configured academic year is ${JSON.stringify(yearCfg.current)}, expected ${CURRENT_YEAR}`);
+
+const cfgKeys = (groupsCfg.groups || []).map((g) => g.key);
+assert(JSON.stringify(cfgKeys) === JSON.stringify(Object.keys(EXPECTED_GROUPS)),
+  `group definition lists the six groups in the live page's order (${cfgKeys.join(" > ")})`,
+  "group definition keys or order do not match the live pages",
+  [`config: ${cfgKeys.join(", ")}`, `expected: ${Object.keys(EXPECTED_GROUPS).join(", ")}`]);
+
+const groupLabelGaps = (groupsCfg.groups || []).filter(
+  (g) => !(g.en && g.en.heading && g.en.filter_label && g.pl && g.pl.heading && g.pl.filter_label)
+).map((g) => g.key);
+assert(groupLabelGaps.length === 0,
+  "every group defines an English and Polish heading and filter label",
+  "groups missing a heading or filter label", groupLabelGaps);
+
+const groupOrders = (groupsCfg.groups || []).map((g) => g.order);
+assert(groupOrders.every((o) => Number.isInteger(o)) &&
+  new Set(groupOrders).size === groupOrders.length,
+  "group display orders are unique integers",
+  "group display orders are missing, non-integer or duplicated", groupOrders);
+
+/* -- member records --------------------------------------------------------- */
+
+const teamFiles = fs.existsSync(path.join(ROOT, TEAM_DIR))
+  ? fs.readdirSync(path.join(ROOT, TEAM_DIR)).filter((f) => /\.ya?ml$/i.test(f)).sort()
+  : [];
+
+const team = teamFiles.map((f) => ({ _file: `${TEAM_DIR}/${f}`, ...loadYaml(`${TEAM_DIR}/${f}`) }));
+const current = team.filter((m) => m.published === true && m.academic_year === CURRENT_YEAR);
+
+assert(current.length === EXPECTED_TOTAL,
+  `exactly ${EXPECTED_TOTAL} published records for ${CURRENT_YEAR}`,
+  `expected ${EXPECTED_TOTAL} published ${CURRENT_YEAR} records, found ${current.length}`);
+
+// One record per person, one file per record — no EN-only / PL-only splits.
+const enOnly = teamFiles.filter((f) => /[-.](en|pl)\.ya?ml$/i.test(f) || /^(en|pl)[-.]/i.test(f));
+assert(enOnly.length === 0,
+  "no language-split member files exist (one canonical record per person)",
+  "language-split member files found", enOnly);
+
+const slugs = team.map((m) => m.slug);
+const dupSlugs = slugs.filter((s, i) => slugs.indexOf(s) !== i);
+assert(dupSlugs.length === 0, "every member slug is unique", "duplicate member slugs", [...new Set(dupSlugs)]);
+
+const slugMismatch = team.filter((m) => m._file !== `${TEAM_DIR}/${m.slug}.yaml`).map((m) => m._file);
+assert(slugMismatch.length === 0,
+  "every record's slug matches its filename",
+  "records whose slug does not match the filename", slugMismatch);
+
+const badGroup = current.filter((m) => !cfgKeys.includes(m.group)).map((m) => `${m.slug} -> ${m.group}`);
+assert(badGroup.length === 0,
+  "every member references a group defined centrally",
+  "members referencing an undefined group", badGroup);
+
+const wrongCounts = Object.entries(EXPECTED_GROUPS)
+  .map(([k, n]) => [k, n, current.filter((m) => m.group === k).length])
+  .filter(([, want, got]) => want !== got)
+  .map(([k, want, got]) => `${k}: expected ${want}, found ${got}`);
+assert(wrongCounts.length === 0,
+  `all six groups hold the expected member counts (${Object.entries(EXPECTED_GROUPS).map(([k, n]) => `${k} ${n}`).join(", ")})`,
+  "group member counts do not match the live pages", wrongCounts);
+
+const dupOrder = [];
+for (const key of cfgKeys) {
+  const orders = current.filter((m) => m.group === key).map((m) => m.order);
+  if (new Set(orders).size !== orders.length) dupOrder.push(`${key}: ${orders.join(",")}`);
+}
+assert(dupOrder.length === 0,
+  "every member has a unique display position within their group",
+  "duplicate display positions inside a group", dupOrder);
+
+const SHARED_REQUIRED = ["slug", "academic_year", "group", "order", "name", "email", "linkedin"];
+const missingShared = [];
+for (const m of current) {
+  for (const f of SHARED_REQUIRED) {
+    if (m[f] === undefined || m[f] === null || String(m[f]).trim() === "") {
+      missingShared.push(`${m.slug}: ${f}`);
+    }
+  }
+  if (!("photo" in m)) missingShared.push(`${m.slug}: photo (may be null, but must be present)`);
+  if (!("published" in m)) missingShared.push(`${m.slug}: published`);
+}
+assert(missingShared.length === 0,
+  `all ${SHARED_REQUIRED.length + 2} shared invariant fields are present on every member`,
+  "members missing a required shared field", missingShared);
+
+const badOrder = current.filter((m) => !Number.isInteger(m.order)).map((m) => `${m.slug}: ${m.order}`);
+assert(badOrder.length === 0, "every `order` value is a whole number",
+  "non-numeric display positions", badOrder);
+
+const badPublished = team.filter((m) => typeof m.published !== "boolean").map((m) => `${m.slug}: ${m.published}`);
+assert(badPublished.length === 0, "every `published` value is a real boolean",
+  "non-boolean publication flags", badPublished);
+
+const badYear = team.filter((m) => !/^\d{4}\/\d{2}$/.test(String(m.academic_year)))
+  .map((m) => `${m.slug}: ${m.academic_year}`);
+assert(badYear.length === 0, "every `academic_year` matches the YYYY/YY format",
+  "malformed academic years", badYear);
+
+const missingRole = current.filter((m) => !(m.en && m.en.role) || !(m.pl && m.pl.role)).map((m) => m.slug);
+assert(missingRole.length === 0,
+  "every member has both an English and a Polish role",
+  "members missing a localised role", missingRole);
+
+// Polish roles are grammatically gendered free text and must be authored, not
+// derived. An identical EN/PL pair almost certainly means one was copied.
+const copiedRole = current.filter((m) => m.en.role === m.pl.role).map((m) => `${m.slug}: ${m.en.role}`);
+assert(copiedRole.length === 0,
+  "no Polish role is a copy of its English counterpart",
+  "identical English and Polish roles — a translation is probably missing", copiedRole);
+
+const withPhoto = current.filter((m) => m.photo);
+const withoutPhoto = current.filter((m) => !m.photo);
+
+const missingAlt = withPhoto.filter((m) => !(m.en && m.en.photo_alt) || !(m.pl && m.pl.photo_alt))
+  .map((m) => m.slug);
+assert(missingAlt.length === 0,
+  `all ${withPhoto.length} members with a photograph have English and Polish alt text`,
+  "members with a photograph but no localised alt text", missingAlt);
+
+assert(withoutPhoto.every((m) => m.photo === null),
+  `a null photograph is accepted (${withoutPhoto.length} member: ${withoutPhoto.map((m) => m.name).join(", ") || "none"})`,
+  "a member without a photograph uses something other than an explicit null",
+  withoutPhoto.map((m) => `${m.slug}: ${JSON.stringify(m.photo)}`));
+
+const strayAlt = withoutPhoto.filter((m) => (m.en && m.en.photo_alt) || (m.pl && m.pl.photo_alt))
+  .map((m) => m.slug);
+assert(strayAlt.length === 0,
+  "no photograph-less member carries alt text for an image that does not exist",
+  "alt text on a member with no photograph", strayAlt);
+
+const badPhotoPath = withPhoto.filter((m) => !String(m.photo).startsWith("/assets/team/"))
+  .map((m) => `${m.slug}: ${m.photo}`);
+assert(badPhotoPath.length === 0,
+  "every photograph path is root-relative under /assets/team/",
+  "photograph paths that are not root-relative", badPhotoPath);
+
+const missingPhotoFile = withPhoto.filter((m) => !exists(String(m.photo).replace(/^\/+/, "")))
+  .map((m) => `${m.slug}: ${m.photo}`);
+assert(missingPhotoFile.length === 0,
+  `all ${withPhoto.length} referenced photographs exist on disk`,
+  "photograph paths that do not resolve to a real file", missingPhotoFile);
+
+const badEmail = current.filter((m) => !/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(String(m.email)))
+  .map((m) => `${m.slug}: ${m.email}`);
+assert(badEmail.length === 0, "every e-mail address is well formed",
+  "malformed e-mail addresses", badEmail);
+
+const badLinkedIn = current.filter((m) => !/^https:\/\/www\.linkedin\.com\/in\/\S+$/.test(String(m.linkedin)))
+  .map((m) => `${m.slug}: ${m.linkedin}`);
+assert(badLinkedIn.length === 0, "every LinkedIn value is an HTTPS linkedin.com/in/ URL",
+  "malformed LinkedIn URLs", badLinkedIn);
+
+// Content is data, not markup: the templates escape it, so a stored tag or
+// entity would render as visible literal text.
+const rawHtml = [];
+for (const m of current) {
+  const fields = [m.name, m.email, m.linkedin, m.photo, m.aria_name_email, m.aria_name_linkedin,
+    m.en && m.en.role, m.pl && m.pl.role, m.en && m.en.photo_alt, m.pl && m.pl.photo_alt];
+  for (const v of fields) {
+    if (typeof v !== "string") continue;
+    if (/<[a-z/!]/i.test(v) || /&[a-z]+;|&#\d+;/i.test(v)) rawHtml.push(`${m.slug}: ${v}`);
+  }
+}
+assert(rawHtml.length === 0,
+  "no member record contains raw HTML tags or entities",
+  "member fields containing markup", rawHtml);
+
+const missingAria = current.filter((m) => !m.aria_name_email || !m.aria_name_linkedin).map((m) => m.slug);
+assert(missingAria.length === 0,
+  "every member stores the exact names used in their link aria-labels",
+  "members missing an aria name component", missingAria);
+
+/* =================================================================== 15. generated team pages */
+
+section("15. Generated team pages (Phase 4)");
+
+const TEAM_PAGES = { en: "dist/team.html", pl: "dist/pl/team.html" };
+
+if (!exists("dist")) {
+  ok("dist/ absent — generated team-page checks skipped (run `npm run build` to enable them)");
+} else {
+  const missingTeam = Object.values(TEAM_PAGES).filter((p) => !exists(p));
+  assert(missingTeam.length === 0,
+    "dist/team.html and dist/pl/team.html were both generated",
+    "generated team pages missing after build", missingTeam);
+
+  if (missingTeam.length === 0) {
+    const gEn = read(TEAM_PAGES.en);
+    const gPl = read(TEAM_PAGES.pl);
+
+    assert(/<html lang="en">/.test(gEn), "generated English team page declares lang=\"en\"",
+      "generated English team page has the wrong <html lang>");
+    assert(/<html lang="pl">/.test(gPl), "generated Polish team page declares lang=\"pl\"",
+      "generated Polish team page has the wrong <html lang>");
+
+    const canon = (s) => (s.match(/<link rel="canonical" href="([^"]+)"/) || [])[1];
+    assert(canon(gEn) === `${SITE}/team.html` && canon(gPl) === `${SITE}/pl/team.html`,
+      "generated canonicals are self-referencing and keep the .html URLs",
+      "generated canonical URLs are wrong", [`en: ${canon(gEn)}`, `pl: ${canon(gPl)}`]);
+
+    const alts = (s) => [...s.matchAll(/<link rel="alternate" hreflang="([^"]+)" href="([^"]+)"/g)]
+      .map((m) => `${m[1]}=${m[2]}`).sort();
+    const wantAlts = [
+      `en=${SITE}/team.html`, `pl=${SITE}/pl/team.html`, `x-default=${SITE}/team.html`,
+    ].sort();
+    assert(JSON.stringify(alts(gEn)) === JSON.stringify(wantAlts) &&
+      JSON.stringify(alts(gPl)) === JSON.stringify(wantAlts),
+      "both generated pages carry the identical, reciprocal hreflang trio",
+      "generated hreflang alternates are not reciprocal",
+      [`en: ${alts(gEn).join(" ")}`, `pl: ${alts(gPl).join(" ")}`]);
+
+    // The language switcher must cross to the OTHER language's team page, not
+    // to a home page and not to its own.
+    const switchTargets = (s) => {
+      const nav = s.match(/<nav class="lang-switch"[\s\S]*?<\/nav>/);
+      return nav ? [...nav[0].matchAll(/<a[^>]*href="([^"]+)"/g)].map((m) => m[1]) : [];
+    };
+    const enSwitch = switchTargets(gEn);
+    const plSwitch = switchTargets(gPl);
+    assert(enSwitch.some((h) => h === "/pl/team.html") && plSwitch.some((h) => h === "/team.html"),
+      "language switchers point at the paired team page in the other language",
+      "language-switcher destinations are wrong",
+      [`en page offers: ${enSwitch.join(", ")}`, `pl page offers: ${plSwitch.join(", ")}`]);
+
+    for (const [code, src] of [["en", gEn], ["pl", gPl]]) {
+      const cards = (src.match(/<div class="member reveal/g) || []).length;
+      assert(cards === EXPECTED_TOTAL,
+        `generated ${code} page renders exactly ${EXPECTED_TOTAL} member cards`,
+        `generated ${code} page renders ${cards} member cards, expected ${EXPECTED_TOTAL}`);
+
+      const chips = [...src.matchAll(/<button class="chip[^"]*" data-filter="([^"]+)">/g)].map((m) => m[1]);
+      assert(JSON.stringify(chips) === JSON.stringify(["all", ...cfgKeys]),
+        `generated ${code} page has the "all" chip plus all six group filters, in order`,
+        `generated ${code} page filter controls are wrong or out of order`, chips);
+
+      const sections = [...src.matchAll(/<div class="team-section" data-group="([^"]+)">/g)].map((m) => m[1]);
+      assert(JSON.stringify(sections) === JSON.stringify(cfgKeys),
+        `generated ${code} page has all six sections in the live page's order`,
+        `generated ${code} page section order is wrong`, sections);
+
+      // Member order inside the page must equal the order the records declare.
+      const rendered = [...src.matchAll(/<h3>([^<]+)<\/h3>/g)].map((m) => m[1]);
+      const expected = cfgKeys.flatMap((k) =>
+        current.filter((m) => m.group === k).sort((a, b) => a.order - b.order).map((m) => m.name));
+      assert(JSON.stringify(rendered) === JSON.stringify(expected),
+        `generated ${code} page renders members in the order the records declare`,
+        `generated ${code} page member order does not match the structured records`,
+        rendered.filter((n, i) => n !== expected[i]));
+
+      // Scoped to the member cards: the shared footer also carries a mailto:.
+      const memberLinks = [...src.matchAll(/<div class="member-links">[\s\S]*?<\/div>/g)].join("");
+      const emails = [...memberLinks.matchAll(/href="mailto:([^"]+)"/g)].map((m) => m[1]).sort();
+      assert(JSON.stringify(emails) === JSON.stringify(current.map((m) => m.email).sort()),
+        `generated ${code} page preserves all ${EXPECTED_TOTAL} e-mail addresses`,
+        `generated ${code} page e-mail links do not match the records`);
+
+      const lis = [...src.matchAll(/href="(https:\/\/www\.linkedin\.com\/in\/[^"]+)"/g)].map((m) => m[1]).sort();
+      assert(JSON.stringify(lis) === JSON.stringify(current.map((m) => m.linkedin).sort()),
+        `generated ${code} page preserves all ${EXPECTED_TOTAL} LinkedIn links`,
+        `generated ${code} page LinkedIn links do not match the records`);
+
+      // The null-photo card: placeholder present, no <img>, no empty src.
+      const phEmpty = [...src.matchAll(/<div class="ph"([^>]*)>([\s\S]*?)<\/div>/g)]
+        .filter((m) => !/<img/.test(m[2]));
+      assert(phEmpty.length === withoutPhoto.length,
+        `generated ${code} page renders ${withoutPhoto.length} .ph placeholder without an <img>`,
+        `generated ${code} page has ${phEmpty.length} empty .ph blocks, expected ${withoutPhoto.length}`);
+      assert(phEmpty.every((m) => /data-label="[^"]+"/.test(m[1])),
+        `generated ${code} page's placeholder carries a data-label`,
+        `generated ${code} page's placeholder is missing its data-label`);
+      assert(!/<img[^>]*src=""/.test(src) && !/<img[^>]*src="\/assets\/team\/null/.test(src),
+        `generated ${code} page contains no empty or invalid image src`,
+        `generated ${code} page contains a broken <img src>`);
+
+      assert(/<a[^>]*class="[^"]*\bactive\b[^"]*"[^>]*href="team\.html"/.test(src) ||
+        /<a[^>]*href="team\.html"[^>]*class="[^"]*\bactive\b[^"]*"/.test(src),
+        `generated ${code} page marks Team as the active navigation item`,
+        `generated ${code} page has no active navigation state on Team`);
+    }
+
+    // Roles must not leak across languages. Every English role string is
+    // checked for absence on the Polish page and vice versa.
+    const enRoles = [...new Set(current.map((m) => m.en.role))];
+    const plRoles = [...new Set(current.map((m) => m.pl.role))];
+    const roleRegion = (s) => (s.match(/<div class="member-role">[\s\S]*/) || [""])[0];
+    const enLeak = plRoles.filter((r) => roleRegion(gEn).includes(`<div class="member-role">${r}<`));
+    const plLeak = enRoles.filter((r) => roleRegion(gPl).includes(`<div class="member-role">${r}<`));
+    assert(enLeak.length === 0, "no Polish role appears on the generated English page",
+      "Polish roles leaked onto the English page", enLeak);
+    assert(plLeak.length === 0, "no English role appears on the generated Polish page",
+      "English roles leaked onto the Polish page", plLeak);
+
+    // The sitemap already lists the live /team.html and /pl/team.html. Phase 4
+    // must not have touched it, and must not have added a dist/ URL.
+    assert(!/\/dist\//.test(sitemapRaw),
+      "sitemap.xml lists no dist/ URL for the generated pages",
+      "sitemap.xml references the generated output");
+
+    // --- semantic comparison against the live pages -------------------------
+    // compare-team.js is a standalone script; run it as a child process so its
+    // exit status, not a re-implementation of it, is what gets asserted.
+    const { spawnSync } = require("child_process");
+    const cmp = spawnSync(process.execPath, [path.join(__dirname, "compare-team.js")], {
+      cwd: ROOT, encoding: "utf8",
+    });
+    const matched = (cmp.stdout.match(/PASS — (\d+)\/\1 comparisons matched/) || [])[1];
+    assert(cmp.status === 0,
+      `generated team pages match the live pages (${matched || "?"} semantic comparisons — scripts/compare-team.js)`,
+      "scripts/compare-team.js reports differences from the live team pages",
+      (cmp.stdout || "").split("\n").filter((l) => /FAIL/.test(l)).slice(0, 12));
+  }
+}
 
 /* =================================================================== summary */
 

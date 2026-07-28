@@ -146,7 +146,11 @@ generated chrome against these two on every run.
 
 Identical in both languages: `domain`, `shortName`, `logo`, `email`,
 `charityNumber`, `themeColor`, `fontsHref`, `defaultOgImage` (+ width/height),
-the three social URLs, `lambertUrl`, `currentAcademicYear`.
+the three social URLs, `lambertUrl`.
+
+(`currentAcademicYear` was listed here until Phase 4 removed it: the academic
+year is content, and now lives in `content/settings/academic-year.yaml`. See
+[TEAM_MIGRATION.md](TEAM_MIGRATION.md) §4.)
 
 `src/_data/nav.json` holds navigation **structure** (order, target files,
 variants) with no wording. `src/_data/locales.json` holds locale mechanics

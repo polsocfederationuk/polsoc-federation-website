@@ -1,0 +1,29 @@
+# Team member — 2025/26 committee.
+# Generated from the live pages during the Phase 4 migration; edit freely.
+# Fields above the `en:` block are shared and must be identical in both
+# languages by construction. Fields under `en:`/`pl:` are translated.
+
+slug: ewa-borys
+academic_year: "2025/26"
+group: partnerships
+order: 1
+published: true
+
+name: "Ewa Borys"
+photo: "/assets/team/ewa-borys.jpg"
+email: "ewa.borys@polsocfederation.pl"
+linkedin: "https://www.linkedin.com/in/ewa-borys-7b37b22a0/"
+
+# Names used inside the link aria-labels, transcribed verbatim. Stored rather
+# than derived because the live pages disambiguate the two people called
+# Maksymilian on LinkedIn but not on e-mail.
+aria_name_email: "Ewa"
+aria_name_linkedin: "Ewa"
+
+en:
+  role: "Partnerships Officer"
+  photo_alt: "Ewa Borys"
+
+pl:
+  role: "Specjalista ds. partnerstw"
+  photo_alt: "Ewa Borys"

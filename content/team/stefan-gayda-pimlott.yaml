@@ -1,0 +1,27 @@
+# Team member — 2025/26 committee.
+# Generated from the live pages during the Phase 4 migration; edit freely.
+# Fields above the `en:` block are shared and must be identical in both
+# languages by construction. Fields under `en:`/`pl:` are translated.
+
+slug: stefan-gayda-pimlott
+academic_year: "2025/26"
+group: regional
+order: 2
+published: true
+
+name: "Stefan Gayda-Pimlott"
+photo: null   # deliberately absent — renders the .ph placeholder
+email: "stefan.gayda-pimlott@polsocfederation.pl"
+linkedin: "https://www.linkedin.com/in/stefan-gayda-pimlott-773899405/"
+
+# Names used inside the link aria-labels, transcribed verbatim. Stored rather
+# than derived because the live pages disambiguate the two people called
+# Maksymilian on LinkedIn but not on e-mail.
+aria_name_email: "Stefan"
+aria_name_linkedin: "Stefan"
+
+en:
+  role: "South Executive"
+
+pl:
+  role: "Przedstawiciel regionu południowego"

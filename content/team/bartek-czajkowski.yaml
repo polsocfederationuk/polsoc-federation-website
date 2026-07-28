@@ -1,0 +1,29 @@
+# Team member — 2025/26 committee.
+# Generated from the live pages during the Phase 4 migration; edit freely.
+# Fields above the `en:` block are shared and must be identical in both
+# languages by construction. Fields under `en:`/`pl:` are translated.
+
+slug: bartek-czajkowski
+academic_year: "2025/26"
+group: regional
+order: 3
+published: true
+
+name: "Bartek Czajkowski"
+photo: "/assets/team/bartek-czajkowski.jpg"
+email: "bartek.czajkowski@polsocfederation.pl"
+linkedin: "https://www.linkedin.com/in/czajkaa/"
+
+# Names used inside the link aria-labels, transcribed verbatim. Stored rather
+# than derived because the live pages disambiguate the two people called
+# Maksymilian on LinkedIn but not on e-mail.
+aria_name_email: "Bartek"
+aria_name_linkedin: "Bartek"
+
+en:
+  role: "IT Officer"
+  photo_alt: "Bartek Czajkowski"
+
+pl:
+  role: "Specjalista ds. IT"
+  photo_alt: "Bartek Czajkowski"

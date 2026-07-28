@@ -60,5 +60,17 @@ module.exports = () => {
   for (const [dirName, key] of Object.entries(COLLECTIONS)) {
     out[key] = loadCollection(dirName);
   }
+
+  // `settings` is configuration, not a list of content items, so it is also
+  // exposed keyed by filename for direct lookup:
+  //   records.settings.academicYear.current
+  //   records.settings.teamGroups.groups
+  out.settings = out.settings.reduce((acc, rec) => {
+    const stem = path.basename(rec._source, path.extname(rec._source));
+    const key = stem.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+    acc[key] = rec;
+    return acc;
+  }, {});
+
   return out;
 };

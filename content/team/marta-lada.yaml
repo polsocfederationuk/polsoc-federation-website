@@ -1,0 +1,29 @@
+# Team member — 2025/26 committee.
+# Generated from the live pages during the Phase 4 migration; edit freely.
+# Fields above the `en:` block are shared and must be identical in both
+# languages by construction. Fields under `en:`/`pl:` are translated.
+
+slug: marta-lada
+academic_year: "2025/26"
+group: trustees
+order: 4
+published: true
+
+name: "Marta Łada"
+photo: "/assets/team/marta-lada.jpg"
+email: "marta.lada@polsocfederation.pl"
+linkedin: "https://www.linkedin.com/in/marta-lada/"
+
+# Names used inside the link aria-labels, transcribed verbatim. Stored rather
+# than derived because the live pages disambiguate the two people called
+# Maksymilian on LinkedIn but not on e-mail.
+aria_name_email: "Marta"
+aria_name_linkedin: "Marta"
+
+en:
+  role: "Head of Marketing"
+  photo_alt: "Marta Łada"
+
+pl:
+  role: "Szefowa ds. marketingu"
+  photo_alt: "Marta Łada"

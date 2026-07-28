@@ -1,0 +1,20 @@
+{#
+  The group filter chips.
+
+  Labels come from content/settings/team-groups.yaml — the same file that
+  supplies the section headings — so a renamed group updates both at once.
+
+  "Everyone" / "Wszyscy" is defined separately (`all_filter`) because it is not
+  a group: it has no heading and no members, only a label and the reserved
+  `all` key that team-filter.js checks for.
+
+  role="tablist" and the chips' behaviour are reproduced from the live pages
+  unchanged. See docs/TEAM_MIGRATION.md §11 for the known limitation this
+  inherits (tablist without tab roles or aria-selected).
+#}
+    <div class="filter-bar reveal" role="tablist" aria-label="{{ t.team.filterBarLabel }}">
+      <button class="chip active" data-filter="{{ teamGroups.all_filter.key }}">{{ teamGroups.all_filter[locale.code].filter_label }}</button>
+{%- for group in teamGroups.groups %}
+      <button class="chip" data-filter="{{ group.key }}">{{ group[locale.code].filter_label }}</button>
+{%- endfor %}
+    </div>

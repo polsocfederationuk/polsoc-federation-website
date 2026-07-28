@@ -6,8 +6,9 @@
   "logo": "/assets/logo.svg",
   "email": "contact@polsocfederation.pl",
   "charityNumber": "1166785",
-  "currentAcademicYear": "2026/27",
   "themeColor": "#d7282f",
+
+  "_academicYear": "Deliberately NOT here. The current academic year is content, not site configuration, and lives in content/settings/academic-year.yaml as records.settings.academicYear.current. A Phase 2 placeholder sat here saying 2026/27 and was already contradicting the 2025/26 roster; two sources of truth for the same fact is exactly the bug this architecture exists to prevent.",
 
   "fontsHref": "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Manrope:wght@400;500;600;700&family=Instrument+Serif:ital@1&family=Bodoni+Moda:wght@700;900&display=swap",
 

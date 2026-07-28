@@ -1,0 +1,29 @@
+# Team member — 2025/26 committee.
+# Generated from the live pages during the Phase 4 migration; edit freely.
+# Fields above the `en:` block are shared and must be identical in both
+# languages by construction. Fields under `en:`/`pl:` are translated.
+
+slug: maksymilian-rokosz
+academic_year: "2025/26"
+group: marketing
+order: 3
+published: true
+
+name: "Maksymilian Rokosz"
+photo: "/assets/team/maksymilian-rokosz.jpg"
+email: "maksymilian.rokosz@polsocfederation.pl"
+linkedin: "https://www.linkedin.com/in/maksymilian-rokosz/"
+
+# Names used inside the link aria-labels, transcribed verbatim. Stored rather
+# than derived because the live pages disambiguate the two people called
+# Maksymilian on LinkedIn but not on e-mail.
+aria_name_email: "Maksymilian"
+aria_name_linkedin: "Maksymilian Rokosz"
+
+en:
+  role: "Marketing Officer"
+  photo_alt: "Maksymilian Rokosz"
+
+pl:
+  role: "Specjalista ds. marketingu"
+  photo_alt: "Maksymilian Rokosz"

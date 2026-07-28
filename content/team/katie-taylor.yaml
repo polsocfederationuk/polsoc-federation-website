@@ -1,0 +1,29 @@
+# Team member — 2025/26 committee.
+# Generated from the live pages during the Phase 4 migration; edit freely.
+# Fields above the `en:` block are shared and must be identical in both
+# languages by construction. Fields under `en:`/`pl:` are translated.
+
+slug: katie-taylor
+academic_year: "2025/26"
+group: events
+order: 4
+published: true
+
+name: "Katie Taylor"
+photo: "/assets/team/katie-taylor.jpg"
+email: "katie.taylor@polsocfederation.pl"
+linkedin: "https://www.linkedin.com/in/katie-taylor-624866284/"
+
+# Names used inside the link aria-labels, transcribed verbatim. Stored rather
+# than derived because the live pages disambiguate the two people called
+# Maksymilian on LinkedIn but not on e-mail.
+aria_name_email: "Katie"
+aria_name_linkedin: "Katie"
+
+en:
+  role: "Events Officer"
+  photo_alt: "Katie Taylor"
+
+pl:
+  role: "Specjalista ds. wydarzeń"
+  photo_alt: "Katie Taylor"

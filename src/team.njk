@@ -1,0 +1,95 @@
+---
+layout: layouts/base.njk
+
+# One source template, two pages: English at /team.html, Polish at /pl/team.html.
+pagination:
+  data: locales
+  size: 1
+  alias: locale
+
+# Explicit permalink — Eleventy's default directory URLs (/team/) would change
+# the public URL and break every existing inbound link. See
+# docs/BUILD_ARCHITECTURE.md §10.
+permalink: "{{ locale.urlPrefix }}team.html"
+
+# The page's address, stated once. Canonical, the hreflang trio, og:url and both
+# language-switcher destinations are all derived from this.
+urlPattern: "/{prefix}team.html"
+
+activeNav: team
+
+# The team page overrides the shared banner with its own photograph. No
+# og:image:width/height: the live page has none either, and the file's real
+# dimensions were never recorded. Inventing them would be worse than omitting.
+ogImage: /assets/pbf/team-steps.jpg
+
+# The filter behaviour, as a shared source file rather than two inline copies.
+scriptsAfter:
+  - /js/team-filter.js
+
+# ---------------------------------------------------------------------------
+# Page copy, per locale. Transcribed verbatim from the live team.html and
+# pl/team.html — do not reword.
+#
+# The <h1> is stored as two plain strings rather than one string containing
+# `<span class="fancy">`, so no content field carries raw HTML.
+# ---------------------------------------------------------------------------
+copy:
+  en:
+    title: "Committee and Team | Federation of Polish Student Societies UK"
+    description: "Meet the trustees and officers of the Federation of Polish Student Societies UK — the student committee representing Polish students across British universities."
+    ogImageAlt: "The Federation committee photographed together on the steps at dusk"
+    eyebrow: "2025 / 2026 Committee"
+    h1Lead: "Meet the "
+    h1Fancy: "team"
+    lead: "The students who run the Federation — trustees and officers from universities across the UK, working together to represent Polish students nationally."
+  pl:
+    title: "Zarząd i zespół | Federacja Polskich Stowarzyszeń Studenckich"
+    description: "Poznaj powierników i członków zarządu Federacji w roku 2025/26 — studencki zespół reprezentujący polskich studentów na uczelniach w Wielkiej Brytanii."
+    ogImageAlt: "Zarząd Federacji na wspólnym zdjęciu na schodach o zmierzchu"
+    eyebrow: "Zarząd 2025 / 2026"
+    h1Lead: "Poznaj "
+    h1Fancy: "zespół"
+    lead: "Studenci, którzy prowadzą Federację — powiernicy i członkowie zarządu z uczelni w całej Wielkiej Brytanii, wspólnie reprezentujący polskich studentów na poziomie ogólnokrajowym."
+
+eleventyComputed:
+  pageTitle: "{{ copy[locale.code].title }}"
+  pageDescription: "{{ copy[locale.code].description }}"
+  ogImageAlt: "{{ copy[locale.code].ogImageAlt }}"
+---
+{#- Page copy, UI strings and the two central settings files, resolved once.
+
+    `t` is re-derived here even though base.njk sets it too: a child template is
+    rendered BEFORE its layout, so the layout's `set` is not yet in scope for
+    partials included from this file. Without this line every t.team.* string
+    silently renders empty. -#}
+{%- set t = ui[locale.code] -%}
+{%- set c = copy[locale.code] -%}
+{%- set teamGroups = records.settings.teamGroups -%}
+{%- set currentYear = records.settings.academicYear.current -%}
+<section class="page-hero hero-photo">
+  <div class="hero-photo-bg" style="background-image: url('{{ "/assets/pbf/team-steps.jpg" }}'); background-position: center 34%;" aria-hidden="true"></div>
+  <div class="container">
+    <span class="eyebrow">{{ c.eyebrow }}</span>
+    <h1>{{ c.h1Lead }}<span class="fancy">{{ c.h1Fancy }}</span></h1>
+    <p class="lead">
+      {{ c.lead }}
+    </p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+
+    {#- Filter chips — show one group at a time. -#}
+{% include "partials/team-filters.njk" %}
+
+    {#- One section per group, in the order defined centrally. Members are
+        filtered to the CURRENT academic year, so adding a 2026/27 committee
+        later is a new set of records plus a one-line settings change — the
+        2025/26 records stay on disk untouched. -#}
+{% for group in teamGroups.groups %}{% set groupMembers = records.team | teamInGroup(group.key, currentYear) %}
+{% include "partials/team-section.njk" %}
+{% endfor %}
+  </div>
+</section>

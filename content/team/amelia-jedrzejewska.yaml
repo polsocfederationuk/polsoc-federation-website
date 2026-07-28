@@ -1,0 +1,29 @@
+# Team member — 2025/26 committee.
+# Generated from the live pages during the Phase 4 migration; edit freely.
+# Fields above the `en:` block are shared and must be identical in both
+# languages by construction. Fields under `en:`/`pl:` are translated.
+
+slug: amelia-jedrzejewska
+academic_year: "2025/26"
+group: legal
+order: 1
+published: true
+
+name: "Amelia Jedrzejewska"
+photo: "/assets/team/amelia-jedrzejewska.jpg"
+email: "amelia.jedrzejewska@polsocfederation.pl"
+linkedin: "https://www.linkedin.com/in/ameliajedrzejewska/"
+
+# Names used inside the link aria-labels, transcribed verbatim. Stored rather
+# than derived because the live pages disambiguate the two people called
+# Maksymilian on LinkedIn but not on e-mail.
+aria_name_email: "Amelia"
+aria_name_linkedin: "Amelia"
+
+en:
+  role: "Legal Officer"
+  photo_alt: "Amelia Jedrzejewska"
+
+pl:
+  role: "Specjalista ds. prawnych"
+  photo_alt: "Amelia Jedrzejewska"

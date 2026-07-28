@@ -1,0 +1,29 @@
+# Team member — 2025/26 committee.
+# Generated from the live pages during the Phase 4 migration; edit freely.
+# Fields above the `en:` block are shared and must be identical in both
+# languages by construction. Fields under `en:`/`pl:` are translated.
+
+slug: olivia-derda
+academic_year: "2025/26"
+group: trustees
+order: 5
+published: true
+
+name: "Olivia Derda"
+photo: "/assets/team/olivia-derda.jpg"
+email: "olivia.derda@polsocfederation.pl"
+linkedin: "https://www.linkedin.com/in/olivia-derda-4b83a320b/"
+
+# Names used inside the link aria-labels, transcribed verbatim. Stored rather
+# than derived because the live pages disambiguate the two people called
+# Maksymilian on LinkedIn but not on e-mail.
+aria_name_email: "Olivia"
+aria_name_linkedin: "Olivia"
+
+en:
+  role: "Head of Legal"
+  photo_alt: "Olivia Derda"
+
+pl:
+  role: "Szefowa działu prawnego"
+  photo_alt: "Olivia Derda"

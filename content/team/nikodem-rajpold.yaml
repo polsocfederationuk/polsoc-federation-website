@@ -1,0 +1,29 @@
+# Team member — 2025/26 committee.
+# Generated from the live pages during the Phase 4 migration; edit freely.
+# Fields above the `en:` block are shared and must be identical in both
+# languages by construction. Fields under `en:`/`pl:` are translated.
+
+slug: nikodem-rajpold
+academic_year: "2025/26"
+group: trustees
+order: 2
+published: true
+
+name: "Nikodem Rajpold"
+photo: "/assets/team/nikodem-rajpold.jpg"
+email: "nikodem.rajpold@polsocfederation.pl"
+linkedin: "https://www.linkedin.com/in/nikodem-rajpold/"
+
+# Names used inside the link aria-labels, transcribed verbatim. Stored rather
+# than derived because the live pages disambiguate the two people called
+# Maksymilian on LinkedIn but not on e-mail.
+aria_name_email: "Nikodem"
+aria_name_linkedin: "Nikodem"
+
+en:
+  role: "Vice-President"
+  photo_alt: "Nikodem Rajpold"
+
+pl:
+  role: "Wiceprezes"
+  photo_alt: "Nikodem Rajpold"

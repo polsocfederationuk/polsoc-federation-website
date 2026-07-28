@@ -318,12 +318,21 @@ locales. Rules carried over from Phase 1:
 
 ## 15. Academic-year strategy
 
-`site.currentAcademicYear` (in `src/_data/site.json`, currently `2026/27`) is the
-single switch. Every event, announcement and team record carries
-`academic_year: "2026/27"`.
+> **Updated in Phase 4.** This section originally put the switch in
+> `site.currentAcademicYear`. It now lives in
+> `content/settings/academic-year.yaml`, read as
+> `records.settings.academicYear.current`. The year is *content* the committee
+> changes each autumn, not site configuration — and the placeholder in
+> `site.json` had already drifted to `2026/27` while the roster said `2025/26`.
+> The field has been removed and the validator fails if it returns.
+> See [TEAM_MIGRATION.md](TEAM_MIGRATION.md) §4.
+
+`content/settings/academic-year.yaml` holds the single switch (`current`,
+presently `2025/26`). Every event, announcement and team record carries a
+matching `academic_year`.
 
 - **Current year first.** Listing pages filter to `academic_year ==
-  site.currentAcademicYear`, sorted by `order` then date.
+  records.settings.academicYear.current`, sorted by `order` then date.
 - **Archives.** Earlier years are grouped into collections keyed by year. The
   archive dropdown (§11) renders those groups — **not built in this phase**.
 - **Detail URLs never change.** `event-<slug>.html` is derived from `slug`
@@ -332,8 +341,9 @@ single switch. Every event, announcement and team record carries
   existing inbound links and search rankings.
 - **Past committees stay available.** Team records carry `academic_year`, so a
   `team.html` filtered to the current year coexists with archived committees.
-- **Rolling over a year** is a one-line change to `currentAcademicYear` plus new
-  records; nothing else moves.
+- **Rolling over a year** is a one-line change to `current` in
+  `content/settings/academic-year.yaml` plus new records; nothing else moves.
+  Phase 4 proved this for the team page — see TEAM_MIGRATION.md §13.
 
 ## 16. Event templates
 
