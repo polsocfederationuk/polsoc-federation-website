@@ -1855,6 +1855,114 @@ if (!exists("dist")) {
   }
 }
 
+/* =================================================================== 19. modal close layering */
+
+section("19. Announcement modal close-button layering (Phase 7)");
+
+/**
+ * Parse one rule's declarations out of the stylesheet by brace matching, rather
+ * than grepping for a substring. A text search for "z-index" anywhere in the
+ * file would happily pass while the declaration sat in a comment or in an
+ * unrelated rule; this reads the actual `.modal-close` block.
+ */
+function cssRule(sheet, selector) {
+  const re = new RegExp("(^|\\})\\s*" + selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\s*\\{", "m");
+  const m = sheet.match(re);
+  if (!m) return null;
+  const open = sheet.indexOf("{", m.index + m[0].length - 1);
+  let depth = 0;
+  for (let i = open; i < sheet.length; i++) {
+    if (sheet[i] === "{") depth++;
+    else if (sheet[i] === "}") { depth--; if (depth === 0) return sheet.slice(open + 1, i); }
+  }
+  return null;
+}
+
+/** Declarations of a rule body, comments stripped, as { prop: value }. */
+function cssDecls(body) {
+  const out = {};
+  if (!body) return out;
+  for (const decl of body.replace(/\/\*[\s\S]*?\*\//g, "").split(";")) {
+    const i = decl.indexOf(":");
+    if (i < 0) continue;
+    out[decl.slice(0, i).trim().toLowerCase()] = decl.slice(i + 1).trim();
+  }
+  return out;
+}
+
+const styleSheet = read("css/style.css");
+const closeBody = cssRule(styleSheet, ".modal-close");
+
+assert(closeBody !== null,
+  "css/style.css defines a .modal-close rule",
+  "the .modal-close rule is missing from css/style.css");
+
+if (closeBody !== null) {
+  const d = cssDecls(closeBody);
+
+  // z-index only takes effect on a positioned element, so the two checks
+  // belong together — a stacking value on a static box is silently inert.
+  const POSITIONED = new Set(["absolute", "relative", "fixed", "sticky"]);
+  assert(POSITIONED.has(String(d.position)),
+    `.modal-close is positioned (position: ${d.position}) so a stacking value applies`,
+    ".modal-close is not positioned — z-index would have no effect", [`position: ${d.position}`]);
+
+  assert(d["z-index"] !== undefined,
+    `.modal-close declares an explicit stacking value (z-index: ${d["z-index"]})`,
+    ".modal-close has no explicit z-index — the modal photograph will paint over it " +
+    "and swallow clicks on the close control (see docs/ANNOUNCEMENT_MODAL_FIX.md)");
+
+  if (d["z-index"] !== undefined) {
+    const z = Number(d["z-index"]);
+    assert(Number.isInteger(z) && z >= 1,
+      `.modal-close's stacking value is a positive integer (${z})`,
+      ".modal-close's z-index is not a positive integer", [`z-index: ${d["z-index"]}`]);
+    // Guard against someone "fixing" a future problem with a huge number: the
+    // button only has to beat its siblings inside .modal-panel, and .modal
+    // itself sits at 200. Anything at or above that is a sign the value was
+    // chosen by escalation rather than by reading the stacking context.
+    assert(z < 200,
+      `.modal-close's stacking value is modest and scoped to .modal-panel (${z} < 200)`,
+      ".modal-close's z-index is inflated — it only needs to beat its siblings inside .modal-panel",
+      [`z-index: ${d["z-index"]}`]);
+  }
+
+  // The fix must not have been achieved by disabling pointer events on the
+  // photograph, which would break image interaction and is explicitly ruled out.
+  const phBody = cssRule(styleSheet, ".modal-panel .ph");
+  assert(!/pointer-events/.test(String(phBody)),
+    "the fix does not disable pointer events on the modal photograph",
+    "pointer-events was used on the modal photograph instead of a stacking value");
+}
+
+// The generated site must serve the same stylesheet, byte for byte — that is
+// what makes the fix reach dist/ without a second edit.
+if (exists("dist/css/style.css")) {
+  const crypto2 = require("crypto");
+  const sha = (p) => crypto2.createHash("sha256").update(fs.readFileSync(path.join(ROOT, p))).digest("hex");
+  assert(sha("css/style.css") === sha("dist/css/style.css"),
+    "dist/css/style.css is a byte-identical copy of css/style.css (the fix reaches the generated pages)",
+    "the generated stylesheet differs from the source stylesheet");
+}
+
+// The fix is CSS-only: no announcement content, data or markup may have moved.
+{
+  const { execFileSync } = require("child_process");
+  let changed = [];
+  try {
+    changed = execFileSync("git", ["status", "--porcelain", "--",
+      "announcements.html", "pl/announcements.html",
+      "js/announcements-data.js", "js/pl/announcements-data.js",
+      "content/announcements"], { cwd: ROOT, encoding: "utf8" })
+      .split("\n").map((l) => l.trim()).filter(Boolean);
+  } catch {
+    changed = ["(git unavailable — check skipped)"];
+  }
+  assert(changed.length === 0 || changed[0].startsWith("(git unavailable"),
+    "no announcement page, data file or content record was modified by this fix",
+    "the modal fix touched announcement content or markup", changed);
+}
+
 /* =================================================================== summary */
 
 console.log("\n" + "=".repeat(64));

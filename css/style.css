@@ -724,6 +724,13 @@ h1, h2, h3, h4 {
 .modal-content .ann-text { color: var(--ink-soft); white-space: pre-line; }
 .modal-close {
   position: absolute;
+  /* Keeps the ✕ above the modal photograph. Both this button and the photo's
+     .ph/img are positioned with z-index:auto inside .modal-panel — which is a
+     stacking context because of its transform — so without this they paint in
+     DOM order and the photo, coming later, swallows the click. 1 is enough:
+     nothing else inside the panel raises itself above the auto/0 level.
+     See docs/ANNOUNCEMENT_MODAL_FIX.md. */
+  z-index: 1;
   top: 18px;
   right: 18px;
   width: 42px;

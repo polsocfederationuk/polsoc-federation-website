@@ -156,9 +156,21 @@ function parsePage(html) {
     out.modal.role = at(attrs, "role");
     out.modal.ariaModal = at(attrs, "aria-modal");
     out.modal.ariaLabel = at(attrs, "aria-label");
-    const closeM = body.match(/<button class="modal-close" id="annClose"([^>]*)>([\s\S]*?)<\/button>/);
-    out.modal.closeAriaLabel = closeM ? at(closeM[1], "aria-label") : null;
-    out.modal.closeGlyph = closeM ? closeM[2].trim() : null;
+    // Attribute-order agnostic: pinning class-then-id has silently matched
+    // nothing before when an attribute was added (see the Phase 5 note in
+    // compare-team.js). Collect every <button> in the modal, then pick the
+    // close controls by class.
+    const buttons = [...body.matchAll(/<button\s+([^>]*?)>([\s\S]*?)<\/button>/g)]
+      .map((m) => ({ attrs: m[1], inner: m[2] }))
+      .filter((b) => /class="[^"]*\bmodal-close\b/.test(b.attrs));
+    out.modal.closeControlCount = buttons.length;
+    const closeM = buttons[0];
+    out.modal.closeIsNativeButton = buttons.length > 0;
+    out.modal.closeId = closeM ? at(closeM.attrs, "id") : null;
+    out.modal.closeClass = closeM ? at(closeM.attrs, "class") : null;
+    out.modal.closeAriaLabel = closeM ? at(closeM.attrs, "aria-label") : null;
+    out.modal.closeAriaLabelNonEmpty = Boolean(closeM && (at(closeM.attrs, "aria-label") || "").trim());
+    out.modal.closeGlyph = closeM ? closeM.inner.trim() : null;
     out.modal.ids = [...body.matchAll(/id="(annModal\w*)"/g)].map((m) => m[1]).sort();
     out.modal.hasAnnText = /<div class="ann-text" id="annModalBody">/.test(body);
   }
@@ -252,6 +264,16 @@ function comparePair(name, cfg) {
   for (const k of Object.keys(live.hero)) check(p(`hero: ${k}`), live.hero[k], gen.hero[k]);
   for (const k of Object.keys(live.meta)) check(p(`head: ${k}`), live.meta[k], gen.meta[k]);
   for (const k of Object.keys(live.modal)) check(p(`modal: ${k}`), live.modal[k], gen.modal[k]);
+
+  // --- close control: absolute requirements on BOTH sides -------------------
+  // The Phase 7 layering fix is CSS-only, so the markup must be unchanged; these
+  // assert the control the fix targets is present, unique and named.
+  for (const [side, parsed] of [["live", live], ["generated", gen]]) {
+    check(p(`${side}: exactly one .modal-close control`), 1, parsed.modal.closeControlCount);
+    check(p(`${side}: the close control is a native <button>`), true, parsed.modal.closeIsNativeButton);
+    check(p(`${side}: the close control carries class "modal-close"`), "modal-close", parsed.modal.closeClass);
+    check(p(`${side}: the close control has a non-empty accessible name`), true, parsed.modal.closeAriaLabelNonEmpty);
+  }
 
   check(p("card container present"), true, gen.refs.gridPresent);
   check(p("card container is empty in served HTML"), live.refs.gridEmpty, gen.refs.gridEmpty);

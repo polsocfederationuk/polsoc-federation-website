@@ -488,7 +488,7 @@ Live bodies contain literal `&` (`Legal & Finance`, `OC&C`) injected raw via
 the generated markup is simply more correct. Bodies are compared as decoded
 text, so this is not treated as a difference.
 
-### D. The close button is unclickable when a photo is present — pre-existing
+### D. The close button is unclickable when a photo is present — RESOLVED in Phase 7
 
 Found while testing, **present identically on the live site**, and reproduced
 rather than fixed.
@@ -504,15 +504,17 @@ the ✕ does nothing. Users are not trapped — Escape closes, backdrop click
 closes, and the button works by keyboard (it receives focus when the dialog
 opens). Nothing about this is caused by the migration.
 
-The fix is one line — `z-index: 1` on `.modal-close` — but it would mean editing
-`css/style.css`, which this phase is forbidden from touching, and it is not
-required for equivalent generated behaviour. It belongs in a small CSS fix
-applied to the live stylesheet and verified on both pages at once.
+**Fixed in Phase 7** by adding `z-index: 1` to `.modal-close` in
+`css/style.css` — one declaration, applied to the live stylesheet and inherited
+by the generated pages through the byte-identical passthrough copy. See
+[ANNOUNCEMENT_MODAL_FIX.md](ANNOUNCEMENT_MODAL_FIX.md); `scripts/validate.js`
+§19 now fails if the stacking value is removed.
 
 ## 21. Remaining limitations before cutover
 
-- **The close-button overlap (§20 D)** should be fixed on the live stylesheet
-  before or alongside cutover.
+- ~~The close-button overlap (§20 D) should be fixed on the live stylesheet
+  before or alongside cutover.~~ **Done in Phase 7** — see
+  [ANNOUNCEMENT_MODAL_FIX.md](ANNOUNCEMENT_MODAL_FIX.md).
 - **The dialog does not trap focus.** Tab from inside the open modal walks into
   the page behind it. The live pages behave the same way; a focus trap is a
   genuine improvement but a behaviour change, so it was not smuggled in here.
