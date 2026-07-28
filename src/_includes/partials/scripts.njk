@@ -13,10 +13,17 @@
 {#- Note: members.html's Leaflet <script> also carries integrity/crossorigin.
     When that page migrates, `scriptsBefore` entries become objects rather than
     bare strings so those attributes survive. Bare strings suffice for now. -#}
+{#- A `{locale}` token in any entry is replaced with the locale code, so a page
+    can ask for a per-language asset with one line of front matter:
+      scriptsBefore: ["/js/announcements-data-{locale}.js"]
+    Eleventy renders `permalink` and `eleventyComputed` as templates but NOT
+    arbitrary front-matter values, so `{{ locale.code }}` would arrive here
+    literally and the page would request a file that does not exist. This is the
+    same "state the pattern once, resolve it per locale" idea as `urlPattern`. -#}
 {%- for src in scriptsBefore | default([]) %}
-<script src="{{ src }}"></script>
+<script src="{{ src | replace("{locale}", locale.code) }}"></script>
 {%- endfor %}
 <script src="/js/main.js"></script>
 {%- for src in scriptsAfter | default([]) %}
-<script src="{{ src }}"></script>
+<script src="{{ src | replace("{locale}", locale.code) }}"></script>
 {%- endfor %}

@@ -1,0 +1,43 @@
+# Announcement — 2025/26.
+# Generated from the live data arrays during the Phase 6 migration.
+# Fields above the `en:` block are shared and identical in both languages
+# by construction. Body text is Markdown; raw HTML is rejected by the build.
+
+slug: the-pcc-career-mentoring-scheme-returns
+academic_year: "2025/26"
+published_date: "2026-02-24"
+order: 10
+published: true
+
+image: "/assets/announcements/mentoring.jpg"
+image_position: null
+image_fit: null
+image_background: null
+extra_images: []
+signups_closed: true
+
+link: null
+
+en:
+  title: "The PCC Career Mentoring Scheme returns"
+  subtitle: "One-to-one mentoring with experienced professionals, with the Polish City Club."
+  body: |
+    Together with the Polish City Club, we are proud to continue offering a mentoring programme that supports Central and Eastern European students in the UK as they navigate their career ambitions with confidence and clarity.
+
+    The PCC Career Mentoring Scheme connects students with experienced professionals who help them define their goals, navigate applications and prepare for the next steps of their professional journey.
+
+    Building on the success of previous editions, we are committed to expanding the programme and its impact. Past mentees have secured competitive summer internships across law, business and consultancy — earning placements at some of the most prestigious law firms and financial institutions in London and Warsaw.
+
+    We look forward to empowering the next cohort to learn, grow and succeed. Learn. Inspire. Succeed.
+
+pl:
+  title: "Program mentoringowy PCC wraca"
+  subtitle: "Indywidualny mentoring z doświadczonymi profesjonalistami, wspólnie z Polish City Club."
+  body: |
+    Wspólnie z Polish City Club z dumą kontynuujemy program mentoringowy, który pomaga studentom z Europy Środkowo-Wschodniej w Wielkiej Brytanii realizować ambicje zawodowe pewnie i świadomie.
+
+    PCC Career Mentoring Scheme łączy studentów z doświadczonymi profesjonalistami, którzy pomagają określić cele, przejść przez procesy rekrutacyjne i przygotować się na kolejne kroki w karierze.
+
+    Bazując na sukcesie poprzednich edycji, chcemy rozwijać program i zwiększać jego zasięg. Dotychczasowi uczestnicy zdobyli konkurencyjne staże w prawie, biznesie i doradztwie — w jednych z najbardziej prestiżowych kancelarii i instytucji finansowych w Londynie i Warszawie.
+
+    Z niecierpliwością czekamy, by wesprzeć kolejną grupę w nauce, rozwoju i sukcesie. Ucz się. Inspiruj. Osiągaj.

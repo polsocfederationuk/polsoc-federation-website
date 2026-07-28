@@ -1,0 +1,40 @@
+# Announcement — 2025/26.
+# Generated from the live data arrays during the Phase 6 migration.
+# Fields above the `en:` block are shared and identical in both languages
+# by construction. Body text is Markdown; raw HTML is rejected by the build.
+
+slug: 80-years-of-the-polish-institute-and
+academic_year: "2025/26"
+published_date: "2025-10-23"
+order: 24
+published: true
+
+image: "/assets/announcements/pumst-dinner-1.jpg"
+image_position: "center top"
+image_fit: null
+image_background: null
+extra_images:
+  - "/assets/announcements/pumst-dinner-2.jpg"
+signups_closed: false
+
+link: null
+
+en:
+  title: "80 years of the Polish Institute and PUMST"
+  subtitle: "A black-tie founders dinner at Ognisko, eight decades in the making."
+  body: |
+    On 22 October, representatives of the Federation, together with committee members of the UCL and City Polish Societies, attended a black-tie founders dinner at Ognisko in London, organised by the Polish Institute and Sikorski Museum and the Polish Underground Movement Study Trust to commemorate the 80th anniversary of their founding.
+
+    The date could hardly carry more history. On 22 October 1946, General Bór-Komorowski convened the political leaders of the Polish Government-in-Exile together with selected officers of the Home Army (Armia Krajowa). A week later — at Ognisko, the very venue of the dinner — they agreed to establish a charitable trust to collect and preserve documents, journals and items of historical value relating to the Polish resistance during the Second World War. The Polish Underground Movement Study Trust was registered in 1947 and amalgamated with the Polish Institute and Sikorski Museum in 1988; the Institute itself was established on 2 May 1945 and registered as a charity that November.
+
+    Eighty years on, it was an honour for Polish students to sit at the founders' table.
+
+pl:
+  title: "80 lat Instytutu Polskiego i Studium Polski Podziemnej"
+  subtitle: "Kolacja założycielska w konwencji black tie w Ognisku Polskim, osiem dekad historii."
+  body: |
+    22 października przedstawiciele Federacji wraz z członkami zarządów stowarzyszeń polskich z UCL i City wzięli udział w kolacji założycielskiej w konwencji black tie w Ognisku Polskim w Londynie, zorganizowanej przez Instytut Polski i Muzeum im. gen. Sikorskiego oraz Studium Polski Podziemnej z okazji 80. rocznicy ich powstania.
+
+    Trudno o datę bardziej naznaczoną historią. 22 października 1946 roku generał Bór-Komorowski zwołał przywódców politycznych Rządu RP na Uchodźstwie wraz z wybranymi oficerami Armii Krajowej. Tydzień później — właśnie w Ognisku Polskim, gdzie odbyła się kolacja — postanowiono powołać fundację, która miała gromadzić i chronić dokumenty, czasopisma i przedmioty o wartości historycznej związane z polskim podziemiem w czasie II wojny światowej. Studium Polski Podziemnej zarejestrowano w 1947 roku, a w 1988 połączono z Instytutem Polskim i Muzeum im. gen. Sikorskiego; sam Instytut powstał 2 maja 1945 roku i został zarejestrowany jako organizacja charytatywna w listopadzie tego samego roku.
+
+    Osiemdziesiąt lat później zasiadanie przy stole założycieli było dla polskich studentów prawdziwym zaszczytem.

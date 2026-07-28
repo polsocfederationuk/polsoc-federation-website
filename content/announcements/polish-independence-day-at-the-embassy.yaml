@@ -1,0 +1,40 @@
+# Announcement — 2025/26.
+# Generated from the live data arrays during the Phase 6 migration.
+# Fields above the `en:` block are shared and identical in both languages
+# by construction. Body text is Markdown; raw HTML is rejected by the build.
+
+slug: polish-independence-day-at-the-embassy
+academic_year: "2025/26"
+published_date: "2025-11-08"
+order: 21
+published: true
+
+image: "/assets/announcements/independence-boczkowski.jpg"
+image_position: "center top"
+image_fit: null
+image_background: null
+extra_images:
+  - "/assets/announcements/independence-selfie.jpg"
+signups_closed: false
+
+link: null
+
+en:
+  title: "Polish Independence Day at the Embassy"
+  subtitle: "The trustees joined the celebrations at the Embassy of the Republic of Poland."
+  body: |
+    On 7 November, the Federation's trustees attended the Polish Independence Day celebrations at the Embassy of the Republic of Poland in London.
+
+    The evening was opened by a moving speech from the Embassy's Chargé d'affaires, Jerzy Boczkowski, followed by a food and drinks reception.
+
+    Occasions like these are a powerful way to remember Polish history together — and a reminder of why the community we are building matters. Our sincere thanks to the Embassy for the invitation.
+
+pl:
+  title: "Święto Niepodległości w Ambasadzie"
+  subtitle: "Powiernicy wzięli udział w obchodach w Ambasadzie Rzeczypospolitej Polskiej."
+  body: |
+    7 listopada powiernicy Federacji wzięli udział w obchodach Narodowego Święta Niepodległości w Ambasadzie Rzeczypospolitej Polskiej w Londynie.
+
+    Wieczór otworzyło poruszające przemówienie chargé d'affaires Ambasady, Jerzego Boczkowskiego, po którym odbył się poczęstunek.
+
+    Takie chwile pozwalają wspólnie pamiętać o polskiej historii i przypominają, dlaczego społeczność, którą budujemy, ma znaczenie. Serdecznie dziękujemy Ambasadzie za zaproszenie.

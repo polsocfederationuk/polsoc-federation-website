@@ -1,0 +1,35 @@
+# Announcement — 2025/26.
+# Generated from the live data arrays during the Phase 6 migration.
+# Fields above the `en:` block are shared and identical in both languages
+# by construction. Body text is Markdown; raw HTML is rejected by the build.
+
+slug: 1-000-years-since-the-coronation-of
+academic_year: "2025/26"
+published_date: "2025-10-11"
+order: 27
+published: true
+
+image: "/assets/announcements/fed-of-poles.jpg"
+image_position: "center 30%"
+image_fit: null
+image_background: null
+extra_images: []
+signups_closed: false
+
+link: null
+
+en:
+  title: "1,000 years since the coronation of Bolesław Chrobry"
+  subtitle: "Marking a millennium of the Polish crown at the Houses of Parliament."
+  body: |
+    On 10 October, our President, Szymon Kwidziński, attended the celebration commemorating the 1,000th anniversary of Bolesław Chrobry's coronation as the first King of Poland — held at the Houses of Parliament and organised by the Federation of Poles in Great Britain.
+
+    A millennium of Polish statehood celebrated in the heart of Westminster made for a remarkable evening — and it marked the beginning of a fruitful relationship between our two federations.
+
+pl:
+  title: "1000 lat od koronacji Bolesława Chrobrego"
+  subtitle: "Tysiąclecie polskiej korony uczczone w Houses of Parliament."
+  body: |
+    10 października nasz prezes Szymon Kwidziński wziął udział w uroczystości upamiętniającej 1000. rocznicę koronacji Bolesława Chrobrego na pierwszego króla Polski — w Houses of Parliament, zorganizowanej przez Zjednoczenie Polskie w Wielkiej Brytanii.
+
+    Tysiąclecie polskiej państwowości świętowane w sercu Westminsteru złożyło się na wyjątkowy wieczór — i zapoczątkowało owocną współpracę między naszymi organizacjami.

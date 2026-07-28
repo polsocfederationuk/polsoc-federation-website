@@ -33,6 +33,13 @@
       "linkedinLinkTitle": "LinkedIn",
       "emailAriaPattern": "Email {name}",
       "linkedinAriaPattern": "{name} on LinkedIn"
+    },
+    "announcements": {
+      "readMore": "Read more →",
+      "signupsClosed": "Sign-ups closed",
+      "modalLabel": "Announcement",
+      "closeLabel": "Close",
+      "extraImageAltPattern": "{title} — photo {n}"
     }
   },
 
@@ -72,6 +79,14 @@
       "linkedinLinkTitle": "LinkedIn",
       "emailAriaPattern": "Wyślij e-mail do: {name}",
       "linkedinAriaPattern": "Profil LinkedIn: {name}"
+    },
+    "_announcementsComment": "Transcribed verbatim from the live pl/announcements.html — the card call-to-action, the closed-registration chip, the modal's aria-label and its close button. extraImageAltPattern reproduces the existing derived alt text; {n} starts at 2 because the main image is photo 1.",
+    "announcements": {
+      "readMore": "Czytaj więcej →",
+      "signupsClosed": "Nabór zakończony",
+      "modalLabel": "Ogłoszenie",
+      "closeLabel": "Zamknij",
+      "extraImageAltPattern": "{title} — zdjęcie {n}"
     }
   }
 }

@@ -1,0 +1,93 @@
+---
+layout: layouts/base.njk
+
+# One source template, two pages: English at /announcements.html, Polish at
+# /pl/announcements.html.
+pagination:
+  data: locales
+  size: 1
+  alias: locale
+
+# Explicit permalink — Eleventy's default directory URLs (/announcements/)
+# would change the public URL. See docs/BUILD_ARCHITECTURE.md §10.
+permalink: "{{ locale.urlPrefix }}announcements.html"
+
+# The page's address, stated once. Canonical, the hreflang trio, og:url and
+# both language-switcher destinations derive from it.
+urlPattern: "/{prefix}announcements.html"
+
+activeNav: news
+
+ogImage: /assets/pbf/crowd.jpg
+
+# Order matters: the data file defines ANNOUNCEMENTS, main.js defines
+# window.applyTilt, and the page script consumes both.
+scriptsBefore:
+  - /js/announcements-data-{locale}.js
+scriptsAfter:
+  - /js/announcements-page.js
+
+# ---------------------------------------------------------------------------
+# Page copy, per locale. Transcribed verbatim from the live announcements.html
+# and pl/announcements.html — do not reword.
+# ---------------------------------------------------------------------------
+copy:
+  en:
+    title: "News and Announcements | Federation of Polish Student Societies UK"
+    description: "News and announcements from the Federation of Polish Student Societies UK — embassy visits, internships, committee roles and opportunities for Polish students."
+    ogImageAlt: "A full audience of Polish students at a Federation event"
+    eyebrow: "News &amp; opportunities"
+    h1Lead: "What's "
+    h1Fancy: "new"
+    lead: "What the Federation has been up to — embassy visits, appearances at international Polish events, and opportunities for our members, from internships to committee roles. Click any card to read the full story."
+  pl:
+    title: "Aktualności i ogłoszenia | Federacja Polskich Stowarzyszeń Studenckich"
+    description: "Aktualności i ogłoszenia Federacji — wizyty w ambasadzie, staże, nabory do zarządu i możliwości rozwoju dla polskich studentów w Wielkiej Brytanii."
+    ogImageAlt: "Pełna widownia polskich studentów podczas wydarzenia Federacji"
+    eyebrow: "Aktualności i możliwości"
+    h1Lead: "Co "
+    h1Fancy: "nowego"
+    lead: "Czym żyje Federacja — wizyty w ambasadzie, udział w międzynarodowych wydarzeniach polonijnych i możliwości dla naszych członków, od staży po funkcje w zarządzie. Kliknij kartę, aby przeczytać całość."
+
+eleventyComputed:
+  pageTitle: "{{ copy[locale.code].title }}"
+  pageDescription: "{{ copy[locale.code].description }}"
+  ogImageAlt: "{{ copy[locale.code].ogImageAlt }}"
+---
+{#- `t` is re-derived here because a child template renders BEFORE its layout,
+    so the layout's `set` is not yet in scope for this file. -#}
+{%- set t = ui[locale.code] -%}
+{%- set c = copy[locale.code] -%}
+<section class="page-hero hero-photo">
+  <div class="hero-photo-bg" style="background-image: url('/assets/pbf/crowd.jpg'); background-position: center 60%;" aria-hidden="true"></div>
+  <div class="container">
+    <span class="eyebrow">{{ c.eyebrow | safe }}</span>
+    <h1>{{ c.h1Lead }}<span class="fancy">{{ c.h1Fancy }}</span></h1>
+    <p class="lead">
+      {{ c.lead }}
+    </p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    {#- Cards are injected by /js/announcements-page.js from the generated
+        data file. The container is intentionally empty in the served HTML,
+        exactly as on the live pages. -#}
+    <div class="ann-grid" id="annGrid"></div>
+  </div>
+</section>
+
+{#- Expanded announcement modal -#}
+<div class="modal" id="annModal" role="dialog" aria-modal="true" aria-label="{{ t.announcements.modalLabel }}">
+  <div class="modal-panel" style="position: relative;">
+    <button class="modal-close" id="annClose" aria-label="{{ t.announcements.closeLabel }}">✕</button>
+    <div id="annModalPhoto"></div>
+    <div class="modal-content">
+      <span class="ann-date" id="annModalDate"></span>
+      <h2 id="annModalTitle"></h2>
+      <div class="ann-text" id="annModalBody"></div>
+      <div id="annModalExtra"></div>
+    </div>
+  </div>
+</div>

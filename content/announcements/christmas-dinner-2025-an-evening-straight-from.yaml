@@ -1,0 +1,43 @@
+# Announcement — 2025/26.
+# Generated from the live data arrays during the Phase 6 migration.
+# Fields above the `en:` block are shared and identical in both languages
+# by construction. Body text is Markdown; raw HTML is rejected by the build.
+
+slug: christmas-dinner-2025-an-evening-straight-from
+academic_year: "2025/26"
+published_date: "2025-12-09"
+order: 16
+published: true
+
+image: "/assets/announcements/post-christmas.jpg"
+image_position: null
+image_fit: null
+image_background: null
+extra_images: []
+signups_closed: false
+
+link:
+  type: event
+  event_slug: christmas-dinner
+
+en:
+  title: "Christmas Dinner 2025: an evening straight from home"
+  subtitle: "100 students, a candlelit wigilia and carols at Ognisko."
+  body: |
+    Last night, 100 Polish students sat down together at the Ognisko Restaurant in South Kensington for our annual Christmas Dinner — a traditional three-course wigilia followed by drinks and carol singing at the piano.
+
+    For many, it was the closest thing to a Polish family Christmas this side of the holidays: candlelight, kolędy sung with friends old and new, and even a polonez through the hall.
+
+    Thank you to everyone who joined us, and to Roksana Dąbkowska for accompanying our carols so beautifully. Wesołych Świąt!
+  link_label: "See the evening"
+
+pl:
+  title: "Kolacja Wigilijna 2025: wieczór jak z domu"
+  subtitle: "100 studentów, wigilia przy świecach i kolędy w Ognisku Polskim."
+  body: |
+    Wczoraj wieczorem 100 polskich studentów zasiadło razem w restauracji Ognisko Polskie w South Kensington na naszej dorocznej Kolacji Wigilijnej — tradycyjnej, trzydaniowej wigilii, po której przyszedł czas na rozmowy i kolędy przy fortepianie.
+
+    Dla wielu było to najbliższe polskim, rodzinnym świętom, co można znaleźć po tej stronie kanału: blask świec, kolędy śpiewane ze starymi i nowymi znajomymi, a nawet polonez przez całą salę.
+
+    Dziękujemy wszystkim, którzy byli z nami, i Roksanie Dąbkowskiej za tak piękny akompaniament do naszych kolęd. Wesołych Świąt!
+  link_label: "Zobacz ten wieczór"

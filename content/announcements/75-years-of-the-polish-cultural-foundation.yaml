@@ -1,0 +1,39 @@
+# Announcement — 2025/26.
+# Generated from the live data arrays during the Phase 6 migration.
+# Fields above the `en:` block are shared and identical in both languages
+# by construction. Body text is Markdown; raw HTML is rejected by the build.
+
+slug: 75-years-of-the-polish-cultural-foundation
+academic_year: "2025/26"
+published_date: "2026-02-01"
+order: 12
+published: true
+
+image: "/assets/announcements/cultural-foundation.jpg"
+image_position: null
+image_fit: null
+image_background: null
+extra_images: []
+signups_closed: false
+
+link: null
+
+en:
+  title: "75 years of the Polish Cultural Foundation"
+  subtitle: "Celebrating Polish culture at the Embassy of the Republic of Poland in London."
+  body: |
+    Nikodem Rajpold, the Federation's Vice-President, attended the celebrations of the 75th anniversary of the Polish Cultural Foundation, held at the Embassy of the Republic of Poland in London.
+
+    It was a wonderful evening during which the history of the Foundation was remembered and celebrated. Awards were presented to Polish cultural contributors — writers, musicians and creators — and guests enjoyed concerts of both classical and contemporary music.
+
+    Congratulations to the Polish Cultural Foundation on three quarters of a century of keeping Polish culture alive in Britain.
+
+pl:
+  title: "75 lat Polskiej Fundacji Kulturalnej"
+  subtitle: "Świętowanie polskiej kultury w Ambasadzie Rzeczypospolitej Polskiej w Londynie."
+  body: |
+    Nikodem Rajpold, wiceprezes Federacji, wziął udział w obchodach 75-lecia Polskiej Fundacji Kulturalnej w Ambasadzie Rzeczypospolitej Polskiej w Londynie.
+
+    To był wspaniały wieczór, podczas którego wspominano i świętowano historię Fundacji. Wręczono nagrody osobom zasłużonym dla polskiej kultury — pisarzom, muzykom i twórcom — a goście wysłuchali koncertów muzyki klasycznej i współczesnej.
+
+    Gratulujemy Polskiej Fundacji Kulturalnej trzech ćwierćwieczy podtrzymywania polskiej kultury w Wielkiej Brytanii.

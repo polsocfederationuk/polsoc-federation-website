@@ -1,0 +1,43 @@
+# Announcement — 2025/26.
+# Generated from the live data arrays during the Phase 6 migration.
+# Fields above the `en:` block are shared and identical in both languages
+# by construction. Body text is Markdown; raw HTML is rejected by the build.
+
+slug: our-debate-at-the-sikorski-institute-as
+academic_year: "2025/26"
+published_date: "2026-02-12"
+order: 11
+published: true
+
+image: "/assets/debata/networking.jpg"
+image_position: null
+image_fit: null
+image_background: null
+extra_images: []
+signups_closed: false
+
+link:
+  type: event
+  event_slug: sikorski-debate
+
+en:
+  title: "Our debate at the Sikorski Institute — as it happened"
+  subtitle: "A keynote by Prof. Nicholas O'Shaughnessy and an Oxford-style debate at the Sikorski Institute."
+  body: |
+    On 10 February we hosted our first academic debate, How to Think About Politics in a Polarised World, at the Polish Institute and Sikorski Museum in London.
+
+    Professor Nicholas O'Shaughnessy opened the evening with a keynote on politics, emotion and digital media, before two teams faced off in an Oxford-style debate on whether polarisation or disinformation poses the greater threat to Polish democracy — moderated by journalist and editor Maria Budzisiak.
+
+    Guests then explored the Institute's remarkable collections on guided tours over a glass of wine. Thank you to everyone who contributed to such a thoughtful, respectful evening.
+  link_label: "Explore the debate"
+
+pl:
+  title: "Nasza debata w Instytucie Sikorskiego — relacja"
+  subtitle: "Wykład prof. Nicholasa O'Shaughnessy'ego i debata w stylu oksfordzkim w Instytucie Sikorskiego."
+  body: |
+    10 lutego zorganizowaliśmy naszą pierwszą debatę akademicką, Jak myśleć o polityce w spolaryzowanym świecie, w Instytucie Polskim i Muzeum im. gen. Sikorskiego w Londynie.
+
+    Profesor Nicholas O'Shaughnessy otworzył wieczór wykładem o polityce, emocjach i mediach cyfrowych, po którym dwie drużyny zmierzyły się w debacie w stylu oksfordzkim o tym, co bardziej zagraża polskiej demokracji: polaryzacja czy dezinformacja. Debatę poprowadziła dziennikarka i redaktorka Maria Budzisiak.
+
+    Potem goście zwiedzili z przewodnikiem wyjątkowe zbiory Instytutu przy lampce wina. Dziękujemy wszystkim, którzy współtworzyli ten refleksyjny wieczór pełen wzajemnego szacunku.
+  link_label: "Zobacz debatę"

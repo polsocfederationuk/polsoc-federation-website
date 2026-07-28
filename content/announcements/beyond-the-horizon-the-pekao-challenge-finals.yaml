@@ -1,0 +1,43 @@
+# Announcement — 2025/26.
+# Generated from the live data arrays during the Phase 6 migration.
+# Fields above the `en:` block are shared and identical in both languages
+# by construction. Body text is Markdown; raw HTML is rejected by the build.
+
+slug: beyond-the-horizon-the-pekao-challenge-finals
+academic_year: "2025/26"
+published_date: "2026-06-17"
+order: 2
+published: true
+
+image: "/assets/announcements/pekao-finals.jpg"
+image_position: null
+image_fit: null
+image_background: null
+extra_images: []
+signups_closed: false
+
+link: null
+
+en:
+  title: "Beyond the Horizon: the Pekao Challenge finals"
+  subtitle: "Outstanding Polish students competed for investment banking internships at Bank Pekao."
+  body: |
+    We recently had the pleasure of co-hosting the final of the Beyond the Horizon: Pekao Challenge together with Bank Pekao S.A., bringing together outstanding Polish students from leading universities across the UK to explore careers in investment banking and learn what building a career in Poland can look like.
+
+    Every participant submitted an analytical paper on strategic changes and opportunities in the banking sector. The quality of the submissions was genuinely impressive, and the selection process was fiercely competitive — thank you to everyone who took the time to prepare and enter.
+
+    Congratulations once again to the winners, who secured internship placements at Bank Pekao, and to everyone who progressed to the next stage of the recruitment process. We wish you every success in the months ahead.
+
+    A sincere thank you to Bank Pekao for partnering with us to support Polish talent abroad and to strengthen the connection between ambitious young Poles and career opportunities back home. We look forward to future collaborations.
+
+pl:
+  title: "Beyond the Horizon: finał Pekao Challenge"
+  subtitle: "Wybitni polscy studenci rywalizowali o staże w bankowości inwestycyjnej w Banku Pekao."
+  body: |
+    Mieliśmy niedawno przyjemność współorganizować finał Beyond the Horizon: Pekao Challenge razem z Bankiem Pekao S.A. Spotkali się na nim wybitni polscy studenci z czołowych brytyjskich uczelni, by poznać ścieżki kariery w bankowości inwestycyjnej i zobaczyć, jak może wyglądać budowanie kariery w Polsce.
+
+    Każdy uczestnik przygotował pracę analityczną o zmianach strategicznych i szansach w sektorze bankowym. Poziom zgłoszeń był naprawdę wysoki, a rywalizacja zacięta — dziękujemy wszystkim, którzy poświęcili czas na przygotowanie i wzięli udział.
+
+    Gratulujemy raz jeszcze zwycięzcom, którzy zdobyli staże w Banku Pekao, oraz wszystkim, którzy przeszli do kolejnego etapu rekrutacji. Życzymy powodzenia w nadchodzących miesiącach.
+
+    Serdecznie dziękujemy Bankowi Pekao za partnerstwo, wsparcie polskich talentów za granicą i budowanie więzi między ambitnymi młodymi Polakami a możliwościami zawodowymi w kraju. Czekamy na kolejne wspólne projekty.

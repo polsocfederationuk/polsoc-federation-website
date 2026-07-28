@@ -1,0 +1,37 @@
+---
+pagination:
+  data: locales
+  size: 1
+  alias: locale
+
+# One data file per locale: js/announcements-data-en.js and -pl.js.
+#
+# The alternative was a single shared file keyed by language. Per-locale was
+# chosen because each page then downloads only its own copy — a shared file
+# would ship all 28 Polish bodies to English readers and vice versa, roughly
+# doubling the payload for no gain. The cost is two output files instead of
+# one, which is free: both are generated from the same records by the same
+# filter, so they cannot drift. See docs/ANNOUNCEMENTS_MIGRATION.md §8.
+permalink: "js/announcements-data-{{ locale.code }}.js"
+
+eleventyExcludeFromCollections: true
+---
+{%- set items = records.announcements | announcementsFor(locale.code, records.settings.academicYear.current) -%}
+/* ===========================================================================
+   GENERATED FILE — DO NOT EDIT.
+
+   Built from content/announcements/*.yaml by eleventy.config.js.
+   Locale: {{ locale.code }}. Records: {{ items | length }}.
+
+   Edit the YAML records instead; this file is overwritten by every build.
+   Body HTML is rendered at build time by markdown-it with raw HTML disabled,
+   so it is trusted markup, not editor-supplied HTML.
+
+   Image paths are ROOT-RELATIVE ("/assets/...") so the same value resolves
+   from / and from /pl/. Event link hrefs stay RELATIVE on purpose, so each
+   language resolves to its own event page.
+   =========================================================================== */
+
+const ANNOUNCEMENTS = {{ items | dump(2) | safe }};
+
+const ANNOUNCEMENTS_UI = {{ ui[locale.code].announcements | dump(2) | safe }};

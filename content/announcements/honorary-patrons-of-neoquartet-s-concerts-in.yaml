@@ -1,0 +1,43 @@
+# Announcement — 2025/26.
+# Generated from the live data arrays during the Phase 6 migration.
+# Fields above the `en:` block are shared and identical in both languages
+# by construction. Body text is Markdown; raw HTML is rejected by the build.
+
+slug: honorary-patrons-of-neoquartet-s-concerts-in
+academic_year: "2025/26"
+published_date: "2026-01-13"
+order: 15
+published: true
+
+image: null
+image_position: null
+image_fit: null
+image_background: null
+extra_images: []
+signups_closed: false
+
+link:
+  type: external
+  url: "https://www.st-hildas.ox.ac.uk/jdp-music-building/events-schedule"
+
+en:
+  title: "Honorary Patrons of NeoQuartet's concerts in Oxford"
+  subtitle: "The internationally recognised NeoQuartet returns for the January New Music Weekend."
+  body: |
+    We are honoured to serve as Honorary Patron of NeoQuartet's two concerts in Oxford.
+
+    The internationally recognised NeoQuartet returns on 17 January as part of the January New Music Weekend III, with two concerts at the Pavilion and the Jacqueline du Pré Music Building.
+
+    Tickets and further details are available via Oxford University events.
+  link_label: "Tickets & details"
+
+pl:
+  title: "Patronat honorowy nad koncertami NeoQuartet w Oksfordzie"
+  subtitle: "Uznany na świecie NeoQuartet wraca na January New Music Weekend."
+  body: |
+    Z zaszczytem objęliśmy patronat honorowy nad dwoma koncertami NeoQuartet w Oksfordzie.
+
+    Uznany na świecie NeoQuartet wraca 17 stycznia w ramach January New Music Weekend III — z dwoma koncertami w Pavilion i Jacqueline du Pré Music Building.
+
+    Bilety i szczegóły dostępne są przez serwis wydarzeń Uniwersytetu Oksfordzkiego.
+  link_label: "Bilety i szczegóły"

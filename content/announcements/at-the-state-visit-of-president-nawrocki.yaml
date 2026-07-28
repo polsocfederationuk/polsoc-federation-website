@@ -1,0 +1,39 @@
+# Announcement — 2025/26.
+# Generated from the live data arrays during the Phase 6 migration.
+# Fields above the `en:` block are shared and identical in both languages
+# by construction. Body text is Markdown; raw HTML is rejected by the build.
+
+slug: at-the-state-visit-of-president-nawrocki
+academic_year: "2025/26"
+published_date: "2026-01-16"
+order: 14
+published: true
+
+image: "/assets/announcements/president-visit.jpg"
+image_position: null
+image_fit: null
+image_background: null
+extra_images: []
+signups_closed: false
+
+link: null
+
+en:
+  title: "At the State Visit of President Nawrocki"
+  subtitle: "A proud moment for the Polish student community at the National Army Museum."
+  body: |
+    A proud moment for the Polish student community in the UK. During President Karol Nawrocki's State Visit on 13 January 2026, the Federation was represented at the National Army Museum in London, celebrating the strong historic ties between Poland and the United Kingdom.
+
+    Our President, Szymon Kwidziński, and Vice-President, Nikodem Rajpold, had the opportunity to discuss student matters with the President and to share their insights with BBC News Polska.
+
+    We were also delighted to see fellow community representatives at this special event, including Karolina Książek of Polska YMCA GB.
+
+pl:
+  title: "Na wizycie państwowej prezydenta Nawrockiego"
+  subtitle: "Ważny moment dla polskiej społeczności studenckiej w National Army Museum."
+  body: |
+    To był ważny moment dla polskiej społeczności studenckiej w Wielkiej Brytanii. Podczas wizyty państwowej prezydenta Karola Nawrockiego 13 stycznia 2026 roku Federacja była reprezentowana w National Army Museum w Londynie, gdzie świętowano silne, historyczne więzi między Polską a Wielką Brytanią.
+
+    Nasz prezes Szymon Kwidziński i wiceprezes Nikodem Rajpold mieli okazję porozmawiać z prezydentem o sprawach studenckich oraz podzielić się swoimi spostrzeżeniami z BBC News Polska.
+
+    Cieszyliśmy się również, widząc na tym wyjątkowym wydarzeniu przedstawicieli innych organizacji, w tym Karolinę Książek z Polska YMCA GB.

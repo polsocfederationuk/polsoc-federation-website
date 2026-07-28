@@ -1,0 +1,45 @@
+# Announcement — 2025/26.
+# Generated from the live data arrays during the Phase 6 migration.
+# Fields above the `en:` block are shared and identical in both languages
+# by construction. Body text is Markdown; raw HTML is rejected by the build.
+
+slug: with-the-polish-city-club-in-the
+academic_year: "2025/26"
+published_date: "2025-10-26"
+order: 23
+published: true
+
+image: "/assets/announcements/pcc-conference.jpg"
+image_position: null
+image_fit: null
+image_background: null
+extra_images:
+  - "/assets/announcements/pcc-gala.jpg"
+  - "/assets/announcements/pcc-duda.jpg"
+signups_closed: false
+
+link: null
+
+en:
+  title: "With the Polish City Club in the City"
+  subtitle: "Two days celebrating the rise of Polish investment in the UK — with a keynote by Andrzej Duda."
+  body: |
+    On 23 and 24 October, Szymon Kwidziński (President), Nikodem Rajpold (Vice-President) and Marek Świątek (Treasurer & Head of Partnerships) represented the Federation at the Polish City Club's annual gala at Merchant Taylors' Hall and conference at Bloomberg's London headquarters.
+
+    The two days celebrated one of the quiet success stories of recent years: the steady rise of Polish investment in the UK. By the end of 2024, Polish investments here reached around £2.5 billion — making the UK the third-largest destination for Polish foreign direct investment, across more than 120 projects.
+
+    Panels ranged from financial services and capital markets to the cutting edge of technology — AI, energy and dual-use solutions — and the economic mega-trends shaping our shared future. In his keynote, former President of Poland Andrzej Duda noted that Poland has become a G20 economy by GDP, and that its next stage of growth must be built on trust between trade partners, governments and businesses.
+
+    We are grateful to the Polish City Club for having Polish students at the table for such an important conversation.
+
+pl:
+  title: "Z Polish City Club w londyńskim City"
+  subtitle: "Dwa dni o wzroście polskich inwestycji w Wielkiej Brytanii — z wystąpieniem Andrzeja Dudy."
+  body: |
+    23 i 24 października Szymon Kwidziński (prezes), Nikodem Rajpold (wiceprezes) i Marek Świątek (skarbnik i szef ds. partnerstw) reprezentowali Federację na dorocznej gali Polish City Club w Merchant Taylors' Hall oraz na konferencji w londyńskiej siedzibie Bloomberga.
+
+    Te dwa dni były świętem jednego z cichych sukcesów ostatnich lat: stałego wzrostu polskich inwestycji w Wielkiej Brytanii. Do końca 2024 roku sięgnęły one około 2,5 miliarda funtów, co czyni Wielką Brytanię trzecim najważniejszym kierunkiem polskich bezpośrednich inwestycji zagranicznych, realizowanych w ponad 120 projektach.
+
+    Panele obejmowały usługi finansowe i rynki kapitałowe, najnowsze technologie — sztuczną inteligencję, energetykę i rozwiązania podwójnego zastosowania — oraz megatrendy gospodarcze kształtujące naszą wspólną przyszłość. W swoim wystąpieniu były prezydent RP Andrzej Duda zauważył, że Polska dołączyła pod względem PKB do gospodarek G20, a kolejny etap wzrostu musi opierać się na zaufaniu między partnerami handlowymi, rządami i biznesem.
+
+    Dziękujemy Polish City Club za miejsce dla polskich studentów przy stole tak ważnej rozmowy.

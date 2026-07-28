@@ -1,0 +1,51 @@
+# Announcement — 2025/26.
+# Generated from the live data arrays during the Phase 6 migration.
+# Fields above the `en:` block are shared and identical in both languages
+# by construction. Body text is Markdown; raw HTML is rejected by the build.
+
+slug: introducing-the-polish-business-forum
+academic_year: "2025/26"
+published_date: "2026-03-15"
+order: 7
+published: true
+
+image: "/assets/pbf/pbf-logo-full.jpg"
+image_position: null
+image_fit: "contain"
+image_background: "#001f62"
+extra_images: []
+signups_closed: false
+
+link:
+  type: event
+  event_slug: business-forum
+
+en:
+  title: "Introducing the Polish Business Forum"
+  subtitle: "Poland's moment. London's stage. Your opportunity — 24–25 April at London Business School."
+  body: |
+    Poland's moment. London's stage. Your opportunity.
+
+    After a decade of building the UK's most ambitious Polish student community, we are launching something bigger: a premier business forum connecting Poland's transformation with global opportunity.
+
+    Polish Business Forum 2026 will bring together decision-makers, investors, entrepreneurs and top university talent for two days of strategic dialogue on Poland's path from emerging market to European leader.
+
+    On the agenda: capital markets, innovation ecosystems, geopolitical positioning and competitive advantage. The moment: Poland joining the G20 economies, leading EU growth and building its status as a technology hub.
+
+    24–25 April 2026 · London Business School. Save the date — and be part of the conversation.
+  link_label: "Explore the event"
+
+pl:
+  title: "Przedstawiamy Polish Business Forum"
+  subtitle: "Moment Polski. Scena Londynu. Twoja szansa — 24–25 kwietnia w London Business School."
+  body: |
+    Moment Polski. Scena Londynu. Twoja szansa.
+
+    Po dekadzie budowania najbardziej ambitnej polskiej społeczności studenckiej w Wielkiej Brytanii uruchamiamy coś większego: forum biznesowe łączące polską transformację z globalnymi możliwościami.
+
+    Polish Business Forum 2026 zgromadzi decydentów, inwestorów, przedsiębiorców i najlepsze talenty uczelniane na dwa dni strategicznej rozmowy o drodze Polski od rynku wschodzącego do europejskiego lidera.
+
+    W programie: rynki kapitałowe, ekosystemy innowacji, pozycja geopolityczna i przewaga konkurencyjna. Moment: Polska w gronie gospodarek G20, na czele wzrostu w UE, budująca pozycję centrum technologicznego.
+
+    24–25 kwietnia 2026 · London Business School. Zarezerwuj datę i dołącz do rozmowy.
+  link_label: "Zobacz wydarzenie"

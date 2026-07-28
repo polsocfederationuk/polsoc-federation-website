@@ -1,0 +1,47 @@
+# Announcement — 2025/26.
+# Generated from the live data arrays during the Phase 6 migration.
+# Fields above the `en:` block are shared and identical in both languages
+# by construction. Body text is Markdown; raw HTML is rejected by the build.
+
+slug: an-academic-debate-at-the-sikorski-institute
+academic_year: "2025/26"
+published_date: "2026-01-20"
+order: 13
+published: true
+
+image: null
+image_position: null
+image_fit: null
+image_background: null
+extra_images: []
+signups_closed: false
+
+link:
+  type: event
+  event_slug: sikorski-debate
+
+en:
+  title: "An academic debate at the Sikorski Institute"
+  subtitle: "An invitation-only evening of critical thinking on politics in a polarised world."
+  body: |
+    We have the pleasure of organising an exclusive, invitation-only academic debate exploring how we navigate politics in an increasingly polarised world.
+
+    Hosted at the Polish Institute and Sikorski Museum in London, the debate will bring together experts and students for a moderated discussion on facts, emotions and political decision-making in contemporary democracy. The evening will conclude with a networking and wine reception.
+
+    Due to the limited capacity of the venue, personal invitations are being sent by email to members of our community, as a thank-you for their ongoing engagement in Federation events.
+
+    10 February 2026 · London.
+  link_label: "Explore the event"
+
+pl:
+  title: "Debata akademicka w Instytucie Sikorskiego"
+  subtitle: "Wieczór krytycznego myślenia o polityce w spolaryzowanym świecie, wyłącznie na zaproszenia."
+  body: |
+    Mamy przyjemność organizować kameralną debatę akademicką — wyłącznie na zaproszenia — o tym, jak odnaleźć się w polityce w coraz bardziej spolaryzowanym świecie.
+
+    Debata odbędzie się w Instytucie Polskim i Muzeum im. gen. Sikorskiego w Londynie i zgromadzi ekspertów oraz studentów na moderowanej dyskusji o faktach, emocjach i podejmowaniu decyzji politycznych we współczesnej demokracji. Wieczór zakończy się spotkaniem przy lampce wina.
+
+    Ze względu na ograniczoną liczbę miejsc imienne zaproszenia wysyłamy e-mailem do członków naszej społeczności, w podziękowaniu za ich zaangażowanie w wydarzenia Federacji.
+
+    10 lutego 2026 · Londyn.
+  link_label: "Zobacz wydarzenie"

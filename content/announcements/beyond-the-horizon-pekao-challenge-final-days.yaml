@@ -1,0 +1,39 @@
+# Announcement — 2025/26.
+# Generated from the live data arrays during the Phase 6 migration.
+# Fields above the `en:` block are shared and identical in both languages
+# by construction. Body text is Markdown; raw HTML is rejected by the build.
+
+slug: beyond-the-horizon-pekao-challenge-final-days
+academic_year: "2025/26"
+published_date: "2026-05-29"
+order: 3
+published: true
+
+image: "/assets/pbf/sponsors/bank-pekao.png"
+image_position: null
+image_fit: "contain"
+image_background: null
+extra_images: []
+signups_closed: true
+
+link: null
+
+en:
+  title: "Beyond the Horizon: Pekao Challenge — final days to apply"
+  subtitle: "Win a fast-track to a paid investment banking internship in Warsaw."
+  body: |
+    Beyond the Horizon: Pekao Challenge is a competition for ambitious students — with real stakes.
+
+    The best participants will win a fast-track to a three-month investment banking internship at Bank Pekao S.A. in Warsaw, paid at 15,000 PLN per month. The final gala will take place in London — a unique opportunity to meet the Management Board of one of Poland's largest banks.
+
+    Applications close on 31 May 2026 — don't leave it to the last minute.
+
+pl:
+  title: "Beyond the Horizon: Pekao Challenge — ostatnie dni na zgłoszenia"
+  subtitle: "Wygraj szybką ścieżkę do płatnego stażu w bankowości inwestycyjnej w Warszawie."
+  body: |
+    Beyond the Horizon: Pekao Challenge to konkurs dla ambitnych studentów — z realną stawką.
+
+    Najlepsi uczestnicy zdobędą szybką ścieżkę do trzymiesięcznego stażu w bankowości inwestycyjnej w Banku Pekao S.A. w Warszawie, z wynagrodzeniem 15 000 zł miesięcznie. Gala finałowa odbędzie się w Londynie — to wyjątkowa okazja, by poznać zarząd jednego z największych banków w Polsce.
+
+    Zgłoszenia przyjmujemy do 31 maja 2026 roku — nie zostawiaj tego na ostatnią chwilę.

@@ -1,0 +1,43 @@
+# Announcement — 2025/26.
+# Generated from the live data arrays during the Phase 6 migration.
+# Fields above the `en:` block are shared and identical in both languages
+# by construction. Body text is Markdown; raw HTML is rejected by the build.
+
+slug: case-workshop-at-oc-c-strategy-consultants
+academic_year: "2025/26"
+published_date: "2025-10-13"
+order: 26
+published: true
+
+image: "/assets/pbf/sponsors/occ.webp"
+image_position: null
+image_fit: "contain"
+image_background: null
+extra_images: []
+signups_closed: true
+
+link: null
+
+en:
+  title: "Case workshop at OC&C Strategy Consultants"
+  subtitle: "Real casework and networking at OC&C's London headquarters."
+  body: |
+    We are excited to invite you to an exclusive case workshop hosted by the Polish office of OC&C Strategy Consultants, taking place at their London headquarters.
+
+    If you are interested in strategy consulting, want to sharpen your case-solving skills, or are considering applying for consulting roles — this event is for you. It is a fantastic opportunity to ask questions, experience real casework and connect directly with professionals in the industry.
+
+    Thursday 23 October · 15:30 · OC&C offices, London — with drinks and networking to follow the workshop.
+
+    Space is limited.
+
+pl:
+  title: "Warsztaty case study w OC&C Strategy Consultants"
+  subtitle: "Prawdziwe case studies i networking w londyńskiej siedzibie OC&C."
+  body: |
+    Z przyjemnością zapraszamy na kameralne warsztaty case study prowadzone przez polskie biuro OC&C Strategy Consultants w ich londyńskiej siedzibie.
+
+    Jeśli interesuje Cię doradztwo strategiczne, chcesz podszlifować umiejętność rozwiązywania case'ów albo myślisz o aplikowaniu do firm doradczych — to wydarzenie jest dla Ciebie. To świetna okazja, by zadać pytania, zmierzyć się z prawdziwym case'em i porozmawiać bezpośrednio z osobami z branży.
+
+    Czwartek 23 października · 15:30 · biuro OC&C, Londyn — po warsztatach drinki i networking.
+
+    Liczba miejsc ograniczona.

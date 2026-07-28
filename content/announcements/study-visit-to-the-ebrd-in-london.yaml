@@ -1,0 +1,43 @@
+# Announcement — 2025/26.
+# Generated from the live data arrays during the Phase 6 migration.
+# Fields above the `en:` block are shared and identical in both languages
+# by construction. Body text is Markdown; raw HTML is rejected by the build.
+
+slug: study-visit-to-the-ebrd-in-london
+academic_year: "2025/26"
+published_date: "2026-05-19"
+order: 4
+published: true
+
+image: "/assets/announcements/ebrd-logo.png"
+image_position: null
+image_fit: "contain"
+image_background: null
+extra_images: []
+signups_closed: true
+
+link: null
+
+en:
+  title: "Study visit to the EBRD in London"
+  subtitle: "Meet EBRD Director Piotr Szpunar and explore careers in development finance."
+  body: |
+    We are pleased to invite Polish students from UK universities to a study visit at the European Bank for Reconstruction and Development in London, taking place on Tuesday 16 June 2026 from 14:00.
+
+    The visit offers a chance to learn about development finance, the role of the EBRD and its work in Poland and other economies, as well as internship and graduate career opportunities within international financial institutions.
+
+    Participants will meet Piotr Szpunar, Director at the EBRD, alongside other representatives of the Bank, and the afternoon will conclude with a light reception.
+
+    Places are limited and allocated on a first-come, first-served basis.
+
+pl:
+  title: "Wizyta studyjna w EBOR w Londynie"
+  subtitle: "Poznaj dyrektora EBOR Piotra Szpunara i ścieżki kariery w finansowaniu rozwoju."
+  body: |
+    Z przyjemnością zapraszamy polskich studentów z brytyjskich uczelni na wizytę studyjną w Europejskim Banku Odbudowy i Rozwoju w Londynie, we wtorek 16 czerwca 2026 roku od godziny 14:00.
+
+    Wizyta to okazja, by poznać finansowanie rozwoju, rolę EBOR i jego działalność w Polsce oraz innych gospodarkach, a także możliwości staży i pracy dla absolwentów w międzynarodowych instytucjach finansowych.
+
+    Uczestnicy spotkają się z Piotrem Szpunarem, dyrektorem w EBOR, oraz innymi przedstawicielami banku. Popołudnie zakończy się lekkim poczęstunkiem.
+
+    Liczba miejsc jest ograniczona, decyduje kolejność zgłoszeń.

@@ -1,0 +1,43 @@
+# Announcement — 2025/26.
+# Generated from the live data arrays during the Phase 6 migration.
+# Fields above the `en:` block are shared and identical in both languages
+# by construction. Body text is Markdown; raw HTML is rejected by the build.
+
+slug: at-the-polish-british-economic-forum-at
+academic_year: "2025/26"
+published_date: "2026-03-29"
+order: 6
+published: true
+
+image: "/assets/announcements/pb-economic-forum.jpg"
+image_position: null
+image_fit: null
+image_background: null
+extra_images: []
+signups_closed: false
+
+link: null
+
+en:
+  title: "At the Polish–British Economic Forum at Mansion House"
+  subtitle: "Our Vice-President joined senior leaders from government, industry and finance."
+  body: |
+    On 23 March, Nikodem Rajpold, the Federation's Vice-President, attended the Polish–British Economic Forum at Mansion House in London as an honorary guest.
+
+    The Forum took place during the official visit of Andrzej Domański, Minister of Finance and Economy of the Republic of Poland, and brought together senior leaders from government, industry and finance. The programme included a joint ministerial fireside discussion on scaling investment and innovation across both countries — featuring Mark Goldsack of Babcock International Group and Mati Staniszewski of ElevenLabs — and a dedicated panel on UK–Poland security and economic collaboration with BAE Systems, MBDA, Babcock, Polska Grupa Zbrojeniowa and Advanced Protection Systems.
+
+    The event was organised with the participation of the Department for Business and Trade, the Polish Investment and Trade Agency (PAIH), the Embassy of the Republic of Poland in London and the British Embassy Warsaw, among others.
+
+    We are proud that the voice of Polish students had a seat at the table.
+
+pl:
+  title: "Na Polsko-Brytyjskim Forum Gospodarczym w Mansion House"
+  subtitle: "Nasz wiceprezes spotkał się z liderami administracji, przemysłu i finansów."
+  body: |
+    23 marca Nikodem Rajpold, wiceprezes Federacji, wziął udział jako gość honorowy w Polsko-Brytyjskim Forum Gospodarczym w Mansion House w Londynie.
+
+    Forum odbyło się podczas oficjalnej wizyty Andrzeja Domańskiego, ministra finansów i gospodarki RP, i zgromadziło liderów administracji, przemysłu i finansów. W programie znalazła się wspólna rozmowa ministrów o skalowaniu inwestycji i innowacji w obu krajach — z udziałem Marka Goldsacka z Babcock International Group i Matiego Staniszewskiego z ElevenLabs — oraz panel poświęcony współpracy Polski i Wielkiej Brytanii w obszarze bezpieczeństwa i gospodarki, z udziałem BAE Systems, MBDA, Babcock, Polskiej Grupy Zbrojeniowej i Advanced Protection Systems.
+
+    Wydarzenie zorganizowano między innymi przy udziale Department for Business and Trade, Polskiej Agencji Inwestycji i Handlu (PAIH), Ambasady Rzeczypospolitej Polskiej w Londynie i Ambasady Brytyjskiej w Warszawie.
+
+    Jesteśmy dumni, że głos polskich studentów miał swoje miejsce przy tym stole.

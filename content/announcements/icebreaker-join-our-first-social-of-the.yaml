@@ -1,0 +1,47 @@
+# Announcement — 2025/26.
+# Generated from the live data arrays during the Phase 6 migration.
+# Fields above the `en:` block are shared and identical in both languages
+# by construction. Body text is Markdown; raw HTML is rejected by the build.
+
+slug: icebreaker-join-our-first-social-of-the
+academic_year: "2025/26"
+published_date: "2025-10-06"
+order: 28
+published: true
+
+image: "/assets/announcements/icebreaker.jpg"
+image_position: null
+image_fit: null
+image_background: null
+extra_images: []
+signups_closed: false
+
+link:
+  type: event
+  event_slug: icebreaker
+
+en:
+  title: "Icebreaker: join our first social of the year!"
+  subtitle: "Meet your Polish community — Thursday 16 October at Mamuśka!"
+  body: |
+    Join us for our first social of the academic year!
+
+    An evening designed to bring together Polish students from across London — whether you are new to university life or returning for another exciting year, this is the perfect opportunity to connect, unwind and meet your Polish community.
+
+    Thursday 16 October · 18:30 · Mamuśka!, London Waterloo.
+
+    No tickets, no formalities — just come along and say cześć.
+  link_label: "Explore the event"
+
+pl:
+  title: "Icebreaker: przyjdź na pierwsze spotkanie w roku!"
+  subtitle: "Poznaj swoją polską społeczność — czwartek 16 października w Mamuśka!"
+  body: |
+    Zapraszamy na nasze pierwsze spotkanie towarzyskie w roku akademickim!
+
+    To wieczór dla polskich studentów z całego Londynu — niezależnie od tego, czy dopiero zaczynasz studia, czy wracasz na kolejny rok, to idealna okazja, żeby się poznać, odpocząć i wejść do polskiej społeczności.
+
+    Czwartek 16 października · 18:30 · Mamuśka!, londyńskie Waterloo.
+
+    Bez biletów i formalności — po prostu przyjdź i powiedz cześć.
+  link_label: "Zobacz wydarzenie"

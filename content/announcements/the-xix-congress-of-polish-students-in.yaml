@@ -1,0 +1,39 @@
+# Announcement — 2025/26.
+# Generated from the live data arrays during the Phase 6 migration.
+# Fields above the `en:` block are shared and identical in both languages
+# by construction. Body text is Markdown; raw HTML is rejected by the build.
+
+slug: the-xix-congress-of-polish-students-in
+academic_year: "2025/26"
+published_date: "2026-03-01"
+order: 9
+published: true
+
+image: "/assets/announcements/xix-congress.jpg"
+image_position: null
+image_fit: null
+image_background: null
+extra_images: []
+signups_closed: false
+
+link: null
+
+en:
+  title: "The XIX Congress of Polish Students in Milan"
+  subtitle: "Opening horizons and fostering unity with Polish students from around the world."
+  body: |
+    On 27–28 February, a strong Federation delegation — including Szymon Kwidziński, Nikodem Rajpold, Marek Świątek and Kasia Steliga — took part in the XIX International Congress of Polish Student Societies in Milan, a two-day conference bringing together Polish students from all around the world.
+
+    Held under the theme “Opening Horizons, Fostering Unity”, this year's edition tackled the key challenges of the 21st century: building strong institutions, shaping society in the age of new technologies, enhancing the competitiveness of the Polish economy, public health as a foundation of national strength, and the role of sport in that process — while also reflecting on 25 years of Poland's transformation and shared progress.
+
+    Between the talks, panels and keynotes there was a brilliant Friday social and a spectacular black-tie ball to close the Congress. It was two days packed with inspiration, connection and growth — and a powerful reminder of how much the worldwide Polish student community can achieve together.
+
+pl:
+  title: "XIX Kongres Polskich Studentów w Mediolanie"
+  subtitle: "Otwieranie horyzontów i budowanie jedności z polskimi studentami z całego świata."
+  body: |
+    27–28 lutego silna delegacja Federacji — Szymon Kwidziński, Nikodem Rajpold, Marek Świątek i Kasia Steliga — wzięła udział w XIX Międzynarodowym Kongresie Polskich Stowarzyszeń Studenckich w Mediolanie, dwudniowej konferencji gromadzącej polskich studentów z całego świata.
+
+    Tegoroczna edycja, pod hasłem „Opening Horizons, Fostering Unity”, dotyczyła kluczowych wyzwań XXI wieku: budowania silnych instytucji, kształtowania społeczeństwa w erze nowych technologii, konkurencyjności polskiej gospodarki, zdrowia publicznego jako fundamentu siły państwa i roli sportu w tym procesie — a także podsumowania 25 lat polskiej transformacji i wspólnego rozwoju.
+
+    Między wykładami i panelami znalazło się miejsce na świetne piątkowe spotkanie towarzyskie i wyjątkowy bal w konwencji black tie na zakończenie Kongresu. To były dwa dni pełne inspiracji, kontaktów i rozwoju — i mocne przypomnienie, jak wiele polska społeczność studencka na świecie może osiągnąć razem.

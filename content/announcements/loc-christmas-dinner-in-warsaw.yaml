@@ -1,0 +1,43 @@
+# Announcement — 2025/26.
+# Generated from the live data arrays during the Phase 6 migration.
+# Fields above the `en:` block are shared and identical in both languages
+# by construction. Body text is Markdown; raw HTML is rejected by the build.
+
+slug: loc-christmas-dinner-in-warsaw
+academic_year: "2025/26"
+published_date: "2025-11-17"
+order: 19
+published: true
+
+image: null
+image_position: null
+image_fit: null
+image_background: null
+extra_images: []
+signups_closed: false
+
+link: null
+
+en:
+  title: "LOC Christmas Dinner in Warsaw"
+  subtitle: "The most elegant night of the year, at Villa Foksal on 20 December."
+  body: |
+    The most elegant night of the year is nearly here — and we are thrilled to be co-organising this year's LOC Christmas Dinner alongside the LSE SU Polish Business Society, the Oxford University Polish Society, the Cambridge University Polish Society and the Thomas Edison Foundation for Polish Youth.
+
+    This December, Polish students and young professionals from across Europe will gather in Warsaw for a night of celebration, connection and community.
+
+    20 December 2025 · 20:00–03:00 · Villa Foksal, Warsaw · Dress code: black tie.
+
+    Join us to close the year in true style — we can't wait to celebrate with you.
+
+pl:
+  title: "Kolacja Wigilijna LOC w Warszawie"
+  subtitle: "Najbardziej elegancki wieczór roku, w Villa Foksal 20 grudnia."
+  body: |
+    Najbardziej elegancki wieczór roku już blisko — z radością współorganizujemy tegoroczną Kolację Wigilijną LOC razem z LSE SU Polish Business Society, Oxford University Polish Society, Cambridge University Polish Society i Fundacją Thomasa Edisona dla Młodzieży Polskiej.
+
+    W grudniu polscy studenci i młodzi profesjonaliści z całej Europy spotkają się w Warszawie na wieczorze świętowania, rozmów i wspólnoty.
+
+    20 grudnia 2025 · 20:00–03:00 · Villa Foksal, Warszawa · Dress code: black tie.
+
+    Zamknijmy ten rok w naprawdę dobrym stylu — nie możemy się doczekać.

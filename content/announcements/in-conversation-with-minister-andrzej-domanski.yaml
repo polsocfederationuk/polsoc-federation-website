@@ -1,0 +1,39 @@
+# Announcement — 2025/26.
+# Generated from the live data arrays during the Phase 6 migration.
+# Fields above the `en:` block are shared and identical in both languages
+# by construction. Body text is Markdown; raw HTML is rejected by the build.
+
+slug: in-conversation-with-minister-andrzej-domanski
+academic_year: "2025/26"
+published_date: "2026-03-10"
+order: 8
+published: true
+
+image: "/assets/announcements/domanski.jpg"
+image_position: null
+image_fit: null
+image_background: null
+extra_images: []
+signups_closed: true
+
+link: null
+
+en:
+  title: "In conversation with Minister Andrzej Domański"
+  subtitle: "Join us at LSE for a discussion on Poland's economic resilience."
+  body: |
+    In partnership with CETEx, the Embassy of the Republic of Poland in London and the LSE SU Polish Business Society, we are delighted to invite you to a conversation with Andrzej Domański, Minister of Finance and Economy of Poland.
+
+    The discussion will explore building economic resilience amid global uncertainty — reflecting on Poland's experience of economic transformation, sustained growth and competitiveness in the face of geopolitical and technological challenges.
+
+    23 March 2026, 16:30–18:00 · LSE Campus, London.
+
+pl:
+  title: "Rozmowa z ministrem Andrzejem Domańskim"
+  subtitle: "Dołącz do nas w LSE na rozmowę o odporności gospodarczej Polski."
+  body: |
+    We współpracy z CETEx, Ambasadą Rzeczypospolitej Polskiej w Londynie i LSE SU Polish Business Society zapraszamy na rozmowę z Andrzejem Domańskim, ministrem finansów i gospodarki RP.
+
+    Dyskusja będzie dotyczyć budowania odporności gospodarczej w czasach globalnej niepewności — z odniesieniem do polskich doświadczeń transformacji gospodarczej, trwałego wzrostu i konkurencyjności wobec wyzwań geopolitycznych i technologicznych.
+
+    23 marca 2026, 16:30–18:00 · kampus LSE, Londyn.

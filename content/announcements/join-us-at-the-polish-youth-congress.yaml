@@ -1,0 +1,47 @@
+# Announcement — 2025/26.
+# Generated from the live data arrays during the Phase 6 migration.
+# Fields above the `en:` block are shared and identical in both languages
+# by construction. Body text is Markdown; raw HTML is rejected by the build.
+
+slug: join-us-at-the-polish-youth-congress
+academic_year: "2025/26"
+published_date: "2025-11-01"
+order: 22
+published: true
+
+image: "/assets/announcements/yc-announcement.jpg"
+image_position: "center top"
+image_fit: null
+image_background: null
+extra_images: []
+signups_closed: true
+
+link:
+  type: event
+  event_slug: youth-congress
+
+en:
+  title: "Join us at the Polish Youth Congress"
+  subtitle: "Bold ideas, impactful dialogue and Polish excellence — 9 November at Ognisko Polskie."
+  body: |
+    An afternoon of bold ideas, impactful dialogue and Polish excellence.
+
+    Join us at the Federation's flagship conference, bringing together young leaders, professionals and changemakers from across the UK and beyond.
+
+    You will hear conversations on Polish talent in global arenas, leadership abroad, and the role of our generation in shaping what comes next — followed by a live piano concert to mark Polish Independence Day, and networking over drinks.
+
+    9 November 2025 · Ognisko Polskie, London.
+  link_label: "Explore the event"
+
+pl:
+  title: "Dołącz do nas na Polish Youth Congress"
+  subtitle: "Odważne pomysły, wartościowa rozmowa i polska doskonałość — 9 listopada w Ognisku Polskim."
+  body: |
+    Popołudnie odważnych pomysłów, wartościowej rozmowy i polskiej doskonałości.
+
+    Dołącz do nas na flagowej konferencji Federacji, która gromadzi młodych liderów, profesjonalistów i osoby zmieniające rzeczywistość z całej Wielkiej Brytanii i nie tylko.
+
+    Usłyszysz rozmowy o polskich talentach na arenie międzynarodowej, przywództwie za granicą i roli naszego pokolenia w kształtowaniu tego, co przed nami — a na koniec koncert fortepianowy z okazji Święta Niepodległości i czas na rozmowy przy drinku.
+
+    9 listopada 2025 · Ognisko Polskie, Londyn.
+  link_label: "Zobacz wydarzenie"

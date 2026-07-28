@@ -1,0 +1,47 @@
+# Announcement — 2025/26.
+# Generated from the live data arrays during the Phase 6 migration.
+# Fields above the `en:` block are shared and identical in both languages
+# by construction. Body text is Markdown; raw HTML is rejected by the build.
+
+slug: polish-youth-congress-2025-thank-you
+academic_year: "2025/26"
+published_date: "2025-11-10"
+order: 20
+published: true
+
+image: "/assets/announcements/post-yc.jpg"
+image_position: null
+image_fit: null
+image_background: null
+extra_images: []
+signups_closed: false
+
+link:
+  type: event
+  event_slug: youth-congress
+
+en:
+  title: "Polish Youth Congress 2025 — thank you!"
+  subtitle: "A day of bold ideas at Ognisko Polskie, closed with Chopin for Independence Day."
+  body: |
+    Yesterday we welcomed students, young professionals, diplomats and community leaders to Ognisko Polskie for the Polish Youth Congress 2025, organised together with the Embassy of the Republic of Poland in London.
+
+    The day spanned keynote speeches, panels and fireside conversations on international finance, entrepreneurship, leadership, geopolitics and civil society — plus an interactive public-speaking workshop.
+
+    In the spirit of Poland's National Independence Day, the programme closed with Fryderyk Chopin's Sonata No. 2 in B-flat minor, performed by Roksana Dąbkowska.
+
+    Thank you to every speaker, guest and volunteer — and to the Embassy for their partnership in making the day possible.
+  link_label: "Explore the Congress"
+
+pl:
+  title: "Polish Youth Congress 2025 — dziękujemy!"
+  subtitle: "Dzień odważnych pomysłów w Ognisku Polskim, zakończony Chopinem na Święto Niepodległości."
+  body: |
+    Wczoraj powitaliśmy studentów, młodych profesjonalistów, dyplomatów i liderów społeczności w Ognisku Polskim na Polish Youth Congress 2025, organizowanym wspólnie z Ambasadą Rzeczypospolitej Polskiej w Londynie.
+
+    W programie znalazły się wykłady, panele i rozmowy w swobodnej formule o finansach międzynarodowych, przedsiębiorczości, przywództwie, geopolityce i społeczeństwie obywatelskim, a także interaktywne warsztaty z wystąpień publicznych.
+
+    W duchu Narodowego Święta Niepodległości program zamknęła Sonata b-moll nr 2 Fryderyka Chopina w wykonaniu Roksany Dąbkowskiej.
+
+    Dziękujemy każdemu prelegentowi, gościowi i wolontariuszowi — oraz Ambasadzie za współpracę, dzięki której ten dzień mógł się odbyć.
+  link_label: "Zobacz Kongres"

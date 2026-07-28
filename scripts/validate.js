@@ -597,7 +597,8 @@ assert(missingDirs.length === 0,
 // A collection not on this list must still be empty, so an unplanned migration
 // cannot slip in unnoticed alongside a planned one.
 //   Phase 4: team, settings
-const MIGRATED_COLLECTIONS = new Set(["team", "settings"]);
+//   Phase 6: announcements
+const MIGRATED_COLLECTIONS = new Set(["team", "settings", "announcements"]);
 const populated = ["events", "announcements", "team", "societies", "settings"]
   .filter((c) => !MIGRATED_COLLECTIONS.has(c))
   .filter((c) => fs.readdirSync(path.join(ROOT, "content", c))
@@ -685,7 +686,7 @@ if (!exists("dist")) {
     // The intent was never "generate nothing public" — it was "never generate
     // something public by accident". The allowlist keeps that guarantee exact
     // and makes each migration a deliberate, reviewable edit to this line.
-    const MIGRATED = ["team.html", "pl/team.html"];
+    const MIGRATED = ["team.html", "pl/team.html", "announcements.html", "pl/announcements.html"];
 
     const generatedHtml = distFiles.filter((f) => f.endsWith(".html"));
     const strayHtml = generatedHtml.filter(
@@ -716,11 +717,21 @@ if (!exists("dist")) {
     // Most originals sit at the repository root at the same relative path.
     // src/js/team-filter.js is new architecture-owned source with no root
     // counterpart, so its origin is stated explicitly rather than guessed.
-    const PASSTHROUGH_SOURCE = { "js/team-filter.js": "src/js/team-filter.js" };
+    const PASSTHROUGH_SOURCE = {
+      "js/team-filter.js": "src/js/team-filter.js",
+      "js/announcements-page.js": "src/js/announcements-page.js",
+    };
+    // Build PRODUCTS, not copies: these are rendered from templates and have no
+    // byte-identical source, so they are excluded from the copy check and
+    // covered instead by §18 and scripts/compare-announcements.js.
+    const GENERATED_ASSETS = new Set([
+      "js/announcements-data-en.js",
+      "js/announcements-data-pl.js",
+    ]);
     const crypto = require("crypto");
     const hash = (p) => crypto.createHash("sha256")
       .update(fs.readFileSync(path.join(ROOT, p))).digest("hex");
-    const copied = distFiles.filter((f) => !f.endsWith(".html"));
+    const copied = distFiles.filter((f) => !f.endsWith(".html") && !GENERATED_ASSETS.has(f));
     const altered = copied.filter((f) => {
       const source = PASSTHROUGH_SOURCE[f] || f;
       return !exists(source) || hash("dist/" + f) !== hash(source);
@@ -1441,6 +1452,406 @@ if (exists("dist/team.html") && exists("dist/pl/team.html")) {
       `${lang}: live and generated pages carry identical corrected semantics`,
       `${lang}: live and generated pages disagree on the corrected semantics`,
       [`live: ${semantics(live)}`, `dist: ${semantics(gen)}`]);
+  }
+}
+
+/* =================================================================== 17. announcement content */
+
+section("17. Announcement content records (Phase 6)");
+
+const ANN_DIR = "content/announcements";
+const ANN_EXPECTED = 28;
+
+// Feature counts, taken from the live source arrays. These are the numbers the
+// migration must reproduce exactly; they are stated here rather than recomputed
+// from the records, so a record that loses a flag fails instead of redefining
+// the expectation.
+const ANN_FEATURES = {
+  noImage: 3, closed: 8, imagePosition: 5, containFit: 4,
+  extraImages: 3, background: 1, linked: 11, external: 2,
+};
+
+const SUPPORTED_FIT = new Set(["contain"]);
+const SUPPORTED_LINK_TYPES = new Set(["event", "page", "external"]);
+
+const annFiles = fs.existsSync(path.join(ROOT, ANN_DIR))
+  ? fs.readdirSync(path.join(ROOT, ANN_DIR)).filter((f) => /\.ya?ml$/i.test(f)).sort()
+  : [];
+
+const annAll = annFiles.map((f) => ({ _file: `${ANN_DIR}/${f}`, ...loadYaml(`${ANN_DIR}/${f}`) }));
+const ann = annAll.filter((a) => a.published === true && a.academic_year === CURRENT_YEAR);
+
+assert(ann.length === ANN_EXPECTED,
+  `exactly ${ANN_EXPECTED} published announcement records for ${CURRENT_YEAR}`,
+  `expected ${ANN_EXPECTED} published ${CURRENT_YEAR} announcements, found ${ann.length}`);
+
+/* -- identity and ordering -------------------------------------------------- */
+
+const annSlugs = annAll.map((a) => a.slug);
+const annDupSlug = annSlugs.filter((s, i) => annSlugs.indexOf(s) !== i);
+assert(annDupSlug.length === 0, "every announcement slug is unique",
+  "duplicate announcement slugs", [...new Set(annDupSlug)]);
+
+const annSlugFile = annAll.filter((a) => a._file !== `${ANN_DIR}/${a.slug}.yaml`).map((a) => a._file);
+assert(annSlugFile.length === 0, "every announcement's slug matches its filename",
+  "records whose slug does not match the filename", annSlugFile);
+
+const annOrders = ann.map((a) => a.order);
+assert(new Set(annOrders).size === annOrders.length,
+  "every published announcement has a unique display order",
+  "duplicate announcement display orders",
+  annOrders.filter((o, i) => annOrders.indexOf(o) !== i));
+assert(annOrders.every((o) => Number.isInteger(o)),
+  "every announcement `order` is a whole number",
+  "non-integer display orders", annOrders.filter((o) => !Number.isInteger(o)));
+
+// No language-split files.
+const annSplit = annFiles.filter((f) => /[-.](en|pl)\.ya?ml$/i.test(f) || /^(en|pl)[-.]/i.test(f));
+assert(annSplit.length === 0,
+  "no language-split announcement files (one canonical record each)",
+  "language-split announcement files found", annSplit);
+
+/* -- dates ------------------------------------------------------------------ */
+
+const annBadYear = annAll.filter((a) => !/^\d{4}\/\d{2}$/.test(String(a.academic_year)))
+  .map((a) => `${a.slug}: ${a.academic_year}`);
+assert(annBadYear.length === 0, "every announcement `academic_year` matches YYYY/YY",
+  "malformed announcement academic years", annBadYear);
+
+// The date must be a STRING. Unquoted in YAML it parses to a JS Date, whose
+// stringification is timezone-dependent and would make the build non-deterministic.
+const annDateType = annAll.filter((a) => typeof a.published_date !== "string")
+  .map((a) => `${a.slug}: ${Object.prototype.toString.call(a.published_date)}`);
+assert(annDateType.length === 0,
+  "every `published_date` is a quoted string, not a parsed YAML date",
+  "unquoted dates — YAML turned these into timezone-sensitive Date objects", annDateType);
+
+const annBadDate = annAll.filter((a) => {
+  const s = String(a.published_date);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return true;
+  const [y, m, d] = s.split("-").map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  return dt.getUTCFullYear() !== y || dt.getUTCMonth() !== m - 1 || dt.getUTCDate() !== d;
+}).map((a) => `${a.slug}: ${a.published_date}`);
+assert(annBadDate.length === 0, "every `published_date` is a real ISO calendar date",
+  "invalid ISO dates", annBadDate);
+
+const annBadPublished = annAll.filter((a) => typeof a.published !== "boolean")
+  .map((a) => `${a.slug}: ${a.published}`);
+assert(annBadPublished.length === 0, "every announcement `published` is a real boolean",
+  "non-boolean publication flags", annBadPublished);
+
+const annBadClosed = annAll.filter((a) => typeof a.signups_closed !== "boolean")
+  .map((a) => `${a.slug}: ${a.signups_closed}`);
+assert(annBadClosed.length === 0, "every announcement `signups_closed` is a real boolean",
+  "non-boolean closed flags", annBadClosed);
+
+/* -- localised fields ------------------------------------------------------- */
+
+const annMissingLoc = [];
+for (const a of ann) {
+  for (const code of ["en", "pl"]) {
+    const l = a[code];
+    if (!l) { annMissingLoc.push(`${a.slug}: no ${code} block`); continue; }
+    for (const f of ["title", "subtitle", "body"]) {
+      if (!l[f] || !String(l[f]).trim()) annMissingLoc.push(`${a.slug}: ${code}.${f}`);
+    }
+  }
+}
+assert(annMissingLoc.length === 0,
+  "every announcement has an English and Polish title, subtitle and body",
+  "announcements missing a localised field", annMissingLoc);
+
+/* -- no markup in content --------------------------------------------------- */
+
+const annRawHtml = [];
+const annScriptish = [];
+for (const a of ann) {
+  for (const code of ["en", "pl"]) {
+    const l = a[code] || {};
+    for (const f of ["title", "subtitle", "body", "link_label"]) {
+      const v = l[f];
+      if (typeof v !== "string") continue;
+      if (/<[a-z/!][^>]*>/i.test(v)) annRawHtml.push(`${a.slug}: ${code}.${f}`);
+      if (/<\s*script/i.test(v) || /\bon[a-z]+\s*=\s*["']/i.test(v)) {
+        annScriptish.push(`${a.slug}: ${code}.${f}`);
+      }
+    }
+  }
+}
+assert(annRawHtml.length === 0,
+  "no raw HTML in any announcement title, subtitle or body (Markdown only)",
+  "announcement fields containing HTML tags", annRawHtml);
+assert(annScriptish.length === 0,
+  "no <script> tags or inline event handlers in announcement content",
+  "announcement fields containing script or handler markup", annScriptish);
+
+// Markdown link targets must use a safe protocol.
+const annBadProto = [];
+for (const a of ann) {
+  for (const code of ["en", "pl"]) {
+    for (const m of String((a[code] || {}).body || "").matchAll(/\]\(([^)]+)\)/g)) {
+      const url = m[1].trim();
+      if (!/^(https?:|mailto:|\/|#)/i.test(url) && !/^[a-z0-9][a-z0-9-]*\.html([?#]|$)/i.test(url)) {
+        annBadProto.push(`${a.slug} (${code}): ${url}`);
+      }
+    }
+  }
+}
+assert(annBadProto.length === 0,
+  "every Markdown link in a body uses an allowed protocol",
+  "body links using an unsafe or unrecognised protocol", annBadProto);
+
+/* -- images ----------------------------------------------------------------- */
+
+const annImageFields = [];
+for (const a of ann) {
+  if (a.image !== null && typeof a.image !== "string") annImageFields.push(`${a.slug}: image is ${typeof a.image}`);
+  if (a.image && !String(a.image).startsWith("/assets/")) annImageFields.push(`${a.slug}: ${a.image}`);
+  for (const x of a.extra_images || []) {
+    if (!String(x).startsWith("/assets/")) annImageFields.push(`${a.slug}: extra ${x}`);
+  }
+}
+assert(annImageFields.length === 0,
+  "every announcement image path is null or root-relative under /assets/",
+  "image fields that are not null or root-relative", annImageFields);
+
+const annMissingImg = [];
+for (const a of ann) {
+  if (a.image && !exists(String(a.image).replace(/^\/+/, ""))) annMissingImg.push(`${a.slug}: ${a.image}`);
+  for (const x of a.extra_images || []) {
+    if (!exists(String(x).replace(/^\/+/, ""))) annMissingImg.push(`${a.slug}: extra ${x}`);
+  }
+}
+assert(annMissingImg.length === 0,
+  `all referenced announcement images exist on disk (${ann.filter((a) => a.image).length} main + ${ann.reduce((n, a) => n + (a.extra_images || []).length, 0)} extra)`,
+  "announcement image paths that do not resolve to a real file", annMissingImg);
+
+const annBadFit = ann.filter((a) => a.image_fit && !SUPPORTED_FIT.has(a.image_fit))
+  .map((a) => `${a.slug}: ${a.image_fit}`);
+assert(annBadFit.length === 0,
+  `every image_fit uses a supported value (${[...SUPPORTED_FIT].join(", ")})`,
+  "unsupported image_fit values", annBadFit);
+
+/* -- links ------------------------------------------------------------------ */
+
+const annLinked = ann.filter((a) => a.link && a.link.type);
+const annBadType = annLinked.filter((a) => !SUPPORTED_LINK_TYPES.has(a.link.type))
+  .map((a) => `${a.slug}: ${a.link.type}`);
+assert(annBadType.length === 0,
+  `every link type is recognised (${[...SUPPORTED_LINK_TYPES].join(", ")})`,
+  "unrecognised link types", annBadType);
+
+const annBadEvent = annLinked.filter((a) => a.link.type === "event")
+  .filter((a) => !a.link.event_slug || !exists(`event-${a.link.event_slug}.html`))
+  .map((a) => `${a.slug} -> event-${a.link.event_slug}.html`);
+assert(annBadEvent.length === 0,
+  `every event link points at an existing event page (${annLinked.filter((a) => a.link.type === "event").length} links)`,
+  "event links whose target page does not exist", annBadEvent);
+
+const annBadExternal = annLinked.filter((a) => a.link.type === "external")
+  .filter((a) => !/^https:\/\/\S+$/.test(String(a.link.url)))
+  .map((a) => `${a.slug}: ${a.link.url}`);
+assert(annBadExternal.length === 0,
+  "every external link is an HTTPS URL",
+  "external links that are not HTTPS", annBadExternal);
+
+const annBadPage = annLinked.filter((a) => a.link.type === "page")
+  .filter((a) => !exists(String(a.link.page)))
+  .map((a) => `${a.slug}: ${a.link.page}`);
+assert(annBadPage.length === 0,
+  "every internal page link points at an existing page",
+  "page links whose target does not exist", annBadPage);
+
+const annMissingLabel = annLinked.filter(
+  (a) => !((a.en || {}).link_label || "").trim() || !((a.pl || {}).link_label || "").trim()
+).map((a) => a.slug);
+assert(annMissingLabel.length === 0,
+  "every linked announcement has an English and Polish link label",
+  "linked announcements missing a localised label", annMissingLabel);
+
+const annStrayLabel = ann.filter((a) => !(a.link && a.link.type))
+  .filter((a) => ((a.en || {}).link_label || (a.pl || {}).link_label))
+  .map((a) => a.slug);
+assert(annStrayLabel.length === 0,
+  "no announcement carries a link label without a destination",
+  "link labels with no link", annStrayLabel);
+
+/* -- optional-feature counts must match the live source arrays -------------- */
+
+const annCounts = {
+  noImage: ann.filter((a) => !a.image).length,
+  closed: ann.filter((a) => a.signups_closed).length,
+  imagePosition: ann.filter((a) => a.image_position).length,
+  containFit: ann.filter((a) => a.image_fit === "contain").length,
+  extraImages: ann.filter((a) => (a.extra_images || []).length).length,
+  background: ann.filter((a) => a.image_background).length,
+  linked: annLinked.length,
+  external: annLinked.filter((a) => a.link.type === "external").length,
+};
+const annCountMismatch = Object.entries(ANN_FEATURES)
+  .filter(([k, want]) => annCounts[k] !== want)
+  .map(([k, want]) => `${k}: expected ${want}, found ${annCounts[k]}`);
+assert(annCountMismatch.length === 0,
+  `optional-feature counts match the live arrays (${Object.entries(annCounts).map(([k, v]) => `${k} ${v}`).join(", ")})`,
+  "optional-feature counts differ from the live source arrays", annCountMismatch);
+
+/* =================================================================== 18. generated announcements */
+
+section("18. Generated announcement pages (Phase 6)");
+
+const ANN_PAGES = { en: "dist/announcements.html", pl: "dist/pl/announcements.html" };
+const ANN_DATA = { en: "dist/js/announcements-data-en.js", pl: "dist/js/announcements-data-pl.js" };
+
+if (!exists("dist")) {
+  ok("dist/ absent — generated announcement checks skipped (run `npm run build` to enable them)");
+} else {
+  const missingAnn = [...Object.values(ANN_PAGES), ...Object.values(ANN_DATA)].filter((p) => !exists(p));
+  assert(missingAnn.length === 0,
+    "both announcement pages and both generated data files exist",
+    "generated announcement artefacts missing after build", missingAnn);
+
+  if (missingAnn.length === 0) {
+    const vm = require("child_process");
+    const nodeVm = require("vm");
+    const loadArr = (rel, expr) => {
+      const ctx = {};
+      nodeVm.createContext(ctx);
+      nodeVm.runInContext(read(rel), ctx);
+      return nodeVm.runInContext(expr, ctx);
+    };
+
+    const gAnn = { en: read(ANN_PAGES.en), pl: read(ANN_PAGES.pl) };
+    const gData = { en: loadArr(ANN_DATA.en, "ANNOUNCEMENTS"), pl: loadArr(ANN_DATA.pl, "ANNOUNCEMENTS") };
+
+    assert(/<html lang="en">/.test(gAnn.en), 'generated English announcements page declares lang="en"',
+      "generated English announcements page has the wrong <html lang>");
+    assert(/<html lang="pl">/.test(gAnn.pl), 'generated Polish announcements page declares lang="pl"',
+      "generated Polish announcements page has the wrong <html lang>");
+
+    const annCanon = (s) => (s.match(/<link rel="canonical" href="([^"]+)"/) || [])[1];
+    assert(annCanon(gAnn.en) === `${SITE}/announcements.html` &&
+      annCanon(gAnn.pl) === `${SITE}/pl/announcements.html`,
+      "generated announcement canonicals are self-referencing and keep the .html URLs",
+      "generated announcement canonical URLs are wrong",
+      [`en: ${annCanon(gAnn.en)}`, `pl: ${annCanon(gAnn.pl)}`]);
+
+    const annAlts = (s) => [...s.matchAll(/<link rel="alternate" hreflang="([^"]+)" href="([^"]+)"/g)]
+      .map((m) => `${m[1]}=${m[2]}`).sort();
+    const annWant = [`en=${SITE}/announcements.html`, `pl=${SITE}/pl/announcements.html`,
+      `x-default=${SITE}/announcements.html`].sort();
+    assert(JSON.stringify(annAlts(gAnn.en)) === JSON.stringify(annWant) &&
+      JSON.stringify(annAlts(gAnn.pl)) === JSON.stringify(annWant),
+      "both announcement pages carry the identical reciprocal hreflang trio with an English x-default",
+      "generated announcement hreflang alternates are wrong",
+      [`en: ${annAlts(gAnn.en).join(" ")}`, `pl: ${annAlts(gAnn.pl).join(" ")}`]);
+
+    const annOg = (s) => (s.match(/<meta property="og:locale" content="([^"]+)"/) || [])[1];
+    assert(annOg(gAnn.en) === "en_GB" && annOg(gAnn.pl) === "pl_PL",
+      "generated announcement pages declare the correct Open Graph locales",
+      "generated announcement og:locale values are wrong",
+      [`en: ${annOg(gAnn.en)}`, `pl: ${annOg(gAnn.pl)}`]);
+
+    const annSwitch = (s) => {
+      const nav = s.match(/<nav class="lang-switch"[\s\S]*?<\/nav>/);
+      return nav ? [...nav[0].matchAll(/<a[^>]*href="([^"]+)"/g)].map((m) => m[1]) : [];
+    };
+    assert(annSwitch(gAnn.en).includes("/pl/announcements.html") &&
+      annSwitch(gAnn.pl).includes("/announcements.html"),
+      "announcement language switchers point at the paired page in the other language",
+      "announcement language-switcher destinations are wrong",
+      [`en: ${annSwitch(gAnn.en).join(", ")}`, `pl: ${annSwitch(gAnn.pl).join(", ")}`]);
+
+    for (const code of ["en", "pl"]) {
+      const src = gAnn[code];
+      const data = gData[code];
+
+      assert(data.length === ANN_EXPECTED,
+        `generated ${code} data exposes exactly ${ANN_EXPECTED} announcements`,
+        `generated ${code} data exposes ${data.length} announcements, expected ${ANN_EXPECTED}`);
+
+      // Visible order must equal the records' order field.
+      const wantOrder = ann.slice().sort((a, b) => a.order - b.order).map((a) => a[code].title);
+      assert(JSON.stringify(data.map((a) => a.title)) === JSON.stringify(wantOrder),
+        `generated ${code} order matches the records' explicit order field`,
+        `generated ${code} announcement order does not match the source records`,
+        data.map((a) => a.title).filter((t, i) => t !== wantOrder[i]).slice(0, 4));
+
+      // Dates, titles and subtitles are all preserved from the records.
+      const byOrder = ann.slice().sort((a, b) => a.order - b.order);
+      const wrongDate = data.filter((d, i) => d.isoDate !== byOrder[i].published_date)
+        .map((d) => `${d.title}: ${d.isoDate}`);
+      assert(wrongDate.length === 0,
+        `generated ${code} dates all derive from their record's published_date`,
+        `generated ${code} dates do not match their records`, wrongDate.slice(0, 4));
+      const wrongSub = data.filter((d, i) => d.subtitle !== byOrder[i][code].subtitle).map((d) => d.title);
+      assert(wrongSub.length === 0,
+        `generated ${code} subtitles are preserved verbatim`,
+        `generated ${code} subtitles do not match their records`, wrongSub.slice(0, 4));
+
+      // Event links must stay RELATIVE — root-relative would send Polish
+      // readers to the English event page.
+      const internal = data.filter((d) => d.link && !d.link.external).map((d) => d.link.href);
+      assert(internal.every((h) => /^[a-z0-9][a-z0-9-]*\.html$/.test(h)),
+        `generated ${code} internal links stay relative (${internal.length} links)`,
+        `generated ${code} has an internal link that is not relative`,
+        internal.filter((h) => !/^[a-z0-9][a-z0-9-]*\.html$/.test(h)));
+
+      const externals = data.filter((d) => d.link && d.link.external).map((d) => d.link.href);
+      assert(externals.every((h) => /^https:\/\//.test(h)),
+        `generated ${code} external links remain absolute HTTPS (${externals.length} links)`,
+        `generated ${code} has an external link that is not HTTPS`, externals);
+
+      // The /pl/assets/ class of bug: every image path must be root-relative.
+      const allImgs = data.flatMap((d) => [d.image, ...(d.extraImages || [])]).filter(Boolean);
+      assert(allImgs.every((i) => i.startsWith("/assets/")),
+        `no generated ${code} image path can resolve under /pl/ (${allImgs.length} paths, all root-relative)`,
+        `generated ${code} image paths that are not root-relative`,
+        allImgs.filter((i) => !i.startsWith("/assets/")));
+
+      // Every referenced asset must have been copied into dist/.
+      const notCopied = allImgs.filter((i) => !exists("dist" + i));
+      assert(notCopied.length === 0,
+        `all ${allImgs.length} ${code} announcement images were copied into dist/`,
+        `${code} announcement images referenced but not copied into dist/`, notCopied.slice(0, 5));
+
+      // Local CSS and script references on the page must resolve inside dist/.
+      const refs = [
+        ...[...src.matchAll(/<link rel="stylesheet" href="([^"]+)">/g)].map((m) => m[1]),
+        ...[...src.matchAll(/<script src="([^"]+)"><\/script>/g)].map((m) => m[1]),
+      ].filter((r) => r.startsWith("/"));
+      const brokenRefs = refs.filter((r) => !exists("dist" + r));
+      assert(brokenRefs.length === 0,
+        `generated ${code} page's ${refs.length} local CSS/script references all resolve inside dist/`,
+        `generated ${code} page references files that do not exist in dist/`, brokenRefs);
+
+      assert(/<a[^>]*class="[^"]*\bactive\b[^"]*"[^>]*href="announcements\.html"/.test(src) ||
+        /<a[^>]*href="announcements\.html"[^>]*class="[^"]*\bactive\b[^"]*"/.test(src),
+        `generated ${code} announcements page marks News as the active navigation item`,
+        `generated ${code} announcements page has no active navigation state on News`);
+    }
+
+    // Polish event links resolve within /pl/ precisely because they are
+    // relative and the page itself lives at /pl/announcements.html.
+    const plInternal = gData.pl.filter((d) => d.link && !d.link.external).map((d) => d.link.href);
+    assert(plInternal.length > 0 && plInternal.every((h) => !h.startsWith("/")),
+      `Polish internal links resolve within /pl/ (${plInternal.length} relative links from /pl/announcements.html)`,
+      "a Polish internal link would escape /pl/");
+
+    assert(!/announcements-data|announcements\.html.*dist/.test(sitemapRaw) || !/\/dist\//.test(sitemapRaw),
+      "sitemap.xml lists no generated announcement artefact",
+      "sitemap.xml references generated output");
+
+    // --- semantic comparison against the live pages -------------------------
+    const { spawnSync } = require("child_process");
+    const annCmp = spawnSync(process.execPath, [path.join(__dirname, "compare-announcements.js")], {
+      cwd: ROOT, encoding: "utf8",
+    });
+    const annMatched = (annCmp.stdout.match(/PASS — (\d+)\/\1 comparisons matched/) || [])[1];
+    assert(annCmp.status === 0,
+      `generated announcements match the live pages (${annMatched || "?"} semantic comparisons — scripts/compare-announcements.js)`,
+      "scripts/compare-announcements.js reports differences from the live announcement pages",
+      (annCmp.stdout || "").split("\n").filter((l) => /FAIL/.test(l)).slice(0, 12));
   }
 }
 

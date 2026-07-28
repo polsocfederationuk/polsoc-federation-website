@@ -1,0 +1,47 @@
+# Announcement — 2025/26.
+# Generated from the live data arrays during the Phase 6 migration.
+# Fields above the `en:` block are shared and identical in both languages
+# by construction. Body text is Markdown; raw HTML is rejected by the build.
+
+slug: polish-business-forum-2026-two-days-that
+academic_year: "2025/26"
+published_date: "2026-04-30"
+order: 5
+published: true
+
+image: "/assets/pbf/stage.jpg"
+image_position: null
+image_fit: null
+image_background: null
+extra_images: []
+signups_closed: false
+
+link:
+  type: event
+  event_slug: business-forum
+
+en:
+  title: "Polish Business Forum 2026: two days that made history"
+  subtitle: "300+ guests, world-class speakers and the inaugural Forum Ball at The Landmark London."
+  body: |
+    The inaugural Polish Business Forum is behind us — and it exceeded every expectation.
+
+    Over two days at London Business School, more than 300 students, young professionals, investors, entrepreneurs and policymakers explored the theme “Polish Golden Age: From Emerging to Leading” through keynotes, panels, workshops, a career fair and the inaugural Forum Ball at The Landmark London.
+
+    The programme featured conversations with former Prime Minister Jan Krzysztof Bielecki, historian Sir Norman Davies and economist Marcin Piątkowski, alongside investors and leaders from Goldman Sachs, Morgan Stanley, Microsoft, EBRD, KNF, VeloBank and many more.
+
+    Thank you to every speaker, partner, volunteer and guest who made it happen. Planning for the next edition begins soon.
+  link_label: "Explore the Forum"
+
+pl:
+  title: "Polish Business Forum 2026: dwa dni, które przeszły do historii"
+  subtitle: "Ponad 300 gości, prelegenci światowej klasy i pierwszy Bal Forum w The Landmark London."
+  body: |
+    Pierwsze Polish Business Forum za nami — i przerosło wszelkie oczekiwania.
+
+    Przez dwa dni w London Business School ponad 300 studentów, młodych profesjonalistów, inwestorów, przedsiębiorców i decydentów zgłębiało hasło „Polish Golden Age: From Emerging to Leading” podczas wykładów, paneli, warsztatów, targów pracy i pierwszego Balu Forum w The Landmark London.
+
+    W programie znalazły się rozmowy z byłym premierem Janem Krzysztofem Bieleckim, historykiem sir Normanem Daviesem i ekonomistą Marcinem Piątkowskim, a także z inwestorami i liderami z Goldman Sachs, Morgan Stanley, Microsoft, EBOR, KNF, VeloBank i wielu innych instytucji.
+
+    Dziękujemy każdemu prelegentowi, partnerowi, wolontariuszowi i gościowi, dzięki którym to się wydarzyło. Prace nad kolejną edycją ruszają wkrótce.
+  link_label: "Poznaj Forum"

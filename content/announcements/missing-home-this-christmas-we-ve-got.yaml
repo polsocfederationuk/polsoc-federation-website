@@ -1,0 +1,43 @@
+# Announcement — 2025/26.
+# Generated from the live data arrays during the Phase 6 migration.
+# Fields above the `en:` block are shared and identical in both languages
+# by construction. Body text is Markdown; raw HTML is rejected by the build.
+
+slug: missing-home-this-christmas-we-ve-got
+academic_year: "2025/26"
+published_date: "2025-11-26"
+order: 17
+published: true
+
+image: "/assets/announcements/christmas-announcement.jpg"
+image_position: null
+image_fit: null
+image_background: null
+extra_images: []
+signups_closed: true
+
+link:
+  type: event
+  event_slug: christmas-dinner
+
+en:
+  title: "Missing home this Christmas? We've got you covered"
+  subtitle: "Join our annual Christmas Dinner at Ognisko on 8 December."
+  body: |
+    Missing home this Christmas? We've got you covered.
+
+    Join us for an unforgettable evening at the Ognisko Restaurant on Monday 8 December — complete with a complimentary welcome drink and a festive dinner that will transport you straight back to a Polish Christmas table.
+
+    A limited number of early-bird tickets were released — they always go quickly!
+  link_label: "Explore the event"
+
+pl:
+  title: "Tęsknisz za domem w święta? Mamy coś dla Ciebie"
+  subtitle: "Dołącz do naszej dorocznej Kolacji Wigilijnej w Ognisku Polskim 8 grudnia."
+  body: |
+    Tęsknisz za domem w święta? Mamy coś dla Ciebie.
+
+    Dołącz do nas na niezapomniany wieczór w restauracji Ognisko Polskie w poniedziałek 8 grudnia — z drinkiem powitalnym w cenie i świąteczną kolacją, która przeniesie Cię prosto do polskiego stołu wigilijnego.
+
+    Pula biletów w niższej cenie była ograniczona — takie zawsze znikają błyskawicznie!
+  link_label: "Zobacz wydarzenie"

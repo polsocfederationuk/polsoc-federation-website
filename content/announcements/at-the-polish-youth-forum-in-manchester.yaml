@@ -1,0 +1,43 @@
+# Announcement — 2025/26.
+# Generated from the live data arrays during the Phase 6 migration.
+# Fields above the `en:` block are shared and identical in both languages
+# by construction. Body text is Markdown; raw HTML is rejected by the build.
+
+slug: at-the-polish-youth-forum-in-manchester
+academic_year: "2025/26"
+published_date: "2025-11-24"
+order: 18
+published: true
+
+image: "/assets/announcements/youth-forum.jpg"
+image_position: null
+image_fit: null
+image_background: null
+extra_images: []
+signups_closed: false
+
+link:
+  type: external
+  url: "https://twojapolonia.tvp.pl/polacy-na-swiecie/polish-youth-forum-2025-w-manchesterze-mloda-polonia-o-przyszlosci,90510126"
+
+en:
+  title: "At the Polish Youth Forum in Manchester"
+  subtitle: "Kasia Steliga spoke about her journey as a student; TVP Polonia covered the day."
+  body: |
+    On 22 November, Nikodem Rajpold, our Vice-President, and Kasia Steliga, our North Executive, took part in the Polish Youth Forum 2025 in Manchester — a gathering of young Polonia from across the north of England to talk about the future of the Polish community abroad.
+
+    Kasia delivered a speech about her own journey as a Polish student in the UK, and spoke to TVP Polonia about the day — you can watch the coverage below.
+
+    It was fantastic to see the energy of the Polish community in the North, and further proof of why the Federation's presence beyond London matters so much.
+  link_label: "Watch the TVP coverage"
+
+pl:
+  title: "Na Polish Youth Forum w Manchesterze"
+  subtitle: "Kasia Steliga opowiedziała o swojej studenckiej drodze; relację przygotowała TVP Polonia."
+  body: |
+    22 listopada Nikodem Rajpold, nasz wiceprezes, i Kasia Steliga, przedstawicielka regionu północnego, wzięli udział w Polish Youth Forum 2025 w Manchesterze — spotkaniu młodej Polonii z północnej Anglii poświęconym przyszłości polskiej społeczności za granicą.
+
+    Kasia wygłosiła przemówienie o swojej drodze jako polskiej studentki w Wielkiej Brytanii i opowiedziała o tym dniu TVP Polonia — relację możesz obejrzeć poniżej.
+
+    Energia polskiej społeczności na północy zrobiła na nas ogromne wrażenie i po raz kolejny pokazała, jak ważna jest obecność Federacji poza Londynem.
+  link_label: "Obejrzyj materiał TVP"

@@ -1,0 +1,47 @@
+# Announcement — 2025/26.
+# Generated from the live data arrays during the Phase 6 migration.
+# Fields above the `en:` block are shared and identical in both languages
+# by construction. Body text is Markdown; raw HTML is rejected by the build.
+
+slug: become-a-trustee-applications-for-2026-27
+academic_year: "2025/26"
+published_date: "2026-07-07"
+order: 1
+published: true
+
+image: "/assets/announcements/become-a-trustee.jpg"
+image_position: "center 22%"
+image_fit: null
+image_background: null
+extra_images: []
+signups_closed: true
+
+link: null
+
+en:
+  title: "Become a trustee: applications for 2026/27 are open"
+  subtitle: "Five board roles open to ambitious Polish students across the UK."
+  body: |
+    The Federation helped shape the careers of the people who came before you. Now it is your turn.
+
+    We are recruiting our 2026/27 board — five trustee roles open to ambitious Polish students across the UK who want to do something that actually matters:
+
+    President · Vice-President · Head of Marketing · Head of Partnerships · Head of Legal & Finance
+
+    It is demanding. It is real. And it will push you further than any classroom will.
+
+    Applications close on 19 July. You can find out more about what each position involves [on our Instagram](https://www.instagram.com/p/DafxJ5ejGF4/?img_index=1).
+
+pl:
+  title: "Zostań powiernikiem: nabór na rok 2026/27 otwarty"
+  subtitle: "Pięć funkcji w zarządzie dla ambitnych polskich studentów z całej Wielkiej Brytanii."
+  body: |
+    Federacja pomogła ukształtować kariery tych, którzy byli przed Tobą. Teraz Twoja kolej.
+
+    Szukamy zarządu na rok 2026/27 — pięć funkcji powierniczych dla ambitnych polskich studentów z całej Wielkiej Brytanii, którzy chcą robić coś, co naprawdę ma znaczenie:
+
+    Prezes · Wiceprezes · Szef ds. marketingu · Szef ds. partnerstw · Szef ds. prawnych i finansów
+
+    To wymagające zadanie. Prawdziwe. I rozwinie Cię bardziej niż niejedne zajęcia.
+
+    Nabór trwa do 19 lipca. Więcej o tym, czym zajmuje się każda z funkcji, znajdziesz [na naszym Instagramie](https://www.instagram.com/p/DafxJ5ejGF4/?img_index=1).

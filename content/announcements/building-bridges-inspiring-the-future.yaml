@@ -1,0 +1,39 @@
+# Announcement — 2025/26.
+# Generated from the live data arrays during the Phase 6 migration.
+# Fields above the `en:` block are shared and identical in both languages
+# by construction. Body text is Markdown; raw HTML is rejected by the build.
+
+slug: building-bridges-inspiring-the-future
+academic_year: "2025/26"
+published_date: "2025-10-19"
+order: 25
+published: true
+
+image: "/assets/announcements/professionals-conference.jpg"
+image_position: null
+image_fit: null
+image_background: null
+extra_images: []
+signups_closed: false
+
+link: null
+
+en:
+  title: "Building Bridges, Inspiring the Future"
+  subtitle: "Representing Polish students at the Polish Professionals in Great Britain conference."
+  body: |
+    On 18 October, Nikodem Rajpold, the Federation's Vice-President, attended the Polish Professionals in Great Britain: Building Bridges, Inspiring the Future conference at the Royal Army and Navy Club in London as an honorary guest, representing Polish students.
+
+    The day marked the start of many relationships that went on to contribute greatly to the Federation's development throughout the year.
+
+    Many thanks to the organisers — the Association of Polish Engineers in Great Britain, the Polish Medical Association, the Polonium Foundation, the Polish City Club and Polish Business Link — for thinking of Polish students in the UK and wanting to connect with the next generation.
+
+pl:
+  title: "Building Bridges, Inspiring the Future"
+  subtitle: "Reprezentowaliśmy polskich studentów na konferencji Polish Professionals in Great Britain."
+  body: |
+    18 października Nikodem Rajpold, wiceprezes Federacji, wziął udział jako gość honorowy w konferencji Polish Professionals in Great Britain: Building Bridges, Inspiring the Future w Royal Army and Navy Club w Londynie, reprezentując polskich studentów.
+
+    Ten dzień zapoczątkował wiele relacji, które przez cały rok znacząco wpłynęły na rozwój Federacji.
+
+    Dziękujemy organizatorom — Stowarzyszeniu Techników Polskich w Wielkiej Brytanii, Polskiemu Towarzystwu Medycznemu, Fundacji Polonium, Polish City Club i Polish Business Link — za pamięć o polskich studentach w Wielkiej Brytanii i chęć budowania relacji z kolejnym pokoleniem.
