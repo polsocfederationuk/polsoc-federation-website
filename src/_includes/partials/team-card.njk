@@ -13,12 +13,13 @@
                            string (t.team.photoPlaceholderLabel), not member data,
                            so a second member losing their photo needs no new copy.
 
-  ACCESSIBILITY NOTE — the aria-label patterns are English in BOTH locales.
-  That reproduces the live pl/team.html verbatim; see src/_data/ui.json and
-  docs/TEAM_MIGRATION.md §15. The `name` substituted in is stored per member
-  (aria_name_email / aria_name_linkedin) rather than derived, because the live
-  pages disambiguate the two members called Maksymilian on LinkedIn but not on
-  e-mail — deriving it would silently change one of those labels.
+  ACCESSIBILITY — each contact link's accessible name comes from a per-locale
+  pattern in ui.json with the member's FULL name substituted in, so a Polish
+  page announces Polish and no two links on the page share a name. Phase 5
+  corrected this; see docs/TEAM_ACCESSIBILITY_REMEDIATION.md.
+
+  `title` stays as the short tooltip ("Email" / "E-mail" / "LinkedIn"). It is
+  not the accessible name and is not relied on as one.
 #}
 {%- set m = member[locale.code] -%}
         <div class="{{ revealIndex | revealClass }}">
@@ -27,8 +28,8 @@
             <div class="member-role">{{ m.role }}</div>
             <h3>{{ member.name }}</h3>
             <div class="member-links">
-              <a href="mailto:{{ member.email }}" title="{{ t.team.emailLinkTitle }}" aria-label="{{ t.team.emailAriaPattern | replace("{name}", member.aria_name_email) }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg></a>
-              <a href="{{ member.linkedin }}" title="{{ t.team.linkedinLinkTitle }}" aria-label="{{ t.team.linkedinAriaPattern | replace("{name}", member.aria_name_linkedin) }}" target="_blank" rel="noopener"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.34V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.55V9h3.57v11.45z"/></svg></a>
+              <a href="mailto:{{ member.email }}" title="{{ t.team.emailLinkTitle }}" aria-label="{{ t.team.emailAriaPattern | replace("{name}", member.name) }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg></a>
+              <a href="{{ member.linkedin }}" title="{{ t.team.linkedinLinkTitle }}" aria-label="{{ t.team.linkedinAriaPattern | replace("{name}", member.name) }}" target="_blank" rel="noopener"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.34V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.55V9h3.57v11.45z"/></svg></a>
             </div>
           </div>
         </div>

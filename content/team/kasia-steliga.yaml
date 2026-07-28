@@ -14,12 +14,6 @@ photo: "/assets/team/kasia-steliga.jpg"
 email: "kasia.steliga@polsocfederation.pl"
 linkedin: "https://www.linkedin.com/in/katarzyna-steliga-770656145/"
 
-# Names used inside the link aria-labels, transcribed verbatim. Stored rather
-# than derived because the live pages disambiguate the two people called
-# Maksymilian on LinkedIn but not on e-mail.
-aria_name_email: "Kasia"
-aria_name_linkedin: "Kasia"
-
 en:
   role: "North Executive"
   photo_alt: "Kasia Steliga"

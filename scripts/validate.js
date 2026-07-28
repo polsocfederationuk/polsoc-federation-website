@@ -1077,10 +1077,16 @@ assert(rawHtml.length === 0,
   "no member record contains raw HTML tags or entities",
   "member fields containing markup", rawHtml);
 
-const missingAria = current.filter((m) => !m.aria_name_email || !m.aria_name_linkedin).map((m) => m.slug);
-assert(missingAria.length === 0,
-  "every member stores the exact names used in their link aria-labels",
-  "members missing an aria name component", missingAria);
+// Phase 5 derives every contact-link accessible name from `name` via the
+// per-locale patterns in ui.json, so the old per-member aria fields are gone.
+// They must not creep back: a stored name would silently override the pattern
+// for one member and reintroduce the ambiguity Phase 5 removed.
+const staleAria = current
+  .filter((m) => "aria_name_email" in m || "aria_name_linkedin" in m)
+  .map((m) => m.slug);
+assert(staleAria.length === 0,
+  "no member stores a redundant aria name (accessible names derive from `name`)",
+  "records still carrying aria_name_email / aria_name_linkedin", staleAria);
 
 /* =================================================================== 15. generated team pages */
 
@@ -1140,7 +1146,16 @@ if (!exists("dist")) {
         `generated ${code} page renders exactly ${EXPECTED_TOTAL} member cards`,
         `generated ${code} page renders ${cards} member cards, expected ${EXPECTED_TOTAL}`);
 
-      const chips = [...src.matchAll(/<button class="chip[^"]*" data-filter="([^"]+)">/g)].map((m) => m[1]);
+      // Attribute-order agnostic on purpose: pinning the exact attribute
+      // sequence made this silently match nothing when Phase 5 added
+      // aria-pressed, and a zero-length list compares equal to a zero-length
+      // list. The `.length === 7` assertion below is the guard against that.
+      const chips = [...src.matchAll(/<button\s+([^>]*?)>/g)]
+        .filter((m) => /class="[^"]*\bchip\b/.test(m[1]))
+        .map((m) => (m[1].match(/data-filter="([^"]+)"/) || [])[1]);
+      assert(chips.length === 7,
+        `generated ${code} page exposes all seven filter controls`,
+        `generated ${code} page exposes ${chips.length} filter controls, expected 7`);
       assert(JSON.stringify(chips) === JSON.stringify(["all", ...cfgKeys]),
         `generated ${code} page has the "all" chip plus all six group filters, in order`,
         `generated ${code} page filter controls are wrong or out of order`, chips);
@@ -1220,6 +1235,212 @@ if (!exists("dist")) {
       `generated team pages match the live pages (${matched || "?"} semantic comparisons — scripts/compare-team.js)`,
       "scripts/compare-team.js reports differences from the live team pages",
       (cmp.stdout || "").split("\n").filter((l) => /FAIL/.test(l)).slice(0, 12));
+  }
+}
+
+/* =================================================================== 16. team accessibility */
+
+section("16. Team filter and contact-link accessibility (Phase 5)");
+
+// Applies to the LIVE pages and, when a build exists, the generated ones —
+// the whole point of this phase is that the two carry the same corrections.
+const A11Y_PAGES = [
+  { label: "live en", rel: "team.html", locale: "en" },
+  { label: "live pl", rel: "pl/team.html", locale: "pl" },
+];
+if (exists("dist/team.html")) A11Y_PAGES.push({ label: "dist en", rel: "dist/team.html", locale: "en" });
+if (exists("dist/pl/team.html")) A11Y_PAGES.push({ label: "dist pl", rel: "dist/pl/team.html", locale: "pl" });
+
+// Stated here independently of ui.json: a check that reads its expectation from
+// the same file it is checking would pass no matter what that file said.
+const ARIA_PATTERNS = {
+  en: { email: "Email {name}", linkedin: "{name} on LinkedIn" },
+  pl: { email: "Wyślij e-mail do: {name}", linkedin: "Profil LinkedIn: {name}" },
+};
+const ENGLISH_LEAKS = [/^Email\s/, /\son LinkedIn$/];
+const ALL_KEYS = ["all", "trustees", "partnerships", "events", "marketing", "legal", "regional"];
+
+for (const page of A11Y_PAGES) {
+  const src = read(page.rel);
+  const tag = `${page.label} (${page.rel})`;
+
+  // --- filter container ---------------------------------------------------
+  const barMatch = src.match(/<div class="filter-bar([^"]*)"([^>]*)>([\s\S]*?)<\/div>/);
+  assert(Boolean(barMatch), `${tag}: the filter container was found`,
+    `${tag}: no .filter-bar container — the checks below cannot run`);
+
+  if (barMatch) {
+    const barAttrs = barMatch[2];
+    const barBody = barMatch[3];
+
+    assert(!/role="tablist"/.test(src),
+      `${tag}: no role="tablist" (these controls filter a roster, not tab panels)`,
+      `${tag}: role="tablist" is still present`);
+    assert(!/role="tab"/.test(src),
+      `${tag}: no role="tab" anywhere`,
+      `${tag}: role="tab" was introduced — this must not become a tab widget`);
+    assert(/role="group"/.test(barAttrs),
+      `${tag}: the filter container is role="group"`,
+      `${tag}: the filter container is not role="group"`);
+
+    const barLabel = barAttrs.match(/aria-label="([^"]*)"/);
+    assert(Boolean(barLabel && barLabel[1].trim()),
+      `${tag}: the filter group has a non-empty aria-label ("${barLabel ? barLabel[1] : ""}")`,
+      `${tag}: the filter group has no usable aria-label`);
+    // Localised: the Polish label must not be the English one.
+    if (barLabel) {
+      const isEnglishLabel = barLabel[1] === "Filter team by group";
+      assert(page.locale === "en" ? isEnglishLabel : !isEnglishLabel,
+        `${tag}: the filter group's aria-label is in the page's own language`,
+        `${tag}: the filter group's aria-label is not localised ("${barLabel[1]}")`);
+    }
+
+    // --- the chips --------------------------------------------------------
+    const chips = [];
+    for (const m of barBody.matchAll(/<(\w+)\s+([^>]*?)>([\s\S]*?)<\/\1>/g)) {
+      const [, el, attrs, label] = m;
+      if (!/class="[^"]*\bchip\b/.test(attrs)) continue;
+      const at = (n) => { const v = attrs.match(new RegExp(n + '="([^"]*)"')); return v ? v[1] : null; };
+      chips.push({ el, key: at("data-filter"), pressed: at("aria-pressed"),
+        selected: at("aria-selected"), role: at("role"),
+        active: /class="[^"]*\bactive\b/.test(attrs), label: label.trim() });
+    }
+
+    assert(chips.length === 7,
+      `${tag}: all seven filter controls were parsed`,
+      `${tag}: parsed ${chips.length} filter controls, expected 7 — a markup change may be hiding the checks below`);
+
+    assert(chips.every((c) => c.el === "button"),
+      `${tag}: every filter is a native <button> (Enter/Space work without a key handler)`,
+      `${tag}: a filter control is not a native button`,
+      chips.filter((c) => c.el !== "button").map((c) => `${c.key}: <${c.el}>`));
+
+    assert(chips.every((c) => c.role === null),
+      `${tag}: no filter overrides its native button role`,
+      `${tag}: a filter carries an explicit role`,
+      chips.filter((c) => c.role).map((c) => `${c.key}: role="${c.role}"`));
+
+    assert(chips.every((c) => c.selected === null),
+      `${tag}: no filter carries aria-selected`,
+      `${tag}: aria-selected is present on a filter (it belongs to tabs, not toggles)`,
+      chips.filter((c) => c.selected !== null).map((c) => c.key));
+
+    const noPressed = chips.filter((c) => c.pressed === null).map((c) => c.key);
+    assert(noPressed.length === 0,
+      `${tag}: all ${chips.length} filters expose aria-pressed`,
+      `${tag}: filters missing aria-pressed`, noPressed);
+
+    const pressed = chips.filter((c) => c.pressed === "true").map((c) => c.key);
+    assert(pressed.length === 1,
+      `${tag}: exactly one filter starts pressed`,
+      `${tag}: ${pressed.length} filters start pressed, expected exactly 1`, pressed);
+    assert(pressed.length === 1 && pressed[0] === "all",
+      `${tag}: the initially pressed filter is the "Everyone"/"Wszyscy" control`,
+      `${tag}: the initially pressed filter is not the "all" control`, pressed);
+
+    const badUnpressed = chips.filter((c) => c.key !== "all" && c.pressed !== "false").map((c) => c.key);
+    assert(badUnpressed.length === 0,
+      `${tag}: every other filter starts aria-pressed="false"`,
+      `${tag}: filters that do not start explicitly unpressed`, badUnpressed);
+
+    // The state a sighted user sees and the state announced must agree.
+    const mismatched = chips.filter((c) => c.active !== (c.pressed === "true")).map((c) => c.key);
+    assert(mismatched.length === 0,
+      `${tag}: the pressed state matches the .active class on every filter`,
+      `${tag}: pressed state and .active class disagree`, mismatched);
+
+    assert(JSON.stringify(chips.map((c) => c.key)) === JSON.stringify(ALL_KEYS),
+      `${tag}: filter order is unchanged`,
+      `${tag}: filter order changed`, chips.map((c) => c.key));
+  }
+
+  // --- contact links ------------------------------------------------------
+  const cards = [...src.matchAll(
+    /<h3>([^<]+)<\/h3>\s*<div class="member-links">([\s\S]*?)<\/div>/g)];
+  assert(cards.length === EXPECTED_TOTAL,
+    `${tag}: all ${EXPECTED_TOTAL} member contact blocks were parsed`,
+    `${tag}: parsed ${cards.length} member contact blocks, expected ${EXPECTED_TOTAL}`);
+
+  const pat = ARIA_PATTERNS[page.locale];
+  const wrongEmail = [];
+  const wrongLinkedIn = [];
+  const emptyName = [];
+  const leaked = [];
+  const rawAddress = [];
+  const allNames = [];
+
+  for (const [, name, links] of cards) {
+    const person = name.trim();
+    const em = links.match(/href="mailto:[^"]+"[^>]*aria-label="([^"]*)"/);
+    const li = links.match(/href="https:\/\/www\.linkedin\.com[^"]+"[^>]*aria-label="([^"]*)"/);
+    const emAria = em ? em[1] : "";
+    const liAria = li ? li[1] : "";
+    allNames.push(emAria, liAria);
+
+    if (!emAria.trim() || !liAria.trim()) emptyName.push(person);
+    if (emAria !== pat.email.replace("{name}", person)) wrongEmail.push(`${person}: "${emAria}"`);
+    if (liAria !== pat.linkedin.replace("{name}", person)) wrongLinkedIn.push(`${person}: "${liAria}"`);
+    if (/@/.test(emAria) || /@/.test(liAria)) rawAddress.push(person);
+    if (page.locale === "pl" && ENGLISH_LEAKS.some((re) => re.test(emAria) || re.test(liAria))) {
+      leaked.push(`${person}: "${emAria}" / "${liAria}"`);
+    }
+  }
+
+  assert(emptyName.length === 0,
+    `${tag}: every e-mail and LinkedIn link has a non-empty accessible name`,
+    `${tag}: contact links with no accessible name`, emptyName);
+  assert(wrongEmail.length === 0,
+    `${tag}: all ${cards.length} e-mail links follow "${pat.email}"`,
+    `${tag}: e-mail accessible names that do not follow the locale's pattern`, wrongEmail.slice(0, 5));
+  assert(wrongLinkedIn.length === 0,
+    `${tag}: all ${cards.length} LinkedIn links follow "${pat.linkedin}"`,
+    `${tag}: LinkedIn accessible names that do not follow the locale's pattern`, wrongLinkedIn.slice(0, 5));
+  assert(rawAddress.length === 0,
+    `${tag}: no accessible name exposes a raw e-mail address`,
+    `${tag}: accessible names containing an e-mail address`, rawAddress);
+  assert(new Set(allNames).size === allNames.length,
+    `${tag}: all ${allNames.length} contact-link accessible names are unique on the page`,
+    `${tag}: two contact links share an accessible name`,
+    allNames.filter((n, i) => allNames.indexOf(n) !== i));
+
+  if (page.locale === "pl") {
+    assert(leaked.length === 0,
+      `${tag}: no English label pattern survives on the Polish page`,
+      `${tag}: English accessible-label patterns still present`, leaked.slice(0, 5));
+  }
+
+  // --- the filter behaviour keeps both states in step ----------------------
+  // Whether the code is inline (live) or a linked file (generated), it must set
+  // aria-pressed. A page that only toggles the class would pass every static
+  // check above and still strand assistive technology on the initial state.
+  const behaviour = /dist\//.test(page.rel)
+    ? read("dist/js/team-filter.js")
+    : (src.match(/<script>[\s\S]*?<\/script>/g) || []).join("");
+  assert(/aria-pressed/.test(behaviour),
+    `${tag}: the filter code updates aria-pressed, not just the .active class`,
+    `${tag}: the filter code never touches aria-pressed — the state would freeze on load`);
+}
+
+// Live and generated must agree on the corrected semantics, not merely each be
+// internally consistent.
+if (exists("dist/team.html") && exists("dist/pl/team.html")) {
+  const semantics = (rel) => {
+    const s = read(rel);
+    const bar = s.match(/<div class="filter-bar[^"]*"([^>]*)>([\s\S]*?)<\/div>/);
+    return JSON.stringify({
+      role: bar ? (bar[1].match(/role="([^"]*)"/) || [])[1] : null,
+      label: bar ? (bar[1].match(/aria-label="([^"]*)"/) || [])[1] : null,
+      pressed: bar ? [...bar[2].matchAll(/data-filter="([^"]*)"[^>]*aria-pressed="([^"]*)"/g)]
+        .map((m) => `${m[1]}=${m[2]}`) : [],
+      aria: [...s.matchAll(/aria-label="([^"]*)"/g)].map((m) => m[1]).filter((v) => /:|Email|LinkedIn/.test(v)),
+    });
+  };
+  for (const [live, gen, lang] of [["team.html", "dist/team.html", "English"],
+                                   ["pl/team.html", "dist/pl/team.html", "Polish"]]) {
+    assert(semantics(live) === semantics(gen),
+      `${lang}: live and generated pages carry identical corrected semantics`,
+      `${lang}: live and generated pages disagree on the corrected semantics`,
+      [`live: ${semantics(live)}`, `dist: ${semantics(gen)}`]);
   }
 }
 

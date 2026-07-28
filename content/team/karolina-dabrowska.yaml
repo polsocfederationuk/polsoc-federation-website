@@ -14,12 +14,6 @@ photo: "/assets/team/karolina-dabrowska.jpg"
 email: "karolina.dabrowska@polsocfederation.pl"
 linkedin: "https://www.linkedin.com/in/karolina-d%C4%85browska-576588277/"
 
-# Names used inside the link aria-labels, transcribed verbatim. Stored rather
-# than derived because the live pages disambiguate the two people called
-# Maksymilian on LinkedIn but not on e-mail.
-aria_name_email: "Karolina"
-aria_name_linkedin: "Karolina"
-
 en:
   role: "Events Officer"
   photo_alt: "Karolina Dąbrowska"

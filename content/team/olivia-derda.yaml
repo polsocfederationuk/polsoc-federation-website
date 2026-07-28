@@ -14,12 +14,6 @@ photo: "/assets/team/olivia-derda.jpg"
 email: "olivia.derda@polsocfederation.pl"
 linkedin: "https://www.linkedin.com/in/olivia-derda-4b83a320b/"
 
-# Names used inside the link aria-labels, transcribed verbatim. Stored rather
-# than derived because the live pages disambiguate the two people called
-# Maksymilian on LinkedIn but not on e-mail.
-aria_name_email: "Olivia"
-aria_name_linkedin: "Olivia"
-
 en:
   role: "Head of Legal"
   photo_alt: "Olivia Derda"

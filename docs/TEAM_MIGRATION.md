@@ -37,10 +37,6 @@ photo: "/assets/team/example-person.jpg"
 email: "example.person@polsocfederation.pl"
 linkedin: "https://www.linkedin.com/in/example-person/"
 
-# Names used inside the link aria-labels, transcribed verbatim.
-aria_name_email: "Example"
-aria_name_linkedin: "Example"
-
 en:
   role: "Example Officer"
   photo_alt: "Example Person"
@@ -55,10 +51,10 @@ Notes on the fields that are not self-explanatory:
 - **`academic_year`** is quoted. Unquoted, YAML would happily read `2025/26` as
   a string anyway, but quoting makes the intent explicit and matches the date
   handling elsewhere in the build (see §4 and BUILD_ARCHITECTURE §11).
-- **`aria_name_email` / `aria_name_linkedin`** are stored rather than derived
-  from `name`. The live pages use a bare first name for most people but the full
-  name for both members called Maksymilian on LinkedIn. Deriving would silently
-  change one of those labels, so the exact strings are kept. See §15.
+- **Contact-link accessible names are not stored.** They are built at render
+  time from a per-locale pattern in `ui.json` with the member's full `name`
+  substituted in. Phase 4 stored them per member to reproduce the live pages
+  exactly; Phase 5 fixed the underlying defect and removed the fields. See §15.
 - **`photo`** is root-relative (`/assets/…`), never page-relative. A
   page-relative path in shared markup resolves against the *page* URL and breaks
   under `/pl/` — that shipped as a live bug once (CLEANUP_BASELINE §5).
@@ -79,7 +75,6 @@ construction, because there is only one copy of it.
 | `photo` (path or `null`) | |
 | `email` | |
 | `linkedin` | |
-| `aria_name_email`, `aria_name_linkedin` | |
 
 This nesting is not arbitrary — it is Decap CMS's `i18n.structure: single_file`
 layout, so the same files become CMS-editable without restructuring (§12).
@@ -232,12 +227,14 @@ translated.
 
 Markup and behaviour are unchanged from the live pages:
 
-- `<div class="filter-bar reveal" role="tablist" aria-label="…">`
-- `<button class="chip" data-filter="KEY">LABEL</button>`, with `all` first and
-  `active` on it at page load
+- `<div class="filter-bar reveal" role="group" aria-label="…">`
+- `<button class="chip" data-filter="KEY" aria-pressed="…">LABEL</button>`, with
+  `all` first, carrying `active` and `aria-pressed="true"` at page load
 - one `<div class="team-section" data-group="KEY">` per group
 
-Clicking a chip moves `.active` to it and toggles `.hidden` on every section
+Clicking a chip moves both `.active` and `aria-pressed="true"` to it — from a
+single pass, so the visible and announced states cannot drift — and toggles
+`.hidden` on every section
 whose `data-group` does not match — `all` shows everything. Cards in the newly
 shown section replay their reveal animation on a 50 ms stagger.
 
@@ -253,13 +250,13 @@ than ignoring it, so it can never quietly become an unnoticed drift.
 
 `js/main.js` is untouched and still loads first.
 
-### Known limitation, inherited not introduced
+### Corrected in Phase 5
 
-`role="tablist"` is used without `role="tab"` on the buttons and without
-`aria-selected`, so assistive technology is told a tablist exists but not which
-item is chosen. This is exactly what the live pages do; reproducing it faithfully
-was the brief. Fixing it is a template-only change to `team-filters.njk` and
-belongs in an accessibility pass, alongside §15.
+Phase 4 reproduced the live pages' `role="tablist"` faithfully, which meant
+reproducing a defect: a tablist with no tabs, no tabpanels and no
+`aria-selected`. Phase 5 replaced it with a labelled `role="group"` of native
+buttons carrying `aria-pressed`, on the live pages and the templates together.
+See [TEAM_ACCESSIBILITY_REMEDIATION.md](TEAM_ACCESSIBILITY_REMEDIATION.md) §2–3.
 
 ## 12. Connecting to Decap CMS
 
@@ -293,10 +290,9 @@ Two things must be settled before wiring it up:
 
 - **The `group` select must be driven by `team-groups.yaml`**, not by a
   hard-coded options list, or the two definitions will diverge.
-- **`aria_name_email` / `aria_name_linkedin` need a decision.** They are an
-  artefact of reproducing the current pages exactly (§15). Fix the underlying
-  accessibility defect first and these fields can be derived and dropped
-  entirely, rather than exposed as two confusing extra inputs.
+- ~~`aria_name_email` / `aria_name_linkedin` need a decision.~~ **Settled in
+  Phase 5:** the accessibility defect was fixed, the accessible names are now
+  derived from `name`, and both fields have been removed. Nothing to expose.
 
 CMS work is out of scope here; nothing in this phase adds authentication or an
 admin route.

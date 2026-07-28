@@ -14,12 +14,6 @@ photo: "/assets/team/alicja-pardala.jpg"
 email: "alicja.pardala@polsocfederation.pl"
 linkedin: "https://www.linkedin.com/in/alicja-pardala/"
 
-# Names used inside the link aria-labels, transcribed verbatim. Stored rather
-# than derived because the live pages disambiguate the two people called
-# Maksymilian on LinkedIn but not on e-mail.
-aria_name_email: "Alicja"
-aria_name_linkedin: "Alicja"
-
 en:
   role: "Partnerships Officer"
   photo_alt: "Alicja Pardała"

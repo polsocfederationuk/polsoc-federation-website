@@ -118,6 +118,12 @@ function parse(html) {
   }
 
   // ---- filter chips -----------------------------------------------------
+  //
+  // The attribute-order-agnostic parsing below is deliberate. An earlier
+  // version pinned `class` then `data-filter` then `>`; adding aria-pressed in
+  // Phase 5 made it match nothing, and because BOTH sides parsed to an empty
+  // list the filter comparisons still "passed". The `filters` non-empty guard
+  // in comparePage() is what stops that class of false pass recurring.
   const bar = html.match(/<div class="filter-bar([^"]*)"([^>]*)>([\s\S]*?)<\/div>/);
   if (bar) {
     out.filterBarClass = ("filter-bar" + bar[1]).trim();
@@ -125,14 +131,26 @@ function parse(html) {
     const label = bar[2].match(/aria-label="([^"]*)"/);
     out.filterBarRole = role ? role[1] : null;
     out.filterBarLabel = label ? text(label[1]) : null;
-    for (const m of bar[3].matchAll(/<button class="chip([^"]*)" data-filter="([^"]*)">([\s\S]*?)<\/button>/g)) {
+    for (const m of bar[3].matchAll(/<(button|a|div|span)\s+([^>]*?)>([\s\S]*?)<\/\1>/g)) {
+      const [, tag, attrs, label2] = m;
+      if (!/class="[^"]*\bchip\b/.test(attrs)) continue;
+      const attr = (n) => {
+        const v = attrs.match(new RegExp(n + '="([^"]*)"'));
+        return v ? v[1] : null;
+      };
       out.filters.push({
-        key: m[2],
-        active: /\bactive\b/.test(m[1]),
-        label: text(m[3]),
+        tag,                                   // must be a native <button>
+        key: attr("data-filter"),
+        active: /class="[^"]*\bactive\b/.test(attrs),
+        pressed: attr("aria-pressed"),         // null if the attribute is absent
+        ariaSelected: attr("aria-selected"),   // must stay null
+        role: attr("role"),                    // must stay null (no role="tab")
+        label: text(label2),
       });
     }
   }
+  out.hasTablist = /role="tablist"/.test(html);
+  out.hasRoleTab = /role="tab"/.test(html);
 
   // ---- sections and members --------------------------------------------
   const parts = html.split(/<div class="team-section" data-group="([a-z]+)">/);
@@ -227,12 +245,42 @@ function comparePage(name, livePath, distPath, expectations) {
   check(p("hero lead copy"), live.hero.lead, gen.hero.lead);
 
   // --- filters ---
+  // Guard first: an empty parse must never be able to "match" an empty parse.
+  check(p("filter chips were parsed at all (live)"), 7, live.filters.length);
+  check(p("filter chips were parsed at all (generated)"), 7, gen.filters.length);
+
   check(p("filter bar classes"), live.filterBarClass, gen.filterBarClass);
   check(p("filter bar role"), live.filterBarRole, gen.filterBarRole);
   check(p("filter bar aria-label"), live.filterBarLabel, gen.filterBarLabel);
   check(p("filter keys and order"), live.filters.map((f) => f.key), gen.filters.map((f) => f.key));
   check(p("filter labels and order"), live.filters.map((f) => f.label), gen.filters.map((f) => f.label));
   check(p("filter active state"), live.filters.map((f) => f.active), gen.filters.map((f) => f.active));
+  check(p("filter pressed state"), live.filters.map((f) => f.pressed), gen.filters.map((f) => f.pressed));
+  check(p("filter element types"), live.filters.map((f) => f.tag), gen.filters.map((f) => f.tag));
+
+  // --- corrected filter semantics: absolute requirements, both sides --------
+  for (const [side, parsed] of [["live", live], ["generated", gen]]) {
+    check(p(`${side}: no role="tablist" anywhere`), false, parsed.hasTablist);
+    check(p(`${side}: no role="tab" anywhere`), false, parsed.hasRoleTab);
+    check(p(`${side}: filter container is role="group"`), "group", parsed.filterBarRole);
+    check(p(`${side}: filter group has a non-empty aria-label`), true,
+      Boolean(parsed.filterBarLabel && parsed.filterBarLabel.trim()));
+    check(p(`${side}: every filter is a native <button>`), ["button"],
+      [...new Set(parsed.filters.map((f) => f.tag))]);
+    check(p(`${side}: no filter carries role=`), [null],
+      [...new Set(parsed.filters.map((f) => f.role))]);
+    check(p(`${side}: no filter carries aria-selected`), [null],
+      [...new Set(parsed.filters.map((f) => f.ariaSelected))]);
+    check(p(`${side}: every filter carries aria-pressed`), [],
+      parsed.filters.filter((f) => f.pressed === null).map((f) => f.key));
+    check(p(`${side}: exactly one filter starts pressed`), ["all"],
+      parsed.filters.filter((f) => f.pressed === "true").map((f) => f.key));
+    check(p(`${side}: every other filter starts unpressed`), [],
+      parsed.filters.filter((f) => f.key !== "all" && f.pressed !== "false").map((f) => f.key));
+    // The pressed state and the visual state must agree in the served markup.
+    check(p(`${side}: pressed state matches the .active class`), [],
+      parsed.filters.filter((f) => f.active !== (f.pressed === "true")).map((f) => f.key));
+  }
 
   // --- sections ---
   check(p("section keys and order"), live.groups.map((g) => g.key), gen.groups.map((g) => g.key));
@@ -262,6 +310,40 @@ function comparePage(name, livePath, distPath, expectations) {
   ];
   for (const f of FIELDS) {
     check(p(`member field: ${f} (all ${liveM.length}, in order)`), liveM.map((m) => m[f]), genM.map((m) => m[f]));
+  }
+
+  // --- contact-link accessible names: absolute, both sides -----------------
+  //
+  // Parity alone is not enough here: two identically-wrong pages would agree.
+  // Each label is rebuilt from the locale's pattern and the member's own name
+  // and compared to what the page actually serves.
+  for (const [side, members] of [["live", liveM], ["generated", genM]]) {
+    const wantEmail = members.map((m) => expectations.aria.email.replace("{name}", m.name));
+    const wantLinkedIn = members.map((m) => expectations.aria.linkedin.replace("{name}", m.name));
+    check(p(`${side}: e-mail accessible names follow "${expectations.aria.email}"`),
+      wantEmail, members.map((m) => m.emailAria));
+    check(p(`${side}: LinkedIn accessible names follow "${expectations.aria.linkedin}"`),
+      wantLinkedIn, members.map((m) => m.linkedinAria));
+
+    // No link may be nameless, and no accessible name may be a bare address.
+    check(p(`${side}: every contact link has a non-empty accessible name`), [],
+      members.filter((m) => !m.emailAria || !m.emailAria.trim() || !m.linkedinAria || !m.linkedinAria.trim())
+        .map((m) => m.name));
+    check(p(`${side}: no accessible name exposes a raw e-mail address`), [],
+      members.filter((m) => /@/.test(m.emailAria) || /@/.test(m.linkedinAria)).map((m) => m.name));
+
+    // Two links sharing an accessible name is exactly the ambiguity Phase 5
+    // removed by switching from stored first names to the full name.
+    const names = [...members.map((m) => m.emailAria), ...members.map((m) => m.linkedinAria)];
+    check(p(`${side}: all ${names.length} contact-link names are unique on the page`),
+      names.length, new Set(names).size);
+
+    // The Polish page must not fall back to the English patterns.
+    if (expectations.forbiddenAria) {
+      check(p(`${side}: no English label pattern survives on the Polish page`), [],
+        members.filter((m) => expectations.forbiddenAria.some(
+          (re) => re.test(m.emailAria) || re.test(m.linkedinAria))).map((m) => m.name));
+    }
   }
 
   // --- null-photo member ---
@@ -308,11 +390,17 @@ function comparePage(name, livePath, distPath, expectations) {
   console.log(`  -- ${results.length - before - pageFailures}/${results.length - before} matched`);
 }
 
+// The accessible-name patterns each page must serve. These mirror
+// src/_data/ui.json — the generated side reads them from there, so stating them
+// independently here is what makes this a real check rather than a tautology.
 comparePage("English", "team.html", "dist/team.html", {
   scripts: { live: ["js/main.js"], gen: ["js/main.js", "js/team-filter.js"] },
+  aria: { email: "Email {name}", linkedin: "{name} on LinkedIn" },
 });
 comparePage("Polish", "pl/team.html", "dist/pl/team.html", {
   scripts: { live: ["js/main.js"], gen: ["js/main.js", "js/team-filter.js"] },
+  aria: { email: "Wyślij e-mail do: {name}", linkedin: "Profil LinkedIn: {name}" },
+  forbiddenAria: [/^Email /, / on LinkedIn$/],
 });
 
 // ---------------------------------------------------------------------------

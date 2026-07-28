@@ -14,12 +14,6 @@ photo: "/assets/team/szymon-kwidzinski.jpg"
 email: "szymon.kwidzinski@polsocfederation.pl"
 linkedin: "https://www.linkedin.com/in/szymon-kwidzinski/"
 
-# Names used inside the link aria-labels, transcribed verbatim. Stored rather
-# than derived because the live pages disambiguate the two people called
-# Maksymilian on LinkedIn but not on e-mail.
-aria_name_email: "Szymon"
-aria_name_linkedin: "Szymon"
-
 en:
   role: "President"
   photo_alt: "Szymon Kwidziński"

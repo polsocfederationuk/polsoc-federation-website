@@ -14,12 +14,6 @@ photo: "/assets/team/joanna-szpunar.jpg"
 email: "joanna.szpunar@polsocfederation.pl"
 linkedin: "https://www.linkedin.com/in/joanna-szpunar/"
 
-# Names used inside the link aria-labels, transcribed verbatim. Stored rather
-# than derived because the live pages disambiguate the two people called
-# Maksymilian on LinkedIn but not on e-mail.
-aria_name_email: "Joanna"
-aria_name_linkedin: "Joanna"
-
 en:
   role: "Marketing Officer"
   photo_alt: "Joanna Szpunar"

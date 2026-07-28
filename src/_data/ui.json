@@ -36,6 +36,9 @@
     }
   },
 
+  "_ariaPatternComment": "{name} is substituted with the member's FULL name. Until Phase 5 it was a per-member stored string that was usually just a first name, which gave the two members called Maksymilian the identical accessible name \"Email Maksymilian\" on the same page. Using the full name removes that collision and lets the patterns be applied uniformly. See docs/TEAM_ACCESSIBILITY_REMEDIATION.md.",
+
+
   "pl": {
     "logoAlt": "Logo Federacji Polskich Stowarzyszeń Studenckich w Wielkiej Brytanii",
     "brandRows": ["Federacja", "Polskich", "Stowarzyszeń", "Studenckich", "w Wielkiej Brytanii"],
@@ -61,14 +64,14 @@
       "connectHeading": "Śledź nas",
       "copyright": "© 2026 Federacja Polskich Stowarzyszeń Studenckich w Wielkiej Brytanii. Organizacja charytatywna zarejestrowana w Anglii i Walii."
     },
-    "_teamComment": "emailAriaPattern and linkedinAriaPattern are ENGLISH ON PURPOSE. The live pl/team.html carries English aria-labels on all 21 members while translating `title`. That is a pre-existing accessibility defect (see docs/TEAM_MIGRATION.md §15); it is reproduced verbatim here rather than silently corrected. Fixing it later is an edit to these two strings and nothing else.",
+    "_teamComment": "The aria patterns below were English until Phase 5 — a real defect that made a Polish screen reader announce every one of the 42 contact links in English. They are now Polish. The colon construction is deliberate: 'do' and 'profil' would otherwise require the genitive ('do Szymona'), which cannot be produced from an uninflected name, so a label:value form is used instead. See docs/TEAM_ACCESSIBILITY_REMEDIATION.md §7.",
     "team": {
       "filterBarLabel": "Filtruj zespół według sekcji",
       "photoPlaceholderLabel": "Zdjęcie",
       "emailLinkTitle": "E-mail",
       "linkedinLinkTitle": "LinkedIn",
-      "emailAriaPattern": "Email {name}",
-      "linkedinAriaPattern": "{name} on LinkedIn"
+      "emailAriaPattern": "Wyślij e-mail do: {name}",
+      "linkedinAriaPattern": "Profil LinkedIn: {name}"
     }
   }
 }

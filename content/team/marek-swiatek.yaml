@@ -14,12 +14,6 @@ photo: "/assets/team/marek-swiatek.jpg"
 email: "marek.swiatek@polsocfederation.pl"
 linkedin: "https://www.linkedin.com/in/marek-swiatek/"
 
-# Names used inside the link aria-labels, transcribed verbatim. Stored rather
-# than derived because the live pages disambiguate the two people called
-# Maksymilian on LinkedIn but not on e-mail.
-aria_name_email: "Marek"
-aria_name_linkedin: "Marek"
-
 en:
   role: "Treasurer & Head of Partnerships"
   photo_alt: "Marek Świątek"

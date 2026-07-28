@@ -14,12 +14,6 @@ photo: "/assets/team/sara-pietrusinska.jpg"
 email: "sara.pietrusinska@polsocfederation.pl"
 linkedin: "https://www.linkedin.com/in/sara-p-b28047235/"
 
-# Names used inside the link aria-labels, transcribed verbatim. Stored rather
-# than derived because the live pages disambiguate the two people called
-# Maksymilian on LinkedIn but not on e-mail.
-aria_name_email: "Sara"
-aria_name_linkedin: "Sara"
-
 en:
   role: "Institutional Relationships Officer"
   photo_alt: "Sara Pietrusińska"
