@@ -1,0 +1,28 @@
+# Member society.
+# Generated from the live data arrays during the Phase 8 migration.
+# Fields above the `en:` block are shared and identical in both languages
+# by construction. Only the university/location line is localised.
+#
+# active / member / past_member are DATA ONLY — they describe the society's
+# relationship with the Federation and are deliberately not shown on the page.
+
+slug: exeter-polish-society
+order: 9
+published: true
+
+name: "Exeter Polish Society"
+latitude: 50.7371
+longitude: -3.534
+instagram: "exeterpolishsociety"
+email: "polish@groups.exeterguild.com"
+logo: "exeter.jpg"
+
+active: true
+member: false
+past_member: false
+
+en:
+  university_location: "Exeter, England"
+
+pl:
+  university_location: "Exeter, Anglia"

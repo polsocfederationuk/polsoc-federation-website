@@ -1,0 +1,28 @@
+# Member society.
+# Generated from the live data arrays during the Phase 8 migration.
+# Fields above the `en:` block are shared and identical in both languages
+# by construction. Only the university/location line is localised.
+#
+# active / member / past_member are DATA ONLY — they describe the society's
+# relationship with the Federation and are deliberately not shown on the page.
+
+slug: st-andrews-polish-society
+order: 23
+published: true
+
+name: "St Andrews Polish Society"
+latitude: 56.3403
+longitude: -2.7936
+instagram: "sta.polsoc"
+email: "polishsocmail@st-andrews.ac.uk"
+logo: "st-andrews.jpg"
+
+active: true
+member: false
+past_member: false
+
+en:
+  university_location: "St Andrews, Scotland"
+
+pl:
+  university_location: "St Andrews, Szkocja"

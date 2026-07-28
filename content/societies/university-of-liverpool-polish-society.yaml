@@ -1,0 +1,28 @@
+# Member society.
+# Generated from the live data arrays during the Phase 8 migration.
+# Fields above the `en:` block are shared and identical in both languages
+# by construction. Only the university/location line is localised.
+#
+# active / member / past_member are DATA ONLY — they describe the society's
+# relationship with the Federation and are deliberately not shown on the page.
+
+slug: university-of-liverpool-polish-society
+order: 27
+published: true
+
+name: "University of Liverpool Polish Society"
+latitude: 53.4058
+longitude: -2.966
+instagram: "uolpolsoc"
+email: "polish@society.liverpoolguild.org"
+logo: "liverpool.jpg"
+
+active: true
+member: false
+past_member: true
+
+en:
+  university_location: "Liverpool, England"
+
+pl:
+  university_location: "Liverpool, Anglia"

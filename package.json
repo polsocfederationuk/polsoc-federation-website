@@ -11,7 +11,8 @@
     "compare:team": "node scripts/compare-team.js",
     "serve": "python -m http.server 8000",
     "serve:dist": "python -m http.server 8001 --directory dist",
-    "compare:announcements": "node scripts/compare-announcements.js"
+    "compare:announcements": "node scripts/compare-announcements.js",
+    "compare:members": "node scripts/compare-members.js"
   },
   "engines": {
     "node": ">=18"

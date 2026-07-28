@@ -93,6 +93,26 @@ function formatDate(iso, localeCode) {
 }
 
 /**
+ * Every society logo referenced by a record, as repo-relative paths, sorted and
+ * de-duplicated. Records store a bare filename; the logos live in
+ * assets/polsocs/. Driving the passthrough list from the records means exactly
+ * the required files are copied and unreferenced ones are left alone.
+ */
+function societyLogoPaths() {
+  const dir = path.join(__dirname, "content", "societies");
+  if (!fs.existsSync(dir)) return [];
+  const paths = new Set();
+  for (const file of fs.readdirSync(dir).sort()) {
+    if (!/\.ya?ml$/i.test(file)) continue;
+    const rec = yaml.load(fs.readFileSync(path.join(dir, file), "utf8")) || {};
+    if (rec.logo) {
+      paths.add("assets/polsocs/" + String(rec.logo).replace(/^\/+/, "").replace(/^assets\/polsocs\//, ""));
+    }
+  }
+  return [...paths].sort();
+}
+
+/**
  * Every announcement image referenced by a record — main and extra — as
  * repo-relative paths, sorted and de-duplicated. Drives the passthrough list so
  * exactly the required assets are copied and the list never needs maintaining.
@@ -314,6 +334,52 @@ module.exports = function (eleventyConfig) {
       })
   );
 
+  /**
+   * Project the canonical society records into the flat, locale-specific array
+   * the browser renderer consumes.
+   *
+   * Ordering is by the explicit `order` field only. The live page then sorts
+   * the CARDS alphabetically by name before rendering — that is reproduced in
+   * members-page.js, not here, so the data file keeps the canonical order and
+   * the presentation choice stays where it belongs. (The two currently
+   * coincide; see docs/MEMBERS_MIGRATION.md §4.)
+   *
+   * `active`, `member` and `past_member` are carried through even though
+   * nothing renders them: they are real data about the society's relationship
+   * with the Federation, and dropping them would lose information.
+   */
+  eleventyConfig.addFilter("societiesFor", (records, localeCode) =>
+    (records || [])
+      .filter((s) => s.published === true)
+      .sort((a, b) => {
+        if (a.order !== b.order) return a.order - b.order;
+        return String(a.slug) < String(b.slug) ? -1 : 1;
+      })
+      .map((s) => {
+        const loc = s[localeCode] || {};
+        return {
+          slug: s.slug,
+          name: s.name,
+          // Kept as `uni` so the generated array is shape-compatible with the
+          // hand-written one it replaces, which keeps the comparison honest.
+          uni: loc.university_location,
+          lat: s.latitude,
+          lng: s.longitude,
+          instagram: s.instagram,
+          // "" is a real value: three societies publish no address. Never
+          // coerce it to null — the renderer tests it to decide whether to emit
+          // a mailto: control at all.
+          email: s.email || "",
+          // Root-relative on purpose. A bare filename or a page-relative path
+          // would resolve to /pl/assets/polsocs/… from the Polish page and 404.
+          logo: "/assets/polsocs/" + String(s.logo).replace(/^\/+/, ""),
+          active: s.active === true,
+          member: s.member === true,
+          pastMember: s.past_member === true,
+        };
+      })
+  );
+
   // ---------------------------------------------------------------------
   // Shared assets, copied (not moved, not modified) into dist/ so the chrome
   // comparison pages can load the REAL stylesheet and script when dist/ is
@@ -361,6 +427,21 @@ module.exports = function (eleventyConfig) {
   // what the generated pages reference is copied.
   for (const img of announcementImagePaths()) {
     eleventyConfig.addPassthroughCopy({ [img]: img });
+  }
+
+  // ---------------------------------------------------------------------
+  // Members page assets.
+  // ---------------------------------------------------------------------
+  // The members hero photograph, which doubles as the page's og:image.
+  eleventyConfig.addPassthroughCopy({
+    "assets/pbf/networking-hero.jpg": "assets/pbf/networking-hero.jpg",
+  });
+  // The shared map/card renderer.
+  eleventyConfig.addPassthroughCopy({ "src/js/members-page.js": "js/members-page.js" });
+  // Society logos — ONLY those a record actually references. Nothing is
+  // renamed, re-encoded or deleted; unreferenced files stay where they are.
+  for (const logo of societyLogoPaths()) {
+    eleventyConfig.addPassthroughCopy({ [logo]: logo });
   }
 
   // Headshots — ONLY those a record actually references. The list is derived

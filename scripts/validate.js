@@ -598,7 +598,8 @@ assert(missingDirs.length === 0,
 // cannot slip in unnoticed alongside a planned one.
 //   Phase 4: team, settings
 //   Phase 6: announcements
-const MIGRATED_COLLECTIONS = new Set(["team", "settings", "announcements"]);
+//   Phase 8: societies
+const MIGRATED_COLLECTIONS = new Set(["team", "settings", "announcements", "societies"]);
 const populated = ["events", "announcements", "team", "societies", "settings"]
   .filter((c) => !MIGRATED_COLLECTIONS.has(c))
   .filter((c) => fs.readdirSync(path.join(ROOT, "content", c))
@@ -686,7 +687,8 @@ if (!exists("dist")) {
     // The intent was never "generate nothing public" — it was "never generate
     // something public by accident". The allowlist keeps that guarantee exact
     // and makes each migration a deliberate, reviewable edit to this line.
-    const MIGRATED = ["team.html", "pl/team.html", "announcements.html", "pl/announcements.html"];
+    const MIGRATED = ["team.html", "pl/team.html", "announcements.html", "pl/announcements.html",
+      "members.html", "pl/members.html"];
 
     const generatedHtml = distFiles.filter((f) => f.endsWith(".html"));
     const strayHtml = generatedHtml.filter(
@@ -720,6 +722,7 @@ if (!exists("dist")) {
     const PASSTHROUGH_SOURCE = {
       "js/team-filter.js": "src/js/team-filter.js",
       "js/announcements-page.js": "src/js/announcements-page.js",
+      "js/members-page.js": "src/js/members-page.js",
     };
     // Build PRODUCTS, not copies: these are rendered from templates and have no
     // byte-identical source, so they are excluded from the copy check and
@@ -727,6 +730,8 @@ if (!exists("dist")) {
     const GENERATED_ASSETS = new Set([
       "js/announcements-data-en.js",
       "js/announcements-data-pl.js",
+      "js/societies-data-en.js",
+      "js/societies-data-pl.js",
     ]);
     const crypto = require("crypto");
     const hash = (p) => crypto.createHash("sha256")
@@ -1961,6 +1966,387 @@ if (exists("dist/css/style.css")) {
   assert(changed.length === 0 || changed[0].startsWith("(git unavailable"),
     "no announcement page, data file or content record was modified by this fix",
     "the modal fix touched announcement content or markup", changed);
+}
+
+/* =================================================================== 20. society content */
+
+section("20. Member society records (Phase 8)");
+
+const SOC_DIR = "content/societies";
+const SOC_EXPECTED = 30;
+// Status counts taken from the live source arrays. Stated here rather than
+// recomputed from the records, so a record that loses a flag fails instead of
+// quietly redefining the expectation.
+const SOC_STATUS = { emptyEmail: 3, inactive: 1, member: 3, pastMember: 13 };
+
+const socFiles = fs.existsSync(path.join(ROOT, SOC_DIR))
+  ? fs.readdirSync(path.join(ROOT, SOC_DIR)).filter((f) => /\.ya?ml$/i.test(f)).sort()
+  : [];
+const socAll = socFiles.map((f) => ({ _file: `${SOC_DIR}/${f}`, ...loadYaml(`${SOC_DIR}/${f}`) }));
+const soc = socAll.filter((s) => s.published === true);
+
+assert(soc.length === SOC_EXPECTED,
+  `exactly ${SOC_EXPECTED} published society records`,
+  `expected ${SOC_EXPECTED} published societies, found ${soc.length}`);
+
+/* -- identity and ordering -------------------------------------------------- */
+
+const socSlugs = socAll.map((s) => s.slug);
+const socDup = socSlugs.filter((s, i) => socSlugs.indexOf(s) !== i);
+assert(socDup.length === 0, "every society slug is unique",
+  "duplicate society slugs", [...new Set(socDup)]);
+
+const socSlugFile = socAll.filter((s) => s._file !== `${SOC_DIR}/${s.slug}.yaml`).map((s) => s._file);
+assert(socSlugFile.length === 0, "every society's slug matches its filename",
+  "records whose slug does not match the filename", socSlugFile);
+
+const socOrders = soc.map((s) => s.order);
+assert(new Set(socOrders).size === socOrders.length,
+  "every published society has a unique display order",
+  "duplicate society display orders", socOrders.filter((o, i) => socOrders.indexOf(o) !== i));
+assert(socOrders.every((o) => Number.isInteger(o)),
+  "every society `order` is a whole number",
+  "non-integer society display orders", socOrders.filter((o) => !Number.isInteger(o)));
+
+const socSplit = socFiles.filter((f) => /[-.](en|pl)\.ya?ml$/i.test(f) || /^(en|pl)[-.]/i.test(f));
+assert(socSplit.length === 0,
+  "no language-split society files (one canonical record each)",
+  "language-split society files found", socSplit);
+
+/* -- required fields -------------------------------------------------------- */
+
+const SOC_REQUIRED = ["slug", "order", "name", "latitude", "longitude", "instagram", "logo"];
+const socMissing = [];
+for (const s of soc) {
+  for (const f of SOC_REQUIRED) {
+    if (s[f] === undefined || s[f] === null || String(s[f]).trim() === "") socMissing.push(`${s.slug}: ${f}`);
+  }
+  // `email` may be empty, but the KEY must exist — an absent key would mean the
+  // record simply forgot the field rather than declaring "no public address".
+  if (!("email" in s)) socMissing.push(`${s.slug}: email (may be "", but must be present)`);
+  for (const f of ["published", "active", "member", "past_member"]) {
+    if (!(f in s)) socMissing.push(`${s.slug}: ${f}`);
+  }
+  for (const code of ["en", "pl"]) {
+    if (!s[code] || !String((s[code] || {}).university_location || "").trim()) {
+      socMissing.push(`${s.slug}: ${code}.university_location`);
+    }
+  }
+}
+assert(socMissing.length === 0,
+  "every society has all required shared fields plus an English and Polish location line",
+  "societies missing a required field", socMissing);
+
+/* -- coordinates ------------------------------------------------------------ */
+
+const socBadLat = soc.filter((s) => typeof s.latitude !== "number" || !(s.latitude >= -90 && s.latitude <= 90))
+  .map((s) => `${s.slug}: ${s.latitude}`);
+assert(socBadLat.length === 0, "every latitude is a number between -90 and 90",
+  "invalid latitudes", socBadLat);
+
+const socBadLng = soc.filter((s) => typeof s.longitude !== "number" || !(s.longitude >= -180 && s.longitude <= 180))
+  .map((s) => `${s.slug}: ${s.longitude}`);
+assert(socBadLng.length === 0, "every longitude is a number between -180 and 180",
+  "invalid longitudes", socBadLng);
+
+/* -- contact details -------------------------------------------------------- */
+
+// The live handles are the bare Instagram username, no @ and no URL.
+const socBadIg = soc.filter((s) => !/^[A-Za-z0-9._]{1,30}$/.test(String(s.instagram)))
+  .map((s) => `${s.slug}: ${s.instagram}`);
+assert(socBadIg.length === 0,
+  "every Instagram value is a bare handle (no @, no URL)",
+  "malformed Instagram handles", socBadIg);
+
+const socBadEmail = soc.filter((s) => s.email !== "" && !/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(String(s.email)))
+  .map((s) => `${s.slug}: ${s.email}`);
+assert(socBadEmail.length === 0,
+  "every non-empty e-mail address is well formed",
+  "malformed society e-mail addresses", socBadEmail);
+
+const socEmpty = soc.filter((s) => s.email === "");
+assert(socEmpty.length === SOC_STATUS.emptyEmail,
+  `exactly ${SOC_STATUS.emptyEmail} societies publish no e-mail address (${socEmpty.map((s) => s.name).join(", ")})`,
+  `expected ${SOC_STATUS.emptyEmail} societies with an empty e-mail, found ${socEmpty.length}`,
+  socEmpty.map((s) => s.slug));
+
+/* -- logos ------------------------------------------------------------------ */
+
+// Records store a BARE FILENAME; the /assets/polsocs/ prefix is added at build
+// time. Storing a path here would let a page-relative one slip in.
+const socBadLogo = soc.filter((s) => !/^[A-Za-z0-9._-]+\.(jpe?g|png|webp|svg)$/i.test(String(s.logo)))
+  .map((s) => `${s.slug}: ${s.logo}`);
+assert(socBadLogo.length === 0,
+  "every logo is a bare filename with an image extension",
+  "malformed logo values", socBadLogo);
+
+const socMissingLogo = soc.filter((s) => !exists(`assets/polsocs/${s.logo}`)).map((s) => `${s.slug}: ${s.logo}`);
+assert(socMissingLogo.length === 0,
+  `all ${soc.length} referenced society logos exist in assets/polsocs/`,
+  "logo files that do not exist", socMissingLogo);
+
+/* -- status fields ---------------------------------------------------------- */
+
+const socBadBool = [];
+for (const s of socAll) {
+  for (const f of ["published", "active", "member", "past_member"]) {
+    if (typeof s[f] !== "boolean") socBadBool.push(`${s.slug}: ${f}=${JSON.stringify(s[f])}`);
+  }
+}
+assert(socBadBool.length === 0,
+  "published, active, member and past_member are real booleans on every record",
+  "non-boolean society status fields", socBadBool);
+
+const socCounts = {
+  inactive: soc.filter((s) => s.active === false).length,
+  member: soc.filter((s) => s.member === true).length,
+  pastMember: soc.filter((s) => s.past_member === true).length,
+};
+const socCountBad = [
+  ["inactive", SOC_STATUS.inactive, socCounts.inactive],
+  ["member", SOC_STATUS.member, socCounts.member],
+  ["pastMember", SOC_STATUS.pastMember, socCounts.pastMember],
+].filter(([, want, got]) => want !== got).map(([k, want, got]) => `${k}: expected ${want}, found ${got}`);
+assert(socCountBad.length === 0,
+  `status counts match the live arrays (active:false ${socCounts.inactive}, member ${socCounts.member}, past_member ${socCounts.pastMember})`,
+  "society status counts differ from the live source arrays", socCountBad);
+
+/* -- content hygiene -------------------------------------------------------- */
+
+const socRawHtml = [];
+const socBadProto = [];
+for (const s of soc) {
+  const fields = [s.name, s.instagram, s.email, s.logo,
+    (s.en || {}).university_location, (s.pl || {}).university_location];
+  for (const v of fields) {
+    if (typeof v !== "string") continue;
+    if (/<[a-z/!][^>]*>/i.test(v)) socRawHtml.push(`${s.slug}: ${v}`);
+    if (/\b(javascript|vbscript|data):/i.test(v)) socBadProto.push(`${s.slug}: ${v}`);
+  }
+}
+assert(socRawHtml.length === 0,
+  "no society record contains raw HTML",
+  "society fields containing markup", socRawHtml);
+assert(socBadProto.length === 0,
+  "no society record contains an unsafe URL protocol",
+  "society fields using an unsafe protocol", socBadProto);
+
+/* =================================================================== 21. generated member pages */
+
+section("21. Generated member pages (Phase 8)");
+
+const SOC_PAGES = { en: "dist/members.html", pl: "dist/pl/members.html" };
+const SOC_DATA = { en: "dist/js/societies-data-en.js", pl: "dist/js/societies-data-pl.js" };
+
+if (!exists("dist")) {
+  ok("dist/ absent — generated member checks skipped (run `npm run build` to enable them)");
+} else {
+  const missingSoc = [...Object.values(SOC_PAGES), ...Object.values(SOC_DATA)].filter((p) => !exists(p));
+  assert(missingSoc.length === 0,
+    "both member pages and both generated society data files exist",
+    "generated member artefacts missing after build", missingSoc);
+
+  if (missingSoc.length === 0) {
+    const nodeVm2 = require("vm");
+    const loadSoc = (rel, expr) => {
+      const ctx = {};
+      nodeVm2.createContext(ctx);
+      nodeVm2.runInContext(read(rel), ctx);
+      return nodeVm2.runInContext(expr, ctx);
+    };
+
+    const gSoc = { en: read(SOC_PAGES.en), pl: read(SOC_PAGES.pl) };
+    const gData = { en: loadSoc(SOC_DATA.en, "SOCIETIES"), pl: loadSoc(SOC_DATA.pl, "SOCIETIES") };
+
+    assert(/<html lang="en">/.test(gSoc.en), 'generated English members page declares lang="en"',
+      "generated English members page has the wrong <html lang>");
+    assert(/<html lang="pl">/.test(gSoc.pl), 'generated Polish members page declares lang="pl"',
+      "generated Polish members page has the wrong <html lang>");
+
+    const socCanon = (s) => (s.match(/<link rel="canonical" href="([^"]+)"/) || [])[1];
+    assert(socCanon(gSoc.en) === `${SITE}/members.html` && socCanon(gSoc.pl) === `${SITE}/pl/members.html`,
+      "generated member canonicals are self-referencing and keep the .html URLs",
+      "generated member canonical URLs are wrong",
+      [`en: ${socCanon(gSoc.en)}`, `pl: ${socCanon(gSoc.pl)}`]);
+
+    const socAlts = (s) => [...s.matchAll(/<link rel="alternate" hreflang="([^"]+)" href="([^"]+)"/g)]
+      .map((m) => `${m[1]}=${m[2]}`).sort();
+    const socWant = [`en=${SITE}/members.html`, `pl=${SITE}/pl/members.html`,
+      `x-default=${SITE}/members.html`].sort();
+    assert(JSON.stringify(socAlts(gSoc.en)) === JSON.stringify(socWant) &&
+      JSON.stringify(socAlts(gSoc.pl)) === JSON.stringify(socWant),
+      "both member pages carry the identical reciprocal hreflang trio with an English x-default",
+      "generated member hreflang alternates are wrong",
+      [`en: ${socAlts(gSoc.en).join(" ")}`, `pl: ${socAlts(gSoc.pl).join(" ")}`]);
+
+    const socOg = (s) => (s.match(/<meta property="og:locale" content="([^"]+)"/) || [])[1];
+    assert(socOg(gSoc.en) === "en_GB" && socOg(gSoc.pl) === "pl_PL",
+      "generated member pages declare the correct Open Graph locales",
+      "generated member og:locale values are wrong",
+      [`en: ${socOg(gSoc.en)}`, `pl: ${socOg(gSoc.pl)}`]);
+
+    const socSwitch = (s) => {
+      const nav = s.match(/<nav class="lang-switch"[\s\S]*?<\/nav>/);
+      return nav ? [...nav[0].matchAll(/<a[^>]*href="([^"]+)"/g)].map((m) => m[1]) : [];
+    };
+    assert(socSwitch(gSoc.en).includes("/pl/members.html") && socSwitch(gSoc.pl).includes("/members.html"),
+      "member language switchers point at the paired page in the other language",
+      "member language-switcher destinations are wrong",
+      [`en: ${socSwitch(gSoc.en).join(", ")}`, `pl: ${socSwitch(gSoc.pl).join(", ")}`]);
+
+    for (const code of ["en", "pl"]) {
+      const src = gSoc[code];
+      const data = gData[code];
+
+      assert(data.length === SOC_EXPECTED,
+        `generated ${code} data exposes exactly ${SOC_EXPECTED} societies`,
+        `generated ${code} data exposes ${data.length} societies, expected ${SOC_EXPECTED}`);
+
+      // Order must equal the records' explicit order field.
+      const wantOrder = soc.slice().sort((a, b) => a.order - b.order).map((s) => s.name);
+      assert(JSON.stringify(data.map((s) => s.name)) === JSON.stringify(wantOrder),
+        `generated ${code} society order matches the records' explicit order field`,
+        `generated ${code} society order does not match the source records`,
+        data.map((s) => s.name).filter((n, i) => n !== wantOrder[i]).slice(0, 4));
+
+      // Localised text comes from the right block.
+      const byOrder = soc.slice().sort((a, b) => a.order - b.order);
+      const wrongUni = data.filter((s, i) => s.uni !== byOrder[i][code].university_location).map((s) => s.name);
+      assert(wrongUni.length === 0,
+        `generated ${code} university/location text comes from the ${code} block`,
+        `generated ${code} location text does not match its record`, wrongUni.slice(0, 4));
+
+      // Logos: root-relative, present in dist/, never under /pl/.
+      const logos = data.map((s) => s.logo);
+      assert(logos.every((l) => l.startsWith("/assets/polsocs/")),
+        `all ${logos.length} generated ${code} logo paths are root-relative under /assets/polsocs/`,
+        `generated ${code} logo paths that are not root-relative`,
+        logos.filter((l) => !l.startsWith("/assets/polsocs/")));
+      assert(logos.every((l) => !/^\/pl\//.test(l)),
+        `no generated ${code} logo path resolves under /pl/`,
+        `generated ${code} logo paths under /pl/`, logos.filter((l) => /^\/pl\//.test(l)));
+      const notCopied = logos.filter((l) => !exists("dist" + l));
+      assert(notCopied.length === 0,
+        `all ${logos.length} ${code} society logos were copied into dist/`,
+        `${code} society logos referenced but not copied into dist/`, notCopied.slice(0, 5));
+
+      // Empty e-mails must stay empty — a "mailto:" with nothing after it is a
+      // broken control, which is exactly what the renderer must avoid emitting.
+      const empties = data.filter((s) => !s.email);
+      assert(empties.length === SOC_STATUS.emptyEmail,
+        `generated ${code} data keeps ${SOC_STATUS.emptyEmail} societies with an empty e-mail`,
+        `generated ${code} data has ${empties.length} empty e-mails, expected ${SOC_STATUS.emptyEmail}`);
+      assert(!/mailto:"/.test(src) && !/mailto:\s*"/.test(src),
+        `generated ${code} page contains no empty mailto: destination`,
+        `generated ${code} page contains a broken mailto: link`);
+
+      // Instagram destinations are constructed from the bare handle.
+      assert(data.every((s) => /^[A-Za-z0-9._]+$/.test(s.instagram)),
+        `generated ${code} Instagram values are bare handles ready for URL construction`,
+        `generated ${code} data has a malformed Instagram handle`,
+        data.filter((s) => !/^[A-Za-z0-9._]+$/.test(s.instagram)).map((s) => s.instagram));
+
+      // Status fields survive as data...
+      assert(data.every((s) => typeof s.active === "boolean" && typeof s.member === "boolean" &&
+        typeof s.pastMember === "boolean"),
+        `generated ${code} data carries active/member/pastMember on every society`,
+        `generated ${code} data lost a status field`);
+      // ...but must not be rendered as chips. The badges were removed from the
+      // design deliberately; this fails if they come back.
+      const chipMarkup = src.match(/class="[^"]*\b(soc-status|soc-badge|status-chip|member-chip|past-member)\b[^"]*"/g);
+      assert(!chipMarkup,
+        `generated ${code} page renders no membership status chips`,
+        `generated ${code} page reintroduced status chips`, chipMarkup);
+      assert(!/\/js\/members-page\.js/.test(read("dist/js/members-page.js").match(/soc-status|soc-badge/) || ""),
+        `${code}: the shared renderer emits no status-chip class`,
+        `the shared renderer emits status-chip markup`);
+
+      // Leaflet: present, and its CSS before the site sheet.
+      const sheets = [...src.matchAll(/<link rel="stylesheet"\s+([^>]*)>/g)].map((m) => m[1]);
+      const leafIdx = sheets.findIndex((a) => /leaflet\.css/.test(a));
+      const siteIdx = sheets.findIndex((a) => /css\/style\.css/.test(a));
+      assert(leafIdx >= 0, `generated ${code} page loads the Leaflet stylesheet`,
+        `generated ${code} page is missing the Leaflet stylesheet`);
+      assert(leafIdx >= 0 && siteIdx >= 0 && leafIdx < siteIdx,
+        `generated ${code} page loads Leaflet CSS BEFORE css/style.css (cascade preserved)`,
+        `generated ${code} page has the Leaflet CSS in the wrong cascade position`,
+        [`leaflet at ${leafIdx}, style.css at ${siteIdx}`]);
+      assert(leafIdx >= 0 && /integrity="sha256-/.test(sheets[leafIdx]) && /crossorigin=/.test(sheets[leafIdx]),
+        `generated ${code} page keeps Leaflet CSS integrity and crossorigin attributes`,
+        `generated ${code} page dropped Leaflet CSS subresource integrity`);
+      const leafJs = src.match(/<script\s+([^>]*leaflet\.js[^>]*)>/);
+      assert(Boolean(leafJs), `generated ${code} page loads the Leaflet script`,
+        `generated ${code} page is missing the Leaflet script`);
+      assert(leafJs && /integrity="sha256-/.test(leafJs[1]) && /crossorigin=/.test(leafJs[1]),
+        `generated ${code} page keeps Leaflet JS integrity and crossorigin attributes`,
+        `generated ${code} page dropped Leaflet JS subresource integrity`);
+      assert(/leaflet@1\.9\.4/.test(src),
+        `generated ${code} page still pins Leaflet 1.9.4 (not upgraded)`,
+        `generated ${code} page changed the Leaflet version`);
+
+      // The map and card containers, empty in the served HTML exactly as live.
+      assert(/<div id="map"[^>]*><\/div>/.test(src),
+        `generated ${code} page has the empty #map container`,
+        `generated ${code} page's #map container is missing or pre-filled`);
+      assert(/<div class="soc-grid" id="socGrid"><\/div>/.test(src),
+        `generated ${code} page has the empty #socGrid container`,
+        `generated ${code} page's #socGrid container is missing or pre-filled`);
+
+      // All four FAQ items, in both languages.
+      const faq = [...src.matchAll(/<details class="acc"([^>]*)>\s*<summary>([\s\S]*?)<\/summary>/g)];
+      assert(faq.length === 4,
+        `generated ${code} page has all four FAQ items`,
+        `generated ${code} page has ${faq.length} FAQ items, expected 4`);
+      assert(faq.every((m) => !/\bopen\b/.test(m[1])),
+        `generated ${code} page's FAQ items all start collapsed`,
+        `generated ${code} page has an FAQ item open by default`);
+
+      // Local references must resolve inside dist/.
+      const refs = [
+        ...[...src.matchAll(/<link rel="stylesheet"[^>]*href="([^"]+)"/g)].map((m) => m[1]),
+        ...[...src.matchAll(/<script[^>]*src="([^"]+)"/g)].map((m) => m[1]),
+      ].filter((r) => r.startsWith("/"));
+      const broken = refs.filter((r) => !exists("dist" + r));
+      assert(broken.length === 0,
+        `generated ${code} page's ${refs.length} local CSS/script references all resolve inside dist/`,
+        `generated ${code} page references files that do not exist in dist/`, broken);
+
+      assert(/<a[^>]*class="[^"]*\bactive\b[^"]*"[^>]*href="members\.html"/.test(src) ||
+        /<a[^>]*href="members\.html"[^>]*class="[^"]*\bactive\b[^"]*"/.test(src),
+        `generated ${code} members page marks Members as the active navigation item`,
+        `generated ${code} members page has no active navigation state on Members`);
+    }
+
+    // Cross-locale invariants on the generated output.
+    const inv = ["name", "lat", "lng", "instagram", "email", "logo", "active", "member", "pastMember"];
+    const invBad = inv.filter((f) =>
+      JSON.stringify(gData.en.map((s) => s[f])) !== JSON.stringify(gData.pl.map((s) => s[f])));
+    assert(gData.en.length > 0 && gData.pl.length > 0,
+      "both generated locales parsed a non-empty society array",
+      "a generated society array is empty");
+    assert(invBad.length === 0,
+      `all ${inv.length} society invariants are identical in the English and Polish output`,
+      "generated society invariants differ between locales", invBad);
+    const uniSame = gData.en.filter((s, i) => s.uni === gData.pl[i].uni).map((s) => s.name);
+    assert(uniSame.length === 0,
+      "the university/location line is localised for every society",
+      "societies whose location text is identical in both locales", uniSame);
+
+    assert(!/members\.html/.test(sitemapRaw) || !/\/dist\//.test(sitemapRaw),
+      "sitemap.xml lists no generated member artefact",
+      "sitemap.xml references generated output");
+
+    // --- semantic comparison against the live pages -------------------------
+    const { spawnSync } = require("child_process");
+    const socCmp = spawnSync(process.execPath, [path.join(__dirname, "compare-members.js")], {
+      cwd: ROOT, encoding: "utf8",
+    });
+    const socMatched = (socCmp.stdout.match(/PASS — (\d+)\/\1 comparisons matched/) || [])[1];
+    assert(socCmp.status === 0,
+      `generated member pages match the live pages (${socMatched || "?"} semantic comparisons — scripts/compare-members.js)`,
+      "scripts/compare-members.js reports differences from the live member pages",
+      (socCmp.stdout || "").split("\n").filter((l) => /FAIL/.test(l)).slice(0, 12));
+  }
 }
 
 /* =================================================================== summary */

@@ -1,0 +1,28 @@
+# Member society.
+# Generated from the live data arrays during the Phase 8 migration.
+# Fields above the `en:` block are shared and identical in both languages
+# by construction. Only the university/location line is localised.
+#
+# active / member / past_member are DATA ONLY — they describe the society's
+# relationship with the Federation and are deliberately not shown on the page.
+
+slug: university-of-nottingham-polish-society
+order: 28
+published: true
+
+name: "University of Nottingham Polish Society"
+latitude: 52.9385
+longitude: -1.1957
+instagram: "uon_polish"
+email: "polish@uonsu.com"
+logo: "nottingham.jpg"
+
+active: true
+member: false
+past_member: true
+
+en:
+  university_location: "Nottingham, England"
+
+pl:
+  university_location: "Nottingham, Anglia"

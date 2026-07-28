@@ -40,6 +40,12 @@
       "modalLabel": "Announcement",
       "closeLabel": "Close",
       "extraImageAltPattern": "{title} — photo {n}"
+    },
+    "members": {
+      "emailLabel": "Email",
+      "instagramLabel": "Instagram",
+      "emailAriaPattern": "Email {name}",
+      "instagramAriaPattern": "{name} on Instagram"
     }
   },
 
@@ -87,6 +93,13 @@
       "modalLabel": "Ogłoszenie",
       "closeLabel": "Zamknij",
       "extraImageAltPattern": "{title} — zdjęcie {n}"
+    },
+    "_membersComment": "Transcribed verbatim from the live pl/members.html. Unlike the team page (see the aria note above), the Polish society cards were already correctly localised — both the visible labels and the aria-labels.",
+    "members": {
+      "emailLabel": "E-mail",
+      "instagramLabel": "Instagram",
+      "emailAriaPattern": "Napisz e-mail: {name}",
+      "instagramAriaPattern": "{name} na Instagramie"
     }
   }
 }

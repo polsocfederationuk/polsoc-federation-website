@@ -1,0 +1,28 @@
+# Member society.
+# Generated from the live data arrays during the Phase 8 migration.
+# Fields above the `en:` block are shared and identical in both languages
+# by construction. Only the university/location line is localised.
+#
+# active / member / past_member are DATA ONLY — they describe the society's
+# relationship with the Federation and are deliberately not shown on the page.
+
+slug: lancaster-university-polish-society
+order: 14
+published: true
+
+name: "Lancaster University Polish Society"
+latitude: 54.01
+longitude: -2.7857
+instagram: "lu.polishsociety"
+email: "polish.su@groups.lancaster.ac.uk"
+logo: "lancaster.jpg"
+
+active: true
+member: false
+past_member: true
+
+en:
+  university_location: "Lancaster, England"
+
+pl:
+  university_location: "Lancaster, Anglia"

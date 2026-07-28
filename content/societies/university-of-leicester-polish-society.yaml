@@ -1,0 +1,28 @@
+# Member society.
+# Generated from the live data arrays during the Phase 8 migration.
+# Fields above the `en:` block are shared and identical in both languages
+# by construction. Only the university/location line is localised.
+#
+# active / member / past_member are DATA ONLY — they describe the society's
+# relationship with the Federation and are deliberately not shown on the page.
+
+slug: university-of-leicester-polish-society
+order: 26
+published: true
+
+name: "University of Leicester Polish Society"
+latitude: 52.6215
+longitude: -1.124
+instagram: "uol.polishsociety"
+email: ""   # no public address — the card omits the e-mail control
+logo: "leicester.jpg"
+
+active: true
+member: false
+past_member: false
+
+en:
+  university_location: "Leicester, England"
+
+pl:
+  university_location: "Leicester, Anglia"

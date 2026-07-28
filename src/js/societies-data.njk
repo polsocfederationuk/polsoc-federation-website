@@ -1,0 +1,38 @@
+---
+pagination:
+  data: locales
+  size: 1
+  alias: locale
+
+# One data file per locale: js/societies-data-en.js and -pl.js.
+#
+# Per-locale rather than one shared bilingual file so each page downloads only
+# its own copy — the brief is explicit that both language datasets should not
+# ship to every visitor. Only `uni` differs between the two outputs; every
+# invariant is emitted from the same records by the same filter, so the two
+# cannot drift. See docs/MEMBERS_MIGRATION.md §11.
+permalink: "js/societies-data-{{ locale.code }}.js"
+
+eleventyExcludeFromCollections: true
+---
+{%- set items = records.societies | societiesFor(locale.code) -%}
+/* ===========================================================================
+   GENERATED FILE — DO NOT EDIT.
+
+   Built from content/societies/*.yaml by eleventy.config.js.
+   Locale: {{ locale.code }}. Records: {{ items | length }}.
+
+   Edit the YAML records instead; this file is overwritten by every build.
+
+   Logo paths are ROOT-RELATIVE ("/assets/polsocs/...") so the same value
+   resolves from / and from /pl/. An empty `email` is a real value: those
+   societies publish no address and the renderer emits no mailto: control.
+
+   `active`, `member` and `pastMember` are carried through as data. They are
+   deliberately NOT rendered — the membership chips they once drove were
+   removed from the design on purpose.
+   =========================================================================== */
+
+const SOCIETIES = {{ items | dump(2) | safe }};
+
+const SOCIETIES_UI = {{ ui[locale.code].members | dump(2) | safe }};

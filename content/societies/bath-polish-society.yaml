@@ -1,0 +1,28 @@
+# Member society.
+# Generated from the live data arrays during the Phase 8 migration.
+# Fields above the `en:` block are shared and identical in both languages
+# by construction. Only the university/location line is localised.
+#
+# active / member / past_member are DATA ONLY — they describe the society's
+# relationship with the Federation and are deliberately not shown on the page.
+
+slug: bath-polish-society
+order: 2
+published: true
+
+name: "Bath Polish Society"
+latitude: 51.3801
+longitude: -2.3266
+instagram: "bathpolishsoc"
+email: "polishsoc@bath.ac.uk"
+logo: "bath.jpg"
+
+active: true
+member: false
+past_member: false
+
+en:
+  university_location: "Bath, England"
+
+pl:
+  university_location: "Bath, Anglia"

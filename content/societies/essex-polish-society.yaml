@@ -1,0 +1,28 @@
+# Member society.
+# Generated from the live data arrays during the Phase 8 migration.
+# Fields above the `en:` block are shared and identical in both languages
+# by construction. Only the university/location line is localised.
+#
+# active / member / past_member are DATA ONLY — they describe the society's
+# relationship with the Federation and are deliberately not shown on the page.
+
+slug: essex-polish-society
+order: 8
+published: true
+
+name: "Essex Polish Society"
+latitude: 51.8787
+longitude: 0.9481
+instagram: "essexpolishsociety"
+email: ""   # no public address — the card omits the e-mail control
+logo: "essex.jpg"
+
+active: true
+member: false
+past_member: false
+
+en:
+  university_location: "Colchester, England"
+
+pl:
+  university_location: "Colchester, Anglia"

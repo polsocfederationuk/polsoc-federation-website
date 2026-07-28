@@ -1,0 +1,168 @@
+---
+layout: layouts/base.njk
+
+pagination:
+  data: locales
+  size: 1
+  alias: locale
+
+permalink: "{{ locale.urlPrefix }}members.html"
+
+urlPattern: "/{prefix}members.html"
+
+activeNav: members
+
+ogImage: /assets/pbf/networking-hero.jpg
+
+# Leaflet's stylesheet must load BEFORE css/style.css — the site sheet overrides
+# Leaflet's popup and control styling, so reversing the cascade would break the
+# map's appearance. That is exactly why head.njk has a `stylesheetsBefore` slot.
+# Version, URL and the integrity hash are reproduced verbatim; this phase does
+# not upgrade Leaflet.
+stylesheetsBefore:
+  - href: "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity: "sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin: ""
+
+# Order matters and matches the live pages: Leaflet defines `L`, the data file
+# defines SOCIETIES, main.js runs the shared site behaviour, and members-page.js
+# consumes all three.
+scriptsBefore:
+  - src: "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity: "sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin: ""
+  - /js/societies-data-{locale}.js
+scriptsAfter:
+  - /js/members-page.js
+
+# ---------------------------------------------------------------------------
+# Page copy and the four-question FAQ, per locale. Transcribed verbatim from the
+# live members.html and pl/members.html — do not reword.
+#
+# This lives here rather than in content/ because it is page copy, not the
+# collection being migrated. One template renders both pages, so each string is
+# written exactly once; there is no duplication to centralise further.
+#
+# FAQ answers contain inline links, so they are marked `| safe` at the point of
+# use. They are author-controlled page copy, not editor input — unlike
+# announcement bodies, which are Markdown-rendered with raw HTML disabled.
+# ---------------------------------------------------------------------------
+copy:
+  en:
+    title: "Member Societies | Federation of Polish Student Societies UK"
+    description: "Find your local Polish student society. Thirty Polish societies at universities across the United Kingdom, shown on an interactive map with contact details."
+    ogImageAlt: "Polish students networking at a Federation event"
+    eyebrow: "Our network"
+    h1Lead: "Member "
+    h1Fancy: "societies"
+    lead: "Local Polish societies are the backbone of our membership and are, in one way or another, involved in everything we do in the Federation. They serve as local community hubs for Polish students in the UK, and enrich their experience by connecting Polish students and engaging them with Polish culture and language. The Federation works closely with our member organisations to support them, and organise with them on a national level."
+    mapEyebrow: "Find your society"
+    mapTitle: "Across the whole of the UK"
+    mapLead: "Polish student societies at universities the length of the country. Click a pin for a society's details, or pick one from the list below the map."
+    mapAria: "Map of member societies in the UK"
+    faqEyebrow: "Joining the Federation"
+    faqTitleLead: "Common "
+    faqTitleFancy: "questions"
+    faq:
+      - q: "How does our society become a member?"
+        a: 'Drop us a message through the <a href="contact.html">contact page</a> with your society''s name, university and a contact person. We''ll get in touch to introduce the Federation, answer questions and add you to our national network — and to the map above.'
+      - q: "Does membership cost anything?"
+        a: "No — membership is free. The Federation is a registered charity run by student volunteers, and our goal is to support local Polish societies, not to charge them."
+      - q: "What does the Federation do for member societies?"
+        a: "We connect you with Polish societies at other universities, promote your events to a national audience, share sponsorship and partnership opportunities, and represent your members' interests before public and private bodies in the UK, Poland and the EU."
+      - q: "Our society's details on the map are out of date — how do we update them?"
+        a: 'Email <a href="mailto:contact@polsocfederation.pl">contact@polsocfederation.pl</a> with the updated name, links or committee contact and we''ll refresh your pin.'
+    ctaH2: "Society not on the map?"
+    ctaP: "If your Polish society would like to join the Federation — or your pin needs updating — drop us a message and we'll get you added."
+    ctaBtn: "Join the Federation"
+  pl:
+    title: "Stowarzyszenia członkowskie | Federacja Polskich Stowarzyszeń Studenckich"
+    description: "Znajdź swoje lokalne polskie stowarzyszenie studenckie. Trzydzieści organizacji na uczelniach w całej Wielkiej Brytanii, zaznaczonych na interaktywnej mapie."
+    ogImageAlt: "Polscy studenci nawiązują kontakty podczas wydarzenia Federacji"
+    eyebrow: "Nasza sieć"
+    h1Lead: "Stowarzyszenia "
+    h1Fancy: "członkowskie"
+    lead: "Lokalne polskie stowarzyszenia są fundamentem naszego członkostwa i w taki czy inny sposób uczestniczą we wszystkim, co robimy w Federacji. Pełnią rolę lokalnych centrów społeczności dla polskich studentów w Wielkiej Brytanii i wzbogacają ich studenckie życie, łącząc ich ze sobą oraz z polską kulturą i językiem. Federacja ściśle współpracuje z organizacjami członkowskimi, wspierając je i organizując z nimi wydarzenia na skalę ogólnokrajową."
+    mapEyebrow: "Znajdź swoje stowarzyszenie"
+    mapTitle: "W całej Wielkiej Brytanii"
+    mapLead: "Polskie stowarzyszenia studenckie na uczelniach w całym kraju. Kliknij pinezkę, aby zobaczyć szczegóły, albo wybierz stowarzyszenie z listy pod mapą."
+    mapAria: "Mapa stowarzyszeń członkowskich w Wielkiej Brytanii"
+    faqEyebrow: "Dołączenie do Federacji"
+    faqTitleLead: "Najczęstsze "
+    faqTitleFancy: "pytania"
+    faq:
+      - q: "Jak nasze stowarzyszenie może zostać członkiem?"
+        a: 'Napiszcie do nas przez <a href="contact.html">stronę kontaktową</a>, podając nazwę stowarzyszenia, uczelnię i osobę kontaktową. Odezwiemy się, żeby opowiedzieć o Federacji, odpowiedzieć na pytania i dodać Was do naszej ogólnokrajowej sieci — oraz do mapy powyżej.'
+      - q: "Czy członkostwo jest płatne?"
+        a: "Nie — członkostwo jest bezpłatne. Federacja jest zarejestrowaną organizacją charytatywną prowadzoną przez studentów-wolontariuszy, a naszym celem jest wspieranie lokalnych polskich stowarzyszeń, a nie pobieranie od nich opłat."
+      - q: "Co Federacja daje stowarzyszeniom członkowskim?"
+        a: "Łączymy Was z polskimi stowarzyszeniami z innych uczelni, promujemy Wasze wydarzenia wśród odbiorców w całym kraju, dzielimy się możliwościami sponsoringu i współpracy oraz reprezentujemy interesy Waszych członków przed instytucjami publicznymi i prywatnymi w Wielkiej Brytanii, Polsce i Unii Europejskiej."
+      - q: "Dane naszego stowarzyszenia na mapie są nieaktualne — jak je zmienić?"
+        a: 'Napiszcie na <a href="mailto:contact@polsocfederation.pl">contact@polsocfederation.pl</a>, podając aktualną nazwę, linki lub kontakt do zarządu, a my zaktualizujemy Waszą pinezkę.'
+    ctaH2: "Waszego stowarzyszenia nie ma na mapie?"
+    ctaP: "Jeśli Wasze polskie stowarzyszenie chce dołączyć do Federacji — albo Wasza pinezka wymaga aktualizacji — napiszcie do nas, a Was dodamy."
+    ctaBtn: "Dołącz do Federacji"
+
+eleventyComputed:
+  pageTitle: "{{ copy[locale.code].title }}"
+  pageDescription: "{{ copy[locale.code].description }}"
+  ogImageAlt: "{{ copy[locale.code].ogImageAlt }}"
+---
+{%- set c = copy[locale.code] -%}
+<section class="page-hero hero-photo">
+  <div class="hero-photo-bg" style="background-image: url('/assets/pbf/networking-hero.jpg'); background-position: center 45%;" aria-hidden="true"></div>
+  <div class="container">
+    <span class="eyebrow">{{ c.eyebrow }}</span>
+    <h1>{{ c.h1Lead }}<span class="fancy">{{ c.h1Fancy }}</span></h1>
+    <p class="lead">
+      {{ c.lead }}
+    </p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow">{{ c.mapEyebrow }}</span>
+      <h2 class="section-title">{{ c.mapTitle }}</h2>
+      <p class="lead">
+        {{ c.mapLead }}
+      </p>
+    </div>
+    {#- Pins and cards are injected by /js/members-page.js from the generated
+        data file. Both containers are intentionally empty in the served HTML,
+        exactly as on the live pages. -#}
+    <div id="map" class="reveal" aria-label="{{ c.mapAria }}"></div>
+    <div class="soc-grid" id="socGrid"></div>
+  </div>
+</section>
+
+{#- ============================ JOINING FAQ ============================ -#}
+<section class="section section-cream">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow">{{ c.faqEyebrow }}</span>
+      <h2 class="section-title">{{ c.faqTitleLead }}<span class="fancy">{{ c.faqTitleFancy }}</span></h2>
+    </div>
+    <div class="reveal" style="max-width: 820px;">
+{%- for item in c.faq %}
+      <details class="acc">
+        <summary>{{ item.q }}</summary>
+        <div class="acc-body">
+          {{ item.a | safe }}
+        </div>
+      </details>
+{%- endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="section" style="padding-top: 0;">
+  <div class="container">
+    <div class="cta-band reveal">
+      <h2>{{ c.ctaH2 }}</h2>
+      <p>{{ c.ctaP }}</p>
+      <a class="btn btn-light" href="contact.html">{{ c.ctaBtn }} <span class="arrow">&rarr;</span></a>
+    </div>
+  </div>
+</section>

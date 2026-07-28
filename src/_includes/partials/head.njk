@@ -78,12 +78,17 @@
       members.html loads Leaflet CSS BEFORE style.css
       event-business-forum.html loads pbf.css AFTER style.css (it overrides it)
     so there are two slots, not one. -#}
+{#- An entry may be a bare URL string, or an object {href, integrity, crossorigin}
+    for a CDN sheet that carries subresource integrity — dropping those
+    attributes would silently weaken the page's security posture. -#}
 {%- for sheet in stylesheetsBefore | default([]) %}
-  <link rel="stylesheet" href="{{ sheet }}">
+  <link rel="stylesheet" href="{{ sheet.href | default(sheet) }}"{% if sheet.integrity %}
+        integrity="{{ sheet.integrity }}" crossorigin="{{ sheet.crossorigin | default("") }}"{% endif %}>
 {%- endfor %}
   <link rel="stylesheet" href="/css/style.css">
 {%- for sheet in stylesheetsAfter | default([]) %}
-  <link rel="stylesheet" href="{{ sheet }}">
+  <link rel="stylesheet" href="{{ sheet.href | default(sheet) }}"{% if sheet.integrity %}
+        integrity="{{ sheet.integrity }}" crossorigin="{{ sheet.crossorigin | default("") }}"{% endif %}>
 {%- endfor %}
 {%- if extraHead %}
 
