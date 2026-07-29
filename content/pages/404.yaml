@@ -1,0 +1,81 @@
+# 404 page content.
+#
+# These pages are deliberately NOT ordinary indexable page pairs:
+#   - noindex, follow
+#   - no canonical, no hreflang, no Open Graph
+#   - absent from sitemap.xml
+# See docs/STATIC_PAGES_MIGRATION.md §8 for why.
+#
+# Every destination below is ROOT-RELATIVE and stored WITHOUT the /pl/ prefix.
+# The build adds the prefix per locale. A 404 can be served for any missing URL
+# at any depth (/a/b/c/nope), so a page-relative link would resolve against that
+# imaginary directory and break. See §9.
+
+slug: "404"
+published: true
+noindex: true
+
+# The two hero buttons and the three "where to next" cards, as bare page files.
+# The build turns each into "/<file>" or "/pl/<file>".
+primary_destination: "index.html"
+secondary_destination: "contact.html"
+
+cards:
+  - key: events
+    destination: "events.html"
+  - key: news
+    destination: "announcements.html"
+  - key: members
+    destination: "members.html"
+
+en:
+  title: "Page Not Found | Federation of Polish Student Societies UK"
+  description: "The page you were looking for could not be found on the Federation of Polish Student Societies UK website. Use the links below to find what you need."
+  eyebrow: "Error 404"
+  h1_lead: "Page not "
+  h1_fancy: "found"
+  lead: "Sorry — the page you were looking for doesn't exist, or it may have moved. The links below will get you back on track."
+  primary_label: "Back to the homepage"
+  secondary_label: "Get in touch"
+  cards_eyebrow: "Where to next"
+  cards_title_lead: "Try one of "
+  cards_title_fancy: "these"
+  cards_copy:
+    events:
+      heading: "Events"
+      text: "Our flagship events, from the Polish Business Forum at London Business School to the annual Christmas Dinner."
+      more: "See our events"
+    news:
+      heading: "News"
+      text: "Announcements, opportunities and updates from the Federation — internships, committee roles and embassy visits."
+      more: "Read the latest"
+    members:
+      heading: "Member societies"
+      text: "Polish student societies at universities the length of the country, shown on an interactive map."
+      more: "Find your society"
+
+pl:
+  title: "Nie znaleziono strony | Federacja Polskich Stowarzyszeń Studenckich"
+  description: "Strona, której szukasz, nie istnieje na stronie Federacji Polskich Stowarzyszeń Studenckich. Skorzystaj z poniższych odnośników."
+  eyebrow: "Błąd 404"
+  h1_lead: "Nie znaleziono "
+  h1_fancy: "strony"
+  lead: "Przepraszamy — strona, której szukasz, nie istnieje lub została przeniesiona. Poniższe odnośniki pomogą Ci wrócić na właściwą ścieżkę."
+  primary_label: "Wróć na stronę główną"
+  secondary_label: "Napisz do nas"
+  cards_eyebrow: "Dokąd dalej"
+  cards_title_lead: "Spróbuj "
+  cards_title_fancy: "tutaj"
+  cards_copy:
+    events:
+      heading: "Wydarzenia"
+      text: "Nasze flagowe wydarzenia — od Polish Business Forum w London Business School po doroczną Kolację Wigilijną."
+      more: "Zobacz nasze wydarzenia"
+    news:
+      heading: "Aktualności"
+      text: "Ogłoszenia, możliwości i nowości od Federacji — staże, funkcje w zarządzie i wizyty w ambasadzie."
+      more: "Czytaj najnowsze"
+    members:
+      heading: "Stowarzyszenia członkowskie"
+      text: "Polskie stowarzyszenia studenckie na uczelniach w całym kraju, pokazane na interaktywnej mapie."
+      more: "Znajdź swoje stowarzyszenie"

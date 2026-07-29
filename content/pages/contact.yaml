@@ -1,0 +1,128 @@
+# Contact page content.
+#
+# Fields above the `en:`/`pl:` blocks are shared: one destination, one address,
+# one set of handles, used by both languages. Only wording is localised.
+#
+# The address wording is transcribed EXACTLY from the live pages. It is
+# described as a "Correspondence address" / "Adres korespondencyjny" — not an
+# office and not a registered address. Do not reword it: whether this address
+# also belongs in the homepage Organization JSON-LD is a separate, unresolved
+# question and is deliberately not settled here.
+
+slug: contact
+published: true
+
+contact_email: "contact@polsocfederation.pl"
+
+# Address lines are shared EXCEPT the organisation name and the country, which
+# are written differently in each language. The street and city lines are a
+# postal address and are identical in both.
+address:
+  street_lines:
+    - "238-246 King St"
+    - "London W6 0RF"
+
+social_links:
+  - key: instagram
+    url: "https://www.instagram.com/federac_ja/"
+    label: "Instagram"
+    handle: "@federac_ja"
+  - key: linkedin
+    url: "https://www.linkedin.com/company/federation-of-polish-student-societies-in-the-uk"
+    label: "LinkedIn"
+    handle: "Federation of Polish Student Societies"
+  - key: facebook
+    url: "https://www.facebook.com/FederationOfPolishStudentSocietiesUK/"
+    label: "Facebook"
+    handle: "FederationOfPolishStudentSocietiesUK"
+
+# The Federation's own initiatives, each with its own set of links.
+# `icon` names an inline SVG defined in partials/contact-icons.njk — the icon
+# identifier is shared; only the visible label is localised.
+initiatives:
+  - key: polish-business-forum
+    logo: "/assets/pbf/pbf-logo-icon.jpg"
+    title: "Polish Business Forum"
+    links:
+      - icon: linkedin
+        url: "https://www.linkedin.com/company/polishbusinessforum/"
+        external: true
+        label_key: linkedin
+      - icon: instagram
+        url: "https://www.instagram.com/polishbusinessforum/"
+        external: true
+        label_key: instagram
+  - key: the-lambert
+    logo: "/assets/pbf/media/lambert.webp"
+    title: "The Lambert"
+    links:
+      - icon: mail
+        url: "mailto:contact@thelambert.org"
+        external: false
+        label_key: email
+      - icon: globe
+        url: "https://thelambert.org/"
+        external: true
+        label_key: website
+      - icon: instagram
+        url: "https://www.instagram.com/thelambert_/"
+        external: true
+        label_key: instagram
+      - icon: linkedin
+        url: "https://www.linkedin.com/company/thelambert"
+        external: true
+        label_key: linkedin
+
+en:
+  title: "Contact | Federation of Polish Student Societies UK"
+  description: "Contact the Federation of Polish Student Societies UK by email or social media, and find our correspondence address in London for Polish student enquiries."
+  og_image_alt: "Federation of Polish Student Societies in the UK — By Students. For Students."
+  eyebrow: "Get in touch"
+  h1_lead: "Get in "
+  h1_fancy: "touch"
+  lead: "Whether you're a student, a society, a potential partner or a member of the press — we'd love to hear from you."
+  write_to_us_heading: "Write to us"
+  general_enquiries_label: "General enquiries"
+  copy_button_label: "⧉ Copy email address"
+  address_label: "Correspondence address"
+  address_org_line: "Federation of Polish Student Societies in the UK"
+  address_country_line: "United Kingdom"
+  follow_us_heading: "Follow us"
+  initiatives_heading: "Our initiatives"
+  cta_heading: "By students. For students."
+  cta_text: "Join a society, come to an event, or help us build the next one — the Federation is what its members make it."
+  cta_button: "See our events"
+  initiatives_copy:
+    polish-business-forum:
+      logo_alt: "Polish Business Forum logo"
+      note: "Our flagship business conference at London Business School."
+    the-lambert:
+      logo_alt: "The Lambert logo"
+      note: "The Federation's international student journal of Polish students."
+
+pl:
+  title: "Kontakt | Federacja Polskich Stowarzyszeń Studenckich"
+  description: "Skontaktuj się z Federacją Polskich Stowarzyszeń Studenckich — e-mail, media społecznościowe i adres korespondencyjny w Londynie."
+  og_image_alt: "Federacja Polskich Stowarzyszeń Studenckich w Wielkiej Brytanii — Przez studentów. Dla studentów."
+  eyebrow: "Napisz do nas"
+  h1_lead: "Skontaktuj "
+  h1_fancy: "się z nami"
+  lead: "Jesteś studentem, stowarzyszeniem, potencjalnym partnerem albo dziennikarzem? Chętnie Cię wysłuchamy."
+  write_to_us_heading: "Napisz do nas"
+  general_enquiries_label: "Zapytania ogólne"
+  copy_button_label: "⧉ Kopiuj adres e-mail"
+  address_label: "Adres korespondencyjny"
+  address_org_line: "Federacja Polskich Stowarzyszeń Studenckich w Wielkiej Brytanii"
+  address_country_line: "Wielka Brytania"
+  follow_us_heading: "Śledź nas"
+  initiatives_heading: "Nasze inicjatywy"
+  cta_heading: "Przez studentów. Dla studentów."
+  cta_text: "Dołącz do stowarzyszenia, przyjdź na wydarzenie albo pomóż nam stworzyć kolejne — Federacja jest taka, jaką tworzą jej członkowie."
+  cta_button: "Zobacz nasze wydarzenia"
+  initiatives_copy:
+    polish-business-forum:
+      logo_alt: "Logo Polish Business Forum"
+      note: "Nasza flagowa konferencja biznesowa w London Business School."
+    the-lambert:
+      logo_alt: "The Lambert logo"
+      note: "Międzynarodowy magazyn studencki tworzony przez polskich studentów."

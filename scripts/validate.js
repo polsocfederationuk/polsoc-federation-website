@@ -599,8 +599,9 @@ assert(missingDirs.length === 0,
 //   Phase 4: team, settings
 //   Phase 6: announcements
 //   Phase 8: societies
-const MIGRATED_COLLECTIONS = new Set(["team", "settings", "announcements", "societies"]);
-const populated = ["events", "announcements", "team", "societies", "settings"]
+//   Phase 9: pages (contact, 404)
+const MIGRATED_COLLECTIONS = new Set(["team", "settings", "announcements", "societies", "pages"]);
+const populated = ["events", "announcements", "team", "societies", "settings", "pages"]
   .filter((c) => !MIGRATED_COLLECTIONS.has(c))
   .filter((c) => fs.readdirSync(path.join(ROOT, "content", c))
     .some((f) => /\.(ya?ml|json|md)$/i.test(f)));
@@ -688,7 +689,8 @@ if (!exists("dist")) {
     // something public by accident". The allowlist keeps that guarantee exact
     // and makes each migration a deliberate, reviewable edit to this line.
     const MIGRATED = ["team.html", "pl/team.html", "announcements.html", "pl/announcements.html",
-      "members.html", "pl/members.html"];
+      "members.html", "pl/members.html", "contact.html", "pl/contact.html",
+      "404.html", "pl/404.html"];
 
     const generatedHtml = distFiles.filter((f) => f.endsWith(".html"));
     const strayHtml = generatedHtml.filter(
@@ -2346,6 +2348,362 @@ if (!exists("dist")) {
       `generated member pages match the live pages (${socMatched || "?"} semantic comparisons — scripts/compare-members.js)`,
       "scripts/compare-members.js reports differences from the live member pages",
       (socCmp.stdout || "").split("\n").filter((l) => /FAIL/.test(l)).slice(0, 12));
+  }
+}
+
+/* =================================================================== 22. static page content */
+
+section("22. Contact and 404 page records (Phase 9)");
+
+const PAGES_DIR = "content/pages";
+const pageFiles = fs.existsSync(path.join(ROOT, PAGES_DIR))
+  ? fs.readdirSync(path.join(ROOT, PAGES_DIR)).filter((f) => /\.ya?ml$/i.test(f)).sort()
+  : [];
+const pageRecs = pageFiles.map((f) => ({ _file: `${PAGES_DIR}/${f}`, ...loadYaml(`${PAGES_DIR}/${f}`) }));
+
+const pageSplit = pageFiles.filter((f) => /[-.](en|pl)\.ya?ml$/i.test(f) || /^(en|pl)[-.]/i.test(f));
+assert(pageSplit.length === 0,
+  "no language-split page-content files (one canonical record each)",
+  "language-split page files found", pageSplit);
+
+/** Walk every string in a record and report unsafe markup or protocols. */
+function scanStrings(rec, onString) {
+  const walk = (v, trail) => {
+    if (typeof v === "string") return onString(v, trail);
+    if (Array.isArray(v)) return v.forEach((x, i) => walk(x, `${trail}[${i}]`));
+    if (v && typeof v === "object") {
+      for (const [k, x] of Object.entries(v)) if (k !== "_source") walk(x, trail ? `${trail}.${k}` : k);
+    }
+  };
+  walk(rec, "");
+}
+
+const UNSAFE_PROTO = /\b(javascript|vbscript|data)\s*:/i;
+const RAW_TAG = /<[a-z/!][^>]*>/i;
+const HANDLER_ATTR = /\bon[a-z]+\s*=\s*["']/i;
+
+/* -- contact record --------------------------------------------------------- */
+
+const contactRecs = pageRecs.filter((r) => r.slug === "contact");
+assert(contactRecs.length === 1,
+  "exactly one contact-page record exists",
+  `expected 1 contact record, found ${contactRecs.length}`, contactRecs.map((r) => r._file));
+
+if (contactRecs.length === 1) {
+  const ct = contactRecs[0];
+
+  assert(typeof ct.published === "boolean",
+    "the contact record's publication status is a boolean",
+    `contact record's published is ${JSON.stringify(ct.published)}`);
+  assert(Boolean(ct.en) && Boolean(ct.pl),
+    "the contact record contains both an en and a pl block",
+    "the contact record is missing a language block");
+
+  const CONTACT_REQUIRED = ["title", "description", "eyebrow", "h1_lead", "h1_fancy", "lead",
+    "write_to_us_heading", "general_enquiries_label", "copy_button_label", "address_label",
+    "address_org_line", "address_country_line", "follow_us_heading", "initiatives_heading",
+    "cta_heading", "cta_text", "cta_button"];
+  const ctMissing = [];
+  for (const code of ["en", "pl"]) {
+    for (const f of CONTACT_REQUIRED) {
+      if (!String((ct[code] || {})[f] || "").trim()) ctMissing.push(`${code}.${f}`);
+    }
+  }
+  assert(ctMissing.length === 0,
+    `every required contact heading and page string exists in both languages (${CONTACT_REQUIRED.length} each)`,
+    "contact record missing localised strings", ctMissing);
+
+  // The e-mail and every destination must match what the live page serves.
+  const liveContact = read("contact.html");
+  assert(liveContact.includes(`mailto:${ct.contact_email}`),
+    `the contact e-mail matches the live destination (${ct.contact_email})`,
+    "the contact e-mail does not match the live page", [ct.contact_email]);
+
+  const socialUrls = (ct.social_links || []).map((s) => s.url);
+  const socialMissing = socialUrls.filter((u) => !liveContact.includes(u));
+  assert(socialUrls.length > 0 && socialMissing.length === 0,
+    `all ${socialUrls.length} social destinations match the live page`,
+    "social destinations not present on the live contact page", socialMissing);
+
+  const initUrls = (ct.initiatives || []).flatMap((i) => (i.links || []).map((l) => l.url));
+  const initMissing = initUrls.filter((u) => !liveContact.includes(u));
+  assert(initUrls.length > 0 && initMissing.length === 0,
+    `all ${initUrls.length} initiative destinations match the live page`,
+    "initiative destinations not present on the live contact page", initMissing);
+
+  // Every initiative needs localised copy in both languages.
+  const initCopyMissing = [];
+  for (const init of ct.initiatives || []) {
+    for (const code of ["en", "pl"]) {
+      const copy = ((ct[code] || {}).initiatives_copy || {})[init.key];
+      if (!copy || !String(copy.note || "").trim() || !String(copy.logo_alt || "").trim()) {
+        initCopyMissing.push(`${code}.${init.key}`);
+      }
+    }
+  }
+  assert(initCopyMissing.length === 0,
+    "every initiative has a localised title, note and logo alt in both languages",
+    "initiatives missing localised copy", initCopyMissing);
+
+  // External destinations must be HTTPS. mailto: is a documented exception —
+  // The Lambert's contact link is a mailto on the live page.
+  const badProto = [...socialUrls, ...initUrls]
+    .filter((u) => !/^https:\/\//.test(u) && !/^mailto:/.test(u));
+  assert(badProto.length === 0,
+    "every external contact destination is HTTPS (mailto: is the one documented exception)",
+    "contact destinations that are neither HTTPS nor mailto:", badProto);
+
+  const ctUnsafe = [];
+  scanStrings(ct, (v, trail) => {
+    if (RAW_TAG.test(v) || HANDLER_ATTR.test(v)) ctUnsafe.push(`${trail}: raw markup`);
+    if (UNSAFE_PROTO.test(v)) ctUnsafe.push(`${trail}: unsafe protocol`);
+  });
+  assert(ctUnsafe.length === 0,
+    "the contact record contains no raw HTML, inline handlers or unsafe protocols",
+    "unsafe values in the contact record", ctUnsafe);
+}
+
+/* -- 404 record ------------------------------------------------------------- */
+
+const errRecs = pageRecs.filter((r) => String(r.slug) === "404");
+assert(errRecs.length === 1,
+  "exactly one bilingual 404 record exists",
+  `expected 1 404 record, found ${errRecs.length}`, errRecs.map((r) => r._file));
+
+if (errRecs.length === 1) {
+  const er = errRecs[0];
+
+  assert(er.noindex === true,
+    "the 404 record declares noindex: true",
+    "the 404 record does not declare noindex: true", [JSON.stringify(er.noindex)]);
+  assert(typeof er.published === "boolean",
+    "the 404 record's publication status is a boolean",
+    `404 record's published is ${JSON.stringify(er.published)}`);
+  assert(Boolean(er.en) && Boolean(er.pl),
+    "the 404 record contains both an en and a pl block",
+    "the 404 record is missing a language block");
+
+  // A canonical, an hreflang list or a sitemap flag on this record would be a
+  // route to making the pages indexable. None may exist.
+  const forbidden = ["canonical", "hreflang", "alternates", "sitemap", "in_sitemap", "sitemap_include"];
+  const present = forbidden.filter((f) => f in er);
+  assert(present.length === 0,
+    "the 404 record supplies no canonical, hreflang or sitemap-inclusion field",
+    "the 404 record carries a field that could make it indexable", present);
+
+  const ERR_REQUIRED = ["title", "description", "eyebrow", "h1_lead", "h1_fancy", "lead",
+    "primary_label", "secondary_label", "cards_eyebrow", "cards_title_lead", "cards_title_fancy"];
+  const erMissing = [];
+  for (const code of ["en", "pl"]) {
+    for (const f of ERR_REQUIRED) {
+      if (!String((er[code] || {})[f] || "").trim()) erMissing.push(`${code}.${f}`);
+    }
+    for (const card of er.cards || []) {
+      const copy = ((er[code] || {}).cards_copy || {})[card.key];
+      if (!copy || !String(copy.heading || "").trim() || !String(copy.text || "").trim() ||
+          !String(copy.more || "").trim()) erMissing.push(`${code}.cards_copy.${card.key}`);
+    }
+  }
+  assert(erMissing.length === 0,
+    "every required 404 string exists in both languages, including all three cards",
+    "404 record missing localised strings", erMissing);
+
+  // Destinations are stored as bare page files; the build prefixes them. A
+  // stored absolute URL or a "../" would defeat root-link mode.
+  const dests = [er.primary_destination, er.secondary_destination,
+    ...(er.cards || []).map((c) => c.destination)];
+  const badDest = dests.filter((d) => !/^[a-z0-9][a-z0-9-]*\.html$/.test(String(d)));
+  assert(badDest.length === 0,
+    `all ${dests.length} 404 destinations are bare page files the build makes root-relative`,
+    "404 destinations that are not bare page filenames", badDest);
+  const missingDest = dests.filter((d) => !exists(String(d)));
+  assert(missingDest.length === 0,
+    "every 404 destination points at a page that exists",
+    "404 destinations whose target page does not exist", missingDest);
+
+  const erUnsafe = [];
+  scanStrings(er, (v, trail) => {
+    if (RAW_TAG.test(v) || HANDLER_ATTR.test(v)) erUnsafe.push(`${trail}: raw markup`);
+    if (UNSAFE_PROTO.test(v)) erUnsafe.push(`${trail}: unsafe protocol`);
+  });
+  assert(erUnsafe.length === 0,
+    "the 404 record contains no raw HTML, inline handlers or unsafe protocols",
+    "unsafe values in the 404 record", erUnsafe);
+}
+
+/* =================================================================== 23. generated static pages */
+
+section("23. Generated contact and 404 pages (Phase 9)");
+
+if (!exists("dist")) {
+  ok("dist/ absent — generated contact/404 checks skipped (run `npm run build` to enable them)");
+} else {
+  const STATIC_PAGES = {
+    contactEn: "dist/contact.html", contactPl: "dist/pl/contact.html",
+    errEn: "dist/404.html", errPl: "dist/pl/404.html",
+  };
+  const missingStatic = Object.values(STATIC_PAGES).filter((p) => !exists(p));
+  assert(missingStatic.length === 0,
+    "all four generated pages exist (contact ×2, 404 ×2)",
+    "generated contact/404 pages missing after build", missingStatic);
+
+  if (missingStatic.length === 0) {
+    const g = Object.fromEntries(Object.entries(STATIC_PAGES).map(([k, v]) => [k, read(v)]));
+
+    /* ---- contact pages ---- */
+    assert(/<html lang="en">/.test(g.contactEn) && /<html lang="pl">/.test(g.contactPl),
+      "generated contact pages declare the correct <html lang>",
+      "a generated contact page has the wrong <html lang>");
+
+    const cCanon = (s) => (s.match(/<link rel="canonical" href="([^"]+)"/) || [])[1];
+    assert(cCanon(g.contactEn) === `${SITE}/contact.html` && cCanon(g.contactPl) === `${SITE}/pl/contact.html`,
+      "generated contact canonicals are self-referencing and keep the .html URLs",
+      "generated contact canonical URLs are wrong",
+      [`en: ${cCanon(g.contactEn)}`, `pl: ${cCanon(g.contactPl)}`]);
+
+    const cAlts = (s) => [...s.matchAll(/<link rel="alternate" hreflang="([^"]+)" href="([^"]+)"/g)]
+      .map((m) => `${m[1]}=${m[2]}`).sort();
+    const cWant = [`en=${SITE}/contact.html`, `pl=${SITE}/pl/contact.html`,
+      `x-default=${SITE}/contact.html`].sort();
+    assert(JSON.stringify(cAlts(g.contactEn)) === JSON.stringify(cWant) &&
+      JSON.stringify(cAlts(g.contactPl)) === JSON.stringify(cWant),
+      "both contact pages carry the identical reciprocal hreflang trio with an English x-default",
+      "generated contact hreflang alternates are wrong",
+      [`en: ${cAlts(g.contactEn).join(" ")}`, `pl: ${cAlts(g.contactPl).join(" ")}`]);
+
+    const cOg = (s) => (s.match(/<meta property="og:locale" content="([^"]+)"/) || [])[1];
+    assert(cOg(g.contactEn) === "en_GB" && cOg(g.contactPl) === "pl_PL",
+      "generated contact pages declare the correct Open Graph locales",
+      "generated contact og:locale values are wrong");
+
+    const cSwitch = (s) => {
+      const nav = s.match(/<nav class="lang-switch"[\s\S]*?<\/nav>/);
+      return nav ? [...nav[0].matchAll(/<a[^>]*href="([^"]+)"/g)].map((m) => m[1]) : [];
+    };
+    assert(cSwitch(g.contactEn).includes("/pl/contact.html") && cSwitch(g.contactPl).includes("/contact.html"),
+      "contact language switchers point at the paired page in the other language",
+      "contact language-switcher destinations are wrong");
+
+    for (const [code, src] of [["en", g.contactEn], ["pl", g.contactPl]]) {
+      assert(/<a[^>]*class="[^"]*\bactive\b[^"]*"[^>]*href="contact\.html"/.test(src) ||
+        /<a[^>]*href="contact\.html"[^>]*class="[^"]*\bactive\b[^"]*"/.test(src),
+        `generated ${code} contact page marks Contact as the active navigation item`,
+        `generated ${code} contact page has no active navigation state on Contact`);
+
+      // Contact information preserved.
+      assert(src.includes("mailto:contact@polsocfederation.pl"),
+        `generated ${code} contact page preserves the contact e-mail`,
+        `generated ${code} contact page lost the contact e-mail`);
+      assert(/238-246 King St/.test(src) && /London W6 0RF/.test(src),
+        `generated ${code} contact page preserves the address lines`,
+        `generated ${code} contact page lost an address line`);
+      const socials = (src.match(/https:\/\/www\.(instagram|linkedin|facebook)\.com\/[^"]+/g) || []).length;
+      assert(socials >= 3,
+        `generated ${code} contact page preserves the social destinations (${socials} social URLs)`,
+        `generated ${code} contact page is missing social destinations`);
+      const subCards = (src.match(/<div class="sub-card/g) || []).length;
+      assert(subCards === 2,
+        `generated ${code} contact page renders both initiative cards`,
+        `generated ${code} contact page renders ${subCards} initiative cards, expected 2`);
+
+      // Classes the responsive CSS depends on. Losing one reintroduces the
+      // mobile overflow fixed in earlier work.
+      for (const cls of ["contact-grid", "contact-card", "social-list", "sub-grid", "sub-card"]) {
+        assert(new RegExp(`class="[^"]*\\b${cls}\\b`).test(src),
+          `generated ${code} contact page keeps the .${cls} class the responsive CSS needs`,
+          `generated ${code} contact page lost the .${cls} class`);
+      }
+
+      // Local references must resolve inside dist/.
+      const refs = [
+        ...[...src.matchAll(/<link rel="stylesheet"[^>]*href="([^"]+)"/g)].map((m) => m[1]),
+        ...[...src.matchAll(/<script[^>]*src="([^"]+)"/g)].map((m) => m[1]),
+        ...[...src.matchAll(/<img[^>]*src="([^"]+)"/g)].map((m) => m[1]),
+      ].filter((r) => r.startsWith("/"));
+      const broken = refs.filter((r) => !exists("dist" + r));
+      assert(broken.length === 0,
+        `generated ${code} contact page's ${refs.length} local references all resolve inside dist/`,
+        `generated ${code} contact page references files that do not exist in dist/`, broken);
+    }
+
+    // The contact pages ARE in the sitemap already and this phase must not
+    // change it.
+    assert(sitemapRaw.includes(`${SITE}/contact.html`) && sitemapRaw.includes(`${SITE}/pl/contact.html`),
+      "both contact URLs remain in sitemap.xml, unchanged by this phase",
+      "a contact URL is missing from sitemap.xml");
+
+    /* ---- 404 pages ---- */
+    assert(/<html lang="en">/.test(g.errEn) && /<html lang="pl">/.test(g.errPl),
+      "generated 404 pages declare the correct <html lang> (en / pl)",
+      "a generated 404 page has the wrong <html lang>");
+
+    for (const [code, src] of [["en", g.errEn], ["pl", g.errPl]]) {
+      const head404 = src.split("</head>")[0];
+      assert(/<meta name="robots" content="noindex, follow">/.test(head404),
+        `generated ${code} 404 page is noindex, follow`,
+        `generated ${code} 404 page is missing its noindex robots tag`);
+      assert(!/rel="canonical"/.test(src),
+        `generated ${code} 404 page has no canonical`,
+        `generated ${code} 404 page declares a canonical — it must not look indexable`);
+      assert(!/rel="alternate" hreflang/.test(src),
+        `generated ${code} 404 page has no hreflang links`,
+        `generated ${code} 404 page declares hreflang alternates`);
+      assert(!/property="og:/.test(head404),
+        `generated ${code} 404 page has no Open Graph metadata (no indexable og:url)`,
+        `generated ${code} 404 page declares Open Graph metadata`);
+      assert(!/name="twitter:/.test(head404),
+        `generated ${code} 404 page has no Twitter metadata`,
+        `generated ${code} 404 page declares Twitter metadata`);
+
+      // ROOT LINK MODE — the reason this page type exists in the build.
+      const depthRelative = [...src.matchAll(/(?:href|src)="([^"]+)"/g)].map((m) => m[1])
+        .filter((h) => !/^(https?:|mailto:|tel:|data:|#|\/)/.test(h));
+      assert(depthRelative.length === 0,
+        `generated ${code} 404 page has no depth-relative href or src (root-link mode works)`,
+        `generated ${code} 404 page has links that would break at an arbitrary URL depth`, depthRelative);
+
+      // And prove the mode is actually exercised, not merely that the page
+      // happens to contain no links.
+      const rootLinks = [...src.matchAll(/href="(\/[^"]*)"/g)].map((m) => m[1]);
+      assert(rootLinks.length >= 10,
+        `generated ${code} 404 page exercises root-link mode (${rootLinks.length} root-relative destinations)`,
+        `generated ${code} 404 page has too few root-relative links to have exercised root-link mode`);
+      const prefix = code === "pl" ? "/pl/" : "/";
+      assert(rootLinks.some((h) => h === prefix + "index.html"),
+        `generated ${code} 404 page's home link is root-relative (${prefix}index.html)`,
+        `generated ${code} 404 page's home link is wrong`);
+
+      const refs404 = [
+        ...[...src.matchAll(/<link[^>]*href="([^"]+)"/g)].map((m) => m[1]),
+        ...[...src.matchAll(/<script[^>]*src="([^"]+)"/g)].map((m) => m[1]),
+        ...[...src.matchAll(/<img[^>]*src="([^"]+)"/g)].map((m) => m[1]),
+      ].filter((r) => r.startsWith("/"));
+      const broken404 = refs404.filter((r) => !exists("dist" + r));
+      assert(broken404.length === 0,
+        `generated ${code} 404 page's ${refs404.length} local references all resolve inside dist/`,
+        `generated ${code} 404 page references files that do not exist in dist/`, broken404);
+    }
+
+    assert(!sitemapRaw.includes("/404.html"),
+      "neither 404 page appears in sitemap.xml",
+      "a 404 URL appears in sitemap.xml");
+
+    // The Polish 404 rule must still work for the generated page after cutover:
+    // the rule targets /pl/404.html, and the build must emit exactly that path.
+    assert(exists("dist/pl/404.html"),
+      "the generated Polish 404 sits at dist/pl/404.html, the path netlify.toml already targets",
+      "the generated Polish 404 is not at the path the Netlify rule expects");
+
+    // --- semantic comparisons -------------------------------------------
+    const { spawnSync } = require("child_process");
+    for (const [label, script] of [["contact", "compare-contact.js"], ["404", "compare-404.js"]]) {
+      const cmp = spawnSync(process.execPath, [path.join(__dirname, script)], { cwd: ROOT, encoding: "utf8" });
+      const matched = (cmp.stdout.match(/PASS — (\d+)\/\1 comparisons matched/) || [])[1];
+      assert(cmp.status === 0,
+        `generated ${label} pages match the live pages (${matched || "?"} semantic comparisons — scripts/${script})`,
+        `scripts/${script} reports differences from the live pages`,
+        (cmp.stdout || "").split("\n").filter((l) => /FAIL/.test(l)).slice(0, 12));
+    }
   }
 }
 

@@ -1,0 +1,73 @@
+---
+layout: layouts/base.njk
+
+pagination:
+  data: locales
+  size: 1
+  alias: locale
+
+permalink: "{{ locale.urlPrefix }}404.html"
+
+# `urlPattern` is still declared, but ONLY the language switcher consumes it
+# here: `noindex` below suppresses the canonical, the hreflang trio and all
+# Open Graph and Twitter metadata in head.njk. The live 404 pages carry none of
+# those, and adding them to make the pages look "normal" would be wrong — see
+# docs/STATIC_PAGES_MIGRATION.md §8.
+urlPattern: "/{prefix}404.html"
+
+# THE point of this page, and the reason it is not indexable.
+noindex: true
+
+# ROOT LINK MODE. A 404 body can be served for any missing URL at any depth —
+# /nope, /a/b/c/nope, /pl/a/b/nope. A relative "team.html" would resolve against
+# that imaginary directory and 404 again. `linkMode: "root"` makes the shared
+# chrome emit "/team.html" and "/pl/team.html" instead.
+#
+# This phase is the first to exercise that mode, which Phase 3 built and left
+# untested. See §9.
+linkMode: root
+
+# No activeNav: 404 is not a navigation destination, and the live pages mark
+# nothing as active.
+
+eleventyComputed:
+  pageTitle: "{{ records.pages['404'][locale.code].title }}"
+  pageDescription: "{{ records.pages['404'][locale.code].description }}"
+---
+{%- set page = records.pages["404"] -%}
+{%- set c = page[locale.code] -%}
+{#- Every destination is built root-relative from the locale prefix, for the
+    same reason `linkMode: root` exists above. -#}
+{%- set base = "/" + locale.urlPrefix -%}
+<section class="page-hero">
+  <div class="container">
+    <span class="eyebrow">{{ c.eyebrow }}</span>
+    <h1>{{ c.h1_lead }}<span class="fancy">{{ c.h1_fancy }}</span></h1>
+    <p class="lead">
+      {{ c.lead }}
+    </p>
+    <div class="hero-cta" style="margin-top: 28px;">
+      <a class="btn btn-primary" href="{{ base }}{{ page.primary_destination }}">{{ c.primary_label }} <span class="arrow">&rarr;</span></a>
+      <a class="btn btn-ghost" href="{{ base }}{{ page.secondary_destination }}">{{ c.secondary_label }}</a>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow">{{ c.cards_eyebrow }}</span>
+      <h2 class="section-title">{{ c.cards_title_lead }}<span class="fancy">{{ c.cards_title_fancy }}</span></h2>
+    </div>
+    <div class="card-grid">
+{%- for card in page.cards %}
+{%- set copy = c.cards_copy[card.key] %}
+      <a class="card reveal{% if not loop.first %} reveal-d{{ loop.index0 }}{% endif %}" href="{{ base }}{{ card.destination }}">
+        <h3>{{ copy.heading }}</h3>
+        <p>{{ copy.text }}</p>
+        <span class="card-more">{{ copy.more }} <span class="arrow">&rarr;</span></span>
+      </a>
+{%- endfor %}
+    </div>
+  </div>
+</section>

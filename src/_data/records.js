@@ -28,6 +28,9 @@ const COLLECTIONS = {
   team: "team",
   societies: "societies",
   settings: "settings",
+  // Single-instance page content (contact, 404). Not a list of like items the
+  // way the collections above are, so it is also exposed keyed by slug below.
+  pages: "pages",
 };
 
 const loadCollection = (dirName) => {
@@ -69,6 +72,17 @@ module.exports = () => {
     const stem = path.basename(rec._source, path.extname(rec._source));
     const key = stem.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
     acc[key] = rec;
+    return acc;
+  }, {});
+
+  // Single-instance page content is looked up by slug, not iterated:
+  //   records.pages.contact.contact_email
+  //   records.pages["404"].en.heading_lead
+  // The array form stays available as `records.pagesList` for the validator,
+  // which needs to count records and spot duplicates.
+  out.pagesList = out.pages;
+  out.pages = out.pages.reduce((acc, rec) => {
+    acc[String(rec.slug)] = rec;
     return acc;
   }, {});
 

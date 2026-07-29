@@ -46,6 +46,15 @@
       "instagramLabel": "Instagram",
       "emailAriaPattern": "Email {name}",
       "instagramAriaPattern": "{name} on Instagram"
+    },
+    "contact": {
+      "linkLabels": {
+        "email": "Email",
+        "website": "Website",
+        "instagram": "Instagram",
+        "linkedin": "LinkedIn",
+        "facebook": "Facebook"
+      }
     }
   },
 
@@ -100,6 +109,16 @@
       "instagramLabel": "Instagram",
       "emailAriaPattern": "Napisz e-mail: {name}",
       "instagramAriaPattern": "{name} na Instagramie"
+    },
+    "_contactComment": "Labels on the initiative sub-links. Instagram, LinkedIn and Facebook are brand names and stay untranslated on the live Polish page; only 'E-mail' and 'Strona' differ.",
+    "contact": {
+      "linkLabels": {
+        "email": "E-mail",
+        "website": "Strona",
+        "instagram": "Instagram",
+        "linkedin": "LinkedIn",
+        "facebook": "Facebook"
+      }
     }
   }
 }

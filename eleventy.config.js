@@ -93,6 +93,22 @@ function formatDate(iso, localeCode) {
 }
 
 /**
+ * Logos referenced by the contact page's initiative cards, as repo-relative
+ * paths. Read from the record so the passthrough list is exactly what the page
+ * uses and needs no maintenance when an initiative is added.
+ */
+function contactLogoPaths() {
+  const file = path.join(__dirname, "content", "pages", "contact.yaml");
+  if (!fs.existsSync(file)) return [];
+  const rec = yaml.load(fs.readFileSync(file, "utf8")) || {};
+  const paths = new Set();
+  for (const init of rec.initiatives || []) {
+    if (init.logo) paths.add(String(init.logo).replace(/^\/+/, ""));
+  }
+  return [...paths].sort();
+}
+
+/**
  * Every society logo referenced by a record, as repo-relative paths, sorted and
  * de-duplicated. Records store a bare filename; the logos live in
  * assets/polsocs/. Driving the passthrough list from the records means exactly
@@ -441,6 +457,14 @@ module.exports = function (eleventyConfig) {
   // Society logos — ONLY those a record actually references. Nothing is
   // renamed, re-encoded or deleted; unreferenced files stay where they are.
   for (const logo of societyLogoPaths()) {
+    eleventyConfig.addPassthroughCopy({ [logo]: logo });
+  }
+
+  // ---------------------------------------------------------------------
+  // Contact page assets — the two initiative logos, derived from the record so
+  // the list cannot drift from what the page actually references.
+  // ---------------------------------------------------------------------
+  for (const logo of contactLogoPaths()) {
     eleventyConfig.addPassthroughCopy({ [logo]: logo });
   }
 

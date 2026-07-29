@@ -1,0 +1,115 @@
+---
+layout: layouts/base.njk
+
+pagination:
+  data: locales
+  size: 1
+  alias: locale
+
+permalink: "{{ locale.urlPrefix }}contact.html"
+
+urlPattern: "/{prefix}contact.html"
+
+activeNav: contact
+
+# The contact page uses the shared social banner, and the live pages carry the
+# extended image fields (width/height/type/secure_url) because its dimensions
+# are known. head.njk emits those only when width and height are supplied.
+ogImageWidth: 1200
+ogImageHeight: 630
+
+eleventyComputed:
+  pageTitle: "{{ records.pages.contact[locale.code].title }}"
+  pageDescription: "{{ records.pages.contact[locale.code].description }}"
+  ogImageAlt: "{{ records.pages.contact[locale.code].og_image_alt }}"
+---
+{#- `t` is re-derived here: a child template renders BEFORE its layout, so the
+    layout's `set` is not yet in scope for partials included from this file. -#}
+{%- set t = ui[locale.code] -%}
+{%- set page = records.pages.contact -%}
+{%- set c = page[locale.code] -%}
+<section class="page-hero">
+  <div class="container">
+    <span class="eyebrow">{{ c.eyebrow }}</span>
+    <h1>{{ c.h1_lead }}<span class="fancy">{{ c.h1_fancy }}</span></h1>
+    <p class="lead">
+      {{ c.lead }}
+    </p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    {#- .contact-grid is load-bearing: its tracks use minmax(0, 1fr) so a long
+        e-mail address or address line cannot force horizontal overflow. Do not
+        replace the wrapper or drop the class. See STATIC_PAGES_MIGRATION §6. -#}
+    <div class="contact-grid">
+
+      <div class="contact-card reveal">
+        <h3><span class="h3-icon" aria-hidden="true">{% set icon = "mail" %}{% set iconSize = 17 %}{% include "partials/contact-icons.njk" %}</span> {{ c.write_to_us_heading }}</h3>
+        <address>
+          <strong>{{ c.general_enquiries_label }}</strong><br>
+          <a href="mailto:{{ page.contact_email }}">{{ page.contact_email }}</a><br>
+          {#- The copy button is driven entirely by the live js/main.js, which
+              binds any [data-copy] element and picks its toast wording from the
+              document's lang. No page script is needed here. -#}
+          <button class="copy-btn" type="button" data-copy="{{ page.contact_email }}">{{ c.copy_button_label }}</button>
+          <br><br>
+          <strong>{{ c.address_label }}</strong><br>
+          {{ c.address_org_line }}<br>
+{%- for line in page.address.street_lines %}
+          {{ line }}<br>
+{%- endfor %}
+          {{ c.address_country_line }}
+        </address>
+      </div>
+
+      <div class="contact-card reveal reveal-d1">
+        <h3><span class="h3-icon" aria-hidden="true">{% set icon = "share" %}{% set iconSize = 17 %}{% include "partials/contact-icons.njk" %}</span> {{ c.follow_us_heading }}</h3>
+        {#- .social-list tracks also use overflow-safe sizing; the long LinkedIn
+            handle wraps rather than pushing the card wide. -#}
+        <ul class="social-list">
+{%- for social in page.social_links %}
+          <li><a href="{{ social.url }}" target="_blank" rel="noopener">
+            {% set icon = social.key %}{% set iconSize = 20 %}{% include "partials/contact-icons.njk" %}
+            {{ social.label }} <span class="handle">{{ social.handle }}</span></a></li>
+{%- endfor %}
+        </ul>
+      </div>
+
+    </div>
+
+    {#- Secondary contacts: the Federation's initiatives -#}
+    <div class="sub-head reveal">
+      <h2>{{ c.initiatives_heading }}</h2>
+      <span class="rule" aria-hidden="true"></span>
+    </div>
+    <div class="sub-grid">
+{%- for initiative in page.initiatives %}
+{%- set copy = c.initiatives_copy[initiative.key] %}
+      <div class="sub-card reveal{% if not loop.first %} reveal-d{{ loop.index0 }}{% endif %}">
+        <img class="sub-logo" src="{{ initiative.logo }}" alt="{{ copy.logo_alt }}">
+        <h3>{{ initiative.title }}</h3>
+        <p class="sub-note">{{ copy.note }}</p>
+        <div class="sub-links">
+{%- for link in initiative.links %}
+          <a href="{{ link.url }}"{% if link.external %} target="_blank" rel="noopener"{% endif %}>
+            {% set icon = link.icon %}{% set iconSize = 14 %}{% include "partials/contact-icons.njk" %}
+            {{ t.contact.linkLabels[link.label_key] }}</a>
+{%- endfor %}
+        </div>
+      </div>
+{%- endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="section" style="padding-top: 0;">
+  <div class="container">
+    <div class="cta-band reveal">
+      <h2>{{ c.cta_heading }}</h2>
+      <p>{{ c.cta_text }}</p>
+      <a class="btn btn-light" href="events.html">{{ c.cta_button }} <span class="arrow">&rarr;</span></a>
+    </div>
+  </div>
+</section>

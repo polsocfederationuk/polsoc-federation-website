@@ -12,7 +12,9 @@
     "serve": "python -m http.server 8000",
     "serve:dist": "python -m http.server 8001 --directory dist",
     "compare:announcements": "node scripts/compare-announcements.js",
-    "compare:members": "node scripts/compare-members.js"
+    "compare:members": "node scripts/compare-members.js",
+    "compare:contact": "node scripts/compare-contact.js",
+    "compare:404": "node scripts/compare-404.js"
   },
   "engines": {
     "node": ">=18"
