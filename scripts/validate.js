@@ -600,8 +600,9 @@ assert(missingDirs.length === 0,
 //   Phase 6: announcements
 //   Phase 8: societies
 //   Phase 9: pages (contact, 404)
-const MIGRATED_COLLECTIONS = new Set(["team", "settings", "announcements", "societies", "pages"]);
-const populated = ["events", "announcements", "team", "societies", "settings", "pages"]
+//   Phase 11: events (standard family only — the Business Forum is a later phase)
+const MIGRATED_COLLECTIONS = new Set(["team", "settings", "announcements", "societies", "pages", "events"]);
+const populated = ["announcements", "team", "societies", "settings", "pages", "events"]
   .filter((c) => !MIGRATED_COLLECTIONS.has(c))
   .filter((c) => fs.readdirSync(path.join(ROOT, "content", c))
     .some((f) => /\.(ya?ml|json|md)$/i.test(f)));
@@ -690,7 +691,9 @@ if (!exists("dist")) {
     // and makes each migration a deliberate, reviewable edit to this line.
     const MIGRATED = ["team.html", "pl/team.html", "announcements.html", "pl/announcements.html",
       "members.html", "pl/members.html", "contact.html", "pl/contact.html",
-      "404.html", "pl/404.html"];
+      "404.html", "pl/404.html",
+      ...["sikorski-debate", "christmas-dinner", "youth-congress", "icebreaker"]
+        .flatMap((s) => [`event-${s}.html`, `pl/event-${s}.html`])];
 
     const generatedHtml = distFiles.filter((f) => f.endsWith(".html"));
     const strayHtml = generatedHtml.filter(
@@ -2895,18 +2898,26 @@ const eventsContentDir = "content/events";
 const eventRecords = exists(eventsContentDir)
   ? fs.readdirSync(path.join(ROOT, eventsContentDir)).filter((f) => /\.ya?ml$/i.test(f))
   : [];
-assert(eventRecords.length === 0,
-  "content/events/ is still empty — this phase designs the schema, it does not populate it",
-  "active event records were created during the reconciliation phase", eventRecords);
+// Phase 10 asserted this directory was EMPTY. Phase 11 populated it with the
+// four standard events, so the guard now checks the narrower thing that is
+// still true: no Business Forum record exists yet.
+{
+  const bfRecords = eventRecords.filter((f) => /business-forum/i.test(f));
+  assert(bfRecords.length === 0,
+    `content/events/ holds only standard events (${eventRecords.length}); no Business Forum record yet`,
+    "a Business Forum record exists before its dedicated phase", bfRecords);
+}
 
 if (exists("dist")) {
+  // Standard event pages ARE generated as of Phase 11. The listing, the
+  // homepages and the Business Forum are not.
   const forbiddenGenerated = ["dist/events.html", "dist/pl/events.html",
     "dist/index.html", "dist/pl/index.html",
-    ...EXPECTED_EVENT_SLUGS.flatMap((s) => [`dist/event-${s}.html`, `dist/pl/event-${s}.html`])];
+    "dist/event-business-forum.html", "dist/pl/event-business-forum.html"];
   const created = forbiddenGenerated.filter((p) => exists(p));
   assert(created.length === 0,
-    "no generated event, events-listing or homepage page was produced by this phase",
-    "this phase generated pages it was not supposed to", created);
+    "no events listing, homepage or Business Forum page has been generated",
+    "a page outside the migrated scope was generated", created);
 }
 
 // The audit is read-only: the live event sources must be untouched.
@@ -2926,6 +2937,347 @@ if (exists("dist")) {
   assert(changed.length === 0 || changed[0].startsWith("(git unavailable"),
     "the audit changed no live event page, homepage, listing, sitemap or announcement record",
     "the reconciliation phase modified files it must not touch", changed);
+}
+
+/* =================================================================== 25. standard event records */
+
+section("25. Standard event records (Phase 11)");
+
+const EV_DIR = "content/events";
+const EV_EXPECTED = ["sikorski-debate", "christmas-dinner", "youth-congress", "icebreaker"];
+const EV_SECTION_TYPES = new Set(["prose", "gallery", "heading", "album", "instagram"]);
+const EV_REG_STATES = new Set(["none", "open", "closed", "sold-out"]);
+const EV_REG_TYPES = new Set([null, "external-link", "payment-link", "email"]);
+const EV_PRECISION = new Set(["day", "month"]);
+// The Business Forum's dedicated extension must never appear on a standard event.
+const BF_ONLY_KEYS = ["business_forum", "edition_number", "partner_categories",
+  "forum_ball", "photographers", "statistics"];
+
+const evFiles = fs.existsSync(path.join(ROOT, EV_DIR))
+  ? fs.readdirSync(path.join(ROOT, EV_DIR)).filter((f) => /\.ya?ml$/i.test(f)).sort()
+  : [];
+const evAll = evFiles.map((f) => ({ _file: `${EV_DIR}/${f}`, ...loadYaml(`${EV_DIR}/${f}`) }));
+const evStd = evAll.filter((e) => e.published === true && e.event_family === "standard");
+
+assert(evStd.length === 4,
+  "exactly four published standard-event records",
+  `expected 4 published standard events, found ${evStd.length}`, evStd.map((e) => e.slug));
+
+const evMissing = EV_EXPECTED.filter((s) => !evStd.some((e) => e.slug === s));
+assert(evMissing.length === 0,
+  `all four expected event slugs are present (${EV_EXPECTED.join(", ")})`,
+  "expected standard events missing", evMissing);
+
+const evSlugs = evAll.map((e) => e.slug);
+assert(new Set(evSlugs).size === evSlugs.length, "every event slug is unique",
+  "duplicate event slugs", evSlugs.filter((s, i) => evSlugs.indexOf(s) !== i));
+const evOrders = evStd.map((e) => e.order);
+assert(new Set(evOrders).size === evOrders.length, "every standard event has a unique display order",
+  "duplicate event display orders", evOrders);
+const evSlugFile = evAll.filter((e) => e._file !== `${EV_DIR}/${e.slug}.yaml`).map((e) => e._file);
+assert(evSlugFile.length === 0, "every event's slug matches its filename",
+  "records whose slug does not match the filename", evSlugFile);
+
+// The Business Forum is a different family with its own template. A record
+// must never be able to render Forum content through the standard template.
+const evBadFamily = evStd.filter((e) => e.event_family !== "standard" || e.template !== "standard")
+  .map((e) => `${e.slug}: ${e.event_family}/${e.template}`);
+assert(evBadFamily.length === 0,
+  "every standard record pairs event_family: standard with template: standard",
+  "records with a forbidden family/template pair", evBadFamily);
+const evBfLeak = [];
+for (const e of evStd) for (const k of BF_ONLY_KEYS) if (k in e) evBfLeak.push(`${e.slug}: ${k}`);
+assert(evBfLeak.length === 0,
+  "no standard record carries a Business Forum extension field",
+  "Business Forum fields leaked onto a standard event", evBfLeak);
+
+const evBadYear = evStd.filter((e) => e.academic_year !== "2025/26").map((e) => `${e.slug}: ${e.academic_year}`);
+assert(evBadYear.length === 0, 'every standard event is academic_year "2025/26"',
+  "events with an unexpected academic year", evBadYear);
+
+/* -- dates ------------------------------------------------------------------ */
+
+const evDateType = evStd.filter((e) => typeof e.start_date !== "string")
+  .map((e) => `${e.slug}: ${Object.prototype.toString.call(e.start_date)}`);
+assert(evDateType.length === 0,
+  "every start_date is a quoted string, not a YAML-parsed Date",
+  "unquoted event dates — YAML turned these into timezone-sensitive Date objects", evDateType);
+const evBadPrec = evStd.filter((e) => !EV_PRECISION.has(e.date_precision))
+  .map((e) => `${e.slug}: ${e.date_precision}`);
+assert(evBadPrec.length === 0, `every date_precision is one of ${[...EV_PRECISION].join(", ")}`,
+  "unsupported date precision", evBadPrec);
+const evBadDate = evStd.filter((e) => {
+  const s = String(e.start_date);
+  return e.date_precision === "day" ? !/^\d{4}-\d{2}-\d{2}$/.test(s) : !/^\d{4}-\d{2}$/.test(s);
+}).map((e) => `${e.slug}: ${e.start_date} (${e.date_precision})`);
+assert(evBadDate.length === 0, "every start_date matches its declared precision",
+  "dates that do not match their precision", evBadDate);
+
+/* -- venue: the approved reconciliation decisions --------------------------- */
+
+const APPROVED_VENUE = {
+  "sikorski-debate": { en: "Polish Institute and Sikorski Museum", pl: "Instytut Polski i Muzeum im. gen. Sikorskiego", hood: null },
+  "christmas-dinner": { en: "Ognisko Restaurant", pl: "Ognisko Restaurant", hood: "South Kensington" },
+  "youth-congress": { en: "Ognisko Polskie", pl: "Ognisko Polskie", hood: null },
+  "icebreaker": { en: "Mamuśka!", pl: "Mamuśka!", hood: "Waterloo" },
+};
+const evVenueBad = [];
+for (const e of evStd) {
+  const want = APPROVED_VENUE[e.slug];
+  if (!want) continue;
+  const v = e.venue || {};
+  if ((v.name || {}).en !== want.en) evVenueBad.push(`${e.slug}: en name is ${JSON.stringify((v.name || {}).en)}`);
+  if ((v.name || {}).pl !== want.pl) evVenueBad.push(`${e.slug}: pl name is ${JSON.stringify((v.name || {}).pl)}`);
+  const hood = v.neighbourhood ? v.neighbourhood.en : null;
+  if (hood !== want.hood) evVenueBad.push(`${e.slug}: neighbourhood is ${JSON.stringify(hood)}, expected ${JSON.stringify(want.hood)}`);
+  if ((v.locality || {}).en !== "London") evVenueBad.push(`${e.slug}: en locality is not London`);
+  if (v.country !== "GB") evVenueBad.push(`${e.slug}: country is not GB`);
+  // "&" was explicitly ruled out for the Sikorski venue.
+  if (String((v.name || {}).en).includes("&")) evVenueBad.push(`${e.slug}: venue name still uses "&"`);
+}
+assert(evVenueBad.length === 0,
+  "every venue matches the approved reconciliation decision (name, neighbourhood, locality, country)",
+  "venues that do not match the approved decisions", evVenueBad);
+
+/* -- registration ----------------------------------------------------------- */
+
+const evRegBad = [];
+for (const e of evStd) {
+  const r = e.registration || {};
+  if (!EV_REG_STATES.has(r.state)) evRegBad.push(`${e.slug}: state ${JSON.stringify(r.state)}`);
+  if (!EV_REG_TYPES.has(r.type === undefined ? null : r.type)) evRegBad.push(`${e.slug}: type ${JSON.stringify(r.type)}`);
+}
+assert(evRegBad.length === 0,
+  `every registration uses a recognised state and type (${[...EV_REG_STATES].join(", ")})`,
+  "unrecognised registration values", evRegBad);
+
+/* -- localised content ------------------------------------------------------ */
+
+// `card_summary` and `timeline_summary` are required even though no page renders
+// them yet: they were transcribed from the live listing and homepage during the
+// audit, and requiring them now means the listing phase cannot start with a
+// record that silently lacks its card copy.
+const EV_LOC_REQUIRED = ["title_lead", "eyebrow", "hero_summary", "card_summary", "timeline_summary",
+  "date_label", "venue_label",
+  "back_link", "back_link_bottom", "seo_title", "seo_description", "schema_description", "og_image_alt"];
+const evLocBad = [];
+for (const e of evStd) {
+  for (const code of ["en", "pl"]) {
+    const l = e[code];
+    if (!l) { evLocBad.push(`${e.slug}: no ${code} block`); continue; }
+    for (const f of EV_LOC_REQUIRED) {
+      if (!String(l[f] || "").trim()) evLocBad.push(`${e.slug}.${code}.${f}`);
+    }
+    // The localised section list must line up with the shared structure.
+    const shared = (e.sections || []).map((s) => s.type);
+    const local = (l.sections || []).map((s) => s.type);
+    if (JSON.stringify(shared) !== JSON.stringify(local)) {
+      evLocBad.push(`${e.slug}.${code}: section types do not match the shared structure`);
+    }
+    for (let i = 0; i < shared.length; i++) {
+      const s = e.sections[i], ls = (l.sections || [])[i] || {};
+      if (s.type === "gallery" && (ls.alts || []).length !== (s.images || []).length) {
+        evLocBad.push(`${e.slug}.${code}: gallery ${i} has ${(ls.alts || []).length} alts for ${(s.images || []).length} images`);
+      }
+      if (s.type === "prose" && !String(ls.body || "").trim()) evLocBad.push(`${e.slug}.${code}: prose ${i} is empty`);
+      if (s.type === "album" && !((l.album || {}).heading)) evLocBad.push(`${e.slug}.${code}: album copy missing`);
+    }
+  }
+}
+assert(evLocBad.length === 0,
+  `every standard event has all ${EV_LOC_REQUIRED.length} required localised fields, in both languages, with matching section structure`,
+  "missing or mismatched localised event content", evLocBad.slice(0, 10));
+
+/* -- sections, safety, images ----------------------------------------------- */
+
+const evBadSection = [];
+for (const e of evStd) {
+  for (const s of e.sections || []) {
+    if (!EV_SECTION_TYPES.has(s.type)) evBadSection.push(`${e.slug}: ${s.type}`);
+  }
+}
+assert(evBadSection.length === 0,
+  `every section uses a supported type (${[...EV_SECTION_TYPES].join(", ")})`,
+  "unsupported section types", evBadSection);
+
+const evRaw = [], evProto = [];
+for (const e of evStd) {
+  (function walk(v, trail) {
+    if (typeof v === "string") {
+      // Markdown bodies legitimately contain [text](url); raw tags never appear.
+      if (/<[a-z/!][^>]*>/i.test(v)) evRaw.push(`${e.slug}.${trail}`);
+      if (/\b(javascript|vbscript|data)\s*:/i.test(v)) evProto.push(`${e.slug}.${trail}`);
+      return;
+    }
+    if (Array.isArray(v)) return v.forEach((x, i) => walk(x, `${trail}[${i}]`));
+    if (v && typeof v === "object") for (const [k, x] of Object.entries(v)) if (k !== "_file") walk(x, trail ? `${trail}.${k}` : k);
+  })(e, "");
+}
+assert(evRaw.length === 0, "no event record contains raw HTML", "event fields containing markup", evRaw);
+assert(evProto.length === 0, "no event record contains an unsafe URL protocol",
+  "event fields using an unsafe protocol", evProto);
+
+const evImgBad = [], evImgMissing = [];
+for (const e of evStd) {
+  const all = [e.og_image, e.hero_image,
+    ...(e.sections || []).flatMap((s) => (s.images || []).map((i) => i.src)),
+    ...(e.co_organisers || []).map((c) => c.logo)].filter(Boolean);
+  for (const p of all) {
+    if (!String(p).startsWith("/assets/")) evImgBad.push(`${e.slug}: ${p}`);
+    else if (!exists(String(p).replace(/^\/+/, ""))) evImgMissing.push(`${e.slug}: ${p}`);
+  }
+}
+assert(evImgBad.length === 0, "every event image path is root-relative under /assets/",
+  "event image paths that are not root-relative", evImgBad);
+assert(evImgMissing.length === 0, "every referenced event image exists on disk",
+  "event images that do not resolve to a real file", evImgMissing);
+
+// Decision 10: the Icebreaker has no photographs for this edition.
+{
+  const ice = evStd.find((e) => e.slug === "icebreaker");
+  const iceImgs = ice ? (ice.sections || []).flatMap((s) => s.images || []) : [];
+  assert(iceImgs.length === 0,
+    "the Icebreaker record has no gallery images (decision 10 — none were invented)",
+    "photographs were added to the Icebreaker", iceImgs.map((i) => i.src));
+  // Decision 2: the exact day is now known, so it is day-precision.
+  assert(ice && ice.start_date === "2025-10-16" && ice.date_precision === "day",
+    "the Icebreaker carries the approved exact date 2025-10-16 at day precision",
+    "the Icebreaker date does not match the approved decision",
+    [ice && ice.start_date, ice && ice.date_precision]);
+}
+
+/* =================================================================== 26. generated event pages */
+
+section("26. Generated standard event pages (Phase 11)");
+
+if (!exists("dist")) {
+  ok("dist/ absent — generated event checks skipped (run `npm run build` to enable them)");
+} else {
+  const evPages = EV_EXPECTED.flatMap((s) => [`dist/event-${s}.html`, `dist/pl/event-${s}.html`]);
+  const evMissingPages = evPages.filter((p) => !exists(p));
+  assert(evMissingPages.length === 0,
+    `all eight generated standard-event pages exist (${EV_EXPECTED.length} events × 2 locales)`,
+    "generated event pages missing after build", evMissingPages);
+
+  if (evMissingPages.length === 0) {
+    for (const slug of EV_EXPECTED) {
+      for (const [code, rel] of [["en", `dist/event-${slug}.html`], ["pl", `dist/pl/event-${slug}.html`]]) {
+        const src = read(rel);
+        const tag = `${slug} [${code}]`;
+        const rec = evStd.find((e) => e.slug === slug);
+        const pre = code === "en" ? "" : "pl/";
+
+        assert(new RegExp(`<html lang="${code}">`).test(src),
+          `${tag}: declares lang="${code}"`, `${tag}: wrong <html lang>`);
+        const canon = (src.match(/<link rel="canonical" href="([^"]+)"/) || [])[1];
+        assert(canon === `${SITE}/${pre}event-${slug}.html`,
+          `${tag}: canonical is the preserved live URL`, `${tag}: canonical is wrong`, [canon]);
+        const alts = [...src.matchAll(/<link rel="alternate" hreflang="([^"]+)" href="([^"]+)"/g)]
+          .map((m) => `${m[1]}=${m[2]}`).sort();
+        const want = [`en=${SITE}/event-${slug}.html`, `pl=${SITE}/pl/event-${slug}.html`,
+          `x-default=${SITE}/event-${slug}.html`].sort();
+        assert(JSON.stringify(alts) === JSON.stringify(want),
+          `${tag}: reciprocal hreflang trio with an English x-default`,
+          `${tag}: hreflang alternates are wrong`, alts);
+        const ogl = (src.match(/<meta property="og:locale" content="([^"]+)"/) || [])[1];
+        assert(ogl === (code === "en" ? "en_GB" : "pl_PL"),
+          `${tag}: correct Open Graph locale`, `${tag}: wrong og:locale`, [ogl]);
+        assert(/<a[^>]*class="[^"]*\bactive\b[^"]*"[^>]*href="events\.html"/.test(src) ||
+          /<a[^>]*href="events\.html"[^>]*class="[^"]*\bactive\b[^"]*"/.test(src),
+          `${tag}: marks Events as the active navigation item`, `${tag}: no active nav on Events`);
+
+        // The visible date and venue come from the record, once.
+        const factVals = [...src.matchAll(/<span class="fact-value">([\s\S]*?)<\/span>/g)].map((m) => m[1].trim());
+        assert(factVals.length >= 2, `${tag}: facts bar has a date and a venue`,
+          `${tag}: facts bar is incomplete`, factVals);
+        const wantVenue = APPROVED_VENUE[slug];
+        const venueShown = factVals[1] || "";
+        assert(venueShown.startsWith(wantVenue[code]),
+          `${tag}: venue shows the approved canonical name`,
+          `${tag}: venue does not match the approved decision`, [venueShown, wantVenue[code]]);
+        assert(!venueShown.includes("&amp;") && !venueShown.includes(" & "),
+          `${tag}: venue does not use "&"`, `${tag}: venue still uses "&"`, [venueShown]);
+
+        // JSON-LD: every standard event now has a full date, so all eight carry one.
+        const ld = src.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/);
+        assert(Boolean(ld), `${tag}: has an Event JSON-LD block`, `${tag}: JSON-LD missing`);
+        if (ld) {
+          let j = null;
+          try { j = JSON.parse(ld[1]); } catch (e) { fail(`${tag}: JSON-LD does not parse`, [e.message]); }
+          if (j) {
+            assert(j["@type"] === "Event" &&
+              j.eventStatus === "https://schema.org/EventScheduled" &&
+              j.eventAttendanceMode === "https://schema.org/OfflineEventAttendanceMode",
+              `${tag}: JSON-LD is a scheduled, offline Event`,
+              `${tag}: JSON-LD status or attendance mode is wrong`,
+              [j.eventStatus, j.eventAttendanceMode]);
+            assert(/^\d{4}-\d{2}-\d{2}$/.test(String(j.startDate)),
+              `${tag}: JSON-LD startDate is a full ISO date (${j.startDate})`,
+              `${tag}: JSON-LD startDate is not a full date`, [j.startDate]);
+            assert(j.url === canon, `${tag}: JSON-LD url matches the canonical`,
+              `${tag}: JSON-LD url differs from the canonical`, [j.url, canon]);
+            assert(j.location && j.location["@type"] === "Place" &&
+              j.location.address && j.location.address["@type"] === "PostalAddress" &&
+              j.location.address.addressCountry === "GB",
+              `${tag}: JSON-LD location is a structured Place with a PostalAddress`,
+              `${tag}: JSON-LD location structure is wrong`);
+            assert(j.location.name === wantVenue[code],
+              `${tag}: JSON-LD venue is the same canonical name the facts bar shows`,
+              `${tag}: JSON-LD venue drifts from the facts bar`, [j.location.name, wantVenue[code]]);
+            assert(code === "pl" ? j.inLanguage === "pl-PL" : j.inLanguage === undefined,
+              `${tag}: inLanguage is ${code === "pl" ? "pl-PL" : "absent"}`,
+              `${tag}: inLanguage is wrong`, [j.inLanguage]);
+          }
+        }
+
+        // Gallery and album content.
+        const imgs = [...src.matchAll(/<img[^>]*?src="([^"]+)"/g)].map((m) => m[1]);
+        const bodyImgs = imgs.filter((i) => i.startsWith("/assets/"));
+        assert(bodyImgs.every((i) => exists("dist" + i)),
+          `${tag}: all ${bodyImgs.length} referenced images were copied into dist/`,
+          `${tag}: images referenced but not copied`, bodyImgs.filter((i) => !exists("dist" + i)));
+        assert(!/["'(]\/pl\/assets\//.test(src),
+          `${tag}: no /pl/assets/ path`, `${tag}: a /pl/assets/ path appears`,
+          [...src.matchAll(/["'(](\/pl\/assets\/[^"')]*)/g)].map((m) => m[1]));
+        const missingAlt = [...src.matchAll(/<img(?![^>]*\balt=)[^>]*>/g)].map((m) => m[0]);
+        assert(missingAlt.length === 0, `${tag}: every image has an alt attribute`,
+          `${tag}: images without alt`, missingAlt.slice(0, 3));
+        if (rec && rec.album_url) {
+          assert(src.includes(rec.album_url), `${tag}: album link preserved`,
+            `${tag}: album link missing`);
+        }
+        // Internal links must stay relative so /pl/ routes to the Polish listing.
+        const internal = [...src.matchAll(/<a[^>]*href="(events\.html)"/g)].map((m) => m[1]);
+        assert(internal.length >= 2, `${tag}: both back-links point at events.html relatively`,
+          `${tag}: back-links are missing or absolute`, internal);
+      }
+    }
+
+    // Icebreaker: no gallery on either generated page.
+    for (const rel of ["dist/event-icebreaker.html", "dist/pl/event-icebreaker.html"]) {
+      const src = read(rel);
+      assert(!/<div class="gallery-grid/.test(src),
+        `${rel}: renders no gallery (decision 10)`, `${rel}: a gallery appeared on the Icebreaker`);
+    }
+
+    // Nothing outside this phase's scope may have been generated.
+    const forbidden = ["dist/event-business-forum.html", "dist/pl/event-business-forum.html",
+      "dist/events.html", "dist/pl/events.html", "dist/index.html", "dist/pl/index.html"];
+    const created = forbidden.filter((p) => exists(p));
+    assert(created.length === 0,
+      "no Business Forum page, events listing or homepage was generated by this phase",
+      "this phase generated pages outside its scope", created);
+
+    // --- semantic comparison against the live pages -------------------------
+    const { spawnSync } = require("child_process");
+    const evCmp = spawnSync(process.execPath, [path.join(__dirname, "compare-standard-events.js")],
+      { cwd: ROOT, encoding: "utf8" });
+    const evMatched = (evCmp.stdout.match(/PASS — (\d+)\/\1 comparisons matched/) || [])[1];
+    assert(evCmp.status === 0,
+      `generated standard-event pages match the live pages (${evMatched || "?"} semantic comparisons — scripts/compare-standard-events.js)`,
+      "scripts/compare-standard-events.js reports differences",
+      (evCmp.stdout || "").split("\n").filter((l) => /FAIL/.test(l)).slice(0, 12));
+  }
 }
 
 /* =================================================================== summary */

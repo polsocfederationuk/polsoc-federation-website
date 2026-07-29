@@ -1,0 +1,11 @@
+{#
+  Event body copy.
+
+  `body` is Markdown, rendered to trusted HTML at BUILD time by markdown-it with
+  raw HTML disabled — so a content record can never inject markup. The renderer
+  emits real <p> and a bare <blockquote> (no nested <p>), which is what
+  `.prose blockquote` styling expects. See STANDARD_EVENTS_MIGRATION §6.
+#}
+    <div class="prose reveal"{% if section.style %} style="{{ section.style }}"{% endif %}>
+      {{ localSection.body | eventBody | safe }}
+    </div>

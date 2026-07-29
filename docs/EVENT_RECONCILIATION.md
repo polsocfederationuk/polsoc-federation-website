@@ -519,7 +519,18 @@ Reported exactly as they currently stand; **neither has been altered**:
 | Item | English page | Polish page | Status |
 | --- | --- | --- | --- |
 | Christmas Dinner title | "Annual Christmas Dinner" | "Annual Christmas Dinner" | **untranslated** |
-| Debate theme | "How to Think About Politics in a Polarised World" | "How to Think About Politics in a Polarised World" | **untranslated** |
+| Debate theme | "How to Think About Politics in a Polarised World" | ~~"How to Think About Politics in a Polarised World"~~ → "Jak myśleć o polityce w spolaryzowanym świecie" | ~~untranslated~~ **already translated** |
+
+> **Correction (Phase 11).** The second row of this table was wrong. The live
+> `pl/event-sikorski-debate.html` `<h1>` already reads *"Jak myśleć o polityce w
+> spolaryzowanym świecie"*. The audit **data** was correct — the debate title was
+> never flagged `uncertain` in the machine output — but this prose table
+> mis-transcribed it. Only the Christmas Dinner title was genuinely untranslated.
+> The row is struck through rather than deleted so the error stays visible.
+>
+> Decision 9 consequently **confirms existing text** rather than changing it, and
+> the Polish debate title is a *required match* in `compare-standard-events.js`,
+> not an approved correction. Decision 8 remains a real change.
 
 Both are `<h1>` values on the Polish detail pages. Whether each is a deliberate
 brand name or an oversight is a judgement only the Federation can make →
@@ -656,3 +667,59 @@ what follows from each option.
 *Why the system cannot choose:* only one edition exists, so recurrence cannot be inferred.
 *Options:* **(a)** Optional supported section, hideable via `enabled: false` — recommended and already modelled. **(b)** Required in every edition.
 *Consequence:* (a) costs nothing and avoids a future edition being forced to invent a Ball.
+
+---
+
+# Resolution (approved 2026-07-29, applied in Cleanup Phase 11)
+
+**The thirteen questions above are now answered.** This section records the
+approved decisions and where each one landed. The audit above is left exactly as
+it was written — it is the record of what the live pages contained *before* the
+migration, and rewriting it would destroy the evidence the decisions rest on.
+The single factual error it contained is corrected in place in §18, struck
+through rather than removed.
+
+Scope note: these decisions were applied to the **four standard events** only
+(sikorski-debate, christmas-dinner, youth-congress, icebreaker). The Polish
+Business Forum was deliberately excluded from Phase 11; decisions 11 and 13
+therefore remain *approved but not yet applied*.
+
+| # | Question | Approved answer | Applied in Phase 11? |
+| --- | --- | --- | --- |
+| 1 | Polish `og:image:alt` is English | **(a)** Translate — do not reproduce the defect | Yes, on all 3 affected standard pages |
+| 2 | Icebreaker has no day | Use the exact date **16 October 2025** | Yes — date + full JSON-LD |
+| 3 | `eventAttendanceMode` missing on some pages | Emit `OfflineEventAttendanceMode` **consistently** for every event with a full date | Yes, all 8 pages |
+| 4 | Sikorski venue name | EN *Polish Institute and Sikorski Museum*, PL *Instytut Polski i Muzeum im. gen. Sikorskiego* — **no `&`** | Yes |
+| 5 | Christmas Dinner venue | name *Ognisko Restaurant*, neighbourhood *South Kensington*, locality *London* | Yes |
+| 6 | Youth Congress venue | name *Ognisko Polskie*, locality *London* | Yes |
+| 7 | Icebreaker venue | name *Mamuśka!*, neighbourhood *Waterloo*, locality *London* | Yes |
+| 8 | Christmas Dinner Polish title | **Doroczna Kolacja Wigilijna** | Yes |
+| 9 | Debate Polish title | **Jak myśleć o polityce w spolaryzowanym świecie** | Yes — but see §18: this **confirms** the existing live text |
+| 10 | Icebreaker gallery | No gallery this edition; **invent nothing** | Yes — gallery empty, asserted by the validator |
+| 11 | Business Forum listing `alt` | Supply alt text — **in the Forum's own migration** | No, deferred with the Forum |
+| 12 | Slugs and URLs | Keep every existing slug and public URL; year-suffix **future** editions | Yes — all four URLs unchanged |
+| 13 | Forum Ball | Optional / edition-specific | No, deferred with the Forum |
+
+## What this changed about the audit's conclusions
+
+- **§5.2's seven venue and date drifts are resolved at the source.** Display
+  dates and venue strings are no longer stored as text per page; they are
+  generated from `start_date`, `date_precision` and one canonical `venue`. The
+  drift class cannot recur.
+- **§7's month-precision limitation no longer applies to any current event.**
+  Decision 2 supplied the missing day, so all four records are day-precision and
+  all four carry Event JSON-LD. The `month` path remains implemented for future
+  events announced before their date is fixed.
+- **§18's translation findings are settled**: one genuine translation
+  (decision 8), one confirmation (decision 9, per the correction above).
+- **§19's limitations stand**, except that Business Forum multi-edition
+  rendering remains untested for the same reason — its template still does not
+  exist.
+
+Two live oddities were **not** raised as decisions and are therefore reproduced
+verbatim rather than fixed: the English mid-page eyebrow *"As seen on Instagram"*
+on two Polish pages, and an English *"and"* between two media partners in the
+Polish Sikorski prose. They are candidates for a future copy pass.
+
+Implementation detail, evidence and the full list of approved differences:
+[STANDARD_EVENTS_MIGRATION.md](STANDARD_EVENTS_MIGRATION.md).

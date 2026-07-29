@@ -1,0 +1,58 @@
+---
+layout: layouts/base.njk
+
+# One template, eight pages: four standard events × two locales. The pairs come
+# from src/_data/standardEventPages.js because Eleventy paginates one data set
+# and a page here is identified by BOTH the event and the language.
+pagination:
+  data: standardEventPages
+  size: 1
+  alias: page_pair
+
+# Explicit permalink — the live URLs must survive exactly.
+permalink: "{{ page_pair.locale.urlPrefix }}event-{{ page_pair.event.slug }}.html"
+
+# Everything computed — including `locale`, the JSON-LD and the SEO fields —
+# lives in src/event.11tydata.js. See the note at the top of that file for why.
+---
+{%- set event = page_pair.event -%}
+{%- set locale = page_pair.locale -%}
+{%- set c = event[locale.code] -%}
+{%- set jsonld = event | eventJsonLd(locale, site) -%}
+{%- set hasInstagram = false -%}
+{%- for s in event.sections %}{% if s.type == "instagram" or s.instagram_in_grid %}{% set hasInstagram = true %}{% endif %}{% endfor -%}
+<section class="event-hero">
+  <div class="container">
+    {#- Relative on purpose: from /pl/ this resolves to the Polish listing. -#}
+    <a class="back-link" href="events.html">{{ c.back_link }}</a>
+    <span class="eyebrow">{{ c.eyebrow }}</span>
+    <h1>{{ c.title_lead }}{% if c.title_fancy %}<span class="fancy">{{ c.title_fancy }}</span>{% endif %}{{ c.title_tail | default("") }}</h1>
+    <p class="lead">{{ c.hero_summary }}</p>
+{% include "partials/event/facts.njk" %}
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+{% for section in event.sections %}
+{%- set localSection = c.sections[loop.index0] -%}
+{%- if section.type == "prose" %}
+{% include "partials/event/prose.njk" %}
+{%- elif section.type == "gallery" %}
+{% include "partials/event/gallery.njk" %}
+{%- elif section.type == "heading" %}
+{% include "partials/event/heading.njk" %}
+{%- elif section.type == "album" %}
+{% include "partials/event/album.njk" %}
+{%- elif section.type == "instagram" %}
+{% include "partials/event/instagram.njk" %}
+{%- endif %}
+{%- endfor %}
+    <div style="margin-top: 44px;" class="reveal">
+      <a class="btn btn-ghost" href="events.html">{{ c.back_link_bottom }}</a>
+    </div>
+  </div>
+</section>
+{% if hasInstagram %}
+<script async src="https://www.instagram.com/embed.js"></script>
+{%- endif %}

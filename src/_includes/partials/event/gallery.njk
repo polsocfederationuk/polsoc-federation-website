@@ -1,0 +1,20 @@
+{#
+  A gallery grid.
+
+  Image paths and the wide/narrow tile layout are SHARED (they are the same
+  photographs in both languages); only the alt text is localised, positionally
+  matched to the image list.
+
+  `instagram_in_grid` reproduces the Sikorski page's second grid, where the
+  Instagram embed sits inside the grid as a span-2 tile rather than below it.
+#}
+    <div class="gallery-grid reveal"{% if section.style %} style="{{ section.style }}"{% endif %}>
+{%- for image in section.images %}
+      <div class="ph{% if image.wide %} ph-wide span-2{% endif %}"><img src="{{ image.src }}" alt="{{ localSection.alts[loop.index0] }}"></div>
+{%- endfor %}
+{%- if section.instagram_in_grid %}
+      <div class="span-2 insta-embed" style="margin-top: 0;">
+        <blockquote class="instagram-media" data-instgrm-captioned data-instgrm-permalink="{{ event.instagram_permalink }}" data-instgrm-version="14"></blockquote>
+      </div>
+{%- endif %}
+    </div>

@@ -69,6 +69,42 @@ function renderBody(markdown) {
     .join("\n\n");
 }
 
+/**
+ * Event prose renderer.
+ *
+ * Unlike announcement bodies (rendered INLINE because `.ann-text` uses
+ * `white-space: pre-line`), event prose lives in `.prose`, which styles real
+ * <p> and <blockquote> elements. So this is a full block render.
+ *
+ * ONE deviation from markdown-it's default: a blockquote is emitted WITHOUT the
+ * <p> markdown-it normally nests inside it. `.prose blockquote` sets its own
+ * font-family, size and weight, and `.prose p` would override them on the inner
+ * paragraph — the quote would silently render as body text. The live pages have
+ * a bare <blockquote>, and this keeps that.
+ */
+const eventMd = new MarkdownIt({ html: false, linkify: false, typographer: false, breaks: false });
+eventMd.validateLink = (url) => SAFE_LINK.test(String(url).trim());
+eventMd.renderer.rules.link_open = function (tokens, idx, options, env, self) {
+  const href = tokens[idx].attrGet("href") || "";
+  if (/^https?:/i.test(href)) {
+    tokens[idx].attrSet("target", "_blank");
+    tokens[idx].attrSet("rel", "noopener");
+  }
+  return self.renderToken(tokens, idx, options);
+};
+{
+  let bqDepth = 0;
+  eventMd.renderer.rules.blockquote_open = (t, i, o, e, s) => { bqDepth++; return s.renderToken(t, i, o); };
+  eventMd.renderer.rules.blockquote_close = (t, i, o, e, s) => { bqDepth--; return s.renderToken(t, i, o); };
+  eventMd.renderer.rules.paragraph_open = (t, i, o, e, s) => (bqDepth > 0 ? "" : s.renderToken(t, i, o));
+  eventMd.renderer.rules.paragraph_close = (t, i, o, e, s) => (bqDepth > 0 ? "" : s.renderToken(t, i, o));
+}
+function renderEventBody(markdown) {
+  return String(markdown == null ? "" : markdown).replace(/\r\n/g, "\n").trim()
+    ? eventMd.render(String(markdown).replace(/\r\n/g, "\n").trim()).trim()
+    : "";
+}
+
 /* ------------------------------------------------------------ date display */
 const EN_MONTHS = ["January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December"];
@@ -90,6 +126,27 @@ function formatDate(iso, localeCode) {
   const day = Number(m[3]);
   const months = localeCode === "pl" ? PL_MONTHS : EN_MONTHS;
   return `${day} ${months[Number(m[2]) - 1]} ${m[1]}`;
+}
+
+/**
+ * Every image referenced by a standard-event record — gallery tiles, the OG
+ * image and co-organiser logos. Derived from the records so exactly what the
+ * generated pages need is copied, and nothing else.
+ */
+function eventImagePaths() {
+  const dir = path.join(__dirname, "content", "events");
+  if (!fs.existsSync(dir)) return [];
+  const paths = new Set();
+  for (const file of fs.readdirSync(dir).sort()) {
+    if (!/\.ya?ml$/i.test(file)) continue;
+    const rec = yaml.load(fs.readFileSync(path.join(dir, file), "utf8")) || {};
+    const add = (p) => { if (p) paths.add(String(p).replace(/^\/+/, "")); };
+    add(rec.og_image);
+    add(rec.hero_image);
+    for (const sec of rec.sections || []) for (const im of sec.images || []) add(im.src);
+    for (const co of rec.co_organisers || []) add(co.logo);
+  }
+  return [...paths].sort();
 }
 
 /**
@@ -292,6 +349,113 @@ module.exports = function (eleventyConfig) {
   // Localised display date from a stored ISO string.
   eleventyConfig.addFilter("displayDate", (iso, localeCode) => formatDate(iso, localeCode));
 
+  // Event prose Markdown -> trusted HTML, rendered at BUILD time.
+  eleventyConfig.addFilter("eventBody", (markdown) => renderEventBody(markdown));
+
+  /**
+   * The visible date for an event, from its machine-readable fields.
+   *
+   * `date_precision: month` prints "October 2025" / "Październik 2025" — note
+   * the Polish month is NOMINATIVE and capitalised when it stands alone, unlike
+   * the genitive form used in a full date ("16 października 2025"). Getting that
+   * wrong is the kind of thing a generated date silently introduces, so the two
+   * cases are formatted separately.
+   */
+  eleventyConfig.addFilter("eventDisplayDate", (event, localeCode) => {
+    const iso = String(event.start_date || "");
+    if (event.date_precision === "month") {
+      const m = iso.match(/^(\d{4})-(\d{2})$/);
+      if (!m) return iso;
+      const idx = Number(m[2]) - 1;
+      if (localeCode === "pl") {
+        const NOM = ["Styczeń", "Luty", "Marzec", "Kwiecień", "Maj", "Czerwiec", "Lipiec",
+          "Sierpień", "Wrzesień", "Październik", "Listopad", "Grudzień"];
+        return `${NOM[idx]} ${m[1]}`;
+      }
+      return `${EN_MONTHS[idx]} ${m[1]}`;
+    }
+    const start = formatDate(iso, localeCode);
+    if (!event.end_date) return start;
+    // A range shares the month and year when both fall in one month.
+    const a = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    const b = String(event.end_date).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (a && b && a[1] === b[1] && a[2] === b[2]) {
+      return `${Number(a[3])}–${formatDate(event.end_date, localeCode)}`;
+    }
+    return `${start} – ${formatDate(event.end_date, localeCode)}`;
+  });
+
+  /**
+   * The venue string shown in the facts bar: "Name, Neighbourhood" when a
+   * neighbourhood exists, otherwise just the name. ONE source feeds the facts
+   * bar, the listing card and the JSON-LD, which is what stops the three
+   * drifting apart the way the live pages did (EVENT_RECONCILIATION §5.2).
+   */
+  eleventyConfig.addFilter("venueDisplay", (venue, localeCode) => {
+    if (!venue) return "";
+    const name = (venue.name || {})[localeCode] || "";
+    const hood = (venue.neighbourhood || {})[localeCode] || "";
+    if (hood) return `${name}, ${hood}`;
+    // Some pages name the city in the facts bar and some do not — the Youth
+    // Congress says "Ognisko Polskie, London" while the Sikorski debate says
+    // just the institution. That is a per-event editorial choice, so it is an
+    // explicit flag rather than a rule inferred from which fields are set.
+    if (venue.show_locality_in_facts) {
+      const city = (venue.locality || {})[localeCode] || "";
+      return city ? `${name}, ${city}` : name;
+    }
+    return name;
+  });
+
+  // Published standard events for one academic year, in display order.
+  eleventyConfig.addFilter("standardEvents", (events, academicYear) =>
+    (events || [])
+      .filter((e) => e.published === true && e.event_family === "standard" &&
+        e.academic_year === academicYear)
+      .sort((a, b) => (a.order - b.order) || (String(a.slug) < String(b.slug) ? -1 : 1))
+  );
+
+  /**
+   * Event JSON-LD, built from the record.
+   *
+   * Emitted ONLY when the record has a full day-precision date — a month-only
+   * value is not accepted by Google's Event rich results, and shipping an
+   * incomplete block would assert a date the Federation has not recorded.
+   */
+  eleventyConfig.addFilter("eventJsonLd", (event, locale, site) => {
+    if (event.date_precision !== "day") return null;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(event.start_date))) return null;
+    const loc = event[locale.code] || {};
+    const url = `${site.domain}/${locale.urlPrefix}event-${event.slug}.html`;
+    const ld = {
+      "@context": "https://schema.org",
+      "@type": "Event",
+      name: [loc.title_lead, loc.title_fancy, loc.title_tail].filter(Boolean).join("").trim(),
+      description: loc.schema_description,
+      image: site.domain + event.og_image,
+      startDate: event.start_date,
+      eventStatus: "https://schema.org/EventScheduled",
+      eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
+      location: {
+        "@type": "Place",
+        name: (event.venue.name || {})[locale.code],
+        address: {
+          "@type": "PostalAddress",
+          addressLocality: (event.venue.locality || {})[locale.code],
+          addressCountry: event.venue.country,
+        },
+      },
+      organizer: { "@type": "Organization", name: event.organiser, url: site.domain + "/" },
+      url,
+    };
+    if (event.end_date) ld.endDate = event.end_date;
+    if (Array.isArray(event.performers) && event.performers.length) {
+      ld.performer = event.performers.map((p) => ({ "@type": p.type || "Person", name: p.name }));
+    }
+    if (locale.code !== "en") ld.inLanguage = "pl-PL";
+    return JSON.stringify(ld, null, 2);
+  });
+
   // Announcement body Markdown -> trusted HTML, rendered at BUILD time.
   eleventyConfig.addFilter("announcementBody", (markdown) => renderBody(markdown));
 
@@ -461,6 +625,11 @@ module.exports = function (eleventyConfig) {
   }
 
   // ---------------------------------------------------------------------
+  // Standard-event imagery — galleries, OG images and co-organiser logos.
+  for (const img of eventImagePaths()) {
+    eleventyConfig.addPassthroughCopy({ [img]: img });
+  }
+
   // Contact page assets — the two initiative logos, derived from the record so
   // the list cannot drift from what the page actually references.
   // ---------------------------------------------------------------------

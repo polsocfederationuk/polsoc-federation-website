@@ -1,0 +1,160 @@
+# Standard event — 2025/26.
+# Generated from the live pages during the Phase 11 migration, with the
+# approved reconciliation corrections applied. See docs/STANDARD_EVENTS_MIGRATION.md.
+
+slug: christmas-dinner
+event_family: standard
+template: standard
+academic_year: "2025/26"
+published: true
+order: 3
+flagship: false
+show_in_listing: true
+show_on_homepage: true
+show_in_archive: true
+
+start_date: "2025-12-08"
+end_date: null
+date_precision: day
+
+venue:
+  name:
+    en: "Ognisko Restaurant"
+    pl: "Ognisko Restaurant"
+  neighbourhood:
+    en: "South Kensington"
+    pl: "South Kensington"
+  locality:
+    en: "London"
+    pl: "Londyn"
+  country: "GB"
+
+registration:
+  state: none
+  type: null
+  url: null
+  email: null
+
+hero_image: null   # standard event heroes are typographic by design
+og_image: "/assets/wigilia/everyone-sat.jpg"
+instagram_permalink: "https://www.instagram.com/p/DSiAXWKjFFy/"
+album_url: "https://photos.app.goo.gl/23Fyh9p9CmYnfP4g6"
+
+organiser: "Federation of Polish Student Societies UK"
+co_organisers: []
+
+# Ordered page structure. Type and order are shared; the content of each
+# section is localised below. Only these five types are supported.
+sections:
+  - type: prose
+    style: "margin-bottom: 60px;"
+  - type: heading
+  - type: gallery
+    instagram_in_grid: false
+    images:
+      - src: "/assets/wigilia/everyone-sat.jpg"
+        wide: true
+      - src: "/assets/wigilia/roksana-piano.jpg"
+        wide: false
+      - src: "/assets/wigilia/carols-singing.jpg"
+        wide: true
+      - src: "/assets/wigilia/fede-team.jpg"
+        wide: false
+      - src: "/assets/wigilia/polonez.jpg"
+        wide: true
+      - src: "/assets/wigilia/dancing.jpg"
+        wide: false
+  - type: album
+  - type: instagram
+
+en:
+  title_lead: "Annual"
+  title_fancy: "Christmas"
+  title_tail: "Dinner"
+  eyebrow: "Annual tradition"
+  hero_summary: "Wigilia away from home — a Polish Christmas Eve feast for 100 students."
+  card_summary: "Our flagship Christmas celebration — 100 Polish students sat down to a traditional three-course meal at the Ognisko Restaurant, followed by drinks and Christmas carol singing."
+  timeline_summary: "100 students, a traditional three-course wigilia and carol singing in South Kensington."
+  date_label: "Date"
+  venue_label: "Venue"
+  facts:
+    - label: "Attendance"
+      value: "100 students"
+  back_link: "← All events"
+  back_link_bottom: "← Back to all events"
+  sections:
+    - type: prose
+      body: |
+          Our annual flagship Christmas Dinner brought together 100 Polish students at the Ognisko Restaurant in South Kensington. Guests sat down to enjoy a traditional three-course meal, followed by drinks and Christmas carol singing — a taste of a Polish family Christmas for students spending the festive season away from home.
+
+          The evening has become one of the Federation's most loved traditions: a chance to slow down at the end of term, share *kolędy* with friends old and new, and celebrate the community we've built across the UK.
+
+          A special thank you goes to [Roksana Dąbkowska](https://www.roksanadabkowska.com/about), a pianist from the Guildhall School of Music and Drama, for accompanying our Christmas carols at the piano throughout the evening.
+    - type: heading
+      eyebrow: "Gallery"
+      title_lead: "The evening in pictures"
+      title_fancy: ""
+    - type: gallery
+      alts:
+        - "Students seated at the candlelit tables for wigilia at Ognisko"
+        - "Roksana Dąbkowska at the piano during the carol singing"
+        - "Guests singing Christmas carols together"
+        - "The Federation team at the Christmas Dinner"
+        - "Guests dancing the polonez through the hall"
+        - "Dancing after dinner at Ognisko"
+    - type: album
+    - type: instagram
+  album:
+    heading: "All photos from the evening"
+    text: "Browse and download the full album from the Christmas Dinner."
+    label: "Open the album"
+  seo_title: "Christmas Dinner 2025 | Federation of Polish Student Societies UK"
+  seo_description: "The Federation's annual Christmas Dinner 2025 at Ognisko in South Kensington — 100 Polish students, a traditional three-course wigilia and carol singing."
+  schema_description: "The Federation's annual Christmas Dinner for 100 Polish students at Ognisko in South Kensington, with a traditional three-course wigilia and carol singing."
+  og_image_alt: "Polish students seated for the traditional Christmas dinner at Ognisko"
+
+pl:
+  title_lead: "Doroczna "
+  title_fancy: "Kolacja"
+  title_tail: " Wigilijna"
+  eyebrow: "Doroczna tradycja"
+  hero_summary: "Wigilia z dala od domu — polska kolacja wigilijna dla 100 studentów."
+  card_summary: "Nasze flagowe świąteczne spotkanie — 100 polskich studentów zasiadło do tradycyjnej, trzydaniowej kolacji w restauracji Ognisko Polskie, a potem przyszedł czas na rozmowy i wspólne kolędowanie."
+  timeline_summary: "100 studentów, tradycyjna trzydaniowa wigilia i wspólne kolędowanie w South Kensington."
+  date_label: "Data"
+  venue_label: "Miejsce"
+  facts:
+    - label: "Frekwencja"
+      value: "100 studentów"
+  back_link: "← Wszystkie wydarzenia"
+  back_link_bottom: "← Wróć do wszystkich wydarzeń"
+  sections:
+    - type: prose
+      body: |
+          Nasza doroczna, flagowa Kolacja Wigilijna zgromadziła 100 polskich studentów w restauracji Ognisko Polskie w South Kensington. Goście zasiedli do tradycyjnej, trzydaniowej kolacji, a potem przyszedł czas na rozmowy i wspólne kolędowanie — namiastka polskich świąt rodzinnych dla studentów spędzających ten czas z dala od domu.
+
+          Ten wieczór stał się jedną z najbardziej lubianych tradycji Federacji: to okazja, by zwolnić na koniec semestru, zaśpiewać *kolędy* ze starymi i nowymi znajomymi i uczcić społeczność, którą zbudowaliśmy w całej Wielkiej Brytanii.
+
+          Szczególne podziękowania kierujemy do [Roksana Dąbkowska](https://www.roksanadabkowska.com/about), pianistki z Guildhall School of Music and Drama, za akompaniament do naszych kolęd przez cały wieczór.
+    - type: heading
+      eyebrow: "Galeria"
+      title_lead: "Wieczór w obiektywie"
+      title_fancy: ""
+    - type: gallery
+      alts:
+        - "Studenci przy stołach oświetlonych świecami podczas wigilii w Ognisku Polskim"
+        - "Roksana Dąbkowska przy fortepianie podczas kolędowania"
+        - "Goście wspólnie śpiewają kolędy"
+        - "Zespół Federacji na Kolacji Wigilijnej"
+        - "Goście tańczą poloneza przez salę"
+        - "Tańce po kolacji w Ognisku Polskim"
+    - type: album
+    - type: instagram
+  album:
+    heading: "Wszystkie zdjęcia z wieczoru"
+    text: "Przeglądaj i pobierz pełny album z Kolacji Wigilijnej."
+    label: "Otwórz album"
+  seo_title: "Kolacja Wigilijna 2025 | Federacja Polskich Stowarzyszeń Studenckich"
+  seo_description: "Doroczna Kolacja Wigilijna Federacji w Ognisku Polskim w South Kensington — 100 polskich studentów, tradycyjna wigilia i wspólne kolędowanie."
+  schema_description: "Doroczna Kolacja Wigilijna Federacji dla 100 polskich studentów w Ognisku Polskim w South Kensington, z tradycyjną trzydaniową wigilią i wspólnym kolędowaniem."
+  og_image_alt: "Studenci przy stołach oświetlonych świecami podczas wigilii w Ognisku Polskim"

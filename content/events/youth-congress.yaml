@@ -1,0 +1,163 @@
+# Standard event — 2025/26.
+# Generated from the live pages during the Phase 11 migration, with the
+# approved reconciliation corrections applied. See docs/STANDARD_EVENTS_MIGRATION.md.
+
+slug: youth-congress
+event_family: standard
+template: standard
+academic_year: "2025/26"
+published: true
+order: 4
+flagship: false
+show_in_listing: true
+show_on_homepage: true
+show_in_archive: true
+
+start_date: "2025-11-09"
+end_date: null
+date_precision: day
+
+venue:
+  name:
+    en: "Ognisko Polskie"
+    pl: "Ognisko Polskie"
+  neighbourhood: null
+  locality:
+    en: "London"
+    pl: "Londyn"
+  country: "GB"
+  # The live facts bar names the city here; the Sikorski page does not.
+  show_locality_in_facts: true
+
+registration:
+  state: none
+  type: null
+  url: null
+  email: null
+
+hero_image: null   # standard event heroes are typographic by design
+og_image: "/assets/yc/audience.jpg"
+instagram_permalink: "https://www.instagram.com/p/DRE7KufjD5G/"
+album_url: "https://photos.app.goo.gl/RvqfJVSpiPhgNn2r9"
+
+organiser: "Federation of Polish Student Societies UK"
+co_organisers:
+  - logo: "/assets/yc/embassy-logo.jpg"
+    alt:
+      en: "Embassy of the Republic of Poland in London"
+      pl: "Ambasada Rzeczypospolitej Polskiej w Londynie"
+  - logo: "/assets/yc/ognisko-logo.webp"
+    alt:
+      en: "Ognisko Polskie — The Polish Hearth Club"
+      pl: "Ognisko Polskie — The Polish Hearth Club"
+
+# Ordered page structure. Type and order are shared; the content of each
+# section is localised below. Only these five types are supported.
+sections:
+  - type: gallery
+    instagram_in_grid: false
+    images:
+      - src: "/assets/yc/audience.jpg"
+        wide: true
+      - src: "/assets/yc/boczkowski.jpg"
+        wide: false
+      - src: "/assets/yc/team-smiling.jpg"
+        wide: false
+      - src: "/assets/yc/networking.jpg"
+        wide: true
+    style: "margin-bottom: 70px;"
+  - type: prose
+  - type: album
+  - type: instagram
+
+en:
+  title_lead: "Polish Youth Congress"
+  title_fancy: "2025"
+  eyebrow: "Conference"
+  hero_summary: "A day of dialogue for young Poles in the UK — in the spirit of Poland's National Independence Day."
+  card_summary: "A one-day conference with the Embassy of the Republic of Poland — panels on finance, leadership and geopolitics, closed with a Chopin recital in the spirit of Poland's National Independence Day."
+  timeline_summary: "A day of panels with the Polish Embassy, closed with a Chopin recital for Independence Day."
+  date_label: "Date"
+  venue_label: "Venue"
+  facts: []
+  co_organisers_label: "In collaboration with"
+  back_link: "← All events"
+  back_link_bottom: "← Back to all events"
+  sections:
+    - type: gallery
+      alts:
+        - "The audience at the Polish Youth Congress at Ognisko Polskie"
+        - "Chargé d'affaires Jerzy Boczkowski speaking at the Congress"
+        - "The organising team on stage at the close of the Congress"
+        - "Guests networking between sessions at the Polish Youth Congress"
+    - type: prose
+      body: |
+          The Polish Youth Congress 2025 was a one-day conference organised by the Federation of Polish Student Societies in the UK in collaboration with the Embassy of the Republic of Poland in London. The event took place on 9 November 2025 at Ognisko Polskie (The Polish Hearth Club) in London and brought together students, young professionals, community leaders, diplomats, entrepreneurs, and experts from a wide range of fields.
+
+          The Congress was designed to create a platform for dialogue on the opportunities and challenges facing young Poles in the United Kingdom and beyond. Throughout the day, participants engaged with topics spanning international finance, entrepreneurship, leadership, civil society, geopolitics, public affairs, and personal development. The programme featured keynote speeches, panel discussions, fireside conversations, and an interactive workshop focused on communication and public speaking skills.
+
+          Speakers included representatives of the Polish Embassy in London, experienced professionals from global financial institutions, entrepreneurs, policy experts, charity leaders, and representatives of the younger generation who are actively shaping the future of the Polish diaspora across Europe. The event encouraged the exchange of ideas, the sharing of experiences, and the development of meaningful professional and personal connections.
+
+          We extend our special thanks to Anna Tarnowska, Vice-Consul at the Consular and Polish Diaspora Section of the Embassy of the Republic of Poland in London, for the enormous effort she put into organising the Congress together with us.
+
+          > To commemorate Poland's National Independence Day, the programme concluded with Fryderyk Chopin's Sonata No. 2 in B-flat minor, performed by [Roksana Dąbkowska](https://www.roksanadabkowska.com/about).
+
+          The Congress was also held in the spirit of Poland's National Independence Day. The closing piano concert provided a fitting cultural tribute, linking discussions about Poland's future with a celebration of the country's rich cultural heritage.
+
+          The Polish Youth Congress 2025 demonstrated the strength, ambition, and engagement of young Poles abroad, while reinforcing the Federation's mission of connecting and empowering Polish students and young professionals across the United Kingdom.
+    - type: album
+    - type: instagram
+  album:
+    heading: "All photos from the Congress"
+    text: "Browse and download the full album from the Polish Youth Congress 2025."
+    label: "Open the album"
+  seo_title: "Polish Youth Congress 2025 | Federation of Polish Student Societies UK"
+  seo_description: "Polish Youth Congress 2025 at Ognisko Polskie in London — a day of panels with the Embassy of the Republic of Poland, closing with a Chopin recital."
+  schema_description: "A day of panel discussions at Ognisko Polskie organised with the Embassy of the Republic of Poland in London, closing with a Chopin recital for Independence Day."
+  og_image_alt: "The audience during a panel at the Polish Youth Congress in London"
+
+pl:
+  title_lead: "Polish Youth Congress"
+  title_fancy: "2025"
+  eyebrow: "Konferencja"
+  hero_summary: "Dzień dialogu młodych Polaków w Wielkiej Brytanii — w duchu Narodowego Święta Niepodległości."
+  card_summary: "Jednodniowa konferencja z Ambasadą Rzeczypospolitej Polskiej — panele o finansach, przywództwie i geopolityce, zakończone recitalem chopinowskim w duchu Narodowego Święta Niepodległości."
+  timeline_summary: "Dzień paneli dyskusyjnych z Ambasadą RP, zakończony recitalem chopinowskim z okazji Święta Niepodległości."
+  date_label: "Data"
+  venue_label: "Miejsce"
+  facts: []
+  co_organisers_label: "We współpracy z"
+  back_link: "← Wszystkie wydarzenia"
+  back_link_bottom: "← Wróć do wszystkich wydarzeń"
+  sections:
+    - type: gallery
+      alts:
+        - "Widownia Polish Youth Congress w Ognisku Polskim"
+        - "Chargé d'affaires Jerzy Boczkowski przemawia podczas Kongresu"
+        - "Zespół organizacyjny na scenie na zakończenie Kongresu"
+        - "Goście rozmawiają między sesjami Polish Youth Congress"
+    - type: prose
+      body: |
+          Polish Youth Congress 2025 był jednodniową konferencją zorganizowaną przez Federację Polskich Stowarzyszeń Studenckich w Wielkiej Brytanii we współpracy z Ambasadą Rzeczypospolitej Polskiej w Londynie. Wydarzenie odbyło się 9 listopada 2025 roku w Ognisku Polskim (The Polish Hearth Club) w Londynie i zgromadziło studentów, młodych profesjonalistów, liderów społeczności, dyplomatów, przedsiębiorców oraz ekspertów z wielu dziedzin.
+
+          Kongres powstał, by stworzyć przestrzeń do rozmowy o szansach i wyzwaniach stojących przed młodymi Polakami w Wielkiej Brytanii i poza nią. Przez cały dzień uczestnicy poruszali tematy od finansów międzynarodowych, przez przedsiębiorczość, przywództwo, społeczeństwo obywatelskie i geopolitykę, po sprawy publiczne i rozwój osobisty. W programie znalazły się wykłady, panele dyskusyjne, rozmowy w swobodnej formule oraz interaktywne warsztaty z komunikacji i wystąpień publicznych.
+
+          Wśród prelegentów znaleźli się przedstawiciele Ambasady RP w Londynie, doświadczeni profesjonaliści z globalnych instytucji finansowych, przedsiębiorcy, eksperci od polityk publicznych, liderzy organizacji charytatywnych oraz przedstawiciele młodego pokolenia, którzy aktywnie kształtują przyszłość Polonii w Europie. Wydarzenie sprzyjało wymianie myśli, dzieleniu się doświadczeniem i budowaniu wartościowych relacji zawodowych i osobistych.
+
+          Szczególnie dziękujemy Annie Tarnowskiej, wicekonsul w Wydziale Konsularnym i Polonii Ambasady Rzeczypospolitej Polskiej w Londynie, za ogrom pracy, jaki włożyła w organizację Kongresu razem z nami.
+
+          > Dla uczczenia Narodowego Święta Niepodległości program zakończyła Sonata b-moll nr 2 Fryderyka Chopina w wykonaniu [Roksana Dąbkowska](https://www.roksanadabkowska.com/about).
+
+          Kongres odbył się również w duchu Narodowego Święta Niepodległości. Kończący go koncert fortepianowy był trafnym akcentem kulturalnym, łączącym rozmowy o przyszłości Polski ze świętowaniem jej bogatego dziedzictwa.
+
+          Polish Youth Congress 2025 pokazał siłę, ambicję i zaangażowanie młodych Polaków za granicą, umacniając misję Federacji: łączyć i wzmacniać polskich studentów oraz młodych profesjonalistów w całej Wielkiej Brytanii.
+    - type: album
+    - type: instagram
+  album:
+    heading: "Wszystkie zdjęcia z Kongresu"
+    text: "Przeglądaj i pobierz pełny album z Polish Youth Congress 2025."
+    label: "Otwórz album"
+  seo_title: "Polish Youth Congress 2025 | Federacja Polskich Stowarzyszeń Studenckich"
+  seo_description: "Polish Youth Congress 2025 w Ognisku Polskim — dzień paneli dyskusyjnych z Ambasadą RP w Londynie, zakończony recitalem chopinowskim."
+  schema_description: "Dzień paneli dyskusyjnych w Ognisku Polskim, zorganizowany wspólnie z Ambasadą Rzeczypospolitej Polskiej w Londynie, zakończony recitalem chopinowskim z okazji Święta Niepodległości."
+  og_image_alt: "Widownia Polish Youth Congress w Ognisku Polskim"

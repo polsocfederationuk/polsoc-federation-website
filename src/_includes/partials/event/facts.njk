@@ -1,0 +1,21 @@
+{#
+  The event facts bar.
+
+  Date and venue are GENERATED from the record's machine-readable fields, not
+  stored per locale — that is what stops the facts bar, the listing card and the
+  JSON-LD drifting apart the way the live pages did (EVENT_RECONCILIATION §5.2).
+  Only the labels and any extra facts are localised.
+
+  A fact value is either text or a strip of co-organiser logos; the live Youth
+  Congress page uses both forms in the same bar.
+#}
+    <div class="event-facts">
+      <div class="fact"><span class="fact-label">{{ c.date_label }}</span><span class="fact-value">{{ event | eventDisplayDate(locale.code) }}</span></div>
+      <div class="fact"><span class="fact-label">{{ c.venue_label }}</span><span class="fact-value">{{ event.venue | venueDisplay(locale.code) }}</span></div>
+{%- for fact in c.facts %}
+      <div class="fact"><span class="fact-label">{{ fact.label }}</span><span class="fact-value">{{ fact.value }}</span></div>
+{%- endfor %}
+{%- if event.co_organisers | length %}
+      <div class="fact"><span class="fact-label">{{ c.co_organisers_label }}</span><span class="fact-value fact-logos">{% for co in event.co_organisers %}<img src="{{ co.logo }}" alt="{{ co.alt[locale.code] }}">{% endfor %}</span></div>
+{%- endif %}
+    </div>

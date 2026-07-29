@@ -1,0 +1,8 @@
+{#
+  A standalone Instagram embed.
+
+  The permalink is shared; embed.js is loaded once per page by the template.
+#}
+    <div class="insta-embed reveal"{% if section.style %} style="{{ section.style }}"{% endif %}>
+      <blockquote class="instagram-media" data-instgrm-captioned data-instgrm-permalink="{{ event.instagram_permalink }}" data-instgrm-version="14"></blockquote>
+    </div>

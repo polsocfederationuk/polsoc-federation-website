@@ -1,0 +1,5 @@
+{#- A mid-page section heading (eyebrow + title with an optional .fancy span). -#}
+    <div class="section-head reveal"{% if section.style %} style="{{ section.style }}"{% endif %}>
+      <span class="eyebrow">{{ localSection.eyebrow }}</span>
+      <h2 class="section-title">{{ localSection.title_lead }}{% if localSection.title_fancy %} <span class="fancy">{{ localSection.title_fancy }}</span>{% endif %}</h2>
+    </div>

@@ -1,0 +1,174 @@
+# Standard event — 2025/26.
+# Generated from the live pages during the Phase 11 migration, with the
+# approved reconciliation corrections applied. See docs/STANDARD_EVENTS_MIGRATION.md.
+
+slug: sikorski-debate
+event_family: standard
+template: standard
+academic_year: "2025/26"
+published: true
+order: 2
+flagship: false
+show_in_listing: true
+show_on_homepage: true
+show_in_archive: true
+
+start_date: "2026-02-10"
+end_date: null
+date_precision: day
+
+venue:
+  name:
+    en: "Polish Institute and Sikorski Museum"
+    pl: "Instytut Polski i Muzeum im. gen. Sikorskiego"
+  neighbourhood: null
+  locality:
+    en: "London"
+    pl: "Londyn"
+  country: "GB"
+
+registration:
+  state: none
+  type: null
+  url: null
+  email: null
+
+hero_image: null   # standard event heroes are typographic by design
+og_image: "/assets/debata/networking.jpg"
+instagram_permalink: "https://www.instagram.com/p/DVEvlUPjEZk/"
+album_url: null
+
+organiser: "Federation of Polish Student Societies UK"
+co_organisers: []
+
+# Ordered page structure. Type and order are shared; the content of each
+# section is localised below. Only these five types are supported.
+sections:
+  - type: gallery
+    instagram_in_grid: false
+    images:
+      - src: "/assets/debata/networking.jpg"
+        wide: true
+      - src: "/assets/debata/debata-1.jpg"
+        wide: false
+      - src: "/assets/debata/oshaughnessy.jpg"
+        wide: false
+      - src: "/assets/debata/trustees.jpg"
+        wide: true
+    style: "margin-bottom: 70px;"
+  - type: prose
+  - type: heading
+    style: "margin-top: 70px;"
+  - type: gallery
+    instagram_in_grid: true
+    images:
+      - src: "/assets/debata/debata-2.jpg"
+        wide: false
+
+en:
+  title_lead: "How to Think About Politics in a"
+  title_fancy: "Polarised World"
+  eyebrow: "Academic debate"
+  hero_summary: "An evening of critical thinking and constructive debate at the Polish Institute and Sikorski Museum."
+  card_summary: "An academic debate on polarisation and disinformation, opened by a keynote from Professor Nicholas O'Shaughnessy and followed by an Oxford-style debate and guided tours of the Institute's collections."
+  timeline_summary: "An Oxford-style debate on polarisation and disinformation, opened by Prof. Nicholas O'Shaughnessy."
+  date_label: "Date"
+  venue_label: "Venue"
+  facts:
+    - label: "Format"
+      value: "Keynote + Oxford-style debate"
+  back_link: "← All events"
+  back_link_bottom: "← Back to all events"
+  sections:
+    - type: gallery
+      alts:
+        - "Guests networking among the collections of the Polish Institute and Sikorski Museum"
+        - "The audience during the debate at the Sikorski Institute"
+        - "Professor Nicholas O'Shaughnessy delivering the keynote lecture"
+        - "Federation trustees at the Polish Institute and Sikorski Museum"
+    - type: prose
+      body: |
+          On 10 February 2026, the Federation of Polish Student Societies in the UK hosted a special academic debate, *How to Think About Politics in a Polarised World*, at the Polish Institute and Sikorski Museum in London.
+
+          The event brought together students, young professionals, academics, and members of the Polish community for an evening dedicated to critical thinking, political discourse, and constructive debate. Unlike many contemporary political discussions, the aim was not to promote a particular viewpoint, but rather to explore how political opinions are formed in an era increasingly shaped by emotions, algorithms, media narratives, and polarisation.
+
+          The evening began with a keynote lecture by Professor Nicholas O'Shaughnessy, a leading expert on political persuasion, propaganda, and strategic communication. In his address, Professor O'Shaughnessy examined the relationship between politics, emotion, and digital media, offering valuable insights into the challenges facing democratic societies in the modern information environment.
+
+          The keynote was followed by a structured Oxford-style debate on the motion:
+
+          > “This House believes that political polarisation in Poland poses a greater threat to democracy than disinformation.”
+
+          The proposition was represented by [Jacek Sagatowski](https://www.linkedin.com/in/sagatowski/), Political Affairs Expert at the Embassy of the Republic of Poland in London, joined by [Bartłomiej Maciejewski](https://www.linkedin.com/in/bartmaciejewski/), MSc Diplomacy and International Security at the University of Strathclyde and Editorial Writer for [The Lambert](https://thelambert.org/). The opposition was represented by [Dr Roch Dunin-Wąsowicz](https://www.linkedin.com/in/rochdw/) of University College London, alongside [Katie Taylor](https://www.linkedin.com/in/katie-taylor-624866284/), studying Politics, Sociology and East European Studies at UCL and an officer of the Federation's events team. The debate was moderated by journalist and editor Maria Budzisiak, who guided the discussion and audience Q&A session.
+
+          Hosting the event at the Polish Institute and Sikorski Museum carried particular significance. The Institute preserves one of the most important collections relating to modern Polish history outside Poland and serves as a reminder of the enduring importance of political leadership, civic engagement, and informed public discourse. Following the debate, guests had the opportunity to learn more about the Institute's work and explore parts of its collections through guided tours.
+
+          The Federation would like to express its sincere gratitude to the Polish Institute and Sikorski Museum for hosting the event, particularly Danuta Bildziuk and Mike Wójcik for their support throughout the planning process. We are also grateful to our media partners, [MyPolska.uk](https://mypolska.uk/polaryzacja-czy-dezinformacja-mlodzi-polacy-w-londynie-debatowali-o-kondycji-demokracji/) and [British Poles](https://www.britishpoles.uk/jak-myslec-o-polityce-w-spolaryzowanym-swiecie-debata-akademicka/), as well as to everyone who attended and contributed to the evening's thoughtful and respectful atmosphere.
+
+          As one of the Federation's first events in this format, the debate reflected our commitment to creating spaces where complex issues can be discussed with intellectual curiosity, mutual respect, and a focus on evidence-based reasoning. We look forward to building on this success through future events that connect students, professionals, and the wider Polish community in the United Kingdom.
+
+          And if you have not yet been to the [Polish Institute and Sikorski Museum](https://pism.org.uk/) in South Kensington yourself, we wholeheartedly encourage you to visit — it is a place of immense historical and cultural value, home to collections that tell the story of modern Poland like nowhere else in the UK. Entry is free and guided tours are always provided. Opening hours and more information at [pism.org.uk](https://pism.org.uk/).
+    - type: heading
+      eyebrow: "As seen on Instagram"
+      title_lead: "Relive the"
+      title_fancy: "evening"
+    - type: gallery
+      alts:
+        - "A speaker during the debate at the Polish Institute and Sikorski Museum"
+  seo_title: "Sikorski Institute Debate 2026 | Federation of Polish Student Societies UK"
+  seo_description: "An Oxford-style debate on polarisation and disinformation at the Polish Institute and Sikorski Museum, with a keynote by Professor Nicholas O'Shaughnessy."
+  schema_description: "An academic debate on polarisation and disinformation at the Polish Institute and Sikorski Museum, opening with a keynote and followed by an Oxford-style debate."
+  og_image_alt: "Guests networking at the Polish Institute and Sikorski Museum before the debate"
+
+pl:
+  title_lead: "Jak myśleć o polityce w"
+  title_fancy: "spolaryzowanym świecie"
+  eyebrow: "Debata akademicka"
+  hero_summary: "Wieczór krytycznego myślenia i konstruktywnej debaty w Instytucie Polskim i Muzeum im. gen. Sikorskiego."
+  card_summary: "Debata akademicka o polaryzacji i dezinformacji, otwarta wykładem profesora Nicholasa O'Shaughnessy'ego, po którym odbyła się debata w stylu oksfordzkim oraz oprowadzanie po zbiorach Instytutu."
+  timeline_summary: "Debata w stylu oksfordzkim o polaryzacji i dezinformacji, otwarta wykładem prof. Nicholasa O'Shaughnessy'ego."
+  date_label: "Data"
+  venue_label: "Miejsce"
+  facts:
+    - label: "Formuła"
+      value: "Wykład + debata w stylu oksfordzkim"
+  back_link: "← Wszystkie wydarzenia"
+  back_link_bottom: "← Wróć do wszystkich wydarzeń"
+  sections:
+    - type: gallery
+      alts:
+        - "Goście rozmawiają wśród zbiorów Instytutu Polskiego i Muzeum im. gen. Sikorskiego"
+        - "Widownia podczas debaty w Instytucie Sikorskiego"
+        - "Profesor Nicholas O'Shaughnessy wygłasza wykład otwierający"
+        - "Powiernicy Federacji w Instytucie Polskim i Muzeum im. gen. Sikorskiego"
+    - type: prose
+      body: |
+          10 lutego 2026 roku Federacja Polskich Stowarzyszeń Studenckich w Wielkiej Brytanii zorganizowała wyjątkową debatę akademicką *Jak myśleć o polityce w spolaryzowanym świecie* w Instytucie Polskim i Muzeum im. gen. Sikorskiego w Londynie.
+
+          Wydarzenie zgromadziło studentów, młodych profesjonalistów, naukowców i członków polskiej społeczności na wieczorze poświęconym krytycznemu myśleniu, debacie politycznej i konstruktywnej dyskusji. W odróżnieniu od wielu współczesnych sporów politycznych celem nie było promowanie konkretnego poglądu, lecz przyjrzenie się temu, jak kształtują się opinie polityczne w czasach coraz mocniej zdominowanych przez emocje, algorytmy, narracje medialne i polaryzację.
+
+          Wieczór otworzył wykład profesora Nicholasa O'Shaughnessy'ego, czołowego eksperta w dziedzinie perswazji politycznej, propagandy i komunikacji strategicznej. W swoim wystąpieniu profesor przeanalizował związki między polityką, emocjami i mediami cyfrowymi, dzieląc się cennymi spostrzeżeniami na temat wyzwań stojących przed demokracjami we współczesnym środowisku informacyjnym.
+
+          Po wykładzie odbyła się debata w stylu oksfordzkim wokół tezy:
+
+          > „Ta Izba uważa, że polaryzacja polityczna w Polsce stanowi większe zagrożenie dla demokracji niż dezinformacja”.
+
+          Stronę propozycji reprezentowali [Jacek Sagatowski](https://www.linkedin.com/in/sagatowski/), ekspert ds. politycznych w Ambasadzie Rzeczypospolitej Polskiej w Londynie, oraz [Bartłomiej Maciejewski](https://www.linkedin.com/in/bartmaciejewski/), student MSc Diplomacy and International Security na University of Strathclyde i publicysta [The Lambert](https://thelambert.org/). Stronę opozycji reprezentowali [Dr Roch Dunin-Wąsowicz](https://www.linkedin.com/in/rochdw/) z University College London oraz [Katie Taylor](https://www.linkedin.com/in/katie-taylor-624866284/), studiująca Politics, Sociology and East European Studies na UCL i członkini zespołu ds. wydarzeń Federacji. Debatę poprowadziła dziennikarka i redaktorka Maria Budzisiak, która moderowała dyskusję i sesję pytań od publiczności.
+
+          Zorganizowanie wydarzenia w Instytucie Polskim i Muzeum im. gen. Sikorskiego miało szczególne znaczenie. Instytut przechowuje jedną z najważniejszych kolekcji dotyczących najnowszej historii Polski poza jej granicami i przypomina o trwałym znaczeniu przywództwa politycznego, zaangażowania obywatelskiego i rzetelnej debaty publicznej. Po debacie goście mogli dowiedzieć się więcej o pracy Instytutu i zwiedzić część jego zbiorów z przewodnikiem.
+
+          Federacja serdecznie dziękuje Instytutowi Polskiemu i Muzeum im. gen. Sikorskiego za goszczenie wydarzenia, a w szczególności Danucie Bildziuk i Mike'owi Wójcikowi za wsparcie na każdym etapie przygotowań. Dziękujemy również naszym patronom medialnym, [MyPolska.uk](https://mypolska.uk/polaryzacja-czy-dezinformacja-mlodzi-polacy-w-londynie-debatowali-o-kondycji-demokracji/) and [British Poles](https://www.britishpoles.uk/jak-myslec-o-polityce-w-spolaryzowanym-swiecie-debata-akademicka/), a także wszystkim, którzy przyszli i współtworzyli refleksyjną atmosferę tego wieczoru, pełną wzajemnego szacunku.
+
+          Jako jedno z pierwszych wydarzeń Federacji w tej formule debata pokazała, jak ważne jest dla nas tworzenie przestrzeni, w których o złożonych sprawach można rozmawiać z ciekawością, wzajemnym szacunkiem i w oparciu o fakty. Chcemy rozwijać ten sukces w kolejnych wydarzeniach łączących studentów, profesjonalistów i szerszą polską społeczność w Wielkiej Brytanii.
+
+          A jeśli nie byliście jeszcze w [Instytucie Polskim i Muzeum im. gen. Sikorskiego](https://pism.org.uk/) w South Kensington — gorąco zachęcamy do odwiedzin. To miejsce o ogromnej wartości historycznej i kulturowej, ze zbiorami, które opowiadają historię najnowszej Polski jak żadne inne w Wielkiej Brytanii. Wstęp jest bezpłatny, a zwiedzanie zawsze odbywa się z przewodnikiem. Godziny otwarcia i więcej informacji na [pism.org.uk](https://pism.org.uk/).
+    - type: heading
+      eyebrow: "As seen on Instagram"
+      title_lead: "Wróć do tamtego"
+      title_fancy: "wieczoru"
+    - type: gallery
+      alts:
+        - "Mówca podczas debaty w Instytucie Polskim i Muzeum im. gen. Sikorskiego"
+  seo_title: "Debata w Instytucie Sikorskiego 2026 | Federacja Polskich Stowarzyszeń Studenckich"
+  seo_description: "Debata w stylu oksfordzkim o polaryzacji i dezinformacji w Instytucie Polskim i Muzeum im. gen. Sikorskiego, z wykładem prof. Nicholasa O'Shaughnessy'ego."
+  schema_description: "Debata akademicka o polaryzacji i dezinformacji w Instytucie Polskim i Muzeum im. gen. Sikorskiego, otwarta wykładem, po którym odbyła się debata w stylu oksfordzkim."
+  og_image_alt: "Goście rozmawiają wśród zbiorów Instytutu Polskiego i Muzeum im. gen. Sikorskiego"
