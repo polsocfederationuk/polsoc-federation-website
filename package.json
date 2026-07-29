@@ -14,7 +14,8 @@
     "compare:announcements": "node scripts/compare-announcements.js",
     "compare:members": "node scripts/compare-members.js",
     "compare:contact": "node scripts/compare-contact.js",
-    "compare:404": "node scripts/compare-404.js"
+    "compare:404": "node scripts/compare-404.js",
+    "audit:events": "node scripts/audit-events.js"
   },
   "engines": {
     "node": ">=18"

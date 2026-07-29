@@ -2707,6 +2707,227 @@ if (!exists("dist")) {
   }
 }
 
+/* =================================================================== 24. event audit artefacts */
+
+section("24. Event reconciliation artefacts (Phase 10)");
+
+const EXPECTED_EVENT_SLUGS = ["business-forum", "sikorski-debate", "christmas-dinner",
+  "youth-congress", "icebreaker"];
+const SUPPORTED_STATUSES = new Set(["consistent", "expected-localisation",
+  "missing-in-some-sources", "contradiction", "invalid-format", "uncertain", "not-applicable"]);
+// Every place an event's information currently lives. A matrix that forgot one
+// of these would be reconciling an incomplete picture.
+const REQUIRED_SOURCE_LOCATIONS = ["events.html", "pl/events.html", "index.html", "pl/index.html"];
+
+assert(exists("docs/EVENT_SOURCE_MATRIX.json"),
+  "docs/EVENT_SOURCE_MATRIX.json exists (run `npm run audit:events` to regenerate)",
+  "the event source matrix is missing");
+assert(exists("docs/EVENT_RECONCILIATION.md"),
+  "docs/EVENT_RECONCILIATION.md exists",
+  "the event reconciliation report is missing");
+
+if (exists("docs/EVENT_SOURCE_MATRIX.json")) {
+  let matrix = null;
+  try {
+    matrix = JSON.parse(read("docs/EVENT_SOURCE_MATRIX.json"));
+  } catch (e) {
+    fail("the event source matrix is not valid JSON", [e.message]);
+  }
+
+  if (matrix) {
+    const slugs = Object.keys(matrix.events || {});
+    const missingSlugs = EXPECTED_EVENT_SLUGS.filter((s) => !slugs.includes(s));
+    assert(missingSlugs.length === 0,
+      `all five expected event slugs appear in the source matrix (${EXPECTED_EVENT_SLUGS.join(", ")})`,
+      "event slugs missing from the source matrix", missingSlugs);
+    assert(slugs.length > 0,
+      `the source matrix is non-empty (${slugs.length} events)`,
+      "the source matrix contains zero events");
+
+    // Every event must account for every source location.
+    const missingSources = [];
+    for (const [slug, ev] of Object.entries(matrix.events || {})) {
+      const inspected = ev.sources_inspected || [];
+      for (const loc of [...REQUIRED_SOURCE_LOCATIONS, `event-${slug === "business-forum" ? "business-forum" : slug}.html`]) {
+        if (!inspected.some((s) => s === loc)) missingSources.push(`${slug}: ${loc}`);
+      }
+      for (const side of ["en", "pl"]) {
+        if (!ev.detail_pages || !ev.detail_pages[side]) missingSources.push(`${slug}: ${side} detail page not recorded`);
+      }
+    }
+    assert(missingSources.length === 0,
+      "every event accounts for all required source locations (both listings, both homepages, both detail pages)",
+      "events with unaccounted source locations", missingSources.slice(0, 8));
+
+    // Field-entry integrity.
+    const badStatus = [];
+    const inventedRecommendation = [];
+    const unflaggedContradiction = [];
+    let fieldCount = 0;
+    for (const [slug, ev] of Object.entries(matrix.events || {})) {
+      for (const [name, entry] of Object.entries(ev.fields || {})) {
+        fieldCount++;
+        if (!SUPPORTED_STATUSES.has(entry.status)) badStatus.push(`${slug}.${name}: ${entry.status}`);
+        // An unresolved conflict must be flagged AND must not carry a guess.
+        if (entry.status === "contradiction") {
+          if (entry.requires_human_decision !== true) unflaggedContradiction.push(`${slug}.${name}`);
+          if (entry.recommended_value !== null) inventedRecommendation.push(`${slug}.${name}`);
+        }
+        if (entry.requires_human_decision === true && entry.recommended_value !== null) {
+          inventedRecommendation.push(`${slug}.${name}`);
+        }
+      }
+    }
+    assert(fieldCount > 0, `the matrix records ${fieldCount} field comparisons`,
+      "the matrix records no field comparisons");
+    assert(badStatus.length === 0,
+      `every field entry uses a supported status (${[...SUPPORTED_STATUSES].join(", ")})`,
+      "field entries with an unsupported status", badStatus);
+    assert(unflaggedContradiction.length === 0,
+      "every contradiction is flagged requires_human_decision: true",
+      "contradictions not flagged for human decision", unflaggedContradiction);
+    assert(inventedRecommendation.length === 0,
+      "no unresolved item carries an invented recommended_value",
+      "unresolved items with a recommended value — the audit must not guess", [...new Set(inventedRecommendation)]);
+  }
+}
+
+/* -- example schemas -------------------------------------------------------- */
+
+const SCHEMA_EXAMPLES = {
+  standard: "docs/schema-examples/event-standard.example.yaml",
+  businessForum: "docs/schema-examples/event-business-forum.example.yaml",
+};
+const VALID_FAMILY_TEMPLATE = { standard: "standard", "polish-business-forum": "business-forum" };
+
+for (const [label, rel] of Object.entries(SCHEMA_EXAMPLES)) {
+  assert(exists(rel), `${rel} exists`, `${label} schema example is missing`);
+  if (!exists(rel)) continue;
+
+  let doc = null;
+  try {
+    doc = loadYaml(rel);
+    ok(`${label} schema example is valid YAML`);
+  } catch (e) {
+    fail(`${label} schema example is not valid YAML`, [e.message]);
+    continue;
+  }
+
+  assert(Boolean(doc.en) && Boolean(doc.pl),
+    `${label} example contains both an en and a pl block`,
+    `${label} example is missing a locale block`);
+
+  // The permitted family/template pairing — a Business Forum record must never
+  // be able to render through the standard template.
+  assert(VALID_FAMILY_TEMPLATE[doc.event_family] === doc.template,
+    `${label} example uses a permitted event_family/template pair (${doc.event_family} + ${doc.template})`,
+    `${label} example uses a forbidden event_family/template combination`,
+    [`event_family: ${doc.event_family}`, `template: ${doc.template}`]);
+
+  // Dates must be quoted ISO strings, never YAML-parsed Date objects.
+  const dateFields = [["start_date", doc.start_date], ["end_date", doc.end_date]];
+  const badDates = dateFields.filter(([, v]) => v !== null && v !== undefined && typeof v !== "string")
+    .map(([k, v]) => `${k}: ${Object.prototype.toString.call(v)}`);
+  assert(badDates.length === 0,
+    `${label} example quotes its ISO dates so YAML keeps them as strings`,
+    `${label} example has an unquoted date — YAML turned it into a timezone-sensitive Date`, badDates);
+  const malformed = dateFields.filter(([, v]) => typeof v === "string" && !/^\d{4}-\d{2}(-\d{2})?$/.test(v))
+    .map(([k, v]) => `${k}: ${v}`);
+  assert(malformed.length === 0,
+    `${label} example's dates are well-formed ISO values`,
+    `${label} example has a malformed date`, malformed);
+
+  // No raw HTML anywhere in an example.
+  const rawHtml = [];
+  (function walk(v, trail) {
+    if (typeof v === "string") {
+      if (/<[a-z/!][^>]*>/i.test(v)) rawHtml.push(trail);
+      return;
+    }
+    if (Array.isArray(v)) return v.forEach((x, i) => walk(x, `${trail}[${i}]`));
+    if (v && typeof v === "object") {
+      for (const [k, x] of Object.entries(v)) walk(x, trail ? `${trail}.${k}` : k);
+    }
+  })(doc, "");
+  assert(rawHtml.length === 0,
+    `${label} example contains no raw HTML`,
+    `${label} example contains raw HTML`, rawHtml);
+
+  // Fictional data only — a real committee name or the real Forum theme in an
+  // example would eventually be copied into a live record by mistake.
+  const realWorldMarkers = ["polsocfederation.pl", "federac_ja", "Ognisko", "Mamuśka",
+    "Sikorski", "Bielecki", "Norman Davies", "London Business School", "Golden Age"];
+  const leaked = [];
+  (function walk2(v) {
+    if (typeof v === "string") {
+      for (const marker of realWorldMarkers) if (v.includes(marker)) leaked.push(`${marker} in ${JSON.stringify(v.slice(0, 60))}`);
+      return;
+    }
+    if (Array.isArray(v)) return v.forEach(walk2);
+    if (v && typeof v === "object") Object.values(v).forEach(walk2);
+  })(doc);
+  assert(leaked.length === 0,
+    `${label} example uses fictional data only`,
+    `${label} example contains real-world data`, [...new Set(leaked)].slice(0, 6));
+}
+
+// The Business Forum example must demonstrate the real extension, not merely a
+// different template name.
+if (exists(SCHEMA_EXAMPLES.businessForum)) {
+  const bf = loadYaml(SCHEMA_EXAMPLES.businessForum);
+  const ext = bf.business_forum || {};
+  const REQUIRED_EXT = ["edition_number", "branding", "statistics", "people",
+    "partner_categories", "funding_acknowledgement", "forum_ball", "photographers"];
+  const missingExt = REQUIRED_EXT.filter((k) => !(k in ext));
+  assert(missingExt.length === 0,
+    `the Business Forum example demonstrates the specialised extension (${REQUIRED_EXT.length} dedicated field groups)`,
+    "the Business Forum example is missing extension field groups", missingExt);
+
+  const std = loadYaml(SCHEMA_EXAMPLES.standard);
+  assert(!("business_forum" in std),
+    "the standard example carries no business_forum block (Forum fields cannot leak onto ordinary events)",
+    "the standard example contains a business_forum block");
+}
+
+/* -- this phase must not have produced records or pages -------------------- */
+
+const eventsContentDir = "content/events";
+const eventRecords = exists(eventsContentDir)
+  ? fs.readdirSync(path.join(ROOT, eventsContentDir)).filter((f) => /\.ya?ml$/i.test(f))
+  : [];
+assert(eventRecords.length === 0,
+  "content/events/ is still empty — this phase designs the schema, it does not populate it",
+  "active event records were created during the reconciliation phase", eventRecords);
+
+if (exists("dist")) {
+  const forbiddenGenerated = ["dist/events.html", "dist/pl/events.html",
+    "dist/index.html", "dist/pl/index.html",
+    ...EXPECTED_EVENT_SLUGS.flatMap((s) => [`dist/event-${s}.html`, `dist/pl/event-${s}.html`])];
+  const created = forbiddenGenerated.filter((p) => exists(p));
+  assert(created.length === 0,
+    "no generated event, events-listing or homepage page was produced by this phase",
+    "this phase generated pages it was not supposed to", created);
+}
+
+// The audit is read-only: the live event sources must be untouched.
+{
+  const { execFileSync } = require("child_process");
+  let changed = [];
+  try {
+    changed = execFileSync("git", ["status", "--porcelain", "--",
+      "index.html", "pl/index.html", "events.html", "pl/events.html",
+      ...EXPECTED_EVENT_SLUGS.flatMap((s) => [`event-${s}.html`, `pl/event-${s}.html`]),
+      "sitemap.xml", "netlify.toml", "content/announcements"],
+      { cwd: ROOT, encoding: "utf8" })
+      .split("\n").map((l) => l.trim()).filter(Boolean);
+  } catch {
+    changed = ["(git unavailable — check skipped)"];
+  }
+  assert(changed.length === 0 || changed[0].startsWith("(git unavailable"),
+    "the audit changed no live event page, homepage, listing, sitemap or announcement record",
+    "the reconciliation phase modified files it must not touch", changed);
+}
+
 /* =================================================================== summary */
 
 console.log("\n" + "=".repeat(64));

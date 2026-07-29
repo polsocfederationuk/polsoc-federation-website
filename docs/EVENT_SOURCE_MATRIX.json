@@ -1,0 +1,5081 @@
+{
+  "generated_by": "scripts/audit-events.js",
+  "events": {
+    "business-forum": {
+      "slug": "business-forum",
+      "detail_pages": {
+        "en": "event-business-forum.html",
+        "pl": "pl/event-business-forum.html"
+      },
+      "sources_inspected": [
+        "event-business-forum.html",
+        "pl/event-business-forum.html",
+        "events.html",
+        "pl/events.html",
+        "index.html",
+        "pl/index.html",
+        "content/announcements/polish-business-forum-2026-two-days-that.yaml",
+        "content/announcements/introducing-the-polish-business-forum.yaml"
+      ],
+      "related_announcements": [
+        {
+          "slug": "polish-business-forum-2026-two-days-that",
+          "file": "content/announcements/polish-business-forum-2026-two-days-that.yaml",
+          "published_date": "2026-04-30",
+          "link": {
+            "type": "event",
+            "event_slug": "business-forum"
+          },
+          "en_title": "Polish Business Forum 2026: two days that made history",
+          "pl_title": "Polish Business Forum 2026: dwa dni, które przeszły do historii"
+        },
+        {
+          "slug": "introducing-the-polish-business-forum",
+          "file": "content/announcements/introducing-the-polish-business-forum.yaml",
+          "published_date": "2026-03-15",
+          "link": {
+            "type": "event",
+            "event_slug": "business-forum"
+          },
+          "en_title": "Introducing the Polish Business Forum",
+          "pl_title": "Przedstawiamy Polish Business Forum"
+        }
+      ],
+      "announcement_slugs_not_found": [],
+      "present_in_english_listing": true,
+      "present_in_polish_listing": true,
+      "present_in_english_timeline": true,
+      "present_in_polish_timeline": true,
+      "cross_source_checks": [],
+      "fields": {
+        "title": {
+          "field": "title",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "event-business-forum.html",
+              "locale": "en",
+              "value": "Polish Business Forum 2026"
+            },
+            {
+              "file": "pl/event-business-forum.html",
+              "locale": "pl",
+              "value": "Polish Business Forum 2026"
+            }
+          ],
+          "status": "uncertain",
+          "recommended_value": null,
+          "requires_human_decision": true,
+          "notes": "localised field is identical in both languages — may be a proper name, may be an untranslated string"
+        },
+        "hero_eyebrow": {
+          "field": "hero_eyebrow",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "event-business-forum.html",
+              "locale": "en",
+              "value": "A flagship conference by the Federation of Polish Student Societies in the UK"
+            },
+            {
+              "file": "pl/event-business-forum.html",
+              "locale": "pl",
+              "value": "Flagowa konferencja Federacji Polskich Stowarzyszeń Studenckich w Wielkiej Brytanii"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "intro_copy": {
+          "field": "intro_copy",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "event-business-forum.html",
+              "locale": "en",
+              "value": "Polish Golden Age: From Emerging to Leading"
+            },
+            {
+              "file": "pl/event-business-forum.html",
+              "locale": "pl",
+              "value": "Polish Golden Age: From Emerging to Leading"
+            }
+          ],
+          "status": "uncertain",
+          "recommended_value": null,
+          "requires_human_decision": true,
+          "notes": "localised field is identical in both languages — may be a proper name, may be an untranslated string"
+        },
+        "seo_title": {
+          "field": "seo_title",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "event-business-forum.html",
+              "locale": "en",
+              "value": "Polish Business Forum 2026 | Federation of Polish Student Societies UK"
+            },
+            {
+              "file": "pl/event-business-forum.html",
+              "locale": "pl",
+              "value": "Polish Business Forum 2026 | Federacja Polskich Stowarzyszeń Studenckich"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "seo_description": {
+          "field": "seo_description",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "event-business-forum.html",
+              "locale": "en",
+              "value": "Polish Business Forum 2026 at London Business School brought over 300 Polish students, professionals and business leaders together across two days in London."
+            },
+            {
+              "file": "pl/event-business-forum.html",
+              "locale": "pl",
+              "value": "Polish Business Forum 2026 w London Business School zgromadziło ponad 300 polskich studentów, profesjonalistów i liderów biznesu przez dwa dni w Londynie."
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "canonical": {
+          "field": "canonical",
+          "classification": "per-locale-url",
+          "sources": [
+            {
+              "file": "event-business-forum.html",
+              "locale": "en",
+              "value": "https://polsocfederation.pl/event-business-forum.html"
+            },
+            {
+              "file": "pl/event-business-forum.html",
+              "locale": "pl",
+              "value": "https://polsocfederation.pl/pl/event-business-forum.html"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false,
+          "notes": "per-locale URL: the Polish value is the English one with the /pl/ prefix, as intended"
+        },
+        "language": {
+          "field": "language",
+          "classification": "not-applicable",
+          "sources": [
+            {
+              "file": "event-business-forum.html",
+              "locale": "en",
+              "value": "en"
+            },
+            {
+              "file": "pl/event-business-forum.html",
+              "locale": "pl",
+              "value": "pl"
+            }
+          ],
+          "status": "not-applicable",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "og_image": {
+          "field": "og_image",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-business-forum.html",
+              "locale": "en",
+              "value": "assets/pbf/stage.jpg"
+            },
+            {
+              "file": "pl/event-business-forum.html",
+              "locale": "pl",
+              "value": "assets/pbf/stage.jpg"
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": "assets/pbf/stage.jpg",
+          "requires_human_decision": false
+        },
+        "og_image_alt": {
+          "field": "og_image_alt",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "event-business-forum.html",
+              "locale": "en",
+              "value": "The Polish Business Forum team on the main stage at London Business School"
+            },
+            {
+              "file": "pl/event-business-forum.html",
+              "locale": "pl",
+              "value": "The Polish Business Forum team on the main stage at London Business School"
+            }
+          ],
+          "status": "uncertain",
+          "recommended_value": null,
+          "requires_human_decision": true,
+          "notes": "localised field is identical in both languages — may be a proper name, may be an untranslated string"
+        },
+        "hero_image": {
+          "field": "hero_image",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-business-forum.html",
+              "locale": "en",
+              "value": "assets/pbf/networking-hero.jpg"
+            },
+            {
+              "file": "pl/event-business-forum.html",
+              "locale": "pl",
+              "value": "assets/pbf/networking-hero.jpg"
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": "assets/pbf/networking-hero.jpg",
+          "requires_human_decision": false
+        },
+        "detail_template_type": {
+          "field": "detail_template_type",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-business-forum.html",
+              "locale": "en",
+              "value": "business-forum"
+            },
+            {
+              "file": "pl/event-business-forum.html",
+              "locale": "pl",
+              "value": "business-forum"
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": "business-forum",
+          "requires_human_decision": false
+        },
+        "gallery_image_count": {
+          "field": "gallery_image_count",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-business-forum.html",
+              "locale": "en",
+              "value": 54
+            },
+            {
+              "file": "pl/event-business-forum.html",
+              "locale": "pl",
+              "value": 54
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": 54,
+          "requires_human_decision": false
+        },
+        "body_copy_paragraphs": {
+          "field": "body_copy_paragraphs",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-business-forum.html",
+              "locale": "en",
+              "value": 6
+            },
+            {
+              "file": "pl/event-business-forum.html",
+              "locale": "pl",
+              "value": 6
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": 6,
+          "requires_human_decision": false
+        },
+        "instagram_permalink": {
+          "field": "instagram_permalink",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-business-forum.html",
+              "locale": "en",
+              "value": null
+            },
+            {
+              "file": "pl/event-business-forum.html",
+              "locale": "pl",
+              "value": null
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "album_link": {
+          "field": "album_link",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-business-forum.html",
+              "locale": "en",
+              "value": "https://drive.google.com/drive/folders/1m8rpfCNRGF2NdbInmnFpiVEGzMBJsH4Q?usp=sharing"
+            },
+            {
+              "file": "pl/event-business-forum.html",
+              "locale": "pl",
+              "value": "https://drive.google.com/drive/folders/1m8rpfCNRGF2NdbInmnFpiVEGzMBJsH4Q?usp=sharing"
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": "https://drive.google.com/drive/folders/1m8rpfCNRGF2NdbInmnFpiVEGzMBJsH4Q?usp=sharing",
+          "requires_human_decision": false
+        },
+        "registration_link": {
+          "field": "registration_link",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-business-forum.html",
+              "locale": "en",
+              "value": null
+            },
+            {
+              "file": "pl/event-business-forum.html",
+              "locale": "pl",
+              "value": null
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "external_links": {
+          "field": "external_links",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-business-forum.html",
+              "locale": "en",
+              "value": [
+                "https://yonivisuals49.pixieset.com/polishbusinessforum/",
+                "https://drive.google.com/drive/folders/1m8rpfCNRGF2NdbInmnFpiVEGzMBJsH4Q?usp=sharing"
+              ]
+            },
+            {
+              "file": "pl/event-business-forum.html",
+              "locale": "pl",
+              "value": [
+                "https://yonivisuals49.pixieset.com/polishbusinessforum/",
+                "https://drive.google.com/drive/folders/1m8rpfCNRGF2NdbInmnFpiVEGzMBJsH4Q?usp=sharing"
+              ]
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": [
+            "https://yonivisuals49.pixieset.com/polishbusinessforum/",
+            "https://drive.google.com/drive/folders/1m8rpfCNRGF2NdbInmnFpiVEGzMBJsH4Q?usp=sharing"
+          ],
+          "requires_human_decision": false
+        },
+        "download_links": {
+          "field": "download_links",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-business-forum.html",
+              "locale": "en",
+              "value": []
+            },
+            {
+              "file": "pl/event-business-forum.html",
+              "locale": "pl",
+              "value": []
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": [],
+          "requires_human_decision": false
+        },
+        "partner_logo_tiles": {
+          "field": "partner_logo_tiles",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-business-forum.html",
+              "locale": "en",
+              "value": 40
+            },
+            {
+              "file": "pl/event-business-forum.html",
+              "locale": "pl",
+              "value": 40
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": 40,
+          "requires_human_decision": false
+        },
+        "facts": {
+          "field": "facts",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "event-business-forum.html",
+              "locale": "en",
+              "value": [
+                {
+                  "label": "Date",
+                  "value": "24–25 April 2026",
+                  "variant": "text"
+                },
+                {
+                  "label": "Venue",
+                  "value": "London Business School",
+                  "variant": "text"
+                },
+                {
+                  "label": "Attendance",
+                  "value": "300+ guests",
+                  "variant": "text"
+                },
+                {
+                  "label": "Edition",
+                  "value": "Inaugural",
+                  "variant": "text"
+                }
+              ]
+            },
+            {
+              "file": "pl/event-business-forum.html",
+              "locale": "pl",
+              "value": [
+                {
+                  "label": "Data",
+                  "value": "24–25 kwietnia 2026",
+                  "variant": "text"
+                },
+                {
+                  "label": "Miejsce",
+                  "value": "London Business School",
+                  "variant": "text"
+                },
+                {
+                  "label": "Frekwencja",
+                  "value": "300+ gości",
+                  "variant": "text"
+                },
+                {
+                  "label": "Edycja",
+                  "value": "Pierwsza",
+                  "variant": "text"
+                }
+              ]
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "images_missing_alt": {
+          "field": "images_missing_alt",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-business-forum.html",
+              "locale": "en",
+              "value": []
+            },
+            {
+              "file": "pl/event-business-forum.html",
+              "locale": "pl",
+              "value": []
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": [],
+          "requires_human_decision": false
+        },
+        "images_empty_alt": {
+          "field": "images_empty_alt",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-business-forum.html",
+              "locale": "en",
+              "value": [
+                "assets/pbf/sponsors/lbs.jpg",
+                "assets/pbf/sponsors/pko-bp.jpg",
+                "assets/pbf/sponsors/bank-pekao.png",
+                "assets/pbf/sponsors/velobank.png",
+                "assets/pbf/sponsors/occ.webp",
+                "assets/pbf/sponsors/legimi.jpg",
+                "assets/pbf/sponsors/heatpex.jpg",
+                "assets/pbf/sponsors/ntfy.png",
+                "assets/pbf/sponsors/wspolnota-polska.png",
+                "assets/pbf/media/business-insider.png",
+                "assets/pbf/media/pap-biznes.jpg",
+                "assets/pbf/media/puls-biznesu.png",
+                "assets/pbf/media/british-poles.png",
+                "assets/pbf/media/mypolska.png",
+                "assets/pbf/media/lambert.webp",
+                "assets/pbf/media/focus-on-business.jpg",
+                "assets/pbf/media/comparic.webp",
+                "assets/pbf/media/stockwatch.png",
+                "assets/pbf/media/fxmag.webp",
+                "assets/pbf/media/przeglad.webp"
+              ]
+            },
+            {
+              "file": "pl/event-business-forum.html",
+              "locale": "pl",
+              "value": [
+                "assets/pbf/sponsors/lbs.jpg",
+                "assets/pbf/sponsors/pko-bp.jpg",
+                "assets/pbf/sponsors/bank-pekao.png",
+                "assets/pbf/sponsors/velobank.png",
+                "assets/pbf/sponsors/occ.webp",
+                "assets/pbf/sponsors/legimi.jpg",
+                "assets/pbf/sponsors/heatpex.jpg",
+                "assets/pbf/sponsors/ntfy.png",
+                "assets/pbf/sponsors/wspolnota-polska.png",
+                "assets/pbf/media/business-insider.png",
+                "assets/pbf/media/pap-biznes.jpg",
+                "assets/pbf/media/puls-biznesu.png",
+                "assets/pbf/media/british-poles.png",
+                "assets/pbf/media/mypolska.png",
+                "assets/pbf/media/lambert.webp",
+                "assets/pbf/media/focus-on-business.jpg",
+                "assets/pbf/media/comparic.webp",
+                "assets/pbf/media/stockwatch.png",
+                "assets/pbf/media/fxmag.webp",
+                "assets/pbf/media/przeglad.webp"
+              ]
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": [
+            "assets/pbf/sponsors/lbs.jpg",
+            "assets/pbf/sponsors/pko-bp.jpg",
+            "assets/pbf/sponsors/bank-pekao.png",
+            "assets/pbf/sponsors/velobank.png",
+            "assets/pbf/sponsors/occ.webp",
+            "assets/pbf/sponsors/legimi.jpg",
+            "assets/pbf/sponsors/heatpex.jpg",
+            "assets/pbf/sponsors/ntfy.png",
+            "assets/pbf/sponsors/wspolnota-polska.png",
+            "assets/pbf/media/business-insider.png",
+            "assets/pbf/media/pap-biznes.jpg",
+            "assets/pbf/media/puls-biznesu.png",
+            "assets/pbf/media/british-poles.png",
+            "assets/pbf/media/mypolska.png",
+            "assets/pbf/media/lambert.webp",
+            "assets/pbf/media/focus-on-business.jpg",
+            "assets/pbf/media/comparic.webp",
+            "assets/pbf/media/stockwatch.png",
+            "assets/pbf/media/fxmag.webp",
+            "assets/pbf/media/przeglad.webp"
+          ],
+          "requires_human_decision": false
+        },
+        "jsonld_start": {
+          "field": "jsonld_start",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-business-forum.html",
+              "locale": "en",
+              "value": "2026-04-24"
+            },
+            {
+              "file": "pl/event-business-forum.html",
+              "locale": "pl",
+              "value": "2026-04-24"
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": "2026-04-24",
+          "requires_human_decision": false
+        },
+        "jsonld_end": {
+          "field": "jsonld_end",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-business-forum.html",
+              "locale": "en",
+              "value": "2026-04-25"
+            },
+            {
+              "file": "pl/event-business-forum.html",
+              "locale": "pl",
+              "value": "2026-04-25"
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": "2026-04-25",
+          "requires_human_decision": false
+        },
+        "jsonld_name": {
+          "field": "jsonld_name",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "event-business-forum.html",
+              "locale": "en",
+              "value": "Polish Business Forum 2026"
+            },
+            {
+              "file": "pl/event-business-forum.html",
+              "locale": "pl",
+              "value": "Polish Business Forum 2026"
+            }
+          ],
+          "status": "uncertain",
+          "recommended_value": null,
+          "requires_human_decision": true,
+          "notes": "localised field is identical in both languages — may be a proper name, may be an untranslated string"
+        },
+        "jsonld_description": {
+          "field": "jsonld_description",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "event-business-forum.html",
+              "locale": "en",
+              "value": "The inaugural Polish Business Forum at London Business School, bringing over 300 students, professionals and business leaders together under the theme “Polish Golden Age: From Emerging to Leading”."
+            },
+            {
+              "file": "pl/event-business-forum.html",
+              "locale": "pl",
+              "value": "Pierwsza edycja Polish Business Forum w London Business School — ponad 300 studentów, profesjonalistów i liderów biznesu spotkało się pod hasłem „Polish Golden Age: From Emerging to Leading”."
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "jsonld_status": {
+          "field": "jsonld_status",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-business-forum.html",
+              "locale": "en",
+              "value": "https://schema.org/EventScheduled"
+            },
+            {
+              "file": "pl/event-business-forum.html",
+              "locale": "pl",
+              "value": "https://schema.org/EventScheduled"
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": "https://schema.org/EventScheduled",
+          "requires_human_decision": false
+        },
+        "jsonld_attendance": {
+          "field": "jsonld_attendance",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-business-forum.html",
+              "locale": "en",
+              "value": "https://schema.org/OfflineEventAttendanceMode"
+            },
+            {
+              "file": "pl/event-business-forum.html",
+              "locale": "pl",
+              "value": "https://schema.org/OfflineEventAttendanceMode"
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": "https://schema.org/OfflineEventAttendanceMode",
+          "requires_human_decision": false
+        },
+        "jsonld_venue": {
+          "field": "jsonld_venue",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "event-business-forum.html",
+              "locale": "en",
+              "value": "London Business School"
+            },
+            {
+              "file": "pl/event-business-forum.html",
+              "locale": "pl",
+              "value": "London Business School"
+            }
+          ],
+          "status": "uncertain",
+          "recommended_value": null,
+          "requires_human_decision": true,
+          "notes": "localised field is identical in both languages — may be a proper name, may be an untranslated string"
+        },
+        "jsonld_locality": {
+          "field": "jsonld_locality",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "event-business-forum.html",
+              "locale": "en",
+              "value": "London"
+            },
+            {
+              "file": "pl/event-business-forum.html",
+              "locale": "pl",
+              "value": "Londyn"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "jsonld_country": {
+          "field": "jsonld_country",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-business-forum.html",
+              "locale": "en",
+              "value": "GB"
+            },
+            {
+              "file": "pl/event-business-forum.html",
+              "locale": "pl",
+              "value": "GB"
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": "GB",
+          "requires_human_decision": false
+        },
+        "jsonld_organiser": {
+          "field": "jsonld_organiser",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "event-business-forum.html",
+              "locale": "en",
+              "value": "Federation of Polish Student Societies UK"
+            },
+            {
+              "file": "pl/event-business-forum.html",
+              "locale": "pl",
+              "value": "Federacja Polskich Stowarzyszeń Studenckich w Wielkiej Brytanii"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "jsonld_url": {
+          "field": "jsonld_url",
+          "classification": "per-locale-url",
+          "sources": [
+            {
+              "file": "event-business-forum.html",
+              "locale": "en",
+              "value": "https://polsocfederation.pl/event-business-forum.html"
+            },
+            {
+              "file": "pl/event-business-forum.html",
+              "locale": "pl",
+              "value": "https://polsocfederation.pl/pl/event-business-forum.html"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false,
+          "notes": "per-locale URL: the Polish value is the English one with the /pl/ prefix, as intended"
+        },
+        "jsonld_image": {
+          "field": "jsonld_image",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-business-forum.html",
+              "locale": "en",
+              "value": "assets/pbf/stage.jpg"
+            },
+            {
+              "file": "pl/event-business-forum.html",
+              "locale": "pl",
+              "value": "assets/pbf/stage.jpg"
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": "assets/pbf/stage.jpg",
+          "requires_human_decision": false
+        },
+        "jsonld_performers": {
+          "field": "jsonld_performers",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-business-forum.html",
+              "locale": "en",
+              "value": [
+                "Jan Krzysztof Bielecki",
+                "Norman Davies",
+                "Marcin Piątkowski"
+              ]
+            },
+            {
+              "file": "pl/event-business-forum.html",
+              "locale": "pl",
+              "value": [
+                "Jan Krzysztof Bielecki",
+                "Norman Davies",
+                "Marcin Piątkowski"
+              ]
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": [
+            "Jan Krzysztof Bielecki",
+            "Norman Davies",
+            "Marcin Piątkowski"
+          ],
+          "requires_human_decision": false
+        },
+        "jsonld_inLanguage": {
+          "field": "jsonld_inLanguage",
+          "classification": "locale-asymmetric",
+          "sources": [
+            {
+              "file": "event-business-forum.html",
+              "locale": "en",
+              "value": null
+            },
+            {
+              "file": "pl/event-business-forum.html",
+              "locale": "pl",
+              "value": "pl-PL"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false,
+          "notes": "present on one locale by design (schema.org inLanguage on the Polish pages)"
+        },
+        "card_title": {
+          "field": "card_title",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "events.html",
+              "locale": "en",
+              "value": "Polish Business Forum 2026"
+            },
+            {
+              "file": "pl/events.html",
+              "locale": "pl",
+              "value": "Polish Business Forum 2026"
+            }
+          ],
+          "status": "uncertain",
+          "recommended_value": null,
+          "requires_human_decision": true,
+          "notes": "localised field is identical in both languages — may be a proper name, may be an untranslated string"
+        },
+        "card_summary": {
+          "field": "card_summary",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "events.html",
+              "locale": "en",
+              "value": "Over 300 students, professionals, investors and policymakers gathered under the theme “Polish Golden Age: From Emerging to Leading” — two days of keynotes, panels, a career fair and the inaugural Forum Ball."
+            },
+            {
+              "file": "pl/events.html",
+              "locale": "pl",
+              "value": "Ponad 300 studentów, profesjonalistów, inwestorów i przedstawicieli świata polityki spotkało się pod hasłem „Polish Golden Age: From Emerging to Leading” — dwa dni wykładów, paneli, targów pracy i pierwszy Bal Forum."
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "card_display_date": {
+          "field": "card_display_date",
+          "classification": "derived",
+          "sources": [
+            {
+              "file": "events.html",
+              "locale": "en",
+              "value": "24–25 April 2026"
+            },
+            {
+              "file": "pl/events.html",
+              "locale": "pl",
+              "value": "24–25 kwietnia 2026"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false,
+          "notes": "display date — should be generated from a machine-readable date rather than stored per locale"
+        },
+        "card_venue": {
+          "field": "card_venue",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "events.html",
+              "locale": "en",
+              "value": "London Business School"
+            },
+            {
+              "file": "pl/events.html",
+              "locale": "pl",
+              "value": "London Business School"
+            }
+          ],
+          "status": "uncertain",
+          "recommended_value": null,
+          "requires_human_decision": true,
+          "notes": "localised field is identical in both languages — may be a proper name, may be an untranslated string"
+        },
+        "card_image": {
+          "field": "card_image",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "events.html",
+              "locale": "en",
+              "value": "assets/events/my-event.jpg"
+            },
+            {
+              "file": "pl/events.html",
+              "locale": "pl",
+              "value": "assets/events/my-event.jpg"
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": "assets/events/my-event.jpg",
+          "requires_human_decision": false
+        },
+        "card_image_alt": {
+          "field": "card_image_alt",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "events.html",
+              "locale": "en",
+              "value": ""
+            },
+            {
+              "file": "pl/events.html",
+              "locale": "pl",
+              "value": ""
+            }
+          ],
+          "status": "uncertain",
+          "recommended_value": null,
+          "requires_human_decision": true,
+          "notes": "localised field is identical in both languages — may be a proper name, may be an untranslated string"
+        },
+        "flagship_tag": {
+          "field": "flagship_tag",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "events.html",
+              "locale": "en",
+              "value": true
+            },
+            {
+              "file": "pl/events.html",
+              "locale": "pl",
+              "value": true
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": true,
+          "requires_human_decision": false
+        },
+        "timeline_title": {
+          "field": "timeline_title",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "index.html",
+              "locale": "en",
+              "value": "Polish Business Forum at LBS"
+            },
+            {
+              "file": "pl/index.html",
+              "locale": "pl",
+              "value": "Polish Business Forum w LBS"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "timeline_summary": {
+          "field": "timeline_summary",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "index.html",
+              "locale": "en",
+              "value": "Our largest event ever — 300+ attendees, world-class speakers and the inaugural Forum Ball."
+            },
+            {
+              "file": "pl/index.html",
+              "locale": "pl",
+              "value": "Nasze największe wydarzenie w historii — ponad 300 uczestników, prelegenci światowej klasy i pierwszy Bal Forum."
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "timeline_display_date": {
+          "field": "timeline_display_date",
+          "classification": "derived",
+          "sources": [
+            {
+              "file": "index.html",
+              "locale": "en",
+              "value": "24–25 April 2026"
+            },
+            {
+              "file": "pl/index.html",
+              "locale": "pl",
+              "value": "24–25 kwietnia 2026"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false,
+          "notes": "display date — should be generated from a machine-readable date rather than stored per locale"
+        }
+      }
+    },
+    "sikorski-debate": {
+      "slug": "sikorski-debate",
+      "detail_pages": {
+        "en": "event-sikorski-debate.html",
+        "pl": "pl/event-sikorski-debate.html"
+      },
+      "sources_inspected": [
+        "event-sikorski-debate.html",
+        "pl/event-sikorski-debate.html",
+        "events.html",
+        "pl/events.html",
+        "index.html",
+        "pl/index.html",
+        "content/announcements/our-debate-at-the-sikorski-institute-as.yaml",
+        "content/announcements/an-academic-debate-at-the-sikorski-institute.yaml"
+      ],
+      "related_announcements": [
+        {
+          "slug": "our-debate-at-the-sikorski-institute-as",
+          "file": "content/announcements/our-debate-at-the-sikorski-institute-as.yaml",
+          "published_date": "2026-02-12",
+          "link": {
+            "type": "event",
+            "event_slug": "sikorski-debate"
+          },
+          "en_title": "Our debate at the Sikorski Institute — as it happened",
+          "pl_title": "Nasza debata w Instytucie Sikorskiego — relacja"
+        },
+        {
+          "slug": "an-academic-debate-at-the-sikorski-institute",
+          "file": "content/announcements/an-academic-debate-at-the-sikorski-institute.yaml",
+          "published_date": "2026-01-20",
+          "link": {
+            "type": "event",
+            "event_slug": "sikorski-debate"
+          },
+          "en_title": "An academic debate at the Sikorski Institute",
+          "pl_title": "Debata akademicka w Instytucie Sikorskiego"
+        }
+      ],
+      "announcement_slugs_not_found": [],
+      "present_in_english_listing": true,
+      "present_in_polish_listing": true,
+      "present_in_english_timeline": true,
+      "present_in_polish_timeline": true,
+      "cross_source_checks": [
+        {
+          "check": "venue_wording_across_sources",
+          "locale": "en",
+          "values": {
+            "facts bar": "Polish Institute & Sikorski Museum",
+            "listing card": "Polish Institute & Sikorski Museum",
+            "JSON-LD location.name": "Polish Institute and Sikorski Museum"
+          },
+          "distinct": 2,
+          "note": "the same venue is written differently in different places on the same-language pages"
+        }
+      ],
+      "fields": {
+        "title": {
+          "field": "title",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "event-sikorski-debate.html",
+              "locale": "en",
+              "value": "How to Think About Politics in a Polarised World"
+            },
+            {
+              "file": "pl/event-sikorski-debate.html",
+              "locale": "pl",
+              "value": "Jak myśleć o polityce w spolaryzowanym świecie"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "hero_eyebrow": {
+          "field": "hero_eyebrow",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "event-sikorski-debate.html",
+              "locale": "en",
+              "value": "Academic debate"
+            },
+            {
+              "file": "pl/event-sikorski-debate.html",
+              "locale": "pl",
+              "value": "Debata akademicka"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "intro_copy": {
+          "field": "intro_copy",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "event-sikorski-debate.html",
+              "locale": "en",
+              "value": "An evening of critical thinking and constructive debate at the Polish Institute and Sikorski Museum."
+            },
+            {
+              "file": "pl/event-sikorski-debate.html",
+              "locale": "pl",
+              "value": "Wieczór krytycznego myślenia i konstruktywnej debaty w Instytucie Polskim i Muzeum im. gen. Sikorskiego."
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "seo_title": {
+          "field": "seo_title",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "event-sikorski-debate.html",
+              "locale": "en",
+              "value": "Sikorski Institute Debate 2026 | Federation of Polish Student Societies UK"
+            },
+            {
+              "file": "pl/event-sikorski-debate.html",
+              "locale": "pl",
+              "value": "Debata w Instytucie Sikorskiego 2026 | Federacja Polskich Stowarzyszeń Studenckich"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "seo_description": {
+          "field": "seo_description",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "event-sikorski-debate.html",
+              "locale": "en",
+              "value": "An Oxford-style debate on polarisation and disinformation at the Polish Institute and Sikorski Museum, with a keynote by Professor Nicholas O&#x27;Shaughnessy."
+            },
+            {
+              "file": "pl/event-sikorski-debate.html",
+              "locale": "pl",
+              "value": "Debata w stylu oksfordzkim o polaryzacji i dezinformacji w Instytucie Polskim i Muzeum im. gen. Sikorskiego, z wykładem prof. Nicholasa O'Shaughnessy'ego."
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "canonical": {
+          "field": "canonical",
+          "classification": "per-locale-url",
+          "sources": [
+            {
+              "file": "event-sikorski-debate.html",
+              "locale": "en",
+              "value": "https://polsocfederation.pl/event-sikorski-debate.html"
+            },
+            {
+              "file": "pl/event-sikorski-debate.html",
+              "locale": "pl",
+              "value": "https://polsocfederation.pl/pl/event-sikorski-debate.html"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false,
+          "notes": "per-locale URL: the Polish value is the English one with the /pl/ prefix, as intended"
+        },
+        "language": {
+          "field": "language",
+          "classification": "not-applicable",
+          "sources": [
+            {
+              "file": "event-sikorski-debate.html",
+              "locale": "en",
+              "value": "en"
+            },
+            {
+              "file": "pl/event-sikorski-debate.html",
+              "locale": "pl",
+              "value": "pl"
+            }
+          ],
+          "status": "not-applicable",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "og_image": {
+          "field": "og_image",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-sikorski-debate.html",
+              "locale": "en",
+              "value": "assets/debata/networking.jpg"
+            },
+            {
+              "file": "pl/event-sikorski-debate.html",
+              "locale": "pl",
+              "value": "assets/debata/networking.jpg"
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": "assets/debata/networking.jpg",
+          "requires_human_decision": false
+        },
+        "og_image_alt": {
+          "field": "og_image_alt",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "event-sikorski-debate.html",
+              "locale": "en",
+              "value": "Guests networking at the Polish Institute and Sikorski Museum before the debate"
+            },
+            {
+              "file": "pl/event-sikorski-debate.html",
+              "locale": "pl",
+              "value": "Guests networking at the Polish Institute and Sikorski Museum before the debate"
+            }
+          ],
+          "status": "uncertain",
+          "recommended_value": null,
+          "requires_human_decision": true,
+          "notes": "localised field is identical in both languages — may be a proper name, may be an untranslated string"
+        },
+        "hero_image": {
+          "field": "hero_image",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-sikorski-debate.html",
+              "locale": "en",
+              "value": null
+            },
+            {
+              "file": "pl/event-sikorski-debate.html",
+              "locale": "pl",
+              "value": null
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "detail_template_type": {
+          "field": "detail_template_type",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-sikorski-debate.html",
+              "locale": "en",
+              "value": "standard"
+            },
+            {
+              "file": "pl/event-sikorski-debate.html",
+              "locale": "pl",
+              "value": "standard"
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": "standard",
+          "requires_human_decision": false
+        },
+        "gallery_image_count": {
+          "field": "gallery_image_count",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-sikorski-debate.html",
+              "locale": "en",
+              "value": 5
+            },
+            {
+              "file": "pl/event-sikorski-debate.html",
+              "locale": "pl",
+              "value": 5
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": 5,
+          "requires_human_decision": false
+        },
+        "body_copy_paragraphs": {
+          "field": "body_copy_paragraphs",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-sikorski-debate.html",
+              "locale": "en",
+              "value": 9
+            },
+            {
+              "file": "pl/event-sikorski-debate.html",
+              "locale": "pl",
+              "value": 9
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": 9,
+          "requires_human_decision": false
+        },
+        "instagram_permalink": {
+          "field": "instagram_permalink",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-sikorski-debate.html",
+              "locale": "en",
+              "value": "https://www.instagram.com/p/DVEvlUPjEZk/"
+            },
+            {
+              "file": "pl/event-sikorski-debate.html",
+              "locale": "pl",
+              "value": "https://www.instagram.com/p/DVEvlUPjEZk/"
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": "https://www.instagram.com/p/DVEvlUPjEZk/",
+          "requires_human_decision": false
+        },
+        "album_link": {
+          "field": "album_link",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-sikorski-debate.html",
+              "locale": "en",
+              "value": null
+            },
+            {
+              "file": "pl/event-sikorski-debate.html",
+              "locale": "pl",
+              "value": null
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "registration_link": {
+          "field": "registration_link",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-sikorski-debate.html",
+              "locale": "en",
+              "value": null
+            },
+            {
+              "file": "pl/event-sikorski-debate.html",
+              "locale": "pl",
+              "value": null
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "external_links": {
+          "field": "external_links",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-sikorski-debate.html",
+              "locale": "en",
+              "value": [
+                "https://www.linkedin.com/in/sagatowski/",
+                "https://www.linkedin.com/in/bartmaciejewski/",
+                "https://thelambert.org/",
+                "https://www.linkedin.com/in/rochdw/",
+                "https://www.linkedin.com/in/katie-taylor-624866284/",
+                "https://mypolska.uk/polaryzacja-czy-dezinformacja-mlodzi-polacy-w-londynie-debatowali-o-kondycji-demokracji/",
+                "https://www.britishpoles.uk/jak-myslec-o-polityce-w-spolaryzowanym-swiecie-debata-akademicka/",
+                "https://pism.org.uk/"
+              ]
+            },
+            {
+              "file": "pl/event-sikorski-debate.html",
+              "locale": "pl",
+              "value": [
+                "https://www.linkedin.com/in/sagatowski/",
+                "https://www.linkedin.com/in/bartmaciejewski/",
+                "https://thelambert.org/",
+                "https://www.linkedin.com/in/rochdw/",
+                "https://www.linkedin.com/in/katie-taylor-624866284/",
+                "https://mypolska.uk/polaryzacja-czy-dezinformacja-mlodzi-polacy-w-londynie-debatowali-o-kondycji-demokracji/",
+                "https://www.britishpoles.uk/jak-myslec-o-polityce-w-spolaryzowanym-swiecie-debata-akademicka/",
+                "https://pism.org.uk/"
+              ]
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": [
+            "https://www.linkedin.com/in/sagatowski/",
+            "https://www.linkedin.com/in/bartmaciejewski/",
+            "https://thelambert.org/",
+            "https://www.linkedin.com/in/rochdw/",
+            "https://www.linkedin.com/in/katie-taylor-624866284/",
+            "https://mypolska.uk/polaryzacja-czy-dezinformacja-mlodzi-polacy-w-londynie-debatowali-o-kondycji-demokracji/",
+            "https://www.britishpoles.uk/jak-myslec-o-polityce-w-spolaryzowanym-swiecie-debata-akademicka/",
+            "https://pism.org.uk/"
+          ],
+          "requires_human_decision": false
+        },
+        "download_links": {
+          "field": "download_links",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-sikorski-debate.html",
+              "locale": "en",
+              "value": []
+            },
+            {
+              "file": "pl/event-sikorski-debate.html",
+              "locale": "pl",
+              "value": []
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": [],
+          "requires_human_decision": false
+        },
+        "partner_logo_tiles": {
+          "field": "partner_logo_tiles",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-sikorski-debate.html",
+              "locale": "en",
+              "value": 0
+            },
+            {
+              "file": "pl/event-sikorski-debate.html",
+              "locale": "pl",
+              "value": 0
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": 0,
+          "requires_human_decision": false
+        },
+        "facts": {
+          "field": "facts",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "event-sikorski-debate.html",
+              "locale": "en",
+              "value": [
+                {
+                  "label": "Date",
+                  "value": "10 February 2026",
+                  "variant": "text"
+                },
+                {
+                  "label": "Venue",
+                  "value": "Polish Institute & Sikorski Museum",
+                  "variant": "text"
+                },
+                {
+                  "label": "Format",
+                  "value": "Keynote + Oxford-style debate",
+                  "variant": "text"
+                }
+              ]
+            },
+            {
+              "file": "pl/event-sikorski-debate.html",
+              "locale": "pl",
+              "value": [
+                {
+                  "label": "Data",
+                  "value": "10 lutego 2026",
+                  "variant": "text"
+                },
+                {
+                  "label": "Miejsce",
+                  "value": "Instytut Polski i Muzeum im. gen. Sikorskiego",
+                  "variant": "text"
+                },
+                {
+                  "label": "Formuła",
+                  "value": "Wykład + debata w stylu oksfordzkim",
+                  "variant": "text"
+                }
+              ]
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "images_missing_alt": {
+          "field": "images_missing_alt",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-sikorski-debate.html",
+              "locale": "en",
+              "value": []
+            },
+            {
+              "file": "pl/event-sikorski-debate.html",
+              "locale": "pl",
+              "value": []
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": [],
+          "requires_human_decision": false
+        },
+        "images_empty_alt": {
+          "field": "images_empty_alt",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-sikorski-debate.html",
+              "locale": "en",
+              "value": []
+            },
+            {
+              "file": "pl/event-sikorski-debate.html",
+              "locale": "pl",
+              "value": []
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": [],
+          "requires_human_decision": false
+        },
+        "jsonld_start": {
+          "field": "jsonld_start",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-sikorski-debate.html",
+              "locale": "en",
+              "value": "2026-02-10"
+            },
+            {
+              "file": "pl/event-sikorski-debate.html",
+              "locale": "pl",
+              "value": "2026-02-10"
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": "2026-02-10",
+          "requires_human_decision": false
+        },
+        "jsonld_end": {
+          "field": "jsonld_end",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-sikorski-debate.html",
+              "locale": "en",
+              "value": null
+            },
+            {
+              "file": "pl/event-sikorski-debate.html",
+              "locale": "pl",
+              "value": null
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "jsonld_name": {
+          "field": "jsonld_name",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "event-sikorski-debate.html",
+              "locale": "en",
+              "value": "How to Think About Politics in a Polarised World"
+            },
+            {
+              "file": "pl/event-sikorski-debate.html",
+              "locale": "pl",
+              "value": "Jak myśleć o polityce w spolaryzowanym świecie"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "jsonld_description": {
+          "field": "jsonld_description",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "event-sikorski-debate.html",
+              "locale": "en",
+              "value": "An academic debate on polarisation and disinformation at the Polish Institute and Sikorski Museum, opening with a keynote and followed by an Oxford-style debate."
+            },
+            {
+              "file": "pl/event-sikorski-debate.html",
+              "locale": "pl",
+              "value": "Debata akademicka o polaryzacji i dezinformacji w Instytucie Polskim i Muzeum im. gen. Sikorskiego, otwarta wykładem, po którym odbyła się debata w stylu oksfordzkim."
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "jsonld_status": {
+          "field": "jsonld_status",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-sikorski-debate.html",
+              "locale": "en",
+              "value": "https://schema.org/EventScheduled"
+            },
+            {
+              "file": "pl/event-sikorski-debate.html",
+              "locale": "pl",
+              "value": "https://schema.org/EventScheduled"
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": "https://schema.org/EventScheduled",
+          "requires_human_decision": false
+        },
+        "jsonld_attendance": {
+          "field": "jsonld_attendance",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-sikorski-debate.html",
+              "locale": "en",
+              "value": "https://schema.org/OfflineEventAttendanceMode"
+            },
+            {
+              "file": "pl/event-sikorski-debate.html",
+              "locale": "pl",
+              "value": null
+            }
+          ],
+          "status": "contradiction",
+          "recommended_value": null,
+          "requires_human_decision": true
+        },
+        "jsonld_venue": {
+          "field": "jsonld_venue",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "event-sikorski-debate.html",
+              "locale": "en",
+              "value": "Polish Institute and Sikorski Museum"
+            },
+            {
+              "file": "pl/event-sikorski-debate.html",
+              "locale": "pl",
+              "value": "Instytut Polski i Muzeum im. gen. Sikorskiego"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "jsonld_locality": {
+          "field": "jsonld_locality",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "event-sikorski-debate.html",
+              "locale": "en",
+              "value": "London"
+            },
+            {
+              "file": "pl/event-sikorski-debate.html",
+              "locale": "pl",
+              "value": "Londyn"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "jsonld_country": {
+          "field": "jsonld_country",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-sikorski-debate.html",
+              "locale": "en",
+              "value": "GB"
+            },
+            {
+              "file": "pl/event-sikorski-debate.html",
+              "locale": "pl",
+              "value": "GB"
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": "GB",
+          "requires_human_decision": false
+        },
+        "jsonld_organiser": {
+          "field": "jsonld_organiser",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "event-sikorski-debate.html",
+              "locale": "en",
+              "value": "Federation of Polish Student Societies UK"
+            },
+            {
+              "file": "pl/event-sikorski-debate.html",
+              "locale": "pl",
+              "value": "Federacja Polskich Stowarzyszeń Studenckich w Wielkiej Brytanii"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "jsonld_url": {
+          "field": "jsonld_url",
+          "classification": "per-locale-url",
+          "sources": [
+            {
+              "file": "event-sikorski-debate.html",
+              "locale": "en",
+              "value": "https://polsocfederation.pl/event-sikorski-debate.html"
+            },
+            {
+              "file": "pl/event-sikorski-debate.html",
+              "locale": "pl",
+              "value": "https://polsocfederation.pl/pl/event-sikorski-debate.html"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false,
+          "notes": "per-locale URL: the Polish value is the English one with the /pl/ prefix, as intended"
+        },
+        "jsonld_image": {
+          "field": "jsonld_image",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-sikorski-debate.html",
+              "locale": "en",
+              "value": "assets/debata/networking.jpg"
+            },
+            {
+              "file": "pl/event-sikorski-debate.html",
+              "locale": "pl",
+              "value": "assets/debata/networking.jpg"
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": "assets/debata/networking.jpg",
+          "requires_human_decision": false
+        },
+        "jsonld_performers": {
+          "field": "jsonld_performers",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-sikorski-debate.html",
+              "locale": "en",
+              "value": [
+                "Nicholas O'Shaughnessy"
+              ]
+            },
+            {
+              "file": "pl/event-sikorski-debate.html",
+              "locale": "pl",
+              "value": [
+                "Nicholas O'Shaughnessy"
+              ]
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": [
+            "Nicholas O'Shaughnessy"
+          ],
+          "requires_human_decision": false
+        },
+        "jsonld_inLanguage": {
+          "field": "jsonld_inLanguage",
+          "classification": "locale-asymmetric",
+          "sources": [
+            {
+              "file": "event-sikorski-debate.html",
+              "locale": "en",
+              "value": null
+            },
+            {
+              "file": "pl/event-sikorski-debate.html",
+              "locale": "pl",
+              "value": "pl-PL"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false,
+          "notes": "present on one locale by design (schema.org inLanguage on the Polish pages)"
+        },
+        "card_title": {
+          "field": "card_title",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "events.html",
+              "locale": "en",
+              "value": "How to Think About Politics in a Polarised World"
+            },
+            {
+              "file": "pl/events.html",
+              "locale": "pl",
+              "value": "Jak myśleć o polityce w spolaryzowanym świecie"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "card_summary": {
+          "field": "card_summary",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "events.html",
+              "locale": "en",
+              "value": "An academic debate on polarisation and disinformation, opened by a keynote from Professor Nicholas O'Shaughnessy and followed by an Oxford-style debate and guided tours of the Institute's collections."
+            },
+            {
+              "file": "pl/events.html",
+              "locale": "pl",
+              "value": "Debata akademicka o polaryzacji i dezinformacji, otwarta wykładem profesora Nicholasa O'Shaughnessy'ego, po którym odbyła się debata w stylu oksfordzkim oraz oprowadzanie po zbiorach Instytutu."
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "card_display_date": {
+          "field": "card_display_date",
+          "classification": "derived",
+          "sources": [
+            {
+              "file": "events.html",
+              "locale": "en",
+              "value": "10 February 2026"
+            },
+            {
+              "file": "pl/events.html",
+              "locale": "pl",
+              "value": "10 lutego 2026"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false,
+          "notes": "display date — should be generated from a machine-readable date rather than stored per locale"
+        },
+        "card_venue": {
+          "field": "card_venue",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "events.html",
+              "locale": "en",
+              "value": "Polish Institute & Sikorski Museum"
+            },
+            {
+              "file": "pl/events.html",
+              "locale": "pl",
+              "value": "Instytut Polski i Muzeum im. gen. Sikorskiego"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "card_image": {
+          "field": "card_image",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "events.html",
+              "locale": "en",
+              "value": "assets/debata/debata-1.jpg"
+            },
+            {
+              "file": "pl/events.html",
+              "locale": "pl",
+              "value": "assets/debata/debata-1.jpg"
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": "assets/debata/debata-1.jpg",
+          "requires_human_decision": false
+        },
+        "card_image_alt": {
+          "field": "card_image_alt",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "events.html",
+              "locale": "en",
+              "value": "The audience during the academic debate at the Polish Institute and Sikorski Museum"
+            },
+            {
+              "file": "pl/events.html",
+              "locale": "pl",
+              "value": "Widownia podczas debaty akademickiej w Instytucie Polskim i Muzeum im. gen. Sikorskiego"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "flagship_tag": {
+          "field": "flagship_tag",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "events.html",
+              "locale": "en",
+              "value": false
+            },
+            {
+              "file": "pl/events.html",
+              "locale": "pl",
+              "value": false
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": false,
+          "requires_human_decision": false
+        },
+        "timeline_title": {
+          "field": "timeline_title",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "index.html",
+              "locale": "en",
+              "value": "Debate at the Sikorski Institute"
+            },
+            {
+              "file": "pl/index.html",
+              "locale": "pl",
+              "value": "Debata w Instytucie Sikorskiego"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "timeline_summary": {
+          "field": "timeline_summary",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "index.html",
+              "locale": "en",
+              "value": "An Oxford-style debate on polarisation and disinformation, opened by Prof. Nicholas O'Shaughnessy."
+            },
+            {
+              "file": "pl/index.html",
+              "locale": "pl",
+              "value": "Debata w stylu oksfordzkim o polaryzacji i dezinformacji, otwarta wykładem prof. Nicholasa O'Shaughnessy'ego."
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "timeline_display_date": {
+          "field": "timeline_display_date",
+          "classification": "derived",
+          "sources": [
+            {
+              "file": "index.html",
+              "locale": "en",
+              "value": "10 February 2026"
+            },
+            {
+              "file": "pl/index.html",
+              "locale": "pl",
+              "value": "10 lutego 2026"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false,
+          "notes": "display date — should be generated from a machine-readable date rather than stored per locale"
+        }
+      }
+    },
+    "christmas-dinner": {
+      "slug": "christmas-dinner",
+      "detail_pages": {
+        "en": "event-christmas-dinner.html",
+        "pl": "pl/event-christmas-dinner.html"
+      },
+      "sources_inspected": [
+        "event-christmas-dinner.html",
+        "pl/event-christmas-dinner.html",
+        "events.html",
+        "pl/events.html",
+        "index.html",
+        "pl/index.html",
+        "content/announcements/christmas-dinner-2025-an-evening-straight-from.yaml",
+        "content/announcements/missing-home-this-christmas-we-ve-got.yaml"
+      ],
+      "related_announcements": [
+        {
+          "slug": "christmas-dinner-2025-an-evening-straight-from",
+          "file": "content/announcements/christmas-dinner-2025-an-evening-straight-from.yaml",
+          "published_date": "2025-12-09",
+          "link": {
+            "type": "event",
+            "event_slug": "christmas-dinner"
+          },
+          "en_title": "Christmas Dinner 2025: an evening straight from home",
+          "pl_title": "Kolacja Wigilijna 2025: wieczór jak z domu"
+        },
+        {
+          "slug": "missing-home-this-christmas-we-ve-got",
+          "file": "content/announcements/missing-home-this-christmas-we-ve-got.yaml",
+          "published_date": "2025-11-26",
+          "link": {
+            "type": "event",
+            "event_slug": "christmas-dinner"
+          },
+          "en_title": "Missing home this Christmas? We've got you covered",
+          "pl_title": "Tęsknisz za domem w święta? Mamy coś dla Ciebie"
+        }
+      ],
+      "announcement_slugs_not_found": [],
+      "present_in_english_listing": true,
+      "present_in_polish_listing": true,
+      "present_in_english_timeline": true,
+      "present_in_polish_timeline": true,
+      "cross_source_checks": [
+        {
+          "check": "venue_wording_across_sources",
+          "locale": "en",
+          "values": {
+            "facts bar": "Ognisko, South Kensington",
+            "listing card": "Ognisko, South Kensington",
+            "JSON-LD location.name": "Ognisko Polskie"
+          },
+          "distinct": 2,
+          "note": "the same venue is written differently in different places on the same-language pages"
+        },
+        {
+          "check": "venue_wording_across_sources",
+          "locale": "pl",
+          "values": {
+            "facts bar": "Ognisko Polskie, South Kensington",
+            "listing card": "Ognisko Polskie, South Kensington",
+            "JSON-LD location.name": "Ognisko Polskie"
+          },
+          "distinct": 2,
+          "note": "the same venue is written differently in different places on the same-language pages"
+        }
+      ],
+      "fields": {
+        "title": {
+          "field": "title",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "event-christmas-dinner.html",
+              "locale": "en",
+              "value": "Annual Christmas Dinner"
+            },
+            {
+              "file": "pl/event-christmas-dinner.html",
+              "locale": "pl",
+              "value": "Annual Christmas Dinner"
+            }
+          ],
+          "status": "uncertain",
+          "recommended_value": null,
+          "requires_human_decision": true,
+          "notes": "localised field is identical in both languages — may be a proper name, may be an untranslated string"
+        },
+        "hero_eyebrow": {
+          "field": "hero_eyebrow",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "event-christmas-dinner.html",
+              "locale": "en",
+              "value": "Annual tradition"
+            },
+            {
+              "file": "pl/event-christmas-dinner.html",
+              "locale": "pl",
+              "value": "Doroczna tradycja"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "intro_copy": {
+          "field": "intro_copy",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "event-christmas-dinner.html",
+              "locale": "en",
+              "value": "Wigilia away from home — a Polish Christmas Eve feast for 100 students."
+            },
+            {
+              "file": "pl/event-christmas-dinner.html",
+              "locale": "pl",
+              "value": "Wigilia z dala od domu — polska kolacja wigilijna dla 100 studentów."
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "seo_title": {
+          "field": "seo_title",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "event-christmas-dinner.html",
+              "locale": "en",
+              "value": "Christmas Dinner 2025 | Federation of Polish Student Societies UK"
+            },
+            {
+              "file": "pl/event-christmas-dinner.html",
+              "locale": "pl",
+              "value": "Kolacja Wigilijna 2025 | Federacja Polskich Stowarzyszeń Studenckich"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "seo_description": {
+          "field": "seo_description",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "event-christmas-dinner.html",
+              "locale": "en",
+              "value": "The Federation&#x27;s annual Christmas Dinner 2025 at Ognisko in South Kensington — 100 Polish students, a traditional three-course wigilia and carol singing."
+            },
+            {
+              "file": "pl/event-christmas-dinner.html",
+              "locale": "pl",
+              "value": "Doroczna Kolacja Wigilijna Federacji w Ognisku Polskim w South Kensington — 100 polskich studentów, tradycyjna wigilia i wspólne kolędowanie."
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "canonical": {
+          "field": "canonical",
+          "classification": "per-locale-url",
+          "sources": [
+            {
+              "file": "event-christmas-dinner.html",
+              "locale": "en",
+              "value": "https://polsocfederation.pl/event-christmas-dinner.html"
+            },
+            {
+              "file": "pl/event-christmas-dinner.html",
+              "locale": "pl",
+              "value": "https://polsocfederation.pl/pl/event-christmas-dinner.html"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false,
+          "notes": "per-locale URL: the Polish value is the English one with the /pl/ prefix, as intended"
+        },
+        "language": {
+          "field": "language",
+          "classification": "not-applicable",
+          "sources": [
+            {
+              "file": "event-christmas-dinner.html",
+              "locale": "en",
+              "value": "en"
+            },
+            {
+              "file": "pl/event-christmas-dinner.html",
+              "locale": "pl",
+              "value": "pl"
+            }
+          ],
+          "status": "not-applicable",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "og_image": {
+          "field": "og_image",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-christmas-dinner.html",
+              "locale": "en",
+              "value": "assets/wigilia/everyone-sat.jpg"
+            },
+            {
+              "file": "pl/event-christmas-dinner.html",
+              "locale": "pl",
+              "value": "assets/wigilia/everyone-sat.jpg"
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": "assets/wigilia/everyone-sat.jpg",
+          "requires_human_decision": false
+        },
+        "og_image_alt": {
+          "field": "og_image_alt",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "event-christmas-dinner.html",
+              "locale": "en",
+              "value": "Polish students seated for the traditional Christmas dinner at Ognisko"
+            },
+            {
+              "file": "pl/event-christmas-dinner.html",
+              "locale": "pl",
+              "value": "Polish students seated for the traditional Christmas dinner at Ognisko"
+            }
+          ],
+          "status": "uncertain",
+          "recommended_value": null,
+          "requires_human_decision": true,
+          "notes": "localised field is identical in both languages — may be a proper name, may be an untranslated string"
+        },
+        "hero_image": {
+          "field": "hero_image",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-christmas-dinner.html",
+              "locale": "en",
+              "value": null
+            },
+            {
+              "file": "pl/event-christmas-dinner.html",
+              "locale": "pl",
+              "value": null
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "detail_template_type": {
+          "field": "detail_template_type",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-christmas-dinner.html",
+              "locale": "en",
+              "value": "standard"
+            },
+            {
+              "file": "pl/event-christmas-dinner.html",
+              "locale": "pl",
+              "value": "standard"
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": "standard",
+          "requires_human_decision": false
+        },
+        "gallery_image_count": {
+          "field": "gallery_image_count",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-christmas-dinner.html",
+              "locale": "en",
+              "value": 6
+            },
+            {
+              "file": "pl/event-christmas-dinner.html",
+              "locale": "pl",
+              "value": 6
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": 6,
+          "requires_human_decision": false
+        },
+        "body_copy_paragraphs": {
+          "field": "body_copy_paragraphs",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-christmas-dinner.html",
+              "locale": "en",
+              "value": 3
+            },
+            {
+              "file": "pl/event-christmas-dinner.html",
+              "locale": "pl",
+              "value": 3
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": 3,
+          "requires_human_decision": false
+        },
+        "instagram_permalink": {
+          "field": "instagram_permalink",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-christmas-dinner.html",
+              "locale": "en",
+              "value": "https://www.instagram.com/p/DSiAXWKjFFy/"
+            },
+            {
+              "file": "pl/event-christmas-dinner.html",
+              "locale": "pl",
+              "value": "https://www.instagram.com/p/DSiAXWKjFFy/"
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": "https://www.instagram.com/p/DSiAXWKjFFy/",
+          "requires_human_decision": false
+        },
+        "album_link": {
+          "field": "album_link",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-christmas-dinner.html",
+              "locale": "en",
+              "value": "https://photos.app.goo.gl/23Fyh9p9CmYnfP4g6"
+            },
+            {
+              "file": "pl/event-christmas-dinner.html",
+              "locale": "pl",
+              "value": "https://photos.app.goo.gl/23Fyh9p9CmYnfP4g6"
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": "https://photos.app.goo.gl/23Fyh9p9CmYnfP4g6",
+          "requires_human_decision": false
+        },
+        "registration_link": {
+          "field": "registration_link",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-christmas-dinner.html",
+              "locale": "en",
+              "value": null
+            },
+            {
+              "file": "pl/event-christmas-dinner.html",
+              "locale": "pl",
+              "value": null
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "external_links": {
+          "field": "external_links",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-christmas-dinner.html",
+              "locale": "en",
+              "value": [
+                "https://www.roksanadabkowska.com/about",
+                "https://photos.app.goo.gl/23Fyh9p9CmYnfP4g6"
+              ]
+            },
+            {
+              "file": "pl/event-christmas-dinner.html",
+              "locale": "pl",
+              "value": [
+                "https://www.roksanadabkowska.com/about",
+                "https://photos.app.goo.gl/23Fyh9p9CmYnfP4g6"
+              ]
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": [
+            "https://www.roksanadabkowska.com/about",
+            "https://photos.app.goo.gl/23Fyh9p9CmYnfP4g6"
+          ],
+          "requires_human_decision": false
+        },
+        "download_links": {
+          "field": "download_links",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-christmas-dinner.html",
+              "locale": "en",
+              "value": []
+            },
+            {
+              "file": "pl/event-christmas-dinner.html",
+              "locale": "pl",
+              "value": []
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": [],
+          "requires_human_decision": false
+        },
+        "partner_logo_tiles": {
+          "field": "partner_logo_tiles",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-christmas-dinner.html",
+              "locale": "en",
+              "value": 0
+            },
+            {
+              "file": "pl/event-christmas-dinner.html",
+              "locale": "pl",
+              "value": 0
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": 0,
+          "requires_human_decision": false
+        },
+        "facts": {
+          "field": "facts",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "event-christmas-dinner.html",
+              "locale": "en",
+              "value": [
+                {
+                  "label": "Date",
+                  "value": "8 December 2025",
+                  "variant": "text"
+                },
+                {
+                  "label": "Venue",
+                  "value": "Ognisko, South Kensington",
+                  "variant": "text"
+                },
+                {
+                  "label": "Attendance",
+                  "value": "100 students",
+                  "variant": "text"
+                }
+              ]
+            },
+            {
+              "file": "pl/event-christmas-dinner.html",
+              "locale": "pl",
+              "value": [
+                {
+                  "label": "Data",
+                  "value": "8 grudnia 2025",
+                  "variant": "text"
+                },
+                {
+                  "label": "Miejsce",
+                  "value": "Ognisko Polskie, South Kensington",
+                  "variant": "text"
+                },
+                {
+                  "label": "Frekwencja",
+                  "value": "100 studentów",
+                  "variant": "text"
+                }
+              ]
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "images_missing_alt": {
+          "field": "images_missing_alt",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-christmas-dinner.html",
+              "locale": "en",
+              "value": []
+            },
+            {
+              "file": "pl/event-christmas-dinner.html",
+              "locale": "pl",
+              "value": []
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": [],
+          "requires_human_decision": false
+        },
+        "images_empty_alt": {
+          "field": "images_empty_alt",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-christmas-dinner.html",
+              "locale": "en",
+              "value": []
+            },
+            {
+              "file": "pl/event-christmas-dinner.html",
+              "locale": "pl",
+              "value": []
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": [],
+          "requires_human_decision": false
+        },
+        "jsonld_start": {
+          "field": "jsonld_start",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-christmas-dinner.html",
+              "locale": "en",
+              "value": "2025-12-08"
+            },
+            {
+              "file": "pl/event-christmas-dinner.html",
+              "locale": "pl",
+              "value": "2025-12-08"
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": "2025-12-08",
+          "requires_human_decision": false
+        },
+        "jsonld_end": {
+          "field": "jsonld_end",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-christmas-dinner.html",
+              "locale": "en",
+              "value": null
+            },
+            {
+              "file": "pl/event-christmas-dinner.html",
+              "locale": "pl",
+              "value": null
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "jsonld_name": {
+          "field": "jsonld_name",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "event-christmas-dinner.html",
+              "locale": "en",
+              "value": "Annual Christmas Dinner 2025"
+            },
+            {
+              "file": "pl/event-christmas-dinner.html",
+              "locale": "pl",
+              "value": "Doroczna Kolacja Wigilijna 2025"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "jsonld_description": {
+          "field": "jsonld_description",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "event-christmas-dinner.html",
+              "locale": "en",
+              "value": "The Federation's annual Christmas Dinner for 100 Polish students at Ognisko in South Kensington, with a traditional three-course wigilia and carol singing."
+            },
+            {
+              "file": "pl/event-christmas-dinner.html",
+              "locale": "pl",
+              "value": "Doroczna Kolacja Wigilijna Federacji dla 100 polskich studentów w Ognisku Polskim w South Kensington, z tradycyjną trzydaniową wigilią i wspólnym kolędowaniem."
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "jsonld_status": {
+          "field": "jsonld_status",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-christmas-dinner.html",
+              "locale": "en",
+              "value": "https://schema.org/EventScheduled"
+            },
+            {
+              "file": "pl/event-christmas-dinner.html",
+              "locale": "pl",
+              "value": "https://schema.org/EventScheduled"
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": "https://schema.org/EventScheduled",
+          "requires_human_decision": false
+        },
+        "jsonld_attendance": {
+          "field": "jsonld_attendance",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-christmas-dinner.html",
+              "locale": "en",
+              "value": "https://schema.org/OfflineEventAttendanceMode"
+            },
+            {
+              "file": "pl/event-christmas-dinner.html",
+              "locale": "pl",
+              "value": "https://schema.org/OfflineEventAttendanceMode"
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": "https://schema.org/OfflineEventAttendanceMode",
+          "requires_human_decision": false
+        },
+        "jsonld_venue": {
+          "field": "jsonld_venue",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "event-christmas-dinner.html",
+              "locale": "en",
+              "value": "Ognisko Polskie"
+            },
+            {
+              "file": "pl/event-christmas-dinner.html",
+              "locale": "pl",
+              "value": "Ognisko Polskie"
+            }
+          ],
+          "status": "uncertain",
+          "recommended_value": null,
+          "requires_human_decision": true,
+          "notes": "localised field is identical in both languages — may be a proper name, may be an untranslated string"
+        },
+        "jsonld_locality": {
+          "field": "jsonld_locality",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "event-christmas-dinner.html",
+              "locale": "en",
+              "value": "London"
+            },
+            {
+              "file": "pl/event-christmas-dinner.html",
+              "locale": "pl",
+              "value": "Londyn"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "jsonld_country": {
+          "field": "jsonld_country",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-christmas-dinner.html",
+              "locale": "en",
+              "value": "GB"
+            },
+            {
+              "file": "pl/event-christmas-dinner.html",
+              "locale": "pl",
+              "value": "GB"
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": "GB",
+          "requires_human_decision": false
+        },
+        "jsonld_organiser": {
+          "field": "jsonld_organiser",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "event-christmas-dinner.html",
+              "locale": "en",
+              "value": "Federation of Polish Student Societies UK"
+            },
+            {
+              "file": "pl/event-christmas-dinner.html",
+              "locale": "pl",
+              "value": "Federacja Polskich Stowarzyszeń Studenckich w Wielkiej Brytanii"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "jsonld_url": {
+          "field": "jsonld_url",
+          "classification": "per-locale-url",
+          "sources": [
+            {
+              "file": "event-christmas-dinner.html",
+              "locale": "en",
+              "value": "https://polsocfederation.pl/event-christmas-dinner.html"
+            },
+            {
+              "file": "pl/event-christmas-dinner.html",
+              "locale": "pl",
+              "value": "https://polsocfederation.pl/pl/event-christmas-dinner.html"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false,
+          "notes": "per-locale URL: the Polish value is the English one with the /pl/ prefix, as intended"
+        },
+        "jsonld_image": {
+          "field": "jsonld_image",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-christmas-dinner.html",
+              "locale": "en",
+              "value": "assets/wigilia/everyone-sat.jpg"
+            },
+            {
+              "file": "pl/event-christmas-dinner.html",
+              "locale": "pl",
+              "value": "assets/wigilia/everyone-sat.jpg"
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": "assets/wigilia/everyone-sat.jpg",
+          "requires_human_decision": false
+        },
+        "jsonld_performers": {
+          "field": "jsonld_performers",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-christmas-dinner.html",
+              "locale": "en",
+              "value": []
+            },
+            {
+              "file": "pl/event-christmas-dinner.html",
+              "locale": "pl",
+              "value": []
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": [],
+          "requires_human_decision": false
+        },
+        "jsonld_inLanguage": {
+          "field": "jsonld_inLanguage",
+          "classification": "locale-asymmetric",
+          "sources": [
+            {
+              "file": "event-christmas-dinner.html",
+              "locale": "en",
+              "value": null
+            },
+            {
+              "file": "pl/event-christmas-dinner.html",
+              "locale": "pl",
+              "value": "pl-PL"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false,
+          "notes": "present on one locale by design (schema.org inLanguage on the Polish pages)"
+        },
+        "card_title": {
+          "field": "card_title",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "events.html",
+              "locale": "en",
+              "value": "Annual Christmas Dinner"
+            },
+            {
+              "file": "pl/events.html",
+              "locale": "pl",
+              "value": "Doroczna Kolacja Wigilijna"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "card_summary": {
+          "field": "card_summary",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "events.html",
+              "locale": "en",
+              "value": "Our flagship Christmas celebration — 100 Polish students sat down to a traditional three-course meal at the Ognisko Restaurant, followed by drinks and Christmas carol singing."
+            },
+            {
+              "file": "pl/events.html",
+              "locale": "pl",
+              "value": "Nasze flagowe świąteczne spotkanie — 100 polskich studentów zasiadło do tradycyjnej, trzydaniowej kolacji w restauracji Ognisko Polskie, a potem przyszedł czas na rozmowy i wspólne kolędowanie."
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "card_display_date": {
+          "field": "card_display_date",
+          "classification": "derived",
+          "sources": [
+            {
+              "file": "events.html",
+              "locale": "en",
+              "value": "8 December 2025"
+            },
+            {
+              "file": "pl/events.html",
+              "locale": "pl",
+              "value": "8 grudnia 2025"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false,
+          "notes": "display date — should be generated from a machine-readable date rather than stored per locale"
+        },
+        "card_venue": {
+          "field": "card_venue",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "events.html",
+              "locale": "en",
+              "value": "Ognisko, South Kensington"
+            },
+            {
+              "file": "pl/events.html",
+              "locale": "pl",
+              "value": "Ognisko Polskie, South Kensington"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "card_image": {
+          "field": "card_image",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "events.html",
+              "locale": "en",
+              "value": "assets/wigilia/everyone-sat.jpg"
+            },
+            {
+              "file": "pl/events.html",
+              "locale": "pl",
+              "value": "assets/wigilia/everyone-sat.jpg"
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": "assets/wigilia/everyone-sat.jpg",
+          "requires_human_decision": false
+        },
+        "card_image_alt": {
+          "field": "card_image_alt",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "events.html",
+              "locale": "en",
+              "value": "Students seated for the candlelit Christmas Dinner at Ognisko"
+            },
+            {
+              "file": "pl/events.html",
+              "locale": "pl",
+              "value": "Studenci przy stole podczas Kolacji Wigilijnej przy świecach w Ognisku Polskim"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "flagship_tag": {
+          "field": "flagship_tag",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "events.html",
+              "locale": "en",
+              "value": false
+            },
+            {
+              "file": "pl/events.html",
+              "locale": "pl",
+              "value": false
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": false,
+          "requires_human_decision": false
+        },
+        "timeline_title": {
+          "field": "timeline_title",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "index.html",
+              "locale": "en",
+              "value": "Christmas Dinner at Ognisko"
+            },
+            {
+              "file": "pl/index.html",
+              "locale": "pl",
+              "value": "Kolacja Wigilijna w Ognisku Polskim"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "timeline_summary": {
+          "field": "timeline_summary",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "index.html",
+              "locale": "en",
+              "value": "100 students, a traditional three-course wigilia and carol singing in South Kensington."
+            },
+            {
+              "file": "pl/index.html",
+              "locale": "pl",
+              "value": "100 studentów, tradycyjna trzydaniowa wigilia i wspólne kolędowanie w South Kensington."
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "timeline_display_date": {
+          "field": "timeline_display_date",
+          "classification": "derived",
+          "sources": [
+            {
+              "file": "index.html",
+              "locale": "en",
+              "value": "8 December 2025"
+            },
+            {
+              "file": "pl/index.html",
+              "locale": "pl",
+              "value": "8 grudnia 2025"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false,
+          "notes": "display date — should be generated from a machine-readable date rather than stored per locale"
+        }
+      }
+    },
+    "youth-congress": {
+      "slug": "youth-congress",
+      "detail_pages": {
+        "en": "event-youth-congress.html",
+        "pl": "pl/event-youth-congress.html"
+      },
+      "sources_inspected": [
+        "event-youth-congress.html",
+        "pl/event-youth-congress.html",
+        "events.html",
+        "pl/events.html",
+        "index.html",
+        "pl/index.html",
+        "content/announcements/polish-youth-congress-2025-thank-you.yaml",
+        "content/announcements/join-us-at-the-polish-youth-congress.yaml"
+      ],
+      "related_announcements": [
+        {
+          "slug": "polish-youth-congress-2025-thank-you",
+          "file": "content/announcements/polish-youth-congress-2025-thank-you.yaml",
+          "published_date": "2025-11-10",
+          "link": {
+            "type": "event",
+            "event_slug": "youth-congress"
+          },
+          "en_title": "Polish Youth Congress 2025 — thank you!",
+          "pl_title": "Polish Youth Congress 2025 — dziękujemy!"
+        },
+        {
+          "slug": "join-us-at-the-polish-youth-congress",
+          "file": "content/announcements/join-us-at-the-polish-youth-congress.yaml",
+          "published_date": "2025-11-01",
+          "link": {
+            "type": "event",
+            "event_slug": "youth-congress"
+          },
+          "en_title": "Join us at the Polish Youth Congress",
+          "pl_title": "Dołącz do nas na Polish Youth Congress"
+        }
+      ],
+      "announcement_slugs_not_found": [],
+      "present_in_english_listing": true,
+      "present_in_polish_listing": true,
+      "present_in_english_timeline": true,
+      "present_in_polish_timeline": true,
+      "cross_source_checks": [
+        {
+          "check": "venue_wording_across_sources",
+          "locale": "en",
+          "values": {
+            "facts bar": "Ognisko Polskie, London",
+            "listing card": "Ognisko Polskie, London",
+            "JSON-LD location.name": "Ognisko Polskie"
+          },
+          "distinct": 2,
+          "note": "the same venue is written differently in different places on the same-language pages"
+        },
+        {
+          "check": "venue_wording_across_sources",
+          "locale": "pl",
+          "values": {
+            "facts bar": "Ognisko Polskie, Londyn",
+            "listing card": "Ognisko Polskie, Londyn",
+            "JSON-LD location.name": "Ognisko Polskie"
+          },
+          "distinct": 2,
+          "note": "the same venue is written differently in different places on the same-language pages"
+        }
+      ],
+      "fields": {
+        "title": {
+          "field": "title",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "event-youth-congress.html",
+              "locale": "en",
+              "value": "Polish Youth Congress 2025"
+            },
+            {
+              "file": "pl/event-youth-congress.html",
+              "locale": "pl",
+              "value": "Polish Youth Congress 2025"
+            }
+          ],
+          "status": "uncertain",
+          "recommended_value": null,
+          "requires_human_decision": true,
+          "notes": "localised field is identical in both languages — may be a proper name, may be an untranslated string"
+        },
+        "hero_eyebrow": {
+          "field": "hero_eyebrow",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "event-youth-congress.html",
+              "locale": "en",
+              "value": "Conference"
+            },
+            {
+              "file": "pl/event-youth-congress.html",
+              "locale": "pl",
+              "value": "Konferencja"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "intro_copy": {
+          "field": "intro_copy",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "event-youth-congress.html",
+              "locale": "en",
+              "value": "A day of dialogue for young Poles in the UK — in the spirit of Poland's National Independence Day."
+            },
+            {
+              "file": "pl/event-youth-congress.html",
+              "locale": "pl",
+              "value": "Dzień dialogu młodych Polaków w Wielkiej Brytanii — w duchu Narodowego Święta Niepodległości."
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "seo_title": {
+          "field": "seo_title",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "event-youth-congress.html",
+              "locale": "en",
+              "value": "Polish Youth Congress 2025 | Federation of Polish Student Societies UK"
+            },
+            {
+              "file": "pl/event-youth-congress.html",
+              "locale": "pl",
+              "value": "Polish Youth Congress 2025 | Federacja Polskich Stowarzyszeń Studenckich"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "seo_description": {
+          "field": "seo_description",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "event-youth-congress.html",
+              "locale": "en",
+              "value": "Polish Youth Congress 2025 at Ognisko Polskie in London — a day of panels with the Embassy of the Republic of Poland, closing with a Chopin recital."
+            },
+            {
+              "file": "pl/event-youth-congress.html",
+              "locale": "pl",
+              "value": "Polish Youth Congress 2025 w Ognisku Polskim — dzień paneli dyskusyjnych z Ambasadą RP w Londynie, zakończony recitalem chopinowskim."
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "canonical": {
+          "field": "canonical",
+          "classification": "per-locale-url",
+          "sources": [
+            {
+              "file": "event-youth-congress.html",
+              "locale": "en",
+              "value": "https://polsocfederation.pl/event-youth-congress.html"
+            },
+            {
+              "file": "pl/event-youth-congress.html",
+              "locale": "pl",
+              "value": "https://polsocfederation.pl/pl/event-youth-congress.html"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false,
+          "notes": "per-locale URL: the Polish value is the English one with the /pl/ prefix, as intended"
+        },
+        "language": {
+          "field": "language",
+          "classification": "not-applicable",
+          "sources": [
+            {
+              "file": "event-youth-congress.html",
+              "locale": "en",
+              "value": "en"
+            },
+            {
+              "file": "pl/event-youth-congress.html",
+              "locale": "pl",
+              "value": "pl"
+            }
+          ],
+          "status": "not-applicable",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "og_image": {
+          "field": "og_image",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-youth-congress.html",
+              "locale": "en",
+              "value": "assets/yc/audience.jpg"
+            },
+            {
+              "file": "pl/event-youth-congress.html",
+              "locale": "pl",
+              "value": "assets/yc/audience.jpg"
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": "assets/yc/audience.jpg",
+          "requires_human_decision": false
+        },
+        "og_image_alt": {
+          "field": "og_image_alt",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "event-youth-congress.html",
+              "locale": "en",
+              "value": "The audience during a panel at the Polish Youth Congress in London"
+            },
+            {
+              "file": "pl/event-youth-congress.html",
+              "locale": "pl",
+              "value": "The audience during a panel at the Polish Youth Congress in London"
+            }
+          ],
+          "status": "uncertain",
+          "recommended_value": null,
+          "requires_human_decision": true,
+          "notes": "localised field is identical in both languages — may be a proper name, may be an untranslated string"
+        },
+        "hero_image": {
+          "field": "hero_image",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-youth-congress.html",
+              "locale": "en",
+              "value": null
+            },
+            {
+              "file": "pl/event-youth-congress.html",
+              "locale": "pl",
+              "value": null
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "detail_template_type": {
+          "field": "detail_template_type",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-youth-congress.html",
+              "locale": "en",
+              "value": "standard"
+            },
+            {
+              "file": "pl/event-youth-congress.html",
+              "locale": "pl",
+              "value": "standard"
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": "standard",
+          "requires_human_decision": false
+        },
+        "gallery_image_count": {
+          "field": "gallery_image_count",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-youth-congress.html",
+              "locale": "en",
+              "value": 6
+            },
+            {
+              "file": "pl/event-youth-congress.html",
+              "locale": "pl",
+              "value": 6
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": 6,
+          "requires_human_decision": false
+        },
+        "body_copy_paragraphs": {
+          "field": "body_copy_paragraphs",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-youth-congress.html",
+              "locale": "en",
+              "value": 6
+            },
+            {
+              "file": "pl/event-youth-congress.html",
+              "locale": "pl",
+              "value": 6
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": 6,
+          "requires_human_decision": false
+        },
+        "instagram_permalink": {
+          "field": "instagram_permalink",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-youth-congress.html",
+              "locale": "en",
+              "value": "https://www.instagram.com/p/DRE7KufjD5G/"
+            },
+            {
+              "file": "pl/event-youth-congress.html",
+              "locale": "pl",
+              "value": "https://www.instagram.com/p/DRE7KufjD5G/"
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": "https://www.instagram.com/p/DRE7KufjD5G/",
+          "requires_human_decision": false
+        },
+        "album_link": {
+          "field": "album_link",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-youth-congress.html",
+              "locale": "en",
+              "value": "https://photos.app.goo.gl/RvqfJVSpiPhgNn2r9"
+            },
+            {
+              "file": "pl/event-youth-congress.html",
+              "locale": "pl",
+              "value": "https://photos.app.goo.gl/RvqfJVSpiPhgNn2r9"
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": "https://photos.app.goo.gl/RvqfJVSpiPhgNn2r9",
+          "requires_human_decision": false
+        },
+        "registration_link": {
+          "field": "registration_link",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-youth-congress.html",
+              "locale": "en",
+              "value": null
+            },
+            {
+              "file": "pl/event-youth-congress.html",
+              "locale": "pl",
+              "value": null
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "external_links": {
+          "field": "external_links",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-youth-congress.html",
+              "locale": "en",
+              "value": [
+                "https://www.roksanadabkowska.com/about",
+                "https://photos.app.goo.gl/RvqfJVSpiPhgNn2r9"
+              ]
+            },
+            {
+              "file": "pl/event-youth-congress.html",
+              "locale": "pl",
+              "value": [
+                "https://www.roksanadabkowska.com/about",
+                "https://photos.app.goo.gl/RvqfJVSpiPhgNn2r9"
+              ]
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": [
+            "https://www.roksanadabkowska.com/about",
+            "https://photos.app.goo.gl/RvqfJVSpiPhgNn2r9"
+          ],
+          "requires_human_decision": false
+        },
+        "download_links": {
+          "field": "download_links",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-youth-congress.html",
+              "locale": "en",
+              "value": []
+            },
+            {
+              "file": "pl/event-youth-congress.html",
+              "locale": "pl",
+              "value": []
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": [],
+          "requires_human_decision": false
+        },
+        "partner_logo_tiles": {
+          "field": "partner_logo_tiles",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-youth-congress.html",
+              "locale": "en",
+              "value": 0
+            },
+            {
+              "file": "pl/event-youth-congress.html",
+              "locale": "pl",
+              "value": 0
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": 0,
+          "requires_human_decision": false
+        },
+        "facts": {
+          "field": "facts",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "event-youth-congress.html",
+              "locale": "en",
+              "value": [
+                {
+                  "label": "Date",
+                  "value": "9 November 2025",
+                  "variant": "text"
+                },
+                {
+                  "label": "Venue",
+                  "value": "Ognisko Polskie, London",
+                  "variant": "text"
+                },
+                {
+                  "label": "In collaboration with",
+                  "value": null,
+                  "variant": "logos",
+                  "logos": [
+                    {
+                      "src": "assets/yc/embassy-logo.jpg",
+                      "alt": "Embassy of the Republic of Poland in London"
+                    },
+                    {
+                      "src": "assets/yc/ognisko-logo.webp",
+                      "alt": "Ognisko Polskie — The Polish Hearth Club"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "file": "pl/event-youth-congress.html",
+              "locale": "pl",
+              "value": [
+                {
+                  "label": "Data",
+                  "value": "9 listopada 2025",
+                  "variant": "text"
+                },
+                {
+                  "label": "Miejsce",
+                  "value": "Ognisko Polskie, Londyn",
+                  "variant": "text"
+                },
+                {
+                  "label": "We współpracy z",
+                  "value": null,
+                  "variant": "logos",
+                  "logos": [
+                    {
+                      "src": "assets/yc/embassy-logo.jpg",
+                      "alt": "Ambasada Rzeczypospolitej Polskiej w Londynie"
+                    },
+                    {
+                      "src": "assets/yc/ognisko-logo.webp",
+                      "alt": "Ognisko Polskie — The Polish Hearth Club"
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "images_missing_alt": {
+          "field": "images_missing_alt",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-youth-congress.html",
+              "locale": "en",
+              "value": []
+            },
+            {
+              "file": "pl/event-youth-congress.html",
+              "locale": "pl",
+              "value": []
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": [],
+          "requires_human_decision": false
+        },
+        "images_empty_alt": {
+          "field": "images_empty_alt",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-youth-congress.html",
+              "locale": "en",
+              "value": []
+            },
+            {
+              "file": "pl/event-youth-congress.html",
+              "locale": "pl",
+              "value": []
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": [],
+          "requires_human_decision": false
+        },
+        "jsonld_start": {
+          "field": "jsonld_start",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-youth-congress.html",
+              "locale": "en",
+              "value": "2025-11-09"
+            },
+            {
+              "file": "pl/event-youth-congress.html",
+              "locale": "pl",
+              "value": "2025-11-09"
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": "2025-11-09",
+          "requires_human_decision": false
+        },
+        "jsonld_end": {
+          "field": "jsonld_end",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-youth-congress.html",
+              "locale": "en",
+              "value": null
+            },
+            {
+              "file": "pl/event-youth-congress.html",
+              "locale": "pl",
+              "value": null
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "jsonld_name": {
+          "field": "jsonld_name",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "event-youth-congress.html",
+              "locale": "en",
+              "value": "Polish Youth Congress 2025"
+            },
+            {
+              "file": "pl/event-youth-congress.html",
+              "locale": "pl",
+              "value": "Polish Youth Congress 2025"
+            }
+          ],
+          "status": "uncertain",
+          "recommended_value": null,
+          "requires_human_decision": true,
+          "notes": "localised field is identical in both languages — may be a proper name, may be an untranslated string"
+        },
+        "jsonld_description": {
+          "field": "jsonld_description",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "event-youth-congress.html",
+              "locale": "en",
+              "value": "A day of panel discussions at Ognisko Polskie organised with the Embassy of the Republic of Poland in London, closing with a Chopin recital for Independence Day."
+            },
+            {
+              "file": "pl/event-youth-congress.html",
+              "locale": "pl",
+              "value": "Dzień paneli dyskusyjnych w Ognisku Polskim, zorganizowany wspólnie z Ambasadą Rzeczypospolitej Polskiej w Londynie, zakończony recitalem chopinowskim z okazji Święta Niepodległości."
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "jsonld_status": {
+          "field": "jsonld_status",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-youth-congress.html",
+              "locale": "en",
+              "value": "https://schema.org/EventScheduled"
+            },
+            {
+              "file": "pl/event-youth-congress.html",
+              "locale": "pl",
+              "value": "https://schema.org/EventScheduled"
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": "https://schema.org/EventScheduled",
+          "requires_human_decision": false
+        },
+        "jsonld_attendance": {
+          "field": "jsonld_attendance",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-youth-congress.html",
+              "locale": "en",
+              "value": "https://schema.org/OfflineEventAttendanceMode"
+            },
+            {
+              "file": "pl/event-youth-congress.html",
+              "locale": "pl",
+              "value": null
+            }
+          ],
+          "status": "contradiction",
+          "recommended_value": null,
+          "requires_human_decision": true
+        },
+        "jsonld_venue": {
+          "field": "jsonld_venue",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "event-youth-congress.html",
+              "locale": "en",
+              "value": "Ognisko Polskie"
+            },
+            {
+              "file": "pl/event-youth-congress.html",
+              "locale": "pl",
+              "value": "Ognisko Polskie"
+            }
+          ],
+          "status": "uncertain",
+          "recommended_value": null,
+          "requires_human_decision": true,
+          "notes": "localised field is identical in both languages — may be a proper name, may be an untranslated string"
+        },
+        "jsonld_locality": {
+          "field": "jsonld_locality",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "event-youth-congress.html",
+              "locale": "en",
+              "value": "London"
+            },
+            {
+              "file": "pl/event-youth-congress.html",
+              "locale": "pl",
+              "value": "Londyn"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "jsonld_country": {
+          "field": "jsonld_country",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-youth-congress.html",
+              "locale": "en",
+              "value": "GB"
+            },
+            {
+              "file": "pl/event-youth-congress.html",
+              "locale": "pl",
+              "value": "GB"
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": "GB",
+          "requires_human_decision": false
+        },
+        "jsonld_organiser": {
+          "field": "jsonld_organiser",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "event-youth-congress.html",
+              "locale": "en",
+              "value": "Federation of Polish Student Societies UK"
+            },
+            {
+              "file": "pl/event-youth-congress.html",
+              "locale": "pl",
+              "value": "Federacja Polskich Stowarzyszeń Studenckich w Wielkiej Brytanii"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "jsonld_url": {
+          "field": "jsonld_url",
+          "classification": "per-locale-url",
+          "sources": [
+            {
+              "file": "event-youth-congress.html",
+              "locale": "en",
+              "value": "https://polsocfederation.pl/event-youth-congress.html"
+            },
+            {
+              "file": "pl/event-youth-congress.html",
+              "locale": "pl",
+              "value": "https://polsocfederation.pl/pl/event-youth-congress.html"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false,
+          "notes": "per-locale URL: the Polish value is the English one with the /pl/ prefix, as intended"
+        },
+        "jsonld_image": {
+          "field": "jsonld_image",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-youth-congress.html",
+              "locale": "en",
+              "value": "assets/yc/audience.jpg"
+            },
+            {
+              "file": "pl/event-youth-congress.html",
+              "locale": "pl",
+              "value": "assets/yc/audience.jpg"
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": "assets/yc/audience.jpg",
+          "requires_human_decision": false
+        },
+        "jsonld_performers": {
+          "field": "jsonld_performers",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-youth-congress.html",
+              "locale": "en",
+              "value": []
+            },
+            {
+              "file": "pl/event-youth-congress.html",
+              "locale": "pl",
+              "value": []
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": [],
+          "requires_human_decision": false
+        },
+        "jsonld_inLanguage": {
+          "field": "jsonld_inLanguage",
+          "classification": "locale-asymmetric",
+          "sources": [
+            {
+              "file": "event-youth-congress.html",
+              "locale": "en",
+              "value": null
+            },
+            {
+              "file": "pl/event-youth-congress.html",
+              "locale": "pl",
+              "value": "pl-PL"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false,
+          "notes": "present on one locale by design (schema.org inLanguage on the Polish pages)"
+        },
+        "card_title": {
+          "field": "card_title",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "events.html",
+              "locale": "en",
+              "value": "Polish Youth Congress 2025"
+            },
+            {
+              "file": "pl/events.html",
+              "locale": "pl",
+              "value": "Polish Youth Congress 2025"
+            }
+          ],
+          "status": "uncertain",
+          "recommended_value": null,
+          "requires_human_decision": true,
+          "notes": "localised field is identical in both languages — may be a proper name, may be an untranslated string"
+        },
+        "card_summary": {
+          "field": "card_summary",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "events.html",
+              "locale": "en",
+              "value": "A one-day conference with the Embassy of the Republic of Poland — panels on finance, leadership and geopolitics, closed with a Chopin recital in the spirit of Poland's National Independence Day."
+            },
+            {
+              "file": "pl/events.html",
+              "locale": "pl",
+              "value": "Jednodniowa konferencja z Ambasadą Rzeczypospolitej Polskiej — panele o finansach, przywództwie i geopolityce, zakończone recitalem chopinowskim w duchu Narodowego Święta Niepodległości."
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "card_display_date": {
+          "field": "card_display_date",
+          "classification": "derived",
+          "sources": [
+            {
+              "file": "events.html",
+              "locale": "en",
+              "value": "9 November 2025"
+            },
+            {
+              "file": "pl/events.html",
+              "locale": "pl",
+              "value": "9 listopada 2025"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false,
+          "notes": "display date — should be generated from a machine-readable date rather than stored per locale"
+        },
+        "card_venue": {
+          "field": "card_venue",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "events.html",
+              "locale": "en",
+              "value": "Ognisko Polskie, London"
+            },
+            {
+              "file": "pl/events.html",
+              "locale": "pl",
+              "value": "Ognisko Polskie, Londyn"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "card_image": {
+          "field": "card_image",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "events.html",
+              "locale": "en",
+              "value": "assets/yc/team-smiling.jpg"
+            },
+            {
+              "file": "pl/events.html",
+              "locale": "pl",
+              "value": "assets/yc/team-smiling.jpg"
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": "assets/yc/team-smiling.jpg",
+          "requires_human_decision": false
+        },
+        "card_image_alt": {
+          "field": "card_image_alt",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "events.html",
+              "locale": "en",
+              "value": "The Polish Youth Congress team on stage at Ognisko Polskie"
+            },
+            {
+              "file": "pl/events.html",
+              "locale": "pl",
+              "value": "Zespół Polish Youth Congress na scenie w Ognisku Polskim"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "flagship_tag": {
+          "field": "flagship_tag",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "events.html",
+              "locale": "en",
+              "value": false
+            },
+            {
+              "file": "pl/events.html",
+              "locale": "pl",
+              "value": false
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": false,
+          "requires_human_decision": false
+        },
+        "timeline_title": {
+          "field": "timeline_title",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "index.html",
+              "locale": "en",
+              "value": "Polish Youth Congress"
+            },
+            {
+              "file": "pl/index.html",
+              "locale": "pl",
+              "value": "Polish Youth Congress"
+            }
+          ],
+          "status": "uncertain",
+          "recommended_value": null,
+          "requires_human_decision": true,
+          "notes": "localised field is identical in both languages — may be a proper name, may be an untranslated string"
+        },
+        "timeline_summary": {
+          "field": "timeline_summary",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "index.html",
+              "locale": "en",
+              "value": "A day of panels with the Polish Embassy, closed with a Chopin recital for Independence Day."
+            },
+            {
+              "file": "pl/index.html",
+              "locale": "pl",
+              "value": "Dzień paneli dyskusyjnych z Ambasadą RP, zakończony recitalem chopinowskim z okazji Święta Niepodległości."
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "timeline_display_date": {
+          "field": "timeline_display_date",
+          "classification": "derived",
+          "sources": [
+            {
+              "file": "index.html",
+              "locale": "en",
+              "value": "9 November 2025"
+            },
+            {
+              "file": "pl/index.html",
+              "locale": "pl",
+              "value": "9 listopada 2025"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false,
+          "notes": "display date — should be generated from a machine-readable date rather than stored per locale"
+        }
+      }
+    },
+    "icebreaker": {
+      "slug": "icebreaker",
+      "detail_pages": {
+        "en": "event-icebreaker.html",
+        "pl": "pl/event-icebreaker.html"
+      },
+      "sources_inspected": [
+        "event-icebreaker.html",
+        "pl/event-icebreaker.html",
+        "events.html",
+        "pl/events.html",
+        "index.html",
+        "pl/index.html",
+        "content/announcements/icebreaker-join-our-first-social-of-the.yaml"
+      ],
+      "related_announcements": [
+        {
+          "slug": "icebreaker-join-our-first-social-of-the",
+          "file": "content/announcements/icebreaker-join-our-first-social-of-the.yaml",
+          "published_date": "2025-10-06",
+          "link": {
+            "type": "event",
+            "event_slug": "icebreaker"
+          },
+          "en_title": "Icebreaker: join our first social of the year!",
+          "pl_title": "Icebreaker: przyjdź na pierwsze spotkanie w roku!"
+        }
+      ],
+      "announcement_slugs_not_found": [],
+      "present_in_english_listing": true,
+      "present_in_polish_listing": true,
+      "present_in_english_timeline": true,
+      "present_in_polish_timeline": true,
+      "cross_source_checks": [
+        {
+          "check": "venue_wording_across_sources",
+          "locale": "en",
+          "values": {
+            "facts bar": "Mamuśka!, London Waterloo",
+            "listing card": "Mamuśka!, Waterloo",
+            "JSON-LD location.name": "Mamuśka!"
+          },
+          "distinct": 3,
+          "note": "the same venue is written differently in different places on the same-language pages"
+        },
+        {
+          "check": "venue_wording_across_sources",
+          "locale": "pl",
+          "values": {
+            "facts bar": "Mamuśka!, londyńskie Waterloo",
+            "listing card": "Mamuśka!, Waterloo",
+            "JSON-LD location.name": "Mamuśka!"
+          },
+          "distinct": 3,
+          "note": "the same venue is written differently in different places on the same-language pages"
+        }
+      ],
+      "fields": {
+        "title": {
+          "field": "title",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "event-icebreaker.html",
+              "locale": "en",
+              "value": "Icebreaker"
+            },
+            {
+              "file": "pl/event-icebreaker.html",
+              "locale": "pl",
+              "value": "Icebreaker"
+            }
+          ],
+          "status": "uncertain",
+          "recommended_value": null,
+          "requires_human_decision": true,
+          "notes": "localised field is identical in both languages — may be a proper name, may be an untranslated string"
+        },
+        "hero_eyebrow": {
+          "field": "hero_eyebrow",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "event-icebreaker.html",
+              "locale": "en",
+              "value": "Social"
+            },
+            {
+              "file": "pl/event-icebreaker.html",
+              "locale": "pl",
+              "value": "Spotkanie towarzyskie"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "intro_copy": {
+          "field": "intro_copy",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "event-icebreaker.html",
+              "locale": "en",
+              "value": "The opening social of the year — where the community meets."
+            },
+            {
+              "file": "pl/event-icebreaker.html",
+              "locale": "pl",
+              "value": "Pierwsze spotkanie towarzyskie w roku — tam, gdzie poznaje się społeczność."
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "seo_title": {
+          "field": "seo_title",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "event-icebreaker.html",
+              "locale": "en",
+              "value": "Icebreaker 2025 | Federation of Polish Student Societies UK"
+            },
+            {
+              "file": "pl/event-icebreaker.html",
+              "locale": "pl",
+              "value": "Icebreaker 2025 | Federacja Polskich Stowarzyszeń Studenckich"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "seo_description": {
+          "field": "seo_description",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "event-icebreaker.html",
+              "locale": "en",
+              "value": "Icebreaker 2025 at Mamuśka! in London Waterloo opened the year for around 200 Polish students in the UK and introduced the Federation&#x27;s new committee."
+            },
+            {
+              "file": "pl/event-icebreaker.html",
+              "locale": "pl",
+              "value": "Icebreaker 2025 w Mamuśka! na londyńskim Waterloo otworzył rok akademicki dla około 200 polskich studentów i przedstawił nowy zarząd Federacji."
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "canonical": {
+          "field": "canonical",
+          "classification": "per-locale-url",
+          "sources": [
+            {
+              "file": "event-icebreaker.html",
+              "locale": "en",
+              "value": "https://polsocfederation.pl/event-icebreaker.html"
+            },
+            {
+              "file": "pl/event-icebreaker.html",
+              "locale": "pl",
+              "value": "https://polsocfederation.pl/pl/event-icebreaker.html"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false,
+          "notes": "per-locale URL: the Polish value is the English one with the /pl/ prefix, as intended"
+        },
+        "language": {
+          "field": "language",
+          "classification": "not-applicable",
+          "sources": [
+            {
+              "file": "event-icebreaker.html",
+              "locale": "en",
+              "value": "en"
+            },
+            {
+              "file": "pl/event-icebreaker.html",
+              "locale": "pl",
+              "value": "pl"
+            }
+          ],
+          "status": "not-applicable",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "og_image": {
+          "field": "og_image",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-icebreaker.html",
+              "locale": "en",
+              "value": "assets/social/og-image.png"
+            },
+            {
+              "file": "pl/event-icebreaker.html",
+              "locale": "pl",
+              "value": "assets/social/og-image.png"
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": "assets/social/og-image.png",
+          "requires_human_decision": false
+        },
+        "og_image_alt": {
+          "field": "og_image_alt",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "event-icebreaker.html",
+              "locale": "en",
+              "value": "Federation of Polish Student Societies in the UK — By Students. For Students."
+            },
+            {
+              "file": "pl/event-icebreaker.html",
+              "locale": "pl",
+              "value": "Federacja Polskich Stowarzyszeń Studenckich w Wielkiej Brytanii — Przez studentów. Dla studentów."
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "hero_image": {
+          "field": "hero_image",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-icebreaker.html",
+              "locale": "en",
+              "value": null
+            },
+            {
+              "file": "pl/event-icebreaker.html",
+              "locale": "pl",
+              "value": null
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "detail_template_type": {
+          "field": "detail_template_type",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-icebreaker.html",
+              "locale": "en",
+              "value": "standard"
+            },
+            {
+              "file": "pl/event-icebreaker.html",
+              "locale": "pl",
+              "value": "standard"
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": "standard",
+          "requires_human_decision": false
+        },
+        "gallery_image_count": {
+          "field": "gallery_image_count",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-icebreaker.html",
+              "locale": "en",
+              "value": 0
+            },
+            {
+              "file": "pl/event-icebreaker.html",
+              "locale": "pl",
+              "value": 0
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": 0,
+          "requires_human_decision": false
+        },
+        "body_copy_paragraphs": {
+          "field": "body_copy_paragraphs",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-icebreaker.html",
+              "locale": "en",
+              "value": 2
+            },
+            {
+              "file": "pl/event-icebreaker.html",
+              "locale": "pl",
+              "value": 2
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": 2,
+          "requires_human_decision": false
+        },
+        "instagram_permalink": {
+          "field": "instagram_permalink",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-icebreaker.html",
+              "locale": "en",
+              "value": "https://www.instagram.com/p/DQPcgS0DNRE/"
+            },
+            {
+              "file": "pl/event-icebreaker.html",
+              "locale": "pl",
+              "value": "https://www.instagram.com/p/DQPcgS0DNRE/"
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": "https://www.instagram.com/p/DQPcgS0DNRE/",
+          "requires_human_decision": false
+        },
+        "album_link": {
+          "field": "album_link",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-icebreaker.html",
+              "locale": "en",
+              "value": null
+            },
+            {
+              "file": "pl/event-icebreaker.html",
+              "locale": "pl",
+              "value": null
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "registration_link": {
+          "field": "registration_link",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-icebreaker.html",
+              "locale": "en",
+              "value": null
+            },
+            {
+              "file": "pl/event-icebreaker.html",
+              "locale": "pl",
+              "value": null
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "external_links": {
+          "field": "external_links",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-icebreaker.html",
+              "locale": "en",
+              "value": []
+            },
+            {
+              "file": "pl/event-icebreaker.html",
+              "locale": "pl",
+              "value": []
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": [],
+          "requires_human_decision": false
+        },
+        "download_links": {
+          "field": "download_links",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-icebreaker.html",
+              "locale": "en",
+              "value": []
+            },
+            {
+              "file": "pl/event-icebreaker.html",
+              "locale": "pl",
+              "value": []
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": [],
+          "requires_human_decision": false
+        },
+        "partner_logo_tiles": {
+          "field": "partner_logo_tiles",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-icebreaker.html",
+              "locale": "en",
+              "value": 0
+            },
+            {
+              "file": "pl/event-icebreaker.html",
+              "locale": "pl",
+              "value": 0
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": 0,
+          "requires_human_decision": false
+        },
+        "facts": {
+          "field": "facts",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "event-icebreaker.html",
+              "locale": "en",
+              "value": [
+                {
+                  "label": "Date",
+                  "value": "October 2025",
+                  "variant": "text"
+                },
+                {
+                  "label": "Venue",
+                  "value": "Mamuśka!, London Waterloo",
+                  "variant": "text"
+                },
+                {
+                  "label": "Attendance",
+                  "value": "~200 students",
+                  "variant": "text"
+                }
+              ]
+            },
+            {
+              "file": "pl/event-icebreaker.html",
+              "locale": "pl",
+              "value": [
+                {
+                  "label": "Data",
+                  "value": "Październik 2025",
+                  "variant": "text"
+                },
+                {
+                  "label": "Miejsce",
+                  "value": "Mamuśka!, londyńskie Waterloo",
+                  "variant": "text"
+                },
+                {
+                  "label": "Frekwencja",
+                  "value": "~200 studentów",
+                  "variant": "text"
+                }
+              ]
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "images_missing_alt": {
+          "field": "images_missing_alt",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-icebreaker.html",
+              "locale": "en",
+              "value": []
+            },
+            {
+              "file": "pl/event-icebreaker.html",
+              "locale": "pl",
+              "value": []
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": [],
+          "requires_human_decision": false
+        },
+        "images_empty_alt": {
+          "field": "images_empty_alt",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-icebreaker.html",
+              "locale": "en",
+              "value": []
+            },
+            {
+              "file": "pl/event-icebreaker.html",
+              "locale": "pl",
+              "value": []
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": [],
+          "requires_human_decision": false
+        },
+        "jsonld_start": {
+          "field": "jsonld_start",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-icebreaker.html",
+              "locale": "en",
+              "value": "2025-10"
+            },
+            {
+              "file": "pl/event-icebreaker.html",
+              "locale": "pl",
+              "value": "2025-10"
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": "2025-10",
+          "requires_human_decision": false
+        },
+        "jsonld_end": {
+          "field": "jsonld_end",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-icebreaker.html",
+              "locale": "en",
+              "value": null
+            },
+            {
+              "file": "pl/event-icebreaker.html",
+              "locale": "pl",
+              "value": null
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "jsonld_name": {
+          "field": "jsonld_name",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "event-icebreaker.html",
+              "locale": "en",
+              "value": "Icebreaker 2025"
+            },
+            {
+              "file": "pl/event-icebreaker.html",
+              "locale": "pl",
+              "value": "Icebreaker 2025"
+            }
+          ],
+          "status": "uncertain",
+          "recommended_value": null,
+          "requires_human_decision": true,
+          "notes": "localised field is identical in both languages — may be a proper name, may be an untranslated string"
+        },
+        "jsonld_description": {
+          "field": "jsonld_description",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "event-icebreaker.html",
+              "locale": "en",
+              "value": "The Federation's opening social of the academic year at Mamuśka! in London Waterloo, where around 200 Polish students met the new committee."
+            },
+            {
+              "file": "pl/event-icebreaker.html",
+              "locale": "pl",
+              "value": "Pierwsze spotkanie towarzyskie roku akademickiego w Mamuśka! na londyńskim Waterloo, gdzie około 200 polskich studentów poznało nowy zarząd Federacji."
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "jsonld_status": {
+          "field": "jsonld_status",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-icebreaker.html",
+              "locale": "en",
+              "value": "https://schema.org/EventScheduled"
+            },
+            {
+              "file": "pl/event-icebreaker.html",
+              "locale": "pl",
+              "value": "https://schema.org/EventScheduled"
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": "https://schema.org/EventScheduled",
+          "requires_human_decision": false
+        },
+        "jsonld_attendance": {
+          "field": "jsonld_attendance",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-icebreaker.html",
+              "locale": "en",
+              "value": "https://schema.org/OfflineEventAttendanceMode"
+            },
+            {
+              "file": "pl/event-icebreaker.html",
+              "locale": "pl",
+              "value": "https://schema.org/OfflineEventAttendanceMode"
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": "https://schema.org/OfflineEventAttendanceMode",
+          "requires_human_decision": false
+        },
+        "jsonld_venue": {
+          "field": "jsonld_venue",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "event-icebreaker.html",
+              "locale": "en",
+              "value": "Mamuśka!"
+            },
+            {
+              "file": "pl/event-icebreaker.html",
+              "locale": "pl",
+              "value": "Mamuśka!"
+            }
+          ],
+          "status": "uncertain",
+          "recommended_value": null,
+          "requires_human_decision": true,
+          "notes": "localised field is identical in both languages — may be a proper name, may be an untranslated string"
+        },
+        "jsonld_locality": {
+          "field": "jsonld_locality",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "event-icebreaker.html",
+              "locale": "en",
+              "value": "London"
+            },
+            {
+              "file": "pl/event-icebreaker.html",
+              "locale": "pl",
+              "value": "Londyn"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "jsonld_country": {
+          "field": "jsonld_country",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-icebreaker.html",
+              "locale": "en",
+              "value": "GB"
+            },
+            {
+              "file": "pl/event-icebreaker.html",
+              "locale": "pl",
+              "value": "GB"
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": "GB",
+          "requires_human_decision": false
+        },
+        "jsonld_organiser": {
+          "field": "jsonld_organiser",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "event-icebreaker.html",
+              "locale": "en",
+              "value": "Federation of Polish Student Societies UK"
+            },
+            {
+              "file": "pl/event-icebreaker.html",
+              "locale": "pl",
+              "value": "Federacja Polskich Stowarzyszeń Studenckich w Wielkiej Brytanii"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "jsonld_url": {
+          "field": "jsonld_url",
+          "classification": "per-locale-url",
+          "sources": [
+            {
+              "file": "event-icebreaker.html",
+              "locale": "en",
+              "value": "https://polsocfederation.pl/event-icebreaker.html"
+            },
+            {
+              "file": "pl/event-icebreaker.html",
+              "locale": "pl",
+              "value": "https://polsocfederation.pl/pl/event-icebreaker.html"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false,
+          "notes": "per-locale URL: the Polish value is the English one with the /pl/ prefix, as intended"
+        },
+        "jsonld_image": {
+          "field": "jsonld_image",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-icebreaker.html",
+              "locale": "en",
+              "value": "assets/photos/christmas-dinner-group.jpg"
+            },
+            {
+              "file": "pl/event-icebreaker.html",
+              "locale": "pl",
+              "value": "assets/photos/christmas-dinner-group.jpg"
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": "assets/photos/christmas-dinner-group.jpg",
+          "requires_human_decision": false
+        },
+        "jsonld_performers": {
+          "field": "jsonld_performers",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "event-icebreaker.html",
+              "locale": "en",
+              "value": []
+            },
+            {
+              "file": "pl/event-icebreaker.html",
+              "locale": "pl",
+              "value": []
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": [],
+          "requires_human_decision": false
+        },
+        "jsonld_inLanguage": {
+          "field": "jsonld_inLanguage",
+          "classification": "locale-asymmetric",
+          "sources": [
+            {
+              "file": "event-icebreaker.html",
+              "locale": "en",
+              "value": null
+            },
+            {
+              "file": "pl/event-icebreaker.html",
+              "locale": "pl",
+              "value": "pl-PL"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false,
+          "notes": "present on one locale by design (schema.org inLanguage on the Polish pages)"
+        },
+        "card_title": {
+          "field": "card_title",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "events.html",
+              "locale": "en",
+              "value": "Icebreaker"
+            },
+            {
+              "file": "pl/events.html",
+              "locale": "pl",
+              "value": "Icebreaker"
+            }
+          ],
+          "status": "uncertain",
+          "recommended_value": null,
+          "requires_human_decision": true,
+          "notes": "localised field is identical in both languages — may be a proper name, may be an untranslated string"
+        },
+        "card_summary": {
+          "field": "card_summary",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "events.html",
+              "locale": "en",
+              "value": "The opening social of the year — around 200 Polish students met for drinks and conversation at Mamuśka! in London Waterloo, where the new committee was introduced."
+            },
+            {
+              "file": "pl/events.html",
+              "locale": "pl",
+              "value": "Pierwsze spotkanie towarzyskie w roku — około 200 polskich studentów spotkało się na rozmowach w Mamuśka! na londyńskim Waterloo, gdzie przedstawiono nowy zarząd."
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "card_display_date": {
+          "field": "card_display_date",
+          "classification": "derived",
+          "sources": [
+            {
+              "file": "events.html",
+              "locale": "en",
+              "value": "October 2025"
+            },
+            {
+              "file": "pl/events.html",
+              "locale": "pl",
+              "value": "Październik 2025"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false,
+          "notes": "display date — should be generated from a machine-readable date rather than stored per locale"
+        },
+        "card_venue": {
+          "field": "card_venue",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "events.html",
+              "locale": "en",
+              "value": "Mamuśka!, Waterloo"
+            },
+            {
+              "file": "pl/events.html",
+              "locale": "pl",
+              "value": "Mamuśka!, Waterloo"
+            }
+          ],
+          "status": "uncertain",
+          "recommended_value": null,
+          "requires_human_decision": true,
+          "notes": "localised field is identical in both languages — may be a proper name, may be an untranslated string"
+        },
+        "card_image": {
+          "field": "card_image",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "events.html",
+              "locale": "en",
+              "value": "assets/announcements/icebreaker.jpg"
+            },
+            {
+              "file": "pl/events.html",
+              "locale": "pl",
+              "value": "assets/announcements/icebreaker.jpg"
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": "assets/announcements/icebreaker.jpg",
+          "requires_human_decision": false
+        },
+        "card_image_alt": {
+          "field": "card_image_alt",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "events.html",
+              "locale": "en",
+              "value": "Polish students at the Icebreaker social at Mamuśka! in London Waterloo"
+            },
+            {
+              "file": "pl/events.html",
+              "locale": "pl",
+              "value": "Polscy studenci na spotkaniu Icebreaker w Mamuśka! na londyńskim Waterloo"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "flagship_tag": {
+          "field": "flagship_tag",
+          "classification": "shared_invariant",
+          "sources": [
+            {
+              "file": "events.html",
+              "locale": "en",
+              "value": false
+            },
+            {
+              "file": "pl/events.html",
+              "locale": "pl",
+              "value": false
+            }
+          ],
+          "status": "consistent",
+          "recommended_value": false,
+          "requires_human_decision": false
+        },
+        "timeline_title": {
+          "field": "timeline_title",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "index.html",
+              "locale": "en",
+              "value": "Icebreaker at Mamuśka!"
+            },
+            {
+              "file": "pl/index.html",
+              "locale": "pl",
+              "value": "Icebreaker w Mamuśka!"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "timeline_summary": {
+          "field": "timeline_summary",
+          "classification": "localised",
+          "sources": [
+            {
+              "file": "index.html",
+              "locale": "en",
+              "value": "~200 students open the year with drinks in Waterloo and meet the new committee."
+            },
+            {
+              "file": "pl/index.html",
+              "locale": "pl",
+              "value": "Około 200 studentów otwiera rok akademicki na Waterloo i poznaje nowy zarząd."
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false
+        },
+        "timeline_display_date": {
+          "field": "timeline_display_date",
+          "classification": "derived",
+          "sources": [
+            {
+              "file": "index.html",
+              "locale": "en",
+              "value": "October 2025"
+            },
+            {
+              "file": "pl/index.html",
+              "locale": "pl",
+              "value": "Październik 2025"
+            }
+          ],
+          "status": "expected-localisation",
+          "recommended_value": null,
+          "requires_human_decision": false,
+          "notes": "display date — should be generated from a machine-readable date rather than stored per locale"
+        }
+      }
+    }
+  },
+  "summary": {
+    "consistent": 108,
+    "expected-localisation": 92,
+    "missing-in-some-sources": 0,
+    "contradiction": 2,
+    "invalid-format": 0,
+    "uncertain": 23,
+    "not-applicable": 5
+  },
+  "extraction_failures": [],
+  "supported_statuses": [
+    "consistent",
+    "expected-localisation",
+    "missing-in-some-sources",
+    "contradiction",
+    "invalid-format",
+    "uncertain",
+    "not-applicable"
+  ]
+}

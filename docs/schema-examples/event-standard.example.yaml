@@ -1,0 +1,156 @@
+# ===========================================================================
+# EXAMPLE ONLY — fictional data. Not an active record.
+#
+# A STANDARD event. This is the shape the four non-Forum events would take.
+# Every field below is justified by something the five current pages actually
+# do; nothing here is speculative page-building.
+#
+# The active records live at content/events/<slug>.yaml. That directory is
+# deliberately EMPTY during this phase.
+# ===========================================================================
+
+# --- identity -------------------------------------------------------------
+slug: spring-lecture                 # also the URL: /event-spring-lecture.html
+event_family: standard
+template: standard                   # only `standard` is valid for this family
+
+# --- placement ------------------------------------------------------------
+academic_year: "2025/26"
+published: true
+order: 3                             # position within the year, newest first
+
+# Explicit visibility controls rather than inferring from dates. A past event
+# stays on the events page; a minor one may be kept off the homepage without
+# being unpublished. See EVENT_RECONCILIATION.md §H.
+show_in_listing: true
+show_in_timeline: true
+show_in_archive: true
+flagship: false                      # drives the "★ Flagship event" tag
+
+# --- when -----------------------------------------------------------------
+# Quoted so YAML keeps them as strings; an unquoted date becomes a
+# timezone-sensitive JS Date and the day can shift by one.
+start_date: "2026-03-04"
+end_date: null                       # set only for multi-day events
+date_precision: day                  # day | month  (see §G — Icebreaker is month)
+
+# --- where ----------------------------------------------------------------
+venue:
+  # ONE canonical venue name per locale, used by the facts bar, the listing
+  # card AND the JSON-LD. The current pages write it three different ways on
+  # the same page; this field exists to stop that recurring.
+  name:
+    en: "Example Hall"
+    pl: "Przykładowa Sala"
+  locality:
+    en: "London"
+    pl: "Londyn"
+  country: "GB"                      # ISO 3166-1 alpha-2, for JSON-LD
+
+# --- media ----------------------------------------------------------------
+hero_image: null                     # standard heroes are typographic; null is normal
+og_image: "/assets/events/spring-lecture-og.jpg"
+
+gallery:
+  - src: "/assets/events/spring-lecture-1.jpg"
+    wide: true                       # renders as .ph-wide.span-2
+    alt:
+      en: "Guests arriving at Example Hall"
+      pl: "Goście przybywają do Przykładowej Sali"
+  - src: "/assets/events/spring-lecture-2.jpg"
+    wide: false
+    alt:
+      en: "The audience during the lecture"
+      pl: "Publiczność podczas wykładu"
+
+# --- people ---------------------------------------------------------------
+organiser: "Federation of Polish Student Societies UK"
+co_organisers:                       # renders as the facts-bar logo strip
+  - name: "Example Institute"
+    logo: "/assets/events/example-institute-logo.png"
+    alt:
+      en: "Example Institute"
+      pl: "Instytut Przykładowy"
+
+performers:                          # feeds JSON-LD `performer`
+  - name: "Dr Example Person"
+    type: Person
+
+# --- links ----------------------------------------------------------------
+instagram_permalink: "https://www.instagram.com/p/EXAMPLE123/"
+album_url: "https://photos.app.goo.gl/EXAMPLEalbum"
+external_links: []
+downloads: []
+
+registration:
+  # Content-level only. Native ticketing is explicitly out of scope — see §I.
+  state: none                        # none | open | closed | sold-out
+  type: null                         # null | external-link | payment-link | email
+  url: null
+  email: null
+
+# --- optional sections actually supported by the standard template ---------
+# Omitting a key hides that section. There is no free-form page builder.
+sections:
+  prose: true
+  facts: true
+  gallery: true
+  instagram_embed: true
+  album_link: true
+  co_organiser_logos: true
+  call_to_action: false
+  download: false
+
+# ===========================================================================
+# LOCALISED CONTENT
+# ===========================================================================
+en:
+  title: "The Spring Lecture"
+  hero_eyebrow: "Academic lecture"
+  # Deliberately three different summaries: the card, the timeline and the
+  # detail intro are different lengths in the current pages and are NOT
+  # interchangeable.
+  card_summary: "An evening lecture on an example subject, followed by a reception."
+  timeline_summary: "A spring lecture and reception for members."
+  intro_copy: "An evening of examples at Example Hall."
+  body: |
+    First paragraph of the write-up.
+
+    Second paragraph of the write-up.
+  facts:
+    # Labels are localised; the VALUES for date and venue are generated from
+    # the machine-readable fields above and must not be retyped here.
+    date_label: "Date"
+    venue_label: "Venue"
+    extra:
+      - label: "Format"
+        value: "Lecture + reception"
+      - label: "Attendance"
+        value: "~120 students"
+  album_label: "See the full album"
+  seo_title: "The Spring Lecture | Federation of Polish Student Societies UK"
+  seo_description: "An example description of the Spring Lecture, under 160 characters."
+  jsonld_description: "An example lecture at Example Hall, followed by a reception."
+
+pl:
+  title: "Wykład wiosenny"
+  hero_eyebrow: "Wykład akademicki"
+  card_summary: "Wieczorny wykład na przykładowy temat, a po nim poczęstunek."
+  timeline_summary: "Wiosenny wykład i poczęstunek dla członków."
+  intro_copy: "Wieczór przykładów w Przykładowej Sali."
+  body: |
+    Pierwszy akapit relacji.
+
+    Drugi akapit relacji.
+  facts:
+    date_label: "Data"
+    venue_label: "Miejsce"
+    extra:
+      - label: "Formuła"
+        value: "Wykład + poczęstunek"
+      - label: "Frekwencja"
+        value: "~120 studentów"
+  album_label: "Zobacz pełną galerię"
+  seo_title: "Wykład wiosenny | Federacja Polskich Stowarzyszeń Studenckich"
+  seo_description: "Przykładowy opis wykładu wiosennego, poniżej 160 znaków."
+  jsonld_description: "Przykładowy wykład w Przykładowej Sali, a po nim poczęstunek."

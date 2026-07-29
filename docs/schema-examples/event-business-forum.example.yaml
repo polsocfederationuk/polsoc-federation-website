@@ -1,0 +1,216 @@
+# ===========================================================================
+# EXAMPLE ONLY — fictional data. Not an active record.
+#
+# A POLISH BUSINESS FORUM edition. Note what this demonstrates: the Forum uses
+# the SAME shared event core as a standard event (so it appears in listings,
+# the timeline, archives, the sitemap and JSON-LD through one code path), and
+# then adds a `business_forum:` extension block that a standard event does not
+# have and cannot have.
+#
+# This is the recommended shape — see EVENT_RECONCILIATION.md §E for why a
+# nested extension beat both a giant generic schema and a separate side-file.
+#
+# One record per ANNUAL EDITION. Creating the 2027 Forum means adding
+# event-business-forum-2027.yaml, never editing this one.
+# ===========================================================================
+
+# ===========================================================================
+# 1. SHARED EVENT CORE — identical field names to event-standard.example.yaml
+# ===========================================================================
+slug: business-forum-2027
+event_family: polish-business-forum
+template: business-forum             # the ONLY valid template for this family
+
+academic_year: "2026/27"
+published: true
+order: 1
+
+show_in_listing: true
+show_in_timeline: true
+show_in_archive: true
+flagship: true
+
+start_date: "2027-04-23"
+end_date: "2027-04-24"               # the Forum is a multi-day event
+date_precision: day
+
+venue:
+  name:
+    en: "Example Business School"
+    pl: "Example Business School"    # a proper name; not translated
+  locality:
+    en: "London"
+    pl: "Londyn"
+  country: "GB"
+
+hero_image: "/assets/pbf-2027/hero.jpg"
+og_image: "/assets/pbf-2027/og.jpg"
+
+organiser: "Federation of Polish Student Societies UK"
+co_organisers: []
+
+performers:
+  - name: "Example Speaker One"
+    type: Person
+  - name: "Example Speaker Two"
+    type: Person
+
+registration:
+  state: open
+  type: external-link
+  url: "https://example.com/pbf-2027-tickets"
+  email: null
+
+instagram_permalink: null
+album_url: "https://drive.google.com/drive/folders/EXAMPLE"
+external_links: []
+downloads: []
+
+# NOTE: no `sections:` key. The Business Forum's section set is fixed by its
+# template, not chosen per record. A marketing officer fills sections in; they
+# cannot reorder or remove the branded structure. See §D.
+
+# ===========================================================================
+# 2. BUSINESS FORUM EXTENSION — present ONLY on this event family
+# ===========================================================================
+business_forum:
+  edition_number: 2                  # "Inaugural" is edition 1
+  edition_ordinal:                   # how the edition is written out
+    en: "Second"
+    pl: "Druga"
+
+  branding:
+    logo_full: "/assets/pbf-2027/logo-full.png"
+    logo_icon: "/assets/pbf-2027/logo-icon.jpg"
+    watermark_text: "PBF"
+
+  # The navy statistics band. Repeatable content: any number of stats.
+  statistics:
+    - value: "350+"
+      label:
+        en: "guests"
+        pl: "gości"
+    - value: "40"
+      label:
+        en: "speakers"
+        pl: "prelegentów"
+
+  # Founders / project leaders grid.
+  people:
+    - name: "Example Person"
+      photo: "/assets/pbf-2027/people/example-person.jpg"
+      role:
+        en: "Project Lead"
+        pl: "Kierowniczka projektu"
+
+  # Sponsors and media patrons, grouped by tier. Tier labels are localised;
+  # the tier KEY and the partner list are shared.
+  partner_categories:
+    - key: main-partners
+      label:
+        en: "Main partners"
+        pl: "Partnerzy główni"
+      partners:
+        - name: "Example Bank"
+          logo: "/assets/pbf-2027/partners/example-bank.png"
+          url: "https://example.com/"
+    - key: media-patrons
+      label:
+        en: "Media patrons"
+        pl: "Patroni medialni"
+      partners:
+        - name: "Example Media"
+          logo: "/assets/pbf-2027/partners/example-media.png"
+          url: "https://example.com/"
+
+  funding_acknowledgement:
+    logo: "/assets/pbf-2027/funder-logo.png"
+    text:
+      en: "Co-financed by the Example Foundation."
+      pl: "Współfinansowane przez Fundację Przykładową."
+
+  # The Forum Ball is a supported section that may be hidden when an edition
+  # does not hold one — `enabled: false` rather than deleting the block.
+  forum_ball:
+    enabled: true
+    venue:
+      en: "The Example Hotel"
+      pl: "Hotel Przykładowy"
+    date: "2027-04-24"
+    copy:
+      en: "The Forum Ball closes the second day."
+      pl: "Bal Forum zamyka drugi dzień."
+    images:
+      - src: "/assets/pbf-2027/ball-1.jpg"
+        alt:
+          en: "Guests at the Forum Ball"
+          pl: "Goście na Balu Forum"
+
+  # Photographer credits, each with their own gallery.
+  photographers:
+    - name: "Example Photographer"
+      credit_url: "https://example.com/photographer"
+      gallery_url: "https://drive.google.com/drive/folders/EXAMPLE2"
+      images:
+        - src: "/assets/pbf-2027/gallery/1.jpg"
+          alt:
+            en: "The main stage"
+            pl: "Scena główna"
+
+  call_to_action:
+    enabled: true
+    url: "https://example.com/pbf-2027-tickets"
+    label:
+      en: "Register for the Forum"
+      pl: "Zarejestruj się na Forum"
+
+# ===========================================================================
+# 3. LOCALISED CONTENT — the shared core's localised half
+# ===========================================================================
+en:
+  title: "Polish Business Forum 2027"
+  hero_eyebrow: "Flagship conference"
+  hero_tagline: "An example theme for the second edition"
+  card_summary: "The second Polish Business Forum, with an example theme and 350+ guests."
+  timeline_summary: "Our second Forum — 350+ attendees over two days."
+  intro_copy: "The second Polish Business Forum at Example Business School."
+  body: |
+    First paragraph of the Forum write-up.
+
+    Second paragraph of the Forum write-up.
+  facts:
+    date_label: "Date"
+    venue_label: "Venue"
+    extra:
+      - label: "Attendance"
+        value: "350+ guests"
+      - label: "Edition"
+        value: "Second"
+  album_label: "See the full album"
+  seo_title: "Polish Business Forum 2027 | Federation of Polish Student Societies UK"
+  seo_description: "An example description of the second Polish Business Forum."
+  jsonld_description: "The second Polish Business Forum at Example Business School."
+
+pl:
+  title: "Polish Business Forum 2027"
+  hero_eyebrow: "Konferencja flagowa"
+  hero_tagline: "Przykładowy motyw drugiej edycji"
+  card_summary: "Druga edycja Polish Business Forum, z przykładowym motywem i 350+ gośćmi."
+  timeline_summary: "Nasze drugie Forum — ponad 350 uczestników przez dwa dni."
+  intro_copy: "Druga edycja Polish Business Forum w Example Business School."
+  body: |
+    Pierwszy akapit relacji z Forum.
+
+    Drugi akapit relacji z Forum.
+  facts:
+    date_label: "Data"
+    venue_label: "Miejsce"
+    extra:
+      - label: "Frekwencja"
+        value: "350+ gości"
+      - label: "Edycja"
+        value: "Druga"
+  album_label: "Zobacz pełną galerię"
+  seo_title: "Polish Business Forum 2027 | Federacja Polskich Stowarzyszeń Studenckich"
+  seo_description: "Przykładowy opis drugiej edycji Polish Business Forum."
+  jsonld_description: "Druga edycja Polish Business Forum w Example Business School."
