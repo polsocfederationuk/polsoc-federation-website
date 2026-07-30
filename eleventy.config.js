@@ -745,6 +745,11 @@ module.exports = function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy({ "js/main.js": "js/main.js" });
   eleventyConfig.addPassthroughCopy({ "favicon.ico": "favicon.ico" });
   eleventyConfig.addPassthroughCopy({ "site.webmanifest": "site.webmanifest" });
+  // robots.txt is copied byte-for-byte rather than generated: it is three lines of
+  // crawler policy with no data to derive, and its Sitemap: line must keep naming
+  // the production URL. sitemap.xml IS generated (src/sitemap.njk) because its
+  // contents follow from the route inventory.
+  eleventyConfig.addPassthroughCopy({ "robots.txt": "robots.txt" });
   eleventyConfig.addPassthroughCopy({ "assets/logo.svg": "assets/logo.svg" });
   eleventyConfig.addPassthroughCopy({ "assets/icons": "assets/icons" });
   // Referenced by css/style.css for the .nav-pbf-logo mask swap.
@@ -822,10 +827,30 @@ module.exports = function (eleventyConfig) {
     eleventyConfig.addPassthroughCopy({ [photo]: photo });
   }
 
+  // ---------------------------------------------------------------------
+  // FIXTURES ARE NOT PRODUCTION OUTPUT.
+  //
+  // src/build-test/ holds architectural proof pages and the archive-disclosure
+  // fixture. They must never reach the deployment tree — a test page that ships
+  // is a page that can be indexed, linked or crawled by mistake.
+  //
+  // A normal build IGNORES them entirely. `BUILD_FIXTURES=1` builds ONLY them,
+  // into .fixtures/ instead of dist/, so the chrome comparison and the archive-UI
+  // test keep their coverage without production ever containing a fixture.
+  // ---------------------------------------------------------------------
+  const FIXTURES = process.env.BUILD_FIXTURES === "1";
+  if (FIXTURES) {
+    // Build the fixtures and nothing else: every other template is ignored, so
+    // .fixtures/ cannot accidentally become a second copy of the site.
+    for (const t of ["src/*.njk"]) eleventyConfig.ignores.add(t);
+  } else {
+    eleventyConfig.ignores.add("src/build-test/**");
+  }
+
   return {
     dir: {
       input: "src",
-      output: "dist",
+      output: FIXTURES ? ".fixtures" : "dist",
       includes: "_includes",
       data: "_data",
     },

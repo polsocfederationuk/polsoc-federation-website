@@ -1,0 +1,1684 @@
+{
+  "generated_by": "scripts/audit-public-parity.js",
+  "domain": "https://polsocfederation.pl",
+  "note": "Live public surface, walked from the live sitemap and the live pages' own references, classified against the generated deployment tree. Regenerate with `npm run audit:public-parity`.",
+  "summary": {
+    "generated-equivalent": 24,
+    "byte-identical-passthrough": 118,
+    "approved-replacement": 5
+  },
+  "blockers": [],
+  "resources": [
+    {
+      "resource": "assets/announcements/become-a-trustee.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "js/announcements-data.js",
+        "js/pl/announcements-data.js"
+      ]
+    },
+    {
+      "resource": "assets/announcements/christmas-announcement.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "js/announcements-data.js",
+        "js/pl/announcements-data.js"
+      ]
+    },
+    {
+      "resource": "assets/announcements/cultural-foundation.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "js/announcements-data.js",
+        "js/pl/announcements-data.js"
+      ]
+    },
+    {
+      "resource": "assets/announcements/domanski.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "js/announcements-data.js",
+        "js/pl/announcements-data.js"
+      ]
+    },
+    {
+      "resource": "assets/announcements/ebrd-logo.png",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "js/announcements-data.js",
+        "js/pl/announcements-data.js"
+      ]
+    },
+    {
+      "resource": "assets/announcements/fed-of-poles.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "js/announcements-data.js",
+        "js/pl/announcements-data.js"
+      ]
+    },
+    {
+      "resource": "assets/announcements/icebreaker.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "events.html",
+        "pl/events.html",
+        "js/announcements-data.js"
+      ]
+    },
+    {
+      "resource": "assets/announcements/independence-boczkowski.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "js/announcements-data.js",
+        "js/pl/announcements-data.js"
+      ]
+    },
+    {
+      "resource": "assets/announcements/independence-selfie.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "js/announcements-data.js",
+        "js/pl/announcements-data.js"
+      ]
+    },
+    {
+      "resource": "assets/announcements/mentoring.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "js/announcements-data.js",
+        "js/pl/announcements-data.js"
+      ]
+    },
+    {
+      "resource": "assets/announcements/pb-economic-forum.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "js/announcements-data.js",
+        "js/pl/announcements-data.js"
+      ]
+    },
+    {
+      "resource": "assets/announcements/pcc-conference.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "js/announcements-data.js",
+        "js/pl/announcements-data.js"
+      ]
+    },
+    {
+      "resource": "assets/announcements/pcc-duda.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "js/announcements-data.js",
+        "js/pl/announcements-data.js"
+      ]
+    },
+    {
+      "resource": "assets/announcements/pcc-gala.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "js/announcements-data.js",
+        "js/pl/announcements-data.js"
+      ]
+    },
+    {
+      "resource": "assets/announcements/pekao-finals.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "js/announcements-data.js",
+        "js/pl/announcements-data.js"
+      ]
+    },
+    {
+      "resource": "assets/announcements/post-christmas.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "js/announcements-data.js",
+        "js/pl/announcements-data.js"
+      ]
+    },
+    {
+      "resource": "assets/announcements/post-yc.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "js/announcements-data.js",
+        "js/pl/announcements-data.js"
+      ]
+    },
+    {
+      "resource": "assets/announcements/president-visit.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "js/announcements-data.js",
+        "js/pl/announcements-data.js"
+      ]
+    },
+    {
+      "resource": "assets/announcements/professionals-conference.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "js/announcements-data.js",
+        "js/pl/announcements-data.js"
+      ]
+    },
+    {
+      "resource": "assets/announcements/pumst-dinner-1.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "js/announcements-data.js",
+        "js/pl/announcements-data.js"
+      ]
+    },
+    {
+      "resource": "assets/announcements/pumst-dinner-2.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "js/announcements-data.js",
+        "js/pl/announcements-data.js"
+      ]
+    },
+    {
+      "resource": "assets/announcements/xix-congress.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "js/announcements-data.js",
+        "js/pl/announcements-data.js"
+      ]
+    },
+    {
+      "resource": "assets/announcements/yc-announcement.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "js/announcements-data.js",
+        "js/pl/announcements-data.js"
+      ]
+    },
+    {
+      "resource": "assets/announcements/youth-forum.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "js/announcements-data.js",
+        "js/pl/announcements-data.js"
+      ]
+    },
+    {
+      "resource": "assets/debata/debata-1.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "event-sikorski-debate.html",
+        "events.html",
+        "pl/event-sikorski-debate.html"
+      ]
+    },
+    {
+      "resource": "assets/debata/debata-2.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "event-sikorski-debate.html",
+        "pl/event-sikorski-debate.html"
+      ]
+    },
+    {
+      "resource": "assets/debata/networking.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "event-sikorski-debate.html",
+        "events.html",
+        "pl/event-sikorski-debate.html"
+      ]
+    },
+    {
+      "resource": "assets/debata/oshaughnessy.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "event-sikorski-debate.html",
+        "pl/event-sikorski-debate.html"
+      ]
+    },
+    {
+      "resource": "assets/debata/trustees.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "event-sikorski-debate.html",
+        "pl/event-sikorski-debate.html"
+      ]
+    },
+    {
+      "resource": "assets/home/christmas-dancing.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "index.html",
+        "pl/index.html"
+      ]
+    },
+    {
+      "resource": "assets/home/pbf-question.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "index.html",
+        "pl/index.html"
+      ]
+    },
+    {
+      "resource": "assets/home/students-conversation.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "index.html",
+        "pl/index.html"
+      ]
+    },
+    {
+      "resource": "assets/icons/apple-touch-icon.png",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "404.html",
+        "announcements.html",
+        "contact.html"
+      ]
+    },
+    {
+      "resource": "assets/icons/favicon-16x16.png",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "404.html",
+        "announcements.html",
+        "contact.html"
+      ]
+    },
+    {
+      "resource": "assets/icons/favicon-32x32.png",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "404.html",
+        "announcements.html",
+        "contact.html"
+      ]
+    },
+    {
+      "resource": "assets/icons/favicon-48x48.png",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "404.html",
+        "announcements.html",
+        "contact.html"
+      ]
+    },
+    {
+      "resource": "assets/icons/icon-192.png",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "site.webmanifest"
+      ]
+    },
+    {
+      "resource": "assets/icons/icon-512-maskable.png",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "site.webmanifest"
+      ]
+    },
+    {
+      "resource": "assets/icons/icon-512.png",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "index.html",
+        "pl/index.html",
+        "site.webmanifest"
+      ]
+    },
+    {
+      "resource": "assets/logo.svg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "404.html",
+        "announcements.html",
+        "contact.html"
+      ]
+    },
+    {
+      "resource": "assets/pbf/audience.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "event-business-forum.html",
+        "index.html",
+        "pl/event-business-forum.html"
+      ]
+    },
+    {
+      "resource": "assets/pbf/bal-1.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "index.html",
+        "pl/index.html"
+      ]
+    },
+    {
+      "resource": "assets/pbf/ball-polonez.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "event-business-forum.html",
+        "pl/event-business-forum.html"
+      ]
+    },
+    {
+      "resource": "assets/pbf/bielecki.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "event-business-forum.html",
+        "pl/event-business-forum.html"
+      ]
+    },
+    {
+      "resource": "assets/pbf/crowd.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "announcements.html",
+        "pl/announcements.html"
+      ]
+    },
+    {
+      "resource": "assets/pbf/finance-panel.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "event-business-forum.html",
+        "index.html",
+        "pl/event-business-forum.html"
+      ]
+    },
+    {
+      "resource": "assets/pbf/media/british-poles.png",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "event-business-forum.html",
+        "pl/event-business-forum.html"
+      ]
+    },
+    {
+      "resource": "assets/pbf/media/business-insider.png",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "event-business-forum.html",
+        "pl/event-business-forum.html"
+      ]
+    },
+    {
+      "resource": "assets/pbf/media/comparic.webp",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "event-business-forum.html",
+        "pl/event-business-forum.html"
+      ]
+    },
+    {
+      "resource": "assets/pbf/media/focus-on-business.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "event-business-forum.html",
+        "pl/event-business-forum.html"
+      ]
+    },
+    {
+      "resource": "assets/pbf/media/fxmag.webp",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "event-business-forum.html",
+        "pl/event-business-forum.html"
+      ]
+    },
+    {
+      "resource": "assets/pbf/media/lambert.webp",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "contact.html",
+        "event-business-forum.html",
+        "pl/contact.html"
+      ]
+    },
+    {
+      "resource": "assets/pbf/media/mypolska.png",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "event-business-forum.html",
+        "pl/event-business-forum.html"
+      ]
+    },
+    {
+      "resource": "assets/pbf/media/pap-biznes.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "event-business-forum.html",
+        "pl/event-business-forum.html"
+      ]
+    },
+    {
+      "resource": "assets/pbf/media/przeglad.webp",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "event-business-forum.html",
+        "pl/event-business-forum.html"
+      ]
+    },
+    {
+      "resource": "assets/pbf/media/puls-biznesu.png",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "event-business-forum.html",
+        "pl/event-business-forum.html"
+      ]
+    },
+    {
+      "resource": "assets/pbf/media/stockwatch.png",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "event-business-forum.html",
+        "pl/event-business-forum.html"
+      ]
+    },
+    {
+      "resource": "assets/pbf/networking-hero.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "event-business-forum.html",
+        "members.html",
+        "pl/event-business-forum.html"
+      ]
+    },
+    {
+      "resource": "assets/pbf/pbf-logo-full.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "js/announcements-data.js",
+        "js/pl/announcements-data.js"
+      ]
+    },
+    {
+      "resource": "assets/pbf/pbf-logo-full.png",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "event-business-forum.html",
+        "index.html",
+        "pl/event-business-forum.html"
+      ]
+    },
+    {
+      "resource": "assets/pbf/pbf-logo-icon.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "contact.html",
+        "pl/contact.html"
+      ]
+    },
+    {
+      "resource": "assets/pbf/pbf-logo-nav-navy.png",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "css/style.css"
+      ]
+    },
+    {
+      "resource": "assets/pbf/pbf-logo-nav-white.png",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "css/style.css"
+      ]
+    },
+    {
+      "resource": "assets/pbf/project-leaders.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "event-business-forum.html",
+        "pl/event-business-forum.html"
+      ]
+    },
+    {
+      "resource": "assets/pbf/senat-polonia-2026.png",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "event-business-forum.html",
+        "pl/event-business-forum.html"
+      ]
+    },
+    {
+      "resource": "assets/pbf/speaker-question.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "index.html",
+        "pl/index.html"
+      ]
+    },
+    {
+      "resource": "assets/pbf/sponsors/bank-pekao.png",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "event-business-forum.html",
+        "index.html",
+        "pl/event-business-forum.html"
+      ]
+    },
+    {
+      "resource": "assets/pbf/sponsors/heatpex.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "event-business-forum.html",
+        "index.html",
+        "pl/event-business-forum.html"
+      ]
+    },
+    {
+      "resource": "assets/pbf/sponsors/lbs.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "event-business-forum.html",
+        "index.html",
+        "pl/event-business-forum.html"
+      ]
+    },
+    {
+      "resource": "assets/pbf/sponsors/legimi.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "event-business-forum.html",
+        "index.html",
+        "pl/event-business-forum.html"
+      ]
+    },
+    {
+      "resource": "assets/pbf/sponsors/ntfy.png",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "event-business-forum.html",
+        "index.html",
+        "pl/event-business-forum.html"
+      ]
+    },
+    {
+      "resource": "assets/pbf/sponsors/occ.webp",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "event-business-forum.html",
+        "index.html",
+        "pl/event-business-forum.html"
+      ]
+    },
+    {
+      "resource": "assets/pbf/sponsors/pko-bp.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "event-business-forum.html",
+        "index.html",
+        "pl/event-business-forum.html"
+      ]
+    },
+    {
+      "resource": "assets/pbf/sponsors/velobank.png",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "event-business-forum.html",
+        "index.html",
+        "pl/event-business-forum.html"
+      ]
+    },
+    {
+      "resource": "assets/pbf/sponsors/wspolnota-polska.png",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "event-business-forum.html",
+        "index.html",
+        "pl/event-business-forum.html"
+      ]
+    },
+    {
+      "resource": "assets/pbf/stage.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "event-business-forum.html",
+        "events.html",
+        "pl/event-business-forum.html"
+      ]
+    },
+    {
+      "resource": "assets/pbf/team-steps.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "event-business-forum.html",
+        "pl/event-business-forum.html",
+        "pl/team.html"
+      ]
+    },
+    {
+      "resource": "assets/photos/christmas-dinner-group.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "event-icebreaker.html",
+        "index.html",
+        "pl/event-icebreaker.html"
+      ]
+    },
+    {
+      "resource": "assets/social/og-image.png",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "contact.html",
+        "event-icebreaker.html",
+        "index.html"
+      ]
+    },
+    {
+      "resource": "assets/team/aleksander-twardowski.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "pl/team.html",
+        "team.html"
+      ]
+    },
+    {
+      "resource": "assets/team/aleksandra-ceglowska.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "pl/team.html",
+        "team.html"
+      ]
+    },
+    {
+      "resource": "assets/team/alicja-pardala.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "pl/team.html",
+        "team.html"
+      ]
+    },
+    {
+      "resource": "assets/team/amelia-jedrzejewska.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "pl/team.html",
+        "team.html"
+      ]
+    },
+    {
+      "resource": "assets/team/bartek-czajkowski.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "pl/team.html",
+        "team.html"
+      ]
+    },
+    {
+      "resource": "assets/team/dominika-kaczmarczyk.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "pl/team.html",
+        "team.html"
+      ]
+    },
+    {
+      "resource": "assets/team/ewa-borys.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "event-business-forum.html",
+        "pl/event-business-forum.html",
+        "pl/team.html"
+      ]
+    },
+    {
+      "resource": "assets/team/joanna-szpunar.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "pl/team.html",
+        "team.html"
+      ]
+    },
+    {
+      "resource": "assets/team/karolina-dabrowska.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "pl/team.html",
+        "team.html"
+      ]
+    },
+    {
+      "resource": "assets/team/kasia-steliga.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "pl/team.html",
+        "team.html"
+      ]
+    },
+    {
+      "resource": "assets/team/katie-taylor.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "pl/team.html",
+        "team.html"
+      ]
+    },
+    {
+      "resource": "assets/team/maksymilian-celm.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "pl/team.html",
+        "team.html"
+      ]
+    },
+    {
+      "resource": "assets/team/maksymilian-rokosz.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "pl/team.html",
+        "team.html"
+      ]
+    },
+    {
+      "resource": "assets/team/marek-swiatek.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "event-business-forum.html",
+        "pl/event-business-forum.html",
+        "pl/team.html"
+      ]
+    },
+    {
+      "resource": "assets/team/marta-lada.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "pl/team.html",
+        "team.html"
+      ]
+    },
+    {
+      "resource": "assets/team/michal-kobus.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "event-business-forum.html",
+        "pl/event-business-forum.html"
+      ]
+    },
+    {
+      "resource": "assets/team/nicole-karkut.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "pl/team.html",
+        "team.html"
+      ]
+    },
+    {
+      "resource": "assets/team/nikodem-rajpold.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "event-business-forum.html",
+        "pl/event-business-forum.html",
+        "pl/team.html"
+      ]
+    },
+    {
+      "resource": "assets/team/olivia-derda.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "pl/team.html",
+        "team.html"
+      ]
+    },
+    {
+      "resource": "assets/team/sara-pietrusinska.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "pl/team.html",
+        "team.html"
+      ]
+    },
+    {
+      "resource": "assets/team/szymon-kwidzinski.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "event-business-forum.html",
+        "pl/event-business-forum.html",
+        "pl/team.html"
+      ]
+    },
+    {
+      "resource": "assets/wigilia/carols-singing.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "event-christmas-dinner.html",
+        "pl/event-christmas-dinner.html"
+      ]
+    },
+    {
+      "resource": "assets/wigilia/dancing.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "event-christmas-dinner.html",
+        "pl/event-christmas-dinner.html"
+      ]
+    },
+    {
+      "resource": "assets/wigilia/everyone-sat.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "event-christmas-dinner.html",
+        "events.html",
+        "pl/event-christmas-dinner.html"
+      ]
+    },
+    {
+      "resource": "assets/wigilia/fede-team.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "event-christmas-dinner.html",
+        "pl/event-christmas-dinner.html"
+      ]
+    },
+    {
+      "resource": "assets/wigilia/polonez.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "event-christmas-dinner.html",
+        "pl/event-christmas-dinner.html"
+      ]
+    },
+    {
+      "resource": "assets/wigilia/roksana-piano.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "event-christmas-dinner.html",
+        "pl/event-christmas-dinner.html"
+      ]
+    },
+    {
+      "resource": "assets/yc/audience.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "event-youth-congress.html",
+        "pl/event-youth-congress.html"
+      ]
+    },
+    {
+      "resource": "assets/yc/boczkowski.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "event-youth-congress.html",
+        "pl/event-youth-congress.html"
+      ]
+    },
+    {
+      "resource": "assets/yc/embassy-logo.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "event-youth-congress.html",
+        "pl/event-youth-congress.html"
+      ]
+    },
+    {
+      "resource": "assets/yc/networking.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "event-youth-congress.html",
+        "pl/event-youth-congress.html"
+      ]
+    },
+    {
+      "resource": "assets/yc/ognisko-logo.webp",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "event-youth-congress.html",
+        "pl/event-youth-congress.html"
+      ]
+    },
+    {
+      "resource": "assets/yc/team-smiling.jpg",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "event-youth-congress.html",
+        "events.html",
+        "pl/event-youth-congress.html"
+      ]
+    },
+    {
+      "resource": "css/pbf.css",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "event-business-forum.html",
+        "pl/event-business-forum.html"
+      ]
+    },
+    {
+      "resource": "css/style.css",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "404.html",
+        "announcements.html",
+        "contact.html"
+      ]
+    },
+    {
+      "resource": "favicon.ico",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "404.html",
+        "announcements.html",
+        "contact.html"
+      ]
+    },
+    {
+      "resource": "js/announcements-data.js",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": false,
+      "classification": "approved-replacement",
+      "reason": "renamed to js/announcements-data-en.js (locale suffix replaces the js/pl/ split)",
+      "referencedBy": [
+        "announcements.html"
+      ]
+    },
+    {
+      "resource": "js/main.js",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "404.html",
+        "announcements.html",
+        "contact.html"
+      ]
+    },
+    {
+      "resource": "js/pl/announcements-data.js",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": false,
+      "classification": "approved-replacement",
+      "reason": "renamed to js/announcements-data-pl.js (locale suffix replaces the js/pl/ split)",
+      "referencedBy": [
+        "pl/announcements.html"
+      ]
+    },
+    {
+      "resource": "js/pl/societies-data.js",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": false,
+      "classification": "approved-replacement",
+      "reason": "renamed to js/societies-data-pl.js (locale suffix replaces the js/pl/ split)",
+      "referencedBy": [
+        "pl/members.html"
+      ]
+    },
+    {
+      "resource": "js/societies-data.js",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": false,
+      "classification": "approved-replacement",
+      "reason": "renamed to js/societies-data-en.js (locale suffix replaces the js/pl/ split)",
+      "referencedBy": [
+        "members.html"
+      ]
+    },
+    {
+      "resource": "site.webmanifest",
+      "kind": "asset",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "404.html",
+        "announcements.html",
+        "contact.html"
+      ]
+    },
+    {
+      "resource": "404.html",
+      "kind": "page",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "generated-equivalent",
+      "referencedBy": [
+        "404.html",
+        "pl/404.html"
+      ]
+    },
+    {
+      "resource": "announcements.html",
+      "kind": "page",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "generated-equivalent",
+      "referencedBy": [
+        "404.html",
+        "announcements.html",
+        "contact.html"
+      ]
+    },
+    {
+      "resource": "contact.html",
+      "kind": "page",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "generated-equivalent",
+      "referencedBy": [
+        "404.html",
+        "announcements.html",
+        "contact.html"
+      ]
+    },
+    {
+      "resource": "event-business-forum.html",
+      "kind": "page",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "generated-equivalent",
+      "referencedBy": [
+        "404.html",
+        "announcements.html",
+        "contact.html"
+      ]
+    },
+    {
+      "resource": "event-christmas-dinner.html",
+      "kind": "page",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "generated-equivalent",
+      "referencedBy": [
+        "event-christmas-dinner.html",
+        "events.html",
+        "index.html"
+      ]
+    },
+    {
+      "resource": "event-icebreaker.html",
+      "kind": "page",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "generated-equivalent",
+      "referencedBy": [
+        "event-icebreaker.html",
+        "events.html",
+        "index.html"
+      ]
+    },
+    {
+      "resource": "event-sikorski-debate.html",
+      "kind": "page",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "generated-equivalent",
+      "referencedBy": [
+        "event-sikorski-debate.html",
+        "events.html",
+        "index.html"
+      ]
+    },
+    {
+      "resource": "event-youth-congress.html",
+      "kind": "page",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "generated-equivalent",
+      "referencedBy": [
+        "event-youth-congress.html",
+        "events.html",
+        "index.html"
+      ]
+    },
+    {
+      "resource": "events.html",
+      "kind": "page",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "generated-equivalent",
+      "referencedBy": [
+        "404.html",
+        "announcements.html",
+        "contact.html"
+      ]
+    },
+    {
+      "resource": "index.html",
+      "kind": "page",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "generated-equivalent",
+      "referencedBy": [
+        "404.html",
+        "announcements.html",
+        "contact.html"
+      ]
+    },
+    {
+      "resource": "members.html",
+      "kind": "page",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "generated-equivalent",
+      "referencedBy": [
+        "404.html",
+        "announcements.html",
+        "contact.html"
+      ]
+    },
+    {
+      "resource": "pl/404.html",
+      "kind": "page",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "generated-equivalent",
+      "referencedBy": [
+        "404.html",
+        "pl/404.html"
+      ]
+    },
+    {
+      "resource": "pl/announcements.html",
+      "kind": "page",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "generated-equivalent",
+      "referencedBy": [
+        "announcements.html",
+        "pl/404.html",
+        "pl/announcements.html"
+      ]
+    },
+    {
+      "resource": "pl/contact.html",
+      "kind": "page",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "generated-equivalent",
+      "referencedBy": [
+        "contact.html",
+        "pl/404.html",
+        "pl/announcements.html"
+      ]
+    },
+    {
+      "resource": "pl/event-business-forum.html",
+      "kind": "page",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "generated-equivalent",
+      "referencedBy": [
+        "event-business-forum.html",
+        "pl/404.html",
+        "pl/announcements.html"
+      ]
+    },
+    {
+      "resource": "pl/event-christmas-dinner.html",
+      "kind": "page",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "generated-equivalent",
+      "referencedBy": [
+        "event-christmas-dinner.html",
+        "pl/event-christmas-dinner.html",
+        "pl/events.html"
+      ]
+    },
+    {
+      "resource": "pl/event-icebreaker.html",
+      "kind": "page",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "generated-equivalent",
+      "referencedBy": [
+        "event-icebreaker.html",
+        "pl/event-icebreaker.html",
+        "pl/events.html"
+      ]
+    },
+    {
+      "resource": "pl/event-sikorski-debate.html",
+      "kind": "page",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "generated-equivalent",
+      "referencedBy": [
+        "event-sikorski-debate.html",
+        "pl/event-sikorski-debate.html",
+        "pl/events.html"
+      ]
+    },
+    {
+      "resource": "pl/event-youth-congress.html",
+      "kind": "page",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "generated-equivalent",
+      "referencedBy": [
+        "event-youth-congress.html",
+        "pl/event-youth-congress.html",
+        "pl/events.html"
+      ]
+    },
+    {
+      "resource": "pl/events.html",
+      "kind": "page",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "generated-equivalent",
+      "referencedBy": [
+        "events.html",
+        "pl/404.html",
+        "pl/announcements.html"
+      ]
+    },
+    {
+      "resource": "pl/index.html",
+      "kind": "page",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "generated-equivalent",
+      "referencedBy": [
+        "index.html",
+        "pl/404.html",
+        "pl/announcements.html"
+      ]
+    },
+    {
+      "resource": "pl/members.html",
+      "kind": "page",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "generated-equivalent",
+      "referencedBy": [
+        "members.html",
+        "pl/404.html",
+        "pl/announcements.html"
+      ]
+    },
+    {
+      "resource": "pl/team.html",
+      "kind": "page",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "generated-equivalent",
+      "referencedBy": [
+        "pl/404.html",
+        "pl/announcements.html",
+        "pl/contact.html"
+      ]
+    },
+    {
+      "resource": "team.html",
+      "kind": "page",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "generated-equivalent",
+      "referencedBy": [
+        "404.html",
+        "announcements.html",
+        "contact.html"
+      ]
+    },
+    {
+      "resource": "robots.txt",
+      "kind": "root-file",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "byte-identical-passthrough",
+      "referencedBy": [
+        "(platform)"
+      ]
+    },
+    {
+      "resource": "sitemap.xml",
+      "kind": "root-file",
+      "liveExists": true,
+      "distExists": true,
+      "classification": "approved-replacement",
+      "reason": "generated from the route inventory (src/sitemap.njk); same 22 URLs, <lastmod> dropped — see docs/CUTOVER_READINESS.md §3",
+      "referencedBy": [
+        "(platform)"
+      ]
+    }
+  ]
+}

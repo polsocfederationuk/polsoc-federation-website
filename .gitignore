@@ -14,3 +14,8 @@ dist/
 # Eleventy caches
 .cache/
 .eleventy.cache/
+
+# Architectural fixtures (Phase 15). Built by `npm run build:fixtures` into a
+# separate tree so a normal build — and therefore the deployment tree — can never
+# contain a test page. Development-only, exactly like dist/.
+.fixtures/

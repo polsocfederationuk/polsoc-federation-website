@@ -1,0 +1,43 @@
+---
+permalink: sitemap.xml
+eleventyExcludeFromCollections: true
+---
+{#-
+  Generated sitemap, built from src/_data/publicRoutes.js — the same inventory the
+  deployment audit, the crawler and the validator use. It is NOT a scan of dist/,
+  so a diagnostic or fixture page cannot slip in by existing.
+
+  `lastmod` is deliberately OMITTED. The live file carries one hand-set date on all
+  22 URLs, which is not a per-URL content date, and there is no authoritative
+  deterministic date to replace it with: most of these pages have no content date
+  at all. Deriving one from the build clock, file mtime or the current date would
+  make the sitemap non-deterministic AND tell search engines something untrue on
+  every deploy. Omitting the field says nothing rather than something false.
+  Recorded as an approved difference in docs/CUTOVER_READINESS.md §3.
+
+  `changefreq` and `priority` ARE kept: the live values are a consistent, evidently
+  intentional tier model, and a cutover phase is the wrong moment to change a
+  published signal.
+
+  No `xhtml:link` alternates. Every generated page already carries a reciprocal
+  hreflang trio with an English x-default in its <head>, which is the canonical
+  place for it; duplicating that in the sitemap adds a second thing to keep
+  consistent for no gain. The live sitemap has none either.
+-#}
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+{%- for locale in locales %}
+
+  <!-- {{ "English (default)" if locale.code == "en" else "Polish" }} -->
+{%- for route in publicRoutes.routes %}
+{%- if route.locale == locale.code %}
+  <url>
+    <loc>{{ publicRoutes.domain }}{{ route.loc }}</loc>
+    <changefreq>{{ route.changefreq }}</changefreq>
+    <priority>{{ route.priority }}</priority>
+  </url>
+{%- endif %}
+{%- endfor %}
+{%- endfor %}
+
+</urlset>

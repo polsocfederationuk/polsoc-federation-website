@@ -164,8 +164,8 @@ function compareFeatures(label, livePath, genPath) {
 /* --------------------------------------------------------------- run pairs */
 
 const PAIRS = [
-  ["EN chrome", "events.html", "dist/build-test/chrome/index.html"],
-  ["PL chrome", "pl/events.html", "dist/build-test/chrome/pl/index.html"],
+  ["EN chrome", "events.html", ".fixtures/build-test/chrome/index.html"],
+  ["PL chrome", "pl/events.html", ".fixtures/build-test/chrome/pl/index.html"],
 ];
 
 function run() {

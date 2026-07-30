@@ -11,12 +11,17 @@
 const fs = require("fs");
 const path = require("path");
 
-const dist = path.resolve(__dirname, "..", "dist");
+// Both output trees: dist/ is the deployment tree, .fixtures/ holds the
+// architectural fixtures that a normal build deliberately does not emit. Stale
+// output in either would let a removed page survive into the next audit.
+const TARGETS = ["dist", ".fixtures"];
 
-if (!fs.existsSync(dist)) {
-  console.log("clean: dist/ does not exist, nothing to remove");
-  process.exit(0);
+let removed = 0;
+for (const name of TARGETS) {
+  const dir = path.resolve(__dirname, "..", name);
+  if (!fs.existsSync(dir)) continue;
+  fs.rmSync(dir, { recursive: true, force: true });
+  console.log("clean: removed " + dir);
+  removed++;
 }
-
-fs.rmSync(dist, { recursive: true, force: true });
-console.log("clean: removed " + dist);
+if (removed === 0) console.log("clean: nothing to remove");

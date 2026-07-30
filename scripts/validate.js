@@ -54,6 +54,10 @@ const fail = (msg, detail) => {
 
 const assert = (cond, good, bad, detail) => (cond ? ok(good) : fail(bad, detail));
 
+/** SHA-256 of a repo-relative file, for byte-identity checks. */
+const hashFile = (rel) =>
+  require("crypto").createHash("sha256").update(fs.readFileSync(path.join(ROOT, rel))).digest("hex");
+
 /* ------------------------------------------------------------------ helpers */
 
 const read = (rel) => fs.readFileSync(path.join(ROOT, rel), "utf8");
@@ -557,6 +561,26 @@ assert(exists("robots.txt") && !/Disallow/.test(read("robots.txt")),
 assert(read("robots.txt").includes(`${SITE}/sitemap.xml`),
   "robots.txt points at the sitemap", "robots.txt does not declare the sitemap");
 
+/* ---------------------------------------------------------------------------
+   FIXTURE BOOTSTRAP (Phase 15)
+
+   Architectural fixtures no longer ship in dist/ — a normal build ignores them,
+   so a test page can never reach the deployment tree. Several sections below still
+   assert on them (the Phase 2 proof pages, the Phase 3 chrome pages, the Phase 14
+   archive fixture), so they are built ONCE here into .fixtures/.
+
+   Section 33's archive-UI test rebuilds and then removes that tree itself, which
+   is why this runs first and why nothing here depends on it surviving.
+   --------------------------------------------------------------------------- */
+{
+  const { spawnSync } = require("child_process");
+  const r = spawnSync(process.execPath, [path.join(__dirname, "build-fixtures.js")],
+    { cwd: ROOT, encoding: "utf8" });
+  if (r.status !== 0) {
+    console.log("\n  ! fixture build failed — fixture-dependent checks below will fail");
+  }
+}
+
 /* =================================================================== 12. build architecture */
 
 section("12. Build architecture (Phase 2)");
@@ -577,9 +601,19 @@ if (exists("eleventy.config.js")) {
   const cfg = read("eleventy.config.js");
   // Containment is the whole safety story: with input scoped to src/, the build
   // physically cannot read or rewrite the public HTML at the repository root.
-  assert(/input:\s*"src"/.test(cfg) && /output:\s*"dist"/.test(cfg),
-    "Eleventy input is src/ and output is dist/ — the build cannot touch the repository root",
-    "Eleventy input/output directories are not scoped to src/ and dist/");
+  // Phase 15 made the OUTPUT directory conditional: dist/ for a normal build and
+  // .fixtures/ when BUILD_FIXTURES=1, so no test page can reach the deployment
+  // tree. Both branches are asserted, and input stays scoped to src/ — which is
+  // the actual containment guarantee, since it is what stops the build reading or
+  // rewriting the public HTML at the repository root.
+  assert(/input:\s*"src"/.test(cfg), "Eleventy input is scoped to src/ — the build cannot touch the repository root",
+    "Eleventy input is not scoped to src/");
+  assert(/output:\s*FIXTURES \? "\.fixtures" : "dist"/.test(cfg),
+    "Eleventy output is dist/ for a normal build and .fixtures/ only when BUILD_FIXTURES=1",
+    "the Eleventy output directory is not the expected dist/ vs .fixtures/ split");
+  assert(/eleventyConfig\.ignores\.add\("src\/build-test\/\*\*"\)/.test(cfg),
+    "a normal build ignores src/build-test/, so fixtures cannot enter the deployment tree",
+    "src/build-test/ is not ignored by a normal build");
 }
 
 const SRC_DIRS = [
@@ -639,7 +673,7 @@ assert(tracked === "",
 
 // --- proof pages, only if a build has been run ------------------------------
 
-const PROOF = ["dist/build-test/index.html", "dist/build-test/pl/index.html"];
+const PROOF = [".fixtures/build-test/index.html", ".fixtures/build-test/pl/index.html"];
 
 if (!exists("dist")) {
   // Not a failure: validate must work on a clean checkout before any build.
@@ -745,7 +779,11 @@ if (!exists("dist")) {
     const crypto = require("crypto");
     const hash = (p) => crypto.createHash("sha256")
       .update(fs.readFileSync(path.join(ROOT, p))).digest("hex");
-    const copied = distFiles.filter((f) => !f.endsWith(".html") && !GENERATED_ASSETS.has(f));
+    // sitemap.xml joined the generated set in Phase 15 (src/sitemap.njk): it is
+    // built from the route inventory, so it deliberately differs from the
+    // hand-maintained root file and must not be hash-compared against it.
+    const GENERATED_NON_HTML = new Set([...GENERATED_ASSETS, "sitemap.xml"]);
+    const copied = distFiles.filter((f) => !f.endsWith(".html") && !GENERATED_NON_HTML.has(f));
     const altered = copied.filter((f) => {
       const source = PASSTHROUGH_SOURCE[f] || f;
       return !exists(source) || hash("dist/" + f) !== hash(source);
@@ -761,8 +799,8 @@ if (!exists("dist")) {
 section("13. Shared chrome (Phase 3)");
 
 const CHROME = {
-  en: "dist/build-test/chrome/index.html",
-  pl: "dist/build-test/chrome/pl/index.html",
+  en: ".fixtures/build-test/chrome/index.html",
+  pl: ".fixtures/build-test/chrome/pl/index.html",
 };
 
 if (!exists("dist")) {
@@ -4795,7 +4833,7 @@ if (!exists("dist")) {
 
   // The synthetic archive fixture must stay out of the public tree.
   {
-    const fixtures = ["dist/build-test/archive-fixture.html", "dist/build-test/pl/archive-fixture.html"];
+    const fixtures = [".fixtures/build-test/archive-fixture.html", ".fixtures/build-test/pl/archive-fixture.html"];
     assert(fixtures.every((f) => exists(f)),
       "the synthetic archive fixture is generated under build-test/",
       "the archive fixture is missing");
@@ -4835,6 +4873,185 @@ if (!exists("dist")) {
       `the generated homepages match the live pages (${matched || "?"} semantic comparisons — scripts/compare-homepage.js)`,
       "scripts/compare-homepage.js reports differences",
       (cmp.stdout || "").split("\n").filter((l) => /FAIL/.test(l)).slice(0, 12));
+  }
+}
+
+/* =================================================================== 33. deployment tree */
+
+section("33. Deployment tree and cutover readiness (Phase 15)");
+
+{
+  const publicRoutes = require(path.join(ROOT, "src/_data/publicRoutes.js"));
+  const ROUTES = publicRoutes.routes();
+
+  /* -- route inventory ---------------------------------------------------- */
+  assert(ROUTES.length === 22,
+    `the route inventory holds 22 indexable routes (${ROUTES.length})`,
+    `unexpected route count: ${ROUTES.length}`, ROUTES.map((r) => r.loc));
+  {
+    const locs = ROUTES.map((r) => r.loc);
+    const dupes = locs.filter((l, i) => locs.indexOf(l) !== i);
+    assert(dupes.length === 0, "no route is listed twice", "duplicate route", [...new Set(dupes)]);
+    const en = ROUTES.filter((r) => r.locale === "en").length;
+    const pl = ROUTES.filter((r) => r.locale === "pl").length;
+    assert(en === pl, `locale pairs are complete (${en} English, ${pl} Polish)`,
+      "the route inventory is not locale-balanced");
+    assert(!locs.some((l) => /404/.test(l)),
+      "404 pages are excluded from the route inventory (they are noindex)",
+      "a 404 page entered the indexable route inventory");
+    assert(!locs.some((l) => /build-test|fixture/.test(l)),
+      "no fixture route is in the inventory", "a fixture route entered the inventory");
+  }
+
+  if (!exists("dist")) {
+    ok("dist/ not built — run `npm run build` to validate the deployment tree");
+  } else {
+    /* -- required files ---------------------------------------------------- */
+    for (const f of ["dist/sitemap.xml", "dist/robots.txt", "dist/site.webmanifest", "dist/favicon.ico"]) {
+      assert(exists(f), `${f} exists`, `${f} is missing from the deployment tree`);
+    }
+    {
+      const missing = ROUTES.map((r) => `dist/${r.file}`).filter((f) => !exists(f));
+      assert(missing.length === 0, `all ${ROUTES.length} public HTML routes exist in dist/`,
+        "routes missing from dist/", missing);
+    }
+    assert(!exists("dist/build-test"),
+      "a normal build produces no dist/build-test/ — fixtures cannot be deployed",
+      "the deployment tree contains build fixtures");
+
+    /* -- sitemap ----------------------------------------------------------- */
+    {
+      const xml = read("dist/sitemap.xml");
+      const locs = [...xml.matchAll(/<loc>([\s\S]*?)<\/loc>/g)].map((m) => m[1].trim());
+      assert(locs.length > 0, `the generated sitemap parses and holds ${locs.length} URLs`,
+        "the generated sitemap has no URLs");
+      const expected = ROUTES.map((r) => publicRoutes.domain + r.loc);
+      assert(JSON.stringify(locs) === JSON.stringify(expected),
+        "the generated sitemap's URL set matches the canonical route inventory exactly",
+        "sitemap URLs do not match the route inventory",
+        { onlyInSitemap: locs.filter((l) => !expected.includes(l)), onlyInRoutes: expected.filter((l) => !locs.includes(l)) });
+      assert(!locs.some((l) => /404/.test(l)), "the sitemap contains no 404 URL", "a 404 URL is in the sitemap");
+      assert(!locs.some((l) => /build-test|fixture/.test(l)), "the sitemap contains no test URL",
+        "a test URL is in the sitemap");
+      assert(locs.every((l) => l.startsWith("https://")), "every sitemap URL is HTTPS", "a sitemap URL is not HTTPS");
+    }
+
+    /* -- robots ------------------------------------------------------------ */
+    {
+      const robots = read("dist/robots.txt");
+      const declared = (robots.match(/^Sitemap:\s*(\S+)/m) || [])[1];
+      assert(declared === `${publicRoutes.domain}/sitemap.xml`,
+        `robots.txt declares the production sitemap URL (${declared})`,
+        "robots.txt does not point at the production sitemap", declared);
+      assert(hashFile("robots.txt") === hashFile("dist/robots.txt"),
+        "dist/robots.txt is a byte-identical copy of the root file",
+        "dist/robots.txt differs from the root robots.txt");
+    }
+
+    /* -- manifest ---------------------------------------------------------- */
+    {
+      let m = null;
+      try { m = JSON.parse(read("dist/site.webmanifest")); } catch { m = null; }
+      assert(m !== null, "the generated manifest parses", "dist/site.webmanifest does not parse");
+      if (m) {
+        const missing = (m.icons || []).map((i) => String(i.src).replace(/^\//, ""))
+          .filter((s) => !exists("dist/" + s));
+        assert(missing.length === 0, `all ${(m.icons || []).length} manifest icons exist in dist/`,
+          "manifest icons missing from dist/", missing);
+        assert(!(m.icons || []).some((i) => /^\/pl\//.test(i.src)),
+          "no manifest icon uses a /pl/ path", "a manifest icon is locale-scoped");
+      }
+    }
+
+    /* -- the focused audit modules ----------------------------------------- */
+    // Invoked, not reimplemented — each owns its own rules and its own output.
+    {
+      const { spawnSync } = require("child_process");
+      for (const [label, script] of [
+        ["deployment-tree audit", "audit-dist.js"],
+        ["generated-site crawl", "crawl-dist.js"],
+        ["public-parity audit", "audit-public-parity.js"],
+        ["sitemap comparison", "compare-sitemap.js"],
+        ["archive-UI test", "test-archive-ui.js"],
+      ]) {
+        const r = spawnSync(process.execPath, [path.join(__dirname, script)], { cwd: ROOT, encoding: "utf8" });
+        const pass = (r.stdout || "").match(/PASS — (\d+)\/\1 [a-z- ]+/);
+        assert(r.status === 0, `${label} passes (${pass ? pass[1] : "?"} checks — scripts/${script})`,
+          `scripts/${script} reports problems`,
+          (r.stdout || "").split("\n").filter((l) => /FAIL|BLOCKER/.test(l)).slice(0, 10));
+      }
+    }
+
+    /* -- the resource matrix has no blocker -------------------------------- */
+    {
+      const rel = "docs/CUTOVER_RESOURCE_MATRIX.json";
+      assert(exists(rel), "the cutover resource matrix exists", `${rel} is missing`);
+      if (exists(rel)) {
+        let matrix = null;
+        try { matrix = JSON.parse(read(rel)); } catch { matrix = null; }
+        assert(matrix !== null, "the cutover resource matrix parses", `${rel} does not parse`);
+        if (matrix) {
+          assert((matrix.blockers || []).length === 0,
+            "the current-root vs dist/ resource matrix contains no blocker",
+            "publicly required resources are missing from dist/", matrix.blockers);
+        }
+      }
+    }
+  }
+
+  /* -- deployment config is untouched -------------------------------------- */
+  {
+    const toml = read("netlify.toml");
+    assert(/publish\s*=\s*"\."/.test(toml),
+      "Netlify still publishes the repository root — the cutover is a separate commit",
+      "the Netlify publish directory was changed by this phase");
+    assert(/from\s*=\s*"\/pl\/\*"/.test(toml) && /to\s*=\s*"\/pl\/404\.html"/.test(toml)
+      && /status\s*=\s*404/.test(toml),
+      "the Polish 404 fallback rule is unchanged",
+      "the Polish fallback redirect was modified");
+    // Comments are stripped first: netlify.toml explains at length why `force =
+    // true` must never be added, and matching that prose would fail the check the
+    // comment exists to protect.
+    const tomlCode = toml.split("\n").filter((l) => !/^\s*#/.test(l)).join("\n");
+    assert(!/force\s*=\s*true/.test(tomlCode),
+      "the Polish fallback is still non-forced, so real Polish pages win before it",
+      "the fallback became forced, which would intercept the whole Polish site");
+
+    // THE CUTOVER TRAP.
+    //
+    // dist/ is gitignored and untracked, and netlify.toml currently has no build
+    // `command`. Switching `publish` to "dist" WITHOUT adding one would make
+    // Netlify clone the repo, find no dist/, run no build, and publish an empty
+    // directory — the site would go down. The two changes are inseparable, so this
+    // asserts they move together whenever the switch is eventually made.
+    const publishesDist = /publish\s*=\s*"dist"/.test(tomlCode);
+    const hasCommand = /^\s*command\s*=/m.test(tomlCode);
+    assert(!publishesDist || hasCommand,
+      publishesDist
+        ? "netlify.toml publishes dist/ AND declares a build command"
+        : "netlify.toml still publishes the root, so no build command is required yet",
+      "netlify.toml publishes dist/ but declares NO build command — dist/ is gitignored, "
+      + "so Netlify would deploy an empty directory. Add `command = \"npm run build\"` "
+      + "in the same commit. See docs/CUTOVER_READINESS.md §14.");
+  }
+
+  /* -- live public files are untouched -------------------------------------- */
+  {
+    const { execFileSync } = require("child_process");
+    let changed = null;
+    try {
+      changed = execFileSync("git", ["status", "--porcelain", "--",
+        "index.html", "pl/index.html", "events.html", "pl/events.html",
+        "team.html", "pl/team.html", "members.html", "pl/members.html",
+        "announcements.html", "pl/announcements.html", "contact.html", "pl/contact.html",
+        "404.html", "pl/404.html", "sitemap.xml", "robots.txt", "site.webmanifest",
+        "netlify.toml", "css", "js", "assets"],
+        { cwd: ROOT, encoding: "utf8" }).split("\n").map((l) => l.trim()).filter(Boolean);
+    } catch { changed = null; }
+    if (changed === null) ok("git unavailable — live-file guard skipped");
+    else assert(changed.length === 0,
+      "every live public file, asset and the deployment config are unchanged",
+      "this phase modified a live public file", changed);
   }
 }
 

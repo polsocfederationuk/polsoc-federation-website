@@ -20,7 +20,13 @@
     "compare:business-forum": "node scripts/compare-business-forum.js",
     "test:event-groups": "node scripts/test-event-listing-groups.js",
     "compare:events-listing": "node scripts/compare-events-listing.js",
-    "compare:homepage": "node scripts/compare-homepage.js"
+    "compare:homepage": "node scripts/compare-homepage.js",
+    "build:fixtures": "node scripts/build-fixtures.js",
+    "test:archive-ui": "node scripts/test-archive-ui.js",
+    "audit:dist": "node scripts/audit-dist.js",
+    "crawl:dist": "node scripts/crawl-dist.js",
+    "audit:public-parity": "node scripts/audit-public-parity.js",
+    "compare:sitemap": "node scripts/compare-sitemap.js"
   },
   "engines": {
     "node": ">=18"
