@@ -1,0 +1,19 @@
+{#
+  Hero facts bar.
+
+  Every VALUE is generated, never stored as display text:
+    date       <- start_date / end_date via eventDisplayDate
+    venue      <- venue.name
+    attendance <- business_forum.attendance (count + suffix + localised noun)
+    edition    <- business_forum.edition.ordinal
+
+  Only the four labels are stored, because only the labels are language-specific.
+  That is what keeps the facts bar, the JSON-LD and the future listing card from
+  disagreeing the way the live event pages did (EVENT_RECONCILIATION §5.2).
+#}
+    <div class="event-facts">
+      <div class="fact"><span class="fact-label">{{ bf.facts.date_label[locale.code] }}</span><span class="fact-value">{{ event | eventDisplayDate(locale.code) }}</span></div>
+      <div class="fact"><span class="fact-label">{{ bf.facts.venue_label[locale.code] }}</span><span class="fact-value">{{ event.venue | venueDisplay(locale.code) }}</span></div>
+      <div class="fact"><span class="fact-label">{{ bf.facts.attendance_label[locale.code] }}</span><span class="fact-value">{{ bf.attendance.count }}{{ bf.attendance.suffix }} {{ bf.attendance.noun[locale.code] }}</span></div>
+      <div class="fact"><span class="fact-label">{{ bf.facts.edition_label[locale.code] }}</span><span class="fact-value">{{ bf.edition.ordinal[locale.code] }}</span></div>
+    </div>

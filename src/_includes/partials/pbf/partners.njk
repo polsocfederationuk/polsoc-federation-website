@@ -1,0 +1,43 @@
+{#
+  Sponsor and media-patron carousels, plus the funding acknowledgement.
+
+  CAROUSEL DUPLICATION. Each logo is stored ONCE in the record. js/main.js wraps
+  the scroll position at `car.scrollWidth / 2`, which only lands on a tile
+  boundary if the DOM carries exactly two identical sets — so the repetition is a
+  rendering requirement of the animation, not content.
+
+  The count therefore comes from src/_data/businessForumTechnical.js, which is
+  IT-owned and deliberately outside the content record and the future CMS.
+  Storing the duplicate set in YAML would mean a marketing officer adding a
+  partner in one place and silently breaking the loop.
+
+  The repeated set is hidden from assistive technology (`aria-hidden` on the tile,
+  empty `alt` on the image) so screen-reader users hear each partner once.
+#}
+<section class="section section-cream">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow">{{ c.partners_eyebrow }}</span>
+      <h2 class="section-title">{{ c.partners_title.lead }}<span class="fancy">{{ c.partners_title.fancy }}</span></h2>
+      <p class="lead">{{ c.partners_lead }}</p>
+    </div>
+{% for group in bf.partner_groups %}
+    <div class="pbf-logos-head reveal"><h3>{{ group.heading[locale.code] }}</h3><span class="rule" aria-hidden="true"></span></div>
+    <div class="pbf-carousel-wrap reveal">
+    <button class="car-arrow car-prev" type="button" aria-label="{{ group.prev_label[locale.code] }}">←</button>
+    <div class="pbf-carousel" data-autoscroll aria-label="{{ group.aria_label[locale.code] }}">
+{%- for set in range(0, businessForumTechnical.carouselSets) %}
+{%- if set > 0 %}
+      <!-- duplicate set for the seamless loop -->
+{%- endif %}
+{%- for logo in group.logos %}
+      <div class="pbf-logo-tile"{% if set > 0 %} aria-hidden="true"{% endif %}><img src="{{ logo.image }}" alt="{% if set == 0 %}{{ logo.image_alt[locale.code] }}{% endif %}"></div>
+{%- endfor %}
+{%- endfor %}
+    </div>
+    <button class="car-arrow car-next" type="button" aria-label="{{ group.next_label[locale.code] }}">→</button>
+    </div>
+{% endfor %}
+{% include "partials/pbf/funding.njk" %}
+  </div>
+</section>

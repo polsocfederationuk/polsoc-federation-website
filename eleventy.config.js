@@ -129,9 +129,28 @@ function formatDate(iso, localeCode) {
 }
 
 /**
- * Every image referenced by a standard-event record — gallery tiles, the OG
- * image and co-organiser logos. Derived from the records so exactly what the
- * generated pages need is copied, and nothing else.
+ * The JSON-LD `organizer` node.
+ *
+ * The two event families genuinely differ on the live site and both must be
+ * reproduced: standard events name the organisation in English on both locales
+ * and link the root home page, while the Business Forum names it in the page's
+ * own language and links that language's home page. The record shape decides —
+ * a localised `organiser` means the localised organisation page.
+ */
+function buildOrganizer(organiser, locale, site) {
+  const localised = organiser && typeof organiser === "object";
+  return {
+    "@type": "Organization",
+    name: localised ? organiser[locale.code] : organiser,
+    url: site.domain + "/" + (localised ? locale.urlPrefix : ""),
+  };
+}
+
+/**
+ * Every image referenced by an event record — gallery tiles, the OG and card
+ * images, co-organiser logos, and everything inside the Business Forum
+ * extension. Derived from the records so exactly what the generated pages need
+ * is copied, and adding a partner logo needs no second list updated.
  */
 function eventImagePaths() {
   const dir = path.join(__dirname, "content", "events");
@@ -143,8 +162,24 @@ function eventImagePaths() {
     const add = (p) => { if (p) paths.add(String(p).replace(/^\/+/, "")); };
     add(rec.og_image);
     add(rec.hero_image);
+    add(rec.card_image);
     for (const sec of rec.sections || []) for (const im of sec.images || []) add(im.src);
     for (const co of rec.co_organisers || []) add(co.logo);
+
+    const bf = rec.business_forum;
+    if (bf) {
+      add((bf.branding || {}).logo);
+      // Edition-specific hero backdrop, applied via the --pbf-hero-backdrop
+      // custom property rather than an <img>, so it needs copying explicitly.
+      add((bf.branding || {}).hero_backdrop);
+      add((bf.statistics || {}).background);
+      for (const g of bf.galleries || []) for (const im of g.images || []) add(im.src);
+      for (const p of bf.people || []) add(p.photo);
+      for (const f of bf.people_photo_row || []) add(f.src);
+      for (const g of bf.partner_groups || []) for (const lg of g.logos || []) add(lg.image);
+      add((bf.funding_acknowledgement || {}).logo);
+      if ((bf.forum_ball || {}).enabled) add(bf.forum_ball.image);
+    }
   }
   return [...paths].sort();
 }
@@ -353,6 +388,22 @@ module.exports = function (eleventyConfig) {
   eleventyConfig.addFilter("eventBody", (markdown) => renderEventBody(markdown));
 
   /**
+   * Apply an inline style to the FIRST paragraph of rendered prose.
+   *
+   * The Business Forum Ball's opening paragraph carries extra bottom spacing on
+   * the live page, and `.pbf-ball p` sets only colour — so that inline style is
+   * the only thing separating the two paragraphs. It is presentation, so it
+   * belongs to the template rather than being stored in the record as markup a
+   * marketing officer could break.
+   */
+  eleventyConfig.addFilter("styleFirstParagraph", (html, style) => {
+    const s = String(html);
+    const i = s.indexOf("<p>");
+    if (i === -1 || !style) return s;
+    return s.slice(0, i) + `<p style="${style}">` + s.slice(i + 3);
+  });
+
+  /**
    * The visible date for an event, from its machine-readable fields.
    *
    * `date_precision: month` prints "October 2025" / "Październik 2025" — note
@@ -430,7 +481,11 @@ module.exports = function (eleventyConfig) {
     const ld = {
       "@context": "https://schema.org",
       "@type": "Event",
-      name: [loc.title_lead, loc.title_fancy, loc.title_tail].filter(Boolean).join("").trim(),
+      // Standard events compose their name from the display title's parts; the
+      // Business Forum stores one `title` because its visible title is a logo
+      // lock-up, not text. One builder serves both families.
+      name: loc.title
+        || [loc.title_lead, loc.title_fancy, loc.title_tail].filter(Boolean).join("").trim(),
       description: loc.schema_description,
       image: site.domain + event.og_image,
       startDate: event.start_date,
@@ -445,7 +500,7 @@ module.exports = function (eleventyConfig) {
           addressCountry: event.venue.country,
         },
       },
-      organizer: { "@type": "Organization", name: event.organiser, url: site.domain + "/" },
+      organizer: buildOrganizer(event.organiser, locale, site),
       url,
     };
     if (event.end_date) ld.endDate = event.end_date;
@@ -571,6 +626,9 @@ module.exports = function (eleventyConfig) {
   // and remain the files the live site serves.
   // ---------------------------------------------------------------------
   eleventyConfig.addPassthroughCopy({ "css/style.css": "css/style.css" });
+  // The branded Business Forum overrides. Its own url() references resolve
+  // relative to the stylesheet, so no /pl/ variant is needed.
+  eleventyConfig.addPassthroughCopy({ "css/pbf.css": "css/pbf.css" });
   eleventyConfig.addPassthroughCopy({ "js/main.js": "js/main.js" });
   eleventyConfig.addPassthroughCopy({ "favicon.ico": "favicon.ico" });
   eleventyConfig.addPassthroughCopy({ "site.webmanifest": "site.webmanifest" });

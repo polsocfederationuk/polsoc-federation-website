@@ -1,0 +1,17 @@
+{#
+  A story gallery strip. Called once per entry in business_forum.galleries.
+
+  Image paths, order and the `wide` flag are shared between locales; only alt
+  text is localised, matched positionally. `wide` renders the span-2 tile that
+  keeps the existing grid rhythm and object-fit behaviour.
+
+  The strip's spacing comes from `galleryStyle`, set by the caller: it is fixed
+  layout for a branded page, so it stays out of the record and out of the CMS.
+
+  Expects: gallery, galleryStyle
+#}
+    <div class="gallery-grid reveal" style="{{ galleryStyle }}">
+{%- for image in gallery.images %}
+      <div class="ph{% if image.wide %} ph-wide span-2{% endif %}"><img src="{{ image.src }}" alt="{{ image.alt[locale.code] }}"></div>
+{%- endfor %}
+    </div>

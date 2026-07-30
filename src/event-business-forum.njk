@@ -1,0 +1,60 @@
+---
+layout: layouts/base.njk
+
+# Two pages: one Business Forum edition × two locales. The pairs come from
+# src/_data/businessForumPages.js, which filters on event_family — that filter is
+# what stops a Business Forum record ever reaching src/event.njk, and a standard
+# record ever reaching this template.
+pagination:
+  data: businessForumPages
+  size: 1
+  alias: page_pair
+
+# Explicit permalink — the live URLs must survive exactly. No directory URLs.
+permalink: "{{ page_pair.locale.urlPrefix }}event-{{ page_pair.event.slug }}.html"
+
+# Everything computed — `locale`, the pbf-page body class, the pbf.css cascade
+# slot, the SEO fields and the JSON-LD — lives in
+# src/event-business-forum.11tydata.js. See the note at the top of that file.
+---
+{#
+  THE BUSINESS FORUM SECTION ORDER IS FIXED HERE, NOT IN THE RECORD.
+
+  Standard events carry a `sections:` list because their pages genuinely differ
+  in shape. The Forum is a branded set piece: hero, story, numbers, Ball,
+  founders, partners, galleries. A marketing officer fills those sections in and
+  can hide the Ball, but cannot reorder or remove the branded structure — which
+  is why there is no `sections:` key in business-forum.yaml.
+
+  Only the Forum Ball is conditional.
+#}
+{%- set event = page_pair.event -%}
+{%- set locale = page_pair.locale -%}
+{%- set c = event[locale.code] -%}
+{%- set bf = event.business_forum -%}
+{% include "partials/pbf/hero.njk" %}
+
+<section class="section has-watermark">
+  <span class="watermark" aria-hidden="true">{{ bf.branding.watermark_story }}</span>
+  <div class="container">
+
+{#- Gallery spacing is fixed layout for this branded page, so it lives here
+    rather than in the record. -#}
+{% set gallery = bf.galleries[0] %}{% set galleryStyle = "margin-bottom: 70px;" %}{% include "partials/pbf/gallery.njk" %}
+
+    <div class="prose reveal">
+      {{ c.story_body | eventBody | safe }}
+    </div>
+
+{% set gallery = bf.galleries[1] %}{% set galleryStyle = "margin-top: 60px;" %}{% include "partials/pbf/gallery.njk" %}
+  </div>
+</section>
+
+{% include "partials/pbf/statistics.njk" %}
+{%- if bf.forum_ball.enabled %}
+{%- set ball = bf.forum_ball %}
+{% include "partials/pbf/ball.njk" %}
+{%- endif %}
+{% include "partials/pbf/people.njk" %}
+{% include "partials/pbf/partners.njk" %}
+{% include "partials/pbf/photographers.njk" %}

@@ -1,0 +1,38 @@
+{#
+  Photographer credits and gallery links.
+
+  The gallery PIN is a separate field, not embedded in the description: the live
+  page wraps it in <span class="pbf-pin"> and that markup belongs to the template.
+  A photographer without a PIN simply omits the field and no span is emitted.
+
+  The camera glyph is decorative structure (aria-hidden), identical for every
+  card, so it is not a record field.
+#}
+<section class="section pbf-photogs">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow">{{ c.photographers_eyebrow }}</span>
+      <h2 class="section-title">{{ c.photographers_title.lead }}<span class="fancy">{{ c.photographers_title.fancy }}</span></h2>
+      <p class="lead">{{ c.photographers_lead }}</p>
+    </div>
+
+    <div class="pbf-photog-grid">
+{%- for photographer in bf.photographers %}
+      <div class="pbf-photog reveal{% if loop.index0 > 0 %} reveal-d{{ loop.index0 }}{% endif %}">
+        <div class="cam" aria-hidden="true">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        </div>
+        <span class="ptag">{{ photographer.tag[locale.code] }}</span>
+        <h3>{{ photographer.name }}</h3>
+        <p>{{ photographer.description[locale.code] }}{% if photographer.pin %} <span class="pbf-pin">{{ photographer.pin }}</span>{% endif %}</p>
+        <a class="btn btn-pbf" href="{{ photographer.gallery_url }}" target="_blank" rel="noopener">{{ photographer.link_label[locale.code] }} <span class="arrow">→</span></a>
+      </div>
+{%- endfor %}
+    </div>
+
+    <div style="margin-top: 40px;" class="reveal">
+      {#- Relative on purpose: from /pl/ this resolves to the Polish listing. -#}
+      <a class="btn btn-pbf" href="events.html" style="background: transparent; color: #fff; border-color: rgba(255,255,255,0.45);">{{ c.back_link_bottom }}</a>
+    </div>
+  </div>
+</section>

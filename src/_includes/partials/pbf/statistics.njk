@@ -1,0 +1,37 @@
+{#
+  The navy statistics band.
+
+  Two kinds of stat, both driven from the record:
+    counter  — data-count / data-suffix / data-plain, animated by js/main.js
+    text     — a `value` string for a stat that is not a number ("Grand Ball")
+
+  `data-plain` suppresses thousands separators so a year-like number does not
+  render as "2,013". No stat in this edition needs it, but the flag is supported
+  because the homepage's Est. 2013 counter depends on exactly this attribute.
+
+  The literal 0 inside a counter is its pre-animation value and is what shows if
+  JavaScript never runs — not a placeholder.
+
+  The attendance counter's number comes from business_forum.attendance, the same
+  field the facts bar reads, so the band and the bar cannot disagree.
+#}
+<section class="section section-navy spotlight pbf-stats">
+  <div class="pbf-stats-bg" style="background-image: url('{{ bf.statistics.background }}');" aria-hidden="true"></div>
+  <div class="container">
+    <div class="section-head center reveal">
+      <span class="eyebrow">{{ bf.statistics.eyebrow[locale.code] }}</span>
+    </div>
+    <div class="stats-grid">
+{%- for stat in bf.statistics.items %}
+      <div class="stat reveal{% if loop.index0 > 0 %} reveal-d{{ loop.index0 }}{% endif %}">
+{%- if stat.value %}
+        <div class="stat-value">{{ stat.value[locale.code] }}</div>
+        <div class="stat-label">{{ stat.label[locale.code] }}</div>
+{%- else %}
+<div class="stat-number" data-count="{{ stat.count }}"{% if stat.suffix %} data-suffix="{{ stat.suffix }}"{% endif %}{% if stat.plain %} data-plain{% endif %}>0</div><div class="stat-label">{{ stat.label[locale.code] }}</div>
+{%- endif %}
+      </div>
+{%- endfor %}
+    </div>
+  </div>
+</section>

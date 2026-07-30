@@ -1,0 +1,45 @@
+{#
+  Founders and project leaders.
+
+  Names are shared and never translated; roles are localised. The live photo alt
+  IS the person's name, so it is derived rather than stored twice — a separate
+  alt field would let the two drift.
+
+  There are no biography fields because the live page has none; inventing them
+  would create empty CMS inputs that invite content the design cannot show.
+#}
+<section class="section has-watermark">
+  <span class="watermark" aria-hidden="true">{{ bf.branding.watermark_people[locale.code] }}</span>
+  <div class="container">
+    <div class="section-head center reveal">
+      <span class="eyebrow">{{ c.people_eyebrow }}</span>
+      <h2 class="section-title">{{ c.people_title.lead }}<span class="fancy">{{ c.people_title.fancy }}</span></h2>
+      <p class="lead">{{ c.people_lead }}</p>
+    </div>
+
+    <div class="pbf-people reveal">
+{%- for person in bf.people %}
+      <div class="pbf-person">
+        <div class="pp"><img src="{{ person.photo }}" alt="{{ person.name }}"></div>
+        <h3>{{ person.name }}</h3>
+        <span class="pbf-role">{{ person.role[locale.code] }}</span>
+      </div>
+{%- endfor %}
+    </div>
+
+    <div class="pbf-ack reveal">
+      <p>{{ bf.calls_to_action.team.text[locale.code] }}</p>
+      {#- Relative on purpose: from /pl/ this resolves to the Polish team page. -#}
+      <a class="btn btn-primary" href="{{ bf.calls_to_action.team.url }}">{{ bf.calls_to_action.team.label[locale.code] }} <span class="arrow">→</span></a>
+    </div>
+
+    <div class="pbf-photo-row reveal">
+{%- for figure in bf.people_photo_row %}
+      <figure>
+        <div class="pbf-img"><img src="{{ figure.src }}" alt="{{ figure.alt[locale.code] }}"></div>
+        <figcaption class="pbf-caption">{{ figure.caption[locale.code] }}</figcaption>
+      </figure>
+{%- endfor %}
+    </div>
+  </div>
+</section>

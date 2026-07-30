@@ -1,0 +1,28 @@
+{#
+  Branded Business Forum hero. STRUCTURE IS IT-CONTROLLED.
+
+  The hero has no <img>: the backdrop is a CSS layer beneath the navy overlay.
+  The overlay, `center 30%` framing, `cover` scaling, watermark offset and
+  `overflow: hidden` clipping all stay in css/pbf.css and are not configurable.
+
+  Only the PHOTOGRAPH is edition-specific, so it is passed in as a custom
+  property that the stylesheet reads. css/pbf.css falls back to the 2026 image,
+  so the hand-written live pages — which set no property — are unaffected.
+
+  The visible title is the logo lock-up, so the page's real <h1> is
+  screen-reader-only. Removing either would leave the page unbranded or
+  headingless, and neither is editable from a record.
+#}
+<section class="pbf-hero"{% if bf.branding.hero_backdrop %} style="--pbf-hero-backdrop: url('{{ bf.branding.hero_backdrop }}')"{% endif %}>
+  <div class="hero-bg" aria-hidden="true"></div>
+  <span class="pbf-watermark" aria-hidden="true">{{ bf.branding.watermark_hero }}</span>
+  <div class="container">
+    {#- Relative on purpose: from /pl/ this resolves to the Polish listing. -#}
+    <a class="back-link" href="events.html">{{ c.back_link }}</a>
+    <span class="pbf-eyebrow">{{ c.hero_eyebrow }}</span>
+    <h1 class="sr-only">{{ c.title }}</h1>
+    <img class="pbf-logo" src="{{ bf.branding.logo }}" alt="{{ bf.branding.logo_alt }}">
+    <p class="pbf-tagline">{{ bf.branding.tagline }}</p>
+{% include "partials/pbf/facts.njk" %}
+  </div>
+</section>

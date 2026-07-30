@@ -70,6 +70,16 @@ function parse(html) {
   o.meta.description = decode(g(/<meta name="description" content="([\s\S]*?)">/) || "");
   o.meta.canonical = g(/<link rel="canonical" href="([^"]+)">/);
   o.meta.ogLocale = g(/<meta property="og:locale" content="([^"]+)">/);
+  // Added in Phase 12: these were NOT compared originally, and the generated
+  // pages had drifted — og:type defaulted to "website" against the live pages'
+  // "article", and the Icebreaker lost the shared banner's dimension fields.
+  o.meta.ogType = g(/<meta property="og:type" content="([^"]*)">/);
+  o.meta.ogImageExtended = [
+    g(/<meta property="og:image:secure_url" content="([^"]*)">/),
+    g(/<meta property="og:image:type" content="([^"]*)">/),
+    g(/<meta property="og:image:width" content="([^"]*)">/),
+    g(/<meta property="og:image:height" content="([^"]*)">/),
+  ];
   o.meta.ogImage = assetKey((g(/<meta property="og:image" content="([^"]+)">/) || "").replace(/^https?:\/\/[^/]+/, ""));
   o.meta.ogImageAlt = decode(g(/<meta property="og:image:alt" content="([^"]*)">/) || "");
   o.meta.hreflang = [...head.matchAll(/<link rel="alternate" hreflang="([^"]*)" href="([^"]*)">/g)]
@@ -236,6 +246,9 @@ function comparePage(slug, localeCode) {
   check(p("canonical is the live URL"), `${SITE}/${pre}event-${slug}.html`, gen.meta.canonical);
   check(p("hreflang trio"), live.meta.hreflang, gen.meta.hreflang);
   check(p("og:locale"), live.meta.ogLocale, gen.meta.ogLocale);
+  check(p("og:type"), live.meta.ogType, gen.meta.ogType);
+  check(p("og:image extended fields (secure_url/type/width/height)"),
+    live.meta.ogImageExtended, gen.meta.ogImageExtended);
   check(p("og:image"), live.meta.ogImage, gen.meta.ogImage);
   check(p("stylesheets"), live.refs.stylesheets, gen.refs.stylesheets);
   check(p("active nav marks Events"), live.refs.activeNav, gen.refs.activeNav);

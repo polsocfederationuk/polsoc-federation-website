@@ -1,0 +1,462 @@
+# ===========================================================================
+# POLISH BUSINESS FORUM 2026 — the current edition.
+#
+# Generated from the two live pages during the Phase 12 migration; no prose,
+# alt text, partner logo, role or link was retyped. See
+# docs/BUSINESS_FORUM_MIGRATION.md.
+#
+# This record uses the SAME shared event core as the standard events, so a
+# later phase can build listing cards, the homepage timeline, archives, the
+# sitemap and JSON-LD through one code path. The `business_forum:` extension
+# below holds what only this family has, and only this family may have.
+#
+# One record per ANNUAL EDITION. The 2027 Forum is a NEW file
+# (business-forum-2027.yaml), never an edit of this one.
+# ===========================================================================
+
+# ---- shared event core ----------------------------------------------------
+slug: business-forum
+event_family: polish-business-forum
+template: business-forum          # the ONLY template this family may use
+academic_year: "2025/26"
+published: true
+order: 1                          # the flagship leads the listing
+flagship: true
+show_in_listing: true
+show_on_homepage: true
+show_in_archive: true
+
+# Quoted so YAML keeps them as strings: unquoted dates become JS Date objects
+# whose stringification is timezone-dependent.
+start_date: "2026-04-24"
+end_date: "2026-04-25"           # the Forum runs over two days
+date_precision: day
+
+venue:
+  name: { en: "London Business School", pl: "London Business School" }
+  neighbourhood: null
+  locality: { en: "London", pl: "Londyn" }
+  country: "GB"
+
+registration:
+  state: none                      # the 2026 edition has been held
+  type: null
+  url: null
+  email: null
+
+# The Forum's hero shows no <img>: its backdrop is a CSS layer under the navy
+# overlay. The IMAGE is edition-specific and lives in
+# business_forum.branding.hero_backdrop below; the hero's geometry, overlay and
+# clipping stay in css/pbf.css. `hero_image` is the STANDARD-event field for a
+# hero photograph element, which this family does not have — hence null.
+hero_image: null
+card_image: "/assets/pbf/stage.jpg"         # the future listing card
+og_image: "/assets/pbf/stage.jpg"
+
+# Localised on this family: the live Polish page carries the Polish
+# organisation name in its JSON-LD, unlike the standard events.
+organiser:
+  en: "Federation of Polish Student Societies UK"
+  pl: "Federacja Polskich Stowarzyszeń Studenckich w Wielkiej Brytanii"
+co_organisers: []
+
+# Named in the live JSON-LD. Personal names are never translated.
+performers:
+  - name: "Jan Krzysztof Bielecki"
+    type: Person
+  - name: "Norman Davies"
+    type: Person
+  - name: "Marcin Piątkowski"
+    type: Person
+
+# ===========================================================================
+# BUSINESS FORUM EXTENSION — permitted ONLY on event_family:
+# polish-business-forum. The validator rejects it on any standard record.
+# ===========================================================================
+business_forum:
+
+  edition:
+    number: 1                      # the inaugural edition
+    ordinal: { en: "Inaugural", pl: "Pierwsza" }
+
+  # Branding is structural. A marketing officer supplies the artwork and the
+  # words; the geometry, watermark placement and lock-up rules are CSS.
+  branding:
+    logo: "/assets/pbf/pbf-logo-full.png"
+    logo_alt: "Polish Business Forum"   # the wordmark reads the same in both languages
+    tagline: "Polish Golden Age: From Emerging to Leading"
+    # EDITION-SPECIFIC, not permanent branding: this is the 2026 team on the LBS
+    # main stage — the same photograph used for the OG card, the listing card and
+    # the first story tile. A 2027 edition supplies its own here and needs no CSS
+    # change. The template passes it to css/pbf.css as --pbf-hero-backdrop, which
+    # falls back to this same file so the un-migrated live pages are unaffected.
+    hero_backdrop: "/assets/pbf/stage.jpg"
+    # Watermarks: the hero and year marks are language-neutral; the people
+    # section's mark is a translated word.
+    watermark_hero: "PBF"
+    watermark_story: "2026"
+    watermark_people: { en: "FOUNDERS", pl: "ZAŁOŻYCIELE" }
+
+  # Attendance is stored ONCE here and read by both the facts bar and the
+  # statistics band, so the two can never disagree.
+  attendance:
+    count: 300
+    suffix: "+"
+    noun: { en: "guests", pl: "gości" }
+
+  # Hero facts bar. Date and venue values are GENERATED from the canonical
+  # fields above; attendance and edition come from this extension. Only the
+  # labels are stored, because only the labels are language-specific.
+  facts:
+    date_label: { en: "Date", pl: "Data" }
+    venue_label: { en: "Venue", pl: "Miejsce" }
+    attendance_label: { en: "Attendance", pl: "Frekwencja" }
+    edition_label: { en: "Edition", pl: "Edycja" }
+
+  # The navy band. `count`/`suffix`/`plain` drive js/main.js's animated
+  # counters; `plain` suppresses thousands separators for year-like numbers
+  # (no stat needs it this edition, but the homepage's Est. 2013 counter does,
+  # so the flag is supported rather than dropped).
+  statistics:
+    background: "/assets/pbf/networking-hero.jpg"
+    eyebrow: { en: "The Forum in numbers", pl: "Forum w liczbach" }
+    items:
+      - count: 300
+        suffix: "+"
+        plain: false
+        label: { en: "Attendees", pl: "Uczestników" }
+      - count: 2
+        suffix: null
+        plain: false
+        label: { en: "Days of programme", pl: "Dni programu" }
+      - count: 40
+        suffix: "+"
+        plain: false
+        label: { en: "Speakers", pl: "Prelegentów" }
+      - value: { en: "Grand Ball", pl: "Wielki Bal" }   # a text stat, not a counter
+        label: { en: "Black tie at The Landmark London", pl: "Black tie w The Landmark London" }
+
+  # The two story galleries that bracket the write-up. Image paths, order and
+  # tile widths are shared; only alt text is localised. The strips' spacing is
+  # NOT here — it is fixed layout, set by the template, so no CSS reaches the
+  # CMS surface.
+  galleries:
+    - images:
+        - src: "/assets/pbf/stage.jpg"
+          wide: true
+          alt: { en: "The Polish Business Forum team on the main stage at London Business School", pl: "Zespół Polish Business Forum na głównej scenie w London Business School" }
+        - src: "/assets/pbf/audience.jpg"
+          wide: false
+          alt: { en: "A full audience during a Polish Business Forum session", pl: "Pełna widownia podczas sesji Polish Business Forum" }
+    - images:
+        - src: "/assets/pbf/finance-panel.jpg"
+          wide: true
+          alt: { en: "The finance panel on stage at Polish Business Forum 2026", pl: "Panel finansowy na scenie Polish Business Forum 2026" }
+        - src: "/assets/pbf/bielecki.jpg"
+          wide: false
+          alt: { en: "Former Prime Minister Jan Krzysztof Bielecki in conversation at the Forum", pl: "Były premier Jan Krzysztof Bielecki podczas rozmowy na Forum" }
+
+  # Founders and project leaders, in the live order. Names are never
+  # translated; roles are. The live photo alt IS the person's name.
+  #
+  # "Founder" renders as "współzałożyciel" (co-founder) throughout, because the
+  # Forum has five of them — that is the wording the live Polish page already
+  # uses for Szymon Kwidziński's IDENTICAL English role, and for Marek Świątek
+  # and Michał Kobus. Nikodem Rajpold's role was left untranslated on the live
+  # page; it now matches Szymon's, since the English is character-for-character
+  # the same.
+  people:
+    - name: "Szymon Kwidziński"
+      photo: "/assets/team/szymon-kwidzinski.jpg"
+      role: { en: "Project Leader & Founder", pl: "Lider projektu i współzałożyciel" }
+    - name: "Nikodem Rajpold"
+      photo: "/assets/team/nikodem-rajpold.jpg"
+      role: { en: "Project Leader & Founder", pl: "Lider projektu i współzałożyciel" }
+    - name: "Ewa Borys"
+      photo: "/assets/team/ewa-borys.jpg"
+      role: { en: "Project Leader", pl: "Liderka projektu" }
+    - name: "Marek Świątek"
+      photo: "/assets/team/marek-swiatek.jpg"
+      role: { en: "Founder", pl: "Współzałożyciel" }
+    - name: "Michał Kobus"
+      photo: "/assets/team/michal-kobus.jpg"
+      role: { en: "LBS Coordinator & Founder", pl: "Koordynator LBS i współzałożyciel" }
+
+  people_photo_row:
+    - src: "/assets/pbf/project-leaders.jpg"
+      alt: { en: "The Polish Business Forum project leaders on stage", pl: "Liderzy projektu Polish Business Forum na scenie" }
+      caption: { en: "Project leaders", pl: "Liderzy projektu" }
+    - src: "/assets/pbf/team-steps.jpg"
+      alt: { en: "The Polish Business Forum team photographed at dusk", pl: "Zespół Polish Business Forum na zdjęciu o zmierzchu" }
+      caption: { en: "The Forum team", pl: "Zespół Forum" }
+
+  # Sponsors and media patrons. Each logo is stored exactly ONCE.
+  #
+  # The live carousel repeats the tile set in the DOM for a seamless loop, but
+  # that repetition is NOT content and is not configured here — it is IT-owned
+  # machinery in src/_data/businessForumTechnical.js, because it exists only
+  # because js/main.js wraps at scrollWidth / 2. Editing a partner list must
+  # never require thinking about it.
+  partner_groups:
+    - key: sponsors
+      order: 1
+      heading: { en: "Sponsors", pl: "Sponsorzy" }
+      aria_label: { en: "Sponsor logos", pl: "Logotypy sponsorów" }
+      prev_label: { en: "Scroll sponsors backwards", pl: "Przewiń sponsorów wstecz" }
+      next_label: { en: "Scroll sponsors forwards", pl: "Przewiń sponsorów dalej" }
+      logos:
+        - name: "London Business School"
+          image: "/assets/pbf/sponsors/lbs.jpg"
+          url: null
+          image_alt: { en: "London Business School", pl: "London Business School" }
+        - name: "PKO Bank Polski"
+          image: "/assets/pbf/sponsors/pko-bp.jpg"
+          url: null
+          image_alt: { en: "PKO Bank Polski", pl: "PKO Bank Polski" }
+        - name: "Bank Pekao"
+          image: "/assets/pbf/sponsors/bank-pekao.png"
+          url: null
+          image_alt: { en: "Bank Pekao", pl: "Bank Pekao" }
+        - name: "VeloBank"
+          image: "/assets/pbf/sponsors/velobank.png"
+          url: null
+          image_alt: { en: "VeloBank", pl: "VeloBank" }
+        - name: "OC&C Strategy Consultants"
+          image: "/assets/pbf/sponsors/occ.webp"
+          url: null
+          image_alt: { en: "OC&C Strategy Consultants", pl: "OC&C Strategy Consultants" }
+        - name: "Legimi"
+          image: "/assets/pbf/sponsors/legimi.jpg"
+          url: null
+          image_alt: { en: "Legimi", pl: "Legimi" }
+        - name: "HEATPEX"
+          image: "/assets/pbf/sponsors/heatpex.jpg"
+          url: null
+          image_alt: { en: "HEATPEX", pl: "HEATPEX" }
+        - name: "ntfy"
+          image: "/assets/pbf/sponsors/ntfy.png"
+          url: null
+          image_alt: { en: "ntfy", pl: "ntfy" }
+        - name: "Stowarzyszenie Wspólnota Polska"
+          image: "/assets/pbf/sponsors/wspolnota-polska.png"
+          url: null
+          image_alt: { en: "Stowarzyszenie Wspólnota Polska", pl: "Stowarzyszenie Wspólnota Polska" }
+    - key: media-patrons
+      order: 2
+      heading: { en: "Media Patrons", pl: "Patroni medialni" }
+      aria_label: { en: "Media patron logos", pl: "Logotypy patronów medialnych" }
+      prev_label: { en: "Scroll media patrons backwards", pl: "Przewiń patronów medialnych wstecz" }
+      next_label: { en: "Scroll media patrons forwards", pl: "Przewiń patronów medialnych dalej" }
+      logos:
+        - name: "Business Insider Polska"
+          image: "/assets/pbf/media/business-insider.png"
+          url: null
+          image_alt: { en: "Business Insider Polska", pl: "Business Insider Polska" }
+        - name: "PAP Biznes"
+          image: "/assets/pbf/media/pap-biznes.jpg"
+          url: null
+          image_alt: { en: "PAP Biznes", pl: "PAP Biznes" }
+        - name: "Puls Biznesu"
+          image: "/assets/pbf/media/puls-biznesu.png"
+          url: null
+          image_alt: { en: "Puls Biznesu", pl: "Puls Biznesu" }
+        - name: "British Poles"
+          image: "/assets/pbf/media/british-poles.png"
+          url: null
+          image_alt: { en: "British Poles", pl: "British Poles" }
+        - name: "MyPolska"
+          image: "/assets/pbf/media/mypolska.png"
+          url: null
+          image_alt: { en: "MyPolska", pl: "MyPolska" }
+        - name: "The Lambert"
+          image: "/assets/pbf/media/lambert.webp"
+          url: null
+          image_alt: { en: "The Lambert", pl: "The Lambert" }
+        - name: "Focus on Business"
+          image: "/assets/pbf/media/focus-on-business.jpg"
+          url: null
+          image_alt: { en: "Focus on Business", pl: "Focus on Business" }
+        - name: "Comparic"
+          image: "/assets/pbf/media/comparic.webp"
+          url: null
+          image_alt: { en: "Comparic", pl: "Comparic" }
+        - name: "StockWatch"
+          image: "/assets/pbf/media/stockwatch.png"
+          url: null
+          image_alt: { en: "StockWatch", pl: "StockWatch" }
+        - name: "FXMAG"
+          image: "/assets/pbf/media/fxmag.webp"
+          url: null
+          image_alt: { en: "FXMAG", pl: "FXMAG" }
+        - name: "Przegląd"
+          image: "/assets/pbf/media/przeglad.webp"
+          url: null
+          image_alt: { en: "Przegląd", pl: "Przegląd" }
+
+  # Belongs to this family only. Another event would have to demonstrate the
+  # same requirement before this is generalised.
+  funding_acknowledgement:
+    logo: "/assets/pbf/senat-polonia-2026.png"
+    logo_alt: { en: "Senat–Polonia 2026", pl: "Senat–Polonia 2026" }
+    text: { en: "Project co-financed as part of the care of the Senate of the Republic of Poland for the Polish diaspora and Poles abroad in 2026.", pl: "Projekt współfinansowany w ramach sprawowania opieki Senatu Rzeczypospolitej Polskiej nad Polonią i Polakami za granicą w 2026 roku." }
+
+  # Optional and edition-specific: `enabled: false` renders no section at all,
+  # no heading and no placeholder. A future edition without a Ball sets that
+  # flag rather than deleting the block.
+  forum_ball:
+    enabled: true
+    image: "/assets/pbf/ball-polonez.jpg"
+    image_alt: { en: "Guests dancing the polonez at the Polish Business Forum Ball", pl: "Goście tańczą poloneza na Balu Polish Business Forum" }
+    caption: { en: "The polonez opens the Forum Ball", pl: "Polonez otwiera Bal Forum" }
+    eyebrow: { en: "Day one, after dark", pl: "Pierwszy dzień, po zmroku" }
+    title:
+      en: { lead: "The Forum ", fancy: "Ball" }
+      pl: { lead: "Bal ", fancy: "Forum" }
+    body:
+      # The live Polish page carries the ENGLISH ball copy. Translated here as an
+      # approved bilingual correction — see docs/BUSINESS_FORUM_MIGRATION.md §7
+      # and the addendum in docs/EVENT_RECONCILIATION.md.
+      #
+      # "black tie" is kept, matching the statistics label the live Polish page
+      # already uses ("Black tie w The Landmark London"). Brand, hotel and dance
+      # names are proper nouns and are not translated.
+      en: |
+        The inaugural Polish Business Forum Ball brought delegates, speakers and partners together for a grand black-tie evening at The Landmark London — one of the capital's most storied five-star hotels.
+
+        The night opened in true Polish tradition with the polonez, before dinner, speeches and dancing carried the Forum's conversations long past midnight. It was the moment the conference became a community.
+      pl: |
+        Pierwszy Bal Polish Business Forum zgromadził delegatów, prelegentów i partnerów podczas uroczystego wieczoru w formule black tie w The Landmark London, jednym z najbardziej znanych pięciogwiazdkowych hoteli w Londynie.
+
+        Wieczór rozpoczął się zgodnie z polską tradycją polonezem. Następnie kolacja, przemówienia i tańce sprawiły, że rozmowy rozpoczęte podczas Forum trwały długo po północy. To był moment, w którym konferencja przerodziła się w prawdziwą społeczność.
+
+  photographers:
+    - name: "YoniVisuals"
+      gallery_url: "https://yonivisuals49.pixieset.com/polishbusinessforum/"
+      pin: "8409"
+      tag: { en: "Photographer · Conference", pl: "Fotograf · Konferencja" }
+      description: { en: "The official conference gallery. When downloading a photo, enter your own email address — the gallery PIN is", pl: "Oficjalna galeria konferencji. Przy pobieraniu zdjęcia podaj własny adres e-mail — PIN do galerii to" }
+      link_label: { en: "Open the gallery", pl: "Otwórz galerię" }
+    - name: "Stas Romanowski"
+      gallery_url: "https://drive.google.com/drive/folders/1m8rpfCNRGF2NdbInmnFpiVEGzMBJsH4Q?usp=sharing"
+      pin: null
+      tag: { en: "Photographer · Conference + Ball", pl: "Fotograf · Konferencja i Bal" }
+      description: { en: "Full coverage of both conference days and the Forum Ball at The Landmark London, available to browse and download on Google Drive.", pl: "Pełna relacja z obu dni konferencji i Balu Forum w The Landmark London, do przeglądania i pobrania na Google Drive." }
+      # Left untranslated on the live page; now matches the first card's label.
+      link_label: { en: "Open the gallery", pl: "Otwórz galerię" }
+
+  calls_to_action:
+    team:
+      url: "team.html"
+      text: { en: "And behind them stood the entire Federation committee — the officers and volunteers whose months of work on partnerships, marketing, logistics and events made the Forum possible.", pl: "A za nimi stał cały zarząd Federacji — członkowie i wolontariusze, których miesiące pracy nad partnerstwami, marketingiem, logistyką i wydarzeniami sprawiły, że Forum mogło się odbyć." }
+      label: { en: "Meet the full team", pl: "Poznaj cały zespół" }
+
+# ===========================================================================
+# LOCALISED SHARED-CORE CONTENT
+# ===========================================================================
+
+en:
+  # The event name. Rendered as the screen-reader-only <h1>, because the
+  # visible title on this page is the logo lock-up, not text.
+  title: "Polish Business Forum 2026"
+  hero_eyebrow: "A flagship conference by the Federation of Polish Student Societies in the UK"
+  back_link: "← All events"
+  back_link_bottom: "← Back to all events"
+
+  # Story section.
+  story_body: |
+    Polish Business Forum 2026 was the inaugural edition of a new flagship conference organised by the Federation of Polish Student Societies in the UK and hosted at London Business School on 24–25 April 2026.
+
+    Building on the long-standing legacy of the Polish Economic Forum, the event brought together over 300 students, young professionals, business leaders, investors, entrepreneurs, policymakers, and academics to discuss Poland's growing role in the European and global economy. The conference was held under the theme *“Polish Golden Age: From Emerging to Leading”*, exploring how Poland can transform decades of rapid economic growth into lasting economic, technological, and geopolitical leadership.
+
+    Over two days, participants engaged with a diverse programme of keynote speeches, panel discussions, workshops, networking events, a career fair, and the inaugural Polish Business Forum Ball. Discussions focused on technology and artificial intelligence, venture capital and entrepreneurship, capital markets, financial innovation, economic competitiveness, leadership development, and European security.
+
+    ## World-class speakers
+
+    The speaker lineup featured some of the most influential figures from business, finance, academia, and public life. Sessions included discussions with investors from Goldman Sachs, Morgan Stanley, PKO TFI, CVI and Bossalini Capital, technology leaders from Microsoft, Synerise and Creotech, senior representatives of financial institutions including KNF, VeloBank and EBRD, as well as leading economists, entrepreneurs, diplomats and public policy experts.
+
+    > The programme also featured conversations with former Prime Minister Jan Krzysztof Bielecki, historian Sir Norman Davies and economist Marcin Piątkowski.
+
+    A key objective of the conference was to strengthen connections between the Polish diaspora, the United Kingdom's leading universities, and Poland's business ecosystem. Participants represented institutions including London Business School, LSE, Oxford, Cambridge, Imperial College London and UCL, creating a unique platform for networking, career development and the exchange of ideas.
+
+    Polish Business Forum 2026 demonstrated the ability of Polish students in the UK to organise a high-profile international event and created a new platform for promoting Poland's economic achievements, entrepreneurial talent and future ambitions on the global stage. As the next chapter in a tradition spanning more than a decade, the Forum established itself as one of the most significant Polish student-led business events held outside Poland.
+
+  # Section headings.
+  people_eyebrow: "The people behind the Forum"
+  people_title: { lead: "Founders & project ", fancy: "leaders" }
+  people_lead: "The Forum was imagined, founded and delivered by a small team of students who carried it from a first conversation to a 300-person international conference."
+  partners_eyebrow: "Partners"
+  partners_title: { lead: "Made possible by our ", fancy: "partners" }
+  partners_lead: "The Forum's programme, career fair and Ball were brought to life by the organisations below. Use the arrows to browse each strip at your own pace."
+  photographers_eyebrow: "Galleries & downloads"
+  photographers_title: { lead: "Take the memories ", fancy: "home" }
+  photographers_lead: "Both days were captured by two brilliant photographers. Browse their full galleries and download your photos below."
+
+  # Listing and timeline copy, transcribed from the live events page and
+  # homepage. Nothing renders these yet — the listing is a later phase.
+  card_title: "Polish Business Forum 2026"
+  card_summary: "Over 300 students, professionals, investors and policymakers gathered under the theme “Polish Golden Age: From Emerging to Leading” — two days of keynotes, panels, a career fair and the inaugural Forum Ball."
+  card_image_alt: "The Polish Business Forum team on the main stage at London Business School"
+  flagship_tag: "★ Flagship event"
+  timeline_title: "Polish Business Forum at LBS"
+  timeline_summary: "Our largest event ever — 300+ attendees, world-class speakers and the inaugural Forum Ball."
+
+  # SEO and social.
+  seo_title: "Polish Business Forum 2026 | Federation of Polish Student Societies UK"
+  seo_description: "Polish Business Forum 2026 at London Business School brought over 300 Polish students, professionals and business leaders together across two days in London."
+  schema_description: "The inaugural Polish Business Forum at London Business School, bringing over 300 students, professionals and business leaders together under the theme “Polish Golden Age: From Emerging to Leading”."
+  og_image_alt: "The Polish Business Forum team on the main stage at London Business School"
+
+pl:
+  # The event name. Rendered as the screen-reader-only <h1>, because the
+  # visible title on this page is the logo lock-up, not text.
+  title: "Polish Business Forum 2026"
+  hero_eyebrow: "Flagowa konferencja Federacji Polskich Stowarzyszeń Studenckich w Wielkiej Brytanii"
+  back_link: "← Wszystkie wydarzenia"
+  back_link_bottom: "← Wróć do wszystkich wydarzeń"
+
+  # Story section.
+  story_body: |
+    Polish Business Forum 2026 było pierwszą edycją nowej flagowej konferencji zorganizowanej przez Federację Polskich Stowarzyszeń Studenckich w Wielkiej Brytanii, która odbyła się w London Business School w dniach 24–25 kwietnia 2026 roku.
+
+    Nawiązując do wieloletniego dorobku Polish Economic Forum, wydarzenie zgromadziło ponad 300 studentów, młodych profesjonalistów, liderów biznesu, inwestorów, przedsiębiorców, decydentów i naukowców, by rozmawiać o rosnącej roli Polski w gospodarce europejskiej i światowej. Konferencja odbyła się pod hasłem *“Polish Golden Age: From Emerging to Leading”* — szukaliśmy odpowiedzi na pytanie, jak Polska może przekuć dekady szybkiego wzrostu gospodarczego w trwałe przywództwo gospodarcze, technologiczne i geopolityczne.
+
+    Przez dwa dni uczestnicy brali udział w bogatym programie wykładów, paneli dyskusyjnych, warsztatów, spotkań networkingowych, targów pracy oraz pierwszego Balu Polish Business Forum. Rozmowy dotyczyły technologii i sztucznej inteligencji, venture capital i przedsiębiorczości, rynków kapitałowych, innowacji finansowych, konkurencyjności gospodarczej, rozwoju przywództwa oraz bezpieczeństwa europejskiego.
+
+    ## Prelegenci światowej klasy
+
+    Wśród prelegentów znalazły się jedne z najbardziej wpływowych postaci świata biznesu, finansów, nauki i życia publicznego. W sesjach brali udział inwestorzy z Goldman Sachs, Morgan Stanley, PKO TFI, CVI i Bossalini Capital, liderzy technologiczni z Microsoft, Synerise i Creotech, przedstawiciele instytucji finansowych, w tym KNF, VeloBank i EBRD, a także czołowi ekonomiści, przedsiębiorcy, dyplomaci i eksperci polityk publicznych.
+
+    > W programie znalazły się również rozmowy z byłym premierem Janem Krzysztofem Bieleckim, historykiem sir Normanem Daviesem i ekonomistą Marcinem Piątkowskim.
+
+    Kluczowym celem konferencji było wzmocnienie więzi między Polonią, czołowymi brytyjskimi uczelniami i polskim ekosystemem biznesowym. Uczestnicy reprezentowali między innymi London Business School, LSE, Oxford, Cambridge, Imperial College London i UCL, tworząc wyjątkową przestrzeń do budowania kontaktów, rozwoju zawodowego i wymiany myśli.
+
+    Polish Business Forum 2026 pokazało, że polscy studenci w Wielkiej Brytanii potrafią zorganizować międzynarodowe wydarzenie najwyższej rangi, i stworzyło nową platformę promowania polskich osiągnięć gospodarczych, talentów przedsiębiorczych i ambicji na arenie międzynarodowej. Jako kolejny rozdział ponad dziesięcioletniej tradycji Forum ugruntowało swoją pozycję jako jedno z najważniejszych polskich studenckich wydarzeń biznesowych poza granicami kraju.
+
+  # Section headings.
+  people_eyebrow: "Ludzie, którzy stworzyli Forum"
+  people_title: { lead: "Założyciele i liderzy ", fancy: "projektu" }
+  people_lead: "Forum wymyślił, założył i zrealizował niewielki zespół studentów, który doprowadził je od pierwszej rozmowy do międzynarodowej konferencji dla 300 osób."
+  partners_eyebrow: "Partnerzy"
+  partners_title: { lead: "Możliwe dzięki naszym ", fancy: "partnerom" }
+  partners_lead: "Program Forum, targi pracy i Bal powstały dzięki organizacjom wymienionym poniżej. Strzałkami możesz przewijać listy we własnym tempie."
+  photographers_eyebrow: "Galerie i pliki do pobrania"
+  photographers_title: { lead: "Zabierz wspomnienia ", fancy: "ze sobą" }
+  photographers_lead: "Oba dni uwiecznili dwaj znakomici fotografowie. Poniżej możesz przejrzeć ich pełne galerie i pobrać swoje zdjęcia."
+
+  # Listing and timeline copy, transcribed from the live events page and
+  # homepage. Nothing renders these yet — the listing is a later phase.
+  card_title: "Polish Business Forum 2026"
+  card_summary: "Ponad 300 studentów, profesjonalistów, inwestorów i przedstawicieli świata polityki spotkało się pod hasłem „Polish Golden Age: From Emerging to Leading” — dwa dni wykładów, paneli, targów pracy i pierwszy Bal Forum."
+  card_image_alt: "Zespół Polish Business Forum na głównej scenie w London Business School"
+  flagship_tag: "★ Wydarzenie flagowe"
+  timeline_title: "Polish Business Forum w LBS"
+  timeline_summary: "Nasze największe wydarzenie w historii — ponad 300 uczestników, prelegenci światowej klasy i pierwszy Bal Forum."
+
+  # SEO and social.
+  seo_title: "Polish Business Forum 2026 | Federacja Polskich Stowarzyszeń Studenckich"
+  seo_description: "Polish Business Forum 2026 w London Business School zgromadziło ponad 300 polskich studentów, profesjonalistów i liderów biznesu przez dwa dni w Londynie."
+  schema_description: "Pierwsza edycja Polish Business Forum w London Business School — ponad 300 studentów, profesjonalistów i liderów biznesu spotkało się pod hasłem „Polish Golden Age: From Emerging to Leading”."
+  # Decision 1: the live Polish page repeats the ENGLISH og:image:alt. This
+  # is the Polish description of the same photograph, reusing the wording
+  # the live Polish listing card and story gallery already use.
+  og_image_alt: "Zespół Polish Business Forum na głównej scenie w London Business School"

@@ -696,9 +696,60 @@ therefore remain *approved but not yet applied*.
 | 8 | Christmas Dinner Polish title | **Doroczna Kolacja Wigilijna** | Yes |
 | 9 | Debate Polish title | **Jak myśleć o polityce w spolaryzowanym świecie** | Yes — but see §18: this **confirms** the existing live text |
 | 10 | Icebreaker gallery | No gallery this edition; **invent nothing** | Yes — gallery empty, asserted by the validator |
-| 11 | Business Forum listing `alt` | Supply alt text — **in the Forum's own migration** | No, deferred with the Forum |
+| 11 | Business Forum listing `alt` | Supply alt text — **in the Forum's own migration** | Phase 12 — but the premise was wrong, see below |
 | 12 | Slugs and URLs | Keep every existing slug and public URL; year-suffix **future** editions | Yes — all four URLs unchanged |
-| 13 | Forum Ball | Optional / edition-specific | No, deferred with the Forum |
+| 13 | Forum Ball | Optional / edition-specific | Phase 12 — `forum_ball.enabled`, validated as a boolean |
+
+## Phase 12 addendum (Business Forum)
+
+Decisions 11 and 13 were applied when the Polish Business Forum was migrated.
+Decision 1 was also applied to the Forum's Polish page, whose `og:image:alt` and
+`twitter:image:alt` both repeated the English string.
+
+> **Correction: decision 11's premise was wrong.** §9 and the machine matrix
+> recorded the Forum's listing image as `assets/events/my-event.jpg` with
+> `alt=""`. The audit's parser had matched a **commented-out "how to add an
+> event" example** inside `events.html`, not the real card. The actual listing
+> card uses `assets/pbf/stage.jpg` and **already carries meaningful, correctly
+> localised alt text in both languages**:
+>
+> * EN — "The Polish Business Forum team on the main stage at London Business School"
+> * PL — "Zespół Polish Business Forum na głównej scenie w London Business School"
+>
+> Those exact strings are now in the canonical record. Decision 11 is satisfied
+> with nothing authored. The matrix rows for `card_image` and `card_image_alt`
+> should be read as *unreliable for this event*; the same parser weakness may
+> affect any field whose only source was a commented-out block.
+
+**Three untranslated Polish strings that the audit did not catch** were found on
+`pl/event-business-forum.html` while extracting the record: the entire Forum Ball
+body copy (two paragraphs of English), Nikodem Rajpold's role, and the second
+photographer's button label.
+
+> **Approved and applied.** All three have now been translated in the canonical
+> record. The English fields are unchanged, no link was altered, and no personal,
+> partner or sponsor name was translated.
+>
+> | Where | Live Polish page | Canonical record |
+> | --- | --- | --- |
+> | Forum Ball body | two English paragraphs | translated (full text in [BUSINESS_FORUM_MIGRATION.md §21](BUSINESS_FORUM_MIGRATION.md)) |
+> | Nikodem Rajpold's role | `Project Leader & Founder` | `Lider projektu i współzałożyciel` |
+> | Stas Romanowski's button | `Open the gallery` | `Otwórz galerię` |
+>
+> **On "współzałożyciel" rather than "założyciel":** the live Polish page already
+> renders the character-for-character identical English role
+> ("Project Leader & Founder") as *"Lider projektu i współzałożyciel"* for Szymon
+> Kwidziński, and renders "Founder" as *"Współzałożyciel"* for Marek Świątek. The
+> Forum has five founders, so *co-founder* is factually accurate, and any other
+> wording would make two identical English roles read differently on one page.
+>
+> **On "black tie":** kept untranslated in the Ball copy, because the live Polish
+> statistics label already reads *"Black tie w The Landmark London"*.
+>
+> These are the only Business Forum content differences from the live Polish page,
+> alongside decision 1's `og:image:alt`. `scripts/compare-business-forum.js`
+> asserts each one in both directions and still requires every surrounding field
+> to match exactly.
 
 ## What this changed about the audit's conclusions
 

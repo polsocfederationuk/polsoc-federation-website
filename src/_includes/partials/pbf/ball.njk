@@ -1,0 +1,25 @@
+{#
+  The Forum Ball — OPTIONAL and edition-specific.
+
+  The caller guards on `bf.forum_ball.enabled`, so a future edition without a
+  Ball sets `enabled: false` and this section disappears entirely: no heading,
+  no empty container, no placeholder image. The rest of the page is unaffected
+  because nothing else reads these fields.
+#}
+<section class="section pbf-ball">
+  <div class="container">
+    <div class="pbf-ball-grid">
+      <div class="reveal">
+        <div class="pbf-img"><img src="{{ ball.image }}" alt="{{ ball.image_alt[locale.code] }}"></div>
+        <div class="pbf-caption">{{ ball.caption[locale.code] }}</div>
+      </div>
+      <div class="reveal reveal-d1">
+        <span class="eyebrow">{{ ball.eyebrow[locale.code] }}</span>
+        <h2 class="section-title">{{ ball.title[locale.code].lead }}<span class="fancy">{{ ball.title[locale.code].fancy }}</span></h2>
+        {#- The opening paragraph's extra spacing is branded presentation: see the
+            styleFirstParagraph filter. -#}
+        {{ ball.body[locale.code] | eventBody | styleFirstParagraph("margin-bottom: 1.2em;") | safe }}
+      </div>
+    </div>
+  </div>
+</section>

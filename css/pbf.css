@@ -65,9 +65,15 @@
 .pbf-hero .hero-bg {
   position: absolute;
   inset: 0;
+  /* The backdrop PHOTOGRAPH is edition-specific, so a generated page supplies it
+     as --pbf-hero-backdrop on .pbf-hero. The fallback is the 2026 image, which is
+     what the hand-written pages still rely on — they set no custom property, so
+     their hero is byte-for-byte the same rendering as before.
+     Everything else here (overlay gradient, `center 30%`, `cover no-repeat`) is
+     fixed branded treatment and is deliberately NOT configurable. */
   background:
     linear-gradient(180deg, rgba(0, 31, 98, 0.86) 0%, rgba(0, 31, 98, 0.93) 55%, var(--pbf-navy) 96%),
-    url("../assets/pbf/stage.jpg") center 30% / cover no-repeat;
+    var(--pbf-hero-backdrop, url("../assets/pbf/stage.jpg")) center 30% / cover no-repeat;
 }
 .pbf-hero::before {
   content: "";
