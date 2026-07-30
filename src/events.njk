@@ -1,0 +1,87 @@
+---
+layout: layouts/base.njk
+
+pagination:
+  data: locales
+  size: 1
+  alias: locale
+
+# Explicit permalink — the live URLs must survive exactly. No directory URLs.
+permalink: "{{ locale.urlPrefix }}events.html"
+---
+{#
+  The bilingual events listing.
+
+  The year structure comes from src/_data/eventListing.js, which is a pure
+  function of the records and the ONE central setting in
+  content/settings/academic-year.yaml. This template renders that structure; it
+  contains no year logic of its own and no hard-coded "2025/26".
+
+  Archive disclosures use native <details>/<summary>: keyboard accessible and
+  fully usable with JavaScript disabled, and the content stays in the DOM and the
+  accessibility tree when collapsed, so it remains findable by in-page search.
+  No ARIA is added — it would only duplicate or fight the native semantics.
+#}
+{%- set c = records.pages.events[locale.code] -%}
+{%- set seasonShort = eventListing.current.academicYear -%}
+{%- set seasonLong = seasonShort | academicYearLong -%}
+
+<section class="page-hero hero-photo">
+  <div class="hero-photo-bg" style="background-image: url('{{ records.pages.events.hero_image }}'); background-position: {{ records.pages.events.hero_image_position }};" aria-hidden="true"></div>
+  <div class="container">
+    <span class="eyebrow">{{ c.eyebrow | replace("{season}", seasonLong) }}</span>
+    <h1>{{ c.title_lead }} <span class="fancy">{{ c.title_fancy }}</span></h1>
+    <p class="lead">
+      {{ c.lead }}
+    </p>
+  </div>
+</section>
+
+<section class="section has-watermark">
+  {#- The watermark is the season, from the central setting — never literal text. -#}
+  <span class="watermark" aria-hidden="true">{{ seasonShort }}</span>
+  <div class="container">
+{%- if eventListing.current.events.length %}
+    <div class="event-list">
+{% for event in eventListing.current.events %}
+{%- set t_page = c %}
+{% include "partials/event-card.njk" %}
+{% endfor %}
+    </div>
+{%- else %}
+    {#- The configured season exists but has no published events yet. Previous
+        years still show below; the archive is never silently promoted. -#}
+    <p class="lead">{{ c.empty_season | replace("{season}", seasonLong) }}</p>
+{%- endif %}
+
+{%- if eventListing.previous.length %}
+    {#- Only rendered when a previous academic year actually exists, so the page
+        never carries an empty archive control. -#}
+    <div class="event-archive">
+      <h2>{{ c.archive_heading }}</h2>
+{%- for season in eventListing.previous %}
+      <details class="event-archive-year">
+        <summary>{{ c.archive_summary | replace("{season}", season.academicYear | academicYearLong) }}</summary>
+        <div class="event-list">
+{% for event in season.events %}
+{%- set t_page = c %}
+{% include "partials/event-card.njk" %}
+{% endfor %}
+        </div>
+      </details>
+{%- endfor %}
+    </div>
+{%- endif %}
+  </div>
+</section>
+
+<section class="section" style="padding-top: 0;">
+  <div class="container">
+    <div class="cta-band reveal">
+      <h2>{{ c.cta_heading }}</h2>
+      <p>{{ c.cta_text }}</p>
+      {#- Relative on purpose: from /pl/ this resolves to the Polish contact page. -#}
+      <a class="btn btn-light" href="contact.html">{{ c.cta_label }} <span class="arrow">→</span></a>
+    </div>
+  </div>
+</section>

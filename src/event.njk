@@ -26,7 +26,10 @@ permalink: "{{ page_pair.locale.urlPrefix }}event-{{ page_pair.event.slug }}.htm
     {#- Relative on purpose: from /pl/ this resolves to the Polish listing. -#}
     <a class="back-link" href="events.html">{{ c.back_link }}</a>
     <span class="eyebrow">{{ c.eyebrow }}</span>
-    <h1>{{ c.title_lead }}{% if c.title_fancy %}<span class="fancy">{{ c.title_fancy }}</span>{% endif %}{{ c.title_tail | default("") }}</h1>
+    {#- Parts are stored trimmed; the separating spaces belong here. The <span>
+        is inline and contributes none of its own, so concatenating the parts
+        renders "Polish Youth Congress2025". -#}
+    <h1>{{ c.title_lead }}{% if c.title_fancy %} <span class="fancy">{{ c.title_fancy }}</span>{% endif %}{% if c.title_tail %} {{ c.title_tail }}{% endif %}</h1>
     <p class="lead">{{ c.hero_summary }}</p>
 {% include "partials/event/facts.njk" %}
   </div>

@@ -36,6 +36,8 @@ registration:
   email: null
 
 hero_image: null   # standard event heroes are typographic by design
+# The listing card's photograph — a different frame from the OG image.
+card_image: "/assets/yc/team-smiling.jpg"
 og_image: "/assets/yc/audience.jpg"
 instagram_permalink: "https://www.instagram.com/p/DRE7KufjD5G/"
 album_url: "https://photos.app.goo.gl/RvqfJVSpiPhgNn2r9"
@@ -76,6 +78,7 @@ en:
   eyebrow: "Conference"
   hero_summary: "A day of dialogue for young Poles in the UK — in the spirit of Poland's National Independence Day."
   card_summary: "A one-day conference with the Embassy of the Republic of Poland — panels on finance, leadership and geopolitics, closed with a Chopin recital in the spirit of Poland's National Independence Day."
+  card_image_alt: "The Polish Youth Congress team on stage at Ognisko Polskie"
   timeline_summary: "A day of panels with the Polish Embassy, closed with a Chopin recital for Independence Day."
   date_label: "Date"
   venue_label: "Venue"
@@ -122,6 +125,7 @@ pl:
   eyebrow: "Konferencja"
   hero_summary: "Dzień dialogu młodych Polaków w Wielkiej Brytanii — w duchu Narodowego Święta Niepodległości."
   card_summary: "Jednodniowa konferencja z Ambasadą Rzeczypospolitej Polskiej — panele o finansach, przywództwie i geopolityce, zakończone recitalem chopinowskim w duchu Narodowego Święta Niepodległości."
+  card_image_alt: "Zespół Polish Youth Congress na scenie w Ognisku Polskim"
   timeline_summary: "Dzień paneli dyskusyjnych z Ambasadą RP, zakończony recitalem chopinowskim z okazji Święta Niepodległości."
   date_label: "Data"
   venue_label: "Miejsce"

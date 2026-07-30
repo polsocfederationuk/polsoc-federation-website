@@ -93,6 +93,12 @@ function parse(html) {
   const h1 = (body.match(/<h1>([\s\S]*?)<\/h1>/) || [])[1];
   o.hero.h1 = text(h1);
   o.hero.h1Fancy = text((String(h1).match(/<span class="fancy">([\s\S]*?)<\/span>/) || [])[1]);
+  // Added in Phase 13. `text()` turns every tag into whitespace, so it CANNOT
+  // see a missing space beside an inline <span> — Phase 11 shipped
+  // "Polish Youth Congress2025" and this comparison passed. This reads the
+  // heading the way a browser renders it: markup removed, nothing substituted.
+  o.hero.h1Rendered = h1 == null ? null
+    : decode(String(h1).replace(/<[^>]+>/g, "")).replace(/[ \t]+/g, " ").trim();
   o.hero.lead = text(g(/<p class="lead">([\s\S]*?)<\/p>/, body));
 
   // ---- facts ----
@@ -267,9 +273,14 @@ function comparePage(slug, localeCode) {
   if (corr.h1) {
     check(p("APPROVED: live h1 is the old value"), corr.h1[0], live.hero.h1);
     check(p("APPROVED: generated h1 is the translated value"), corr.h1[1], gen.hero.h1);
+    check(p("APPROVED: translated h1 renders with correct word spacing"),
+      corr.h1[1], gen.hero.h1Rendered);
   } else {
     check(p("h1"), live.hero.h1, gen.hero.h1);
     check(p("h1 .fancy span"), live.hero.h1Fancy, gen.hero.h1Fancy);
+    // As rendered, so a missing space beside the inline .fancy span fails.
+    check(p("h1 as rendered (word spacing around the .fancy span)"),
+      live.hero.h1Rendered, gen.hero.h1Rendered);
   }
 
   // og:image:alt — approved localisation on the Polish pages that had English.
@@ -349,6 +360,17 @@ function comparePage(slug, localeCode) {
   if (gen.jsonld) {
     const j = gen.jsonld;
     check(p("JSON-LD @type"), "Event", j["@type"]);
+    // Added in Phase 13: the name was never compared against the live block, and
+    // all four had drifted — three lost a word space, two lost their year.
+    // The Polish Christmas Dinner name is an approved translation.
+    if (corr.schemaName) {
+      check(p("APPROVED: live JSON-LD name is the old value"), corr.schemaName[0], live.jsonld && live.jsonld.name);
+      check(p("APPROVED: generated JSON-LD name is the translated value"), corr.schemaName[1], j.name);
+    } else {
+      check(p("JSON-LD name matches the live block"), live.jsonld && live.jsonld.name, j.name);
+    }
+    check(p("JSON-LD description matches the live block"),
+      live.jsonld && live.jsonld.description, j.description);
     check(p("JSON-LD eventStatus"), "https://schema.org/EventScheduled", j.eventStatus);
     check(p("APPROVED: attendance mode emitted consistently"),
       "https://schema.org/OfflineEventAttendanceMode", j.eventAttendanceMode);

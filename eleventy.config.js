@@ -129,6 +129,36 @@ function formatDate(iso, localeCode) {
 }
 
 /**
+ * An event's full localised title. Shared by the detail template, the listing
+ * card and the JSON-LD builders so all three can never disagree.
+ *
+ * Parts are trimmed and joined with one space — see the `eventTitle` filter for
+ * why concatenation was wrong.
+ */
+function eventTitle(localised) {
+  const loc = localised || {};
+  if (loc.title) return String(loc.title).trim();
+  return [loc.title_lead, loc.title_fancy, loc.title_tail]
+    .map((p) => String(p == null ? "" : p).trim())
+    .filter(Boolean)
+    .join(" ");
+}
+
+/**
+ * The name used in Event JSON-LD.
+ *
+ * Usually the display title, but two live pages deliberately differ: the
+ * Christmas Dinner and the Icebreaker name the YEAR in structured data
+ * ("Annual Christmas Dinner 2025", "Icebreaker 2025") while their visible
+ * headings do not. `schema_name` records that override rather than forcing the
+ * heading to carry a year it does not show.
+ */
+function eventSchemaName(localised) {
+  const loc = localised || {};
+  return loc.schema_name ? String(loc.schema_name).trim() : eventTitle(loc);
+}
+
+/**
  * The JSON-LD `organizer` node.
  *
  * The two event families genuinely differ on the live site and both must be
@@ -189,6 +219,25 @@ function eventImagePaths() {
  * paths. Read from the record so the passthrough list is exactly what the page
  * uses and needs no maintenance when an initiative is added.
  */
+/**
+ * Page-level images referenced by a record under content/pages/ — currently just
+ * the events listing's hero photograph, which belongs to the page rather than to
+ * any one event. Derived from the record so the list needs no maintenance.
+ */
+function pageImagePaths() {
+  const dir = path.join(__dirname, "content", "pages");
+  if (!fs.existsSync(dir)) return [];
+  const paths = new Set();
+  for (const file of fs.readdirSync(dir).sort()) {
+    if (!/\.ya?ml$/i.test(file)) continue;
+    const rec = yaml.load(fs.readFileSync(path.join(dir, file), "utf8")) || {};
+    for (const key of ["hero_image", "og_image", "card_image"]) {
+      if (rec[key]) paths.add(String(rec[key]).replace(/^\/+/, ""));
+    }
+  }
+  return [...paths].sort();
+}
+
 function contactLogoPaths() {
   const file = path.join(__dirname, "content", "pages", "contact.yaml");
   if (!fs.existsSync(file)) return [];
@@ -388,6 +437,37 @@ module.exports = function (eleventyConfig) {
   eleventyConfig.addFilter("eventBody", (markdown) => renderEventBody(markdown));
 
   /**
+   * An event's full localised title, from whichever shape its family uses.
+   *
+   * The Business Forum stores one `title`. Standard events store the display
+   * title split around the `.fancy` span (`title_lead` / `title_fancy` /
+   * `title_tail`), because the middle word is styled differently.
+   *
+   * The parts are joined with a SINGLE SPACE, not concatenated. Phase 11
+   * concatenated them, which rendered "Polish Youth Congress2025" and
+   * "AnnualChristmasDinner" — the `<span>` is inline, so it contributes no space
+   * of its own. The comparison did not catch it because normalising markup to
+   * text replaces tags with whitespace, which papers over exactly this defect.
+   * Records store each part trimmed; the separator belongs to the renderer.
+   */
+  eleventyConfig.addFilter("eventTitle", (localised) => eventTitle(localised));
+
+  /**
+   * "2025/26" → "2025 / 2026", the long form the listing hero uses.
+   *
+   * The live eyebrow reads "2025 / 2026 Season" while the watermark reads
+   * "2025/26" — two renderings of ONE stored value, so changing the central
+   * setting moves both. Returns the input unchanged if it is not a valid
+   * academic year, so a bad value is visible rather than silently blanked.
+   */
+  eleventyConfig.addFilter("academicYearLong", (value) => {
+    const m = /^(\d{4})\/(\d{2})$/.exec(String(value || ""));
+    if (!m) return String(value || "");
+    const start = Number(m[1]);
+    return `${start} / ${String(start + 1)}`;
+  });
+
+  /**
    * Apply an inline style to the FIRST paragraph of rendered prose.
    *
    * The Business Forum Ball's opening paragraph carries extra bottom spacing on
@@ -481,11 +561,9 @@ module.exports = function (eleventyConfig) {
     const ld = {
       "@context": "https://schema.org",
       "@type": "Event",
-      // Standard events compose their name from the display title's parts; the
-      // Business Forum stores one `title` because its visible title is a logo
-      // lock-up, not text. One builder serves both families.
-      name: loc.title
-        || [loc.title_lead, loc.title_fancy, loc.title_tail].filter(Boolean).join("").trim(),
+      // One builder serves both families; `schema_name` overrides where the live
+      // structured data names the year and the visible heading does not.
+      name: eventSchemaName(loc),
       description: loc.schema_description,
       image: site.domain + event.og_image,
       startDate: event.start_date,
@@ -693,6 +771,12 @@ module.exports = function (eleventyConfig) {
   // ---------------------------------------------------------------------
   for (const logo of contactLogoPaths()) {
     eleventyConfig.addPassthroughCopy({ [logo]: logo });
+  }
+
+  // Page-level imagery (the events listing hero), derived from content/pages/.
+  // ---------------------------------------------------------------------
+  for (const img of pageImagePaths()) {
+    eleventyConfig.addPassthroughCopy({ [img]: img });
   }
 
   // Headshots — ONLY those a record actually references. The list is derived

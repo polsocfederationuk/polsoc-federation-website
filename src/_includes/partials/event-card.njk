@@ -1,0 +1,39 @@
+{#
+  One listing card, for BOTH event families.
+
+  The family selects a modifier class, not a different template: the Business
+  Forum card is a listing variant (branded class + flagship tag), never a
+  miniature of its detail page. Adding a family means adding one entry to the
+  map below, not a new card template.
+
+  Everything visible is derived from the canonical record:
+    title   <- eventTitle (title, or the trimmed title parts joined with a space)
+    date    <- start_date / end_date / date_precision, via eventDisplayDate
+    venue   <- the venue object, via venueDisplay
+    summary <- <locale>.card_summary
+    image   <- card_image + <locale>.card_image_alt
+
+  No display date or venue string is stored anywhere; both are generated, which
+  is what stops the card, the facts bar and the JSON-LD drifting apart the way
+  the hand-written pages did (EVENT_RECONCILIATION §5.2).
+
+  The detail link is RELATIVE on purpose. From /events.html it opens the English
+  page; from /pl/events.html the browser resolves it against /pl/ and opens the
+  Polish one. Records therefore never contain a locale prefix.
+
+  Expects: event, locale, t_page (the events-page localised copy)
+#}
+{%- set c = event[locale.code] -%}
+{%- set familyClass = { "polish-business-forum": " event-card-pbf" } -%}
+      <article class="event-card{{ familyClass[event.event_family] | default("") }} reveal">
+        <div class="ph"><img src="{{ event.card_image }}" alt="{{ c.card_image_alt }}"></div>
+        <div class="event-body">
+{%- if event.flagship %}
+          <span class="flagship-tag">{{ t_page.flagship_tag }}</span>
+{%- endif %}
+          <span class="event-date">{{ event | eventDisplayDate(locale.code) }} · {{ event.venue | venueDisplay(locale.code) }}</span>
+          <h2><a href="event-{{ event.slug }}.html">{{ c | eventTitle }}</a></h2>
+          <p>{{ c.card_summary }}</p>
+          <a class="btn btn-primary" href="event-{{ event.slug }}.html">{{ t_page.read_more }} <span class="arrow">→</span></a>
+        </div>
+      </article>

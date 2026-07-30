@@ -393,10 +393,8 @@ en:
 
   # Listing and timeline copy, transcribed from the live events page and
   # homepage. Nothing renders these yet — the listing is a later phase.
-  card_title: "Polish Business Forum 2026"
   card_summary: "Over 300 students, professionals, investors and policymakers gathered under the theme “Polish Golden Age: From Emerging to Leading” — two days of keynotes, panels, a career fair and the inaugural Forum Ball."
   card_image_alt: "The Polish Business Forum team on the main stage at London Business School"
-  flagship_tag: "★ Flagship event"
   timeline_title: "Polish Business Forum at LBS"
   timeline_summary: "Our largest event ever — 300+ attendees, world-class speakers and the inaugural Forum Ball."
 
@@ -445,10 +443,8 @@ pl:
 
   # Listing and timeline copy, transcribed from the live events page and
   # homepage. Nothing renders these yet — the listing is a later phase.
-  card_title: "Polish Business Forum 2026"
   card_summary: "Ponad 300 studentów, profesjonalistów, inwestorów i przedstawicieli świata polityki spotkało się pod hasłem „Polish Golden Age: From Emerging to Leading” — dwa dni wykładów, paneli, targów pracy i pierwszy Bal Forum."
   card_image_alt: "Zespół Polish Business Forum na głównej scenie w London Business School"
-  flagship_tag: "★ Wydarzenie flagowe"
   timeline_title: "Polish Business Forum w LBS"
   timeline_summary: "Nasze największe wydarzenie w historii — ponad 300 uczestników, prelegenci światowej klasy i pierwszy Bal Forum."
 

@@ -80,7 +80,13 @@ function buildJsonLd(event, locale, site) {
   const ld = {
     "@context": "https://schema.org",
     "@type": "Event",
-    name: [loc.title_lead, loc.title_fancy, loc.title_tail].filter(Boolean).join("").trim(),
+    // Mirrors eventSchemaName() in eleventy.config.js: parts joined with a
+    // SPACE (the `.fancy` span is inline and adds none), and `schema_name`
+    // overriding where the live JSON-LD names the year but the heading does not.
+    name: loc.schema_name
+      ? String(loc.schema_name).trim()
+      : [loc.title_lead, loc.title_fancy, loc.title_tail]
+        .map((p) => String(p == null ? "" : p).trim()).filter(Boolean).join(" "),
     description: loc.schema_description,
     image: site.domain + event.og_image,
     startDate: event.start_date,

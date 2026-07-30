@@ -36,6 +36,8 @@ registration:
   email: null
 
 hero_image: null   # standard event heroes are typographic by design
+# The listing card's photograph — a different frame from the OG image.
+card_image: "/assets/announcements/icebreaker.jpg"
 og_image: "/assets/social/og-image.png"
 instagram_permalink: "https://www.instagram.com/p/DQPcgS0DNRE/"
 album_url: null
@@ -58,6 +60,7 @@ en:
   eyebrow: "Social"
   hero_summary: "The opening social of the year — where the community meets."
   card_summary: "The opening social of the year — around 200 Polish students met for drinks and conversation at Mamuśka! in London Waterloo, where the new committee was introduced."
+  card_image_alt: "Polish students at the Icebreaker social at Mamuśka! in London Waterloo"
   timeline_summary: "~200 students open the year with drinks in Waterloo and meet the new committee."
   date_label: "Date"
   venue_label: "Venue"
@@ -79,6 +82,8 @@ en:
     - type: instagram
   seo_title: "Icebreaker 2025 | Federation of Polish Student Societies UK"
   seo_description: "Icebreaker 2025 at Mamuśka! in London Waterloo opened the year for around 200 Polish students in the UK and introduced the Federation's new committee."
+  # The live JSON-LD names the year; the visible heading does not.
+  schema_name: "Icebreaker 2025"
   schema_description: "The Federation's opening social of the academic year at Mamuśka! in London Waterloo, where around 200 Polish students met the new committee."
   og_image_alt: "Federation of Polish Student Societies in the UK — By Students. For Students."
 
@@ -88,6 +93,7 @@ pl:
   eyebrow: "Spotkanie towarzyskie"
   hero_summary: "Pierwsze spotkanie towarzyskie w roku — tam, gdzie poznaje się społeczność."
   card_summary: "Pierwsze spotkanie towarzyskie w roku — około 200 polskich studentów spotkało się na rozmowach w Mamuśka! na londyńskim Waterloo, gdzie przedstawiono nowy zarząd."
+  card_image_alt: "Polscy studenci na spotkaniu Icebreaker w Mamuśka! na londyńskim Waterloo"
   timeline_summary: "Około 200 studentów otwiera rok akademicki na Waterloo i poznaje nowy zarząd."
   date_label: "Data"
   venue_label: "Miejsce"
@@ -109,5 +115,7 @@ pl:
     - type: instagram
   seo_title: "Icebreaker 2025 | Federacja Polskich Stowarzyszeń Studenckich"
   seo_description: "Icebreaker 2025 w Mamuśka! na londyńskim Waterloo otworzył rok akademicki dla około 200 polskich studentów i przedstawił nowy zarząd Federacji."
+  # The live JSON-LD names the year; the visible heading does not.
+  schema_name: "Icebreaker 2025"
   schema_description: "Pierwsze spotkanie towarzyskie roku akademickiego w Mamuśka! na londyńskim Waterloo, gdzie około 200 polskich studentów poznało nowy zarząd Federacji."
   og_image_alt: "Federacja Polskich Stowarzyszeń Studenckich w Wielkiej Brytanii — Przez studentów. Dla studentów."

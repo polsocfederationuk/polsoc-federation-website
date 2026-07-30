@@ -1,0 +1,72 @@
+# ===========================================================================
+# EVENTS LISTING — page-level bilingual copy.
+#
+# One record, both locales. Everything here is page furniture; the cards
+# themselves come from content/events/*.yaml and nothing about an individual
+# event is repeated in this file.
+#
+# The visible copy was transcribed verbatim from the live events pages. Only the
+# archive and empty-season wording is new, because those states do not exist on
+# the live site yet — see docs/EVENTS_LISTING_MIGRATION.md §15.
+# ===========================================================================
+
+slug: events
+template: events
+
+# The hero photograph. Its framing is part of the live design, so the position is
+# recorded with it rather than hard-coded in the template.
+hero_image: "/assets/debata/networking.jpg"
+hero_image_position: "center 52%"
+
+en:
+  # --- hero -----------------------------------------------------------------
+  # `{season}` is replaced with the configured academic year, formatted for
+  # display. It is NOT hard-coded, so changing the central setting changes the
+  # heading, the watermark and this eyebrow together.
+  eyebrow: "{season} Season"
+  title_lead: "Our"
+  title_fancy: "events"
+  lead: "A year in the life of the Federation — from a 300-person business forum at London Business School to carol singing at Ognisko. Here's what we've built this year."
+
+  # --- cards ----------------------------------------------------------------
+  # Generic interface strings, identical on every card. They describe the card
+  # control, not the event, so they live here rather than in five records.
+  read_more: "Read more"
+  flagship_tag: "★ Flagship event"
+
+  # --- archive (new wording — no previous year exists yet) -------------------
+  archive_heading: "Previous seasons"
+  archive_summary: "{season} events"
+  # Shown in place of the card list when the current season has no events yet.
+  empty_season: "The {season} season is just getting started — the first events will appear here soon."
+
+  # --- closing call to action ------------------------------------------------
+  cta_heading: "Want to speak, partner or host?"
+  cta_text: "We're always planning the next event. If you'd like to get involved as a speaker, partner or venue, we'd love to hear from you."
+  cta_label: "Contact us"
+
+  # --- SEO -------------------------------------------------------------------
+  seo_title: "Events | Federation of Polish Student Societies UK"
+  seo_description: "Flagship events for Polish students in the United Kingdom, from the Polish Business Forum at London Business School to the annual Christmas Dinner in London."
+  og_image_alt: "The Polish Business Forum team on the main stage at London Business School"
+
+pl:
+  eyebrow: "Sezon {season}"
+  title_lead: "Nasze"
+  title_fancy: "wydarzenia"
+  lead: "Rok z życia Federacji — od trzystuosobowego forum biznesowego w London Business School po wspólne kolędowanie w Ognisku Polskim. Oto, co udało nam się zbudować w tym roku."
+
+  read_more: "Czytaj więcej"
+  flagship_tag: "★ Wydarzenie flagowe"
+
+  archive_heading: "Poprzednie sezony"
+  archive_summary: "Wydarzenia {season}"
+  empty_season: "Sezon {season} dopiero się zaczyna — pierwsze wydarzenia pojawią się tutaj wkrótce."
+
+  cta_heading: "Chcesz wystąpić, zostać partnerem lub gospodarzem?"
+  cta_text: "Zawsze planujemy kolejne wydarzenie. Jeśli chcesz włączyć się jako prelegent, partner lub gospodarz — napisz do nas."
+  cta_label: "Skontaktuj się z nami"
+
+  seo_title: "Wydarzenia | Federacja Polskich Stowarzyszeń Studenckich"
+  seo_description: "Wydarzenia dla polskich studentów w Wielkiej Brytanii — od Polish Business Forum w London Business School po doroczną Kolację Wigilijną w Londynie."
+  og_image_alt: "Zespół Polish Business Forum na głównej scenie w London Business School"
