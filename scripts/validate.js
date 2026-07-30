@@ -58,6 +58,144 @@ const assert = (cond, good, bad, detail) => (cond ? ok(good) : fail(bad, detail)
 const hashFile = (rel) =>
   require("crypto").createHash("sha256").update(fs.readFileSync(path.join(ROOT, rel))).digest("hex");
 
+/* ===========================================================================
+   DEPLOYMENT STATE
+
+   The site has exactly TWO supported deployment configurations, and this is the
+   single place that decides which one is active. Before this existed, seven
+   assertions across five sections each hardcoded "publish must be '.'", which
+   made the approved cutover un-committable: the guards that protected the
+   pre-cutover state also forbade ever leaving it.
+
+     repository-root   publish = "."      and NO build command
+     generated-dist    publish = "dist"   and command = "npm run build"
+
+   Everything else is rejected, including both halves of a partial cutover.
+   `publish = "dist"` without a command is the dangerous one: dist/ is gitignored
+   and absent from a clean checkout, so Netlify would publish an empty directory
+   and the site would go down.
+
+   Not a general TOML parser — the project has no TOML dependency and does not
+   need one. It reads the `[build]` table only, after stripping comments in a
+   string-aware way, and reports ambiguity rather than guessing.
+   =========================================================================== */
+
+/**
+ * Strip `#` comments while respecting double-quoted strings, so a `#` inside a
+ * value is preserved and a commented-out example never counts as active config.
+ */
+function stripTomlComments(src) {
+  return String(src)
+    .split("\n")
+    .map((line) => {
+      let inStr = false;
+      for (let i = 0; i < line.length; i++) {
+        if (line[i] === '"') inStr = !inStr;
+        else if (line[i] === "#" && !inStr) return line.slice(0, i);
+      }
+      return line;
+    })
+    .join("\n");
+}
+
+/**
+ * Parse the `[build]` table of netlify.toml into a deployment state.
+ *
+ * Returns { publish, command, mode, problems[] }. `command` is `null` when no
+ * key is declared and `""` when one is declared empty — a meaningful difference,
+ * because an empty command is a broken build, not the absence of one.
+ * `mode` is "repository-root", "generated-dist", or "unsupported".
+ */
+function parseDeploymentState(tomlSource) {
+  const problems = [];
+  const code = stripTomlComments(tomlSource);
+
+  // Slice out the [build] table: from its header to the next table header.
+  const lines = code.split("\n");
+  const start = lines.findIndex((l) => /^\s*\[build\]\s*$/.test(l));
+  if (start === -1) {
+    problems.push("no [build] section found");
+    return { publish: null, command: null, mode: "unsupported", problems };
+  }
+  let end = lines.length;
+  for (let i = start + 1; i < lines.length; i++) {
+    // `[build.environment]` is a sub-table, not the end of [build]; any other
+    // bracketed header is.
+    if (/^\s*\[\[?[^\]]+\]\]?\s*$/.test(lines[i]) && !/^\s*\[build\./.test(lines[i])) { end = i; break; }
+  }
+  const buildLines = lines.slice(start + 1, end);
+
+  /** Every active `key = "value"` in the table, so duplicates are visible. */
+  const valuesOf = (key) => buildLines
+    .map((l) => l.match(new RegExp(`^\\s*${key}\\s*=\\s*"([^"]*)"\\s*$`)))
+    .filter(Boolean)
+    .map((m) => m[1]);
+
+  const publishes = valuesOf("publish");
+  const commands = valuesOf("command");
+
+  // A key that appears with a non-string value (or malformed) is ambiguous.
+  const malformed = buildLines.filter((l) =>
+    /^\s*(publish|command)\s*=/.test(l) && !/^\s*(publish|command)\s*=\s*"[^"]*"\s*$/.test(l));
+  for (const l of malformed) problems.push(`unreadable [build] setting: ${l.trim()}`);
+
+  if (publishes.length === 0) problems.push("no active `publish` declared in [build]");
+  if (publishes.length > 1) problems.push(`duplicate active \`publish\` declarations: ${publishes.join(", ")}`);
+  if (commands.length > 1) problems.push(`duplicate active \`command\` declarations: ${commands.join(", ")}`);
+
+  const publish = publishes.length === 1 ? publishes[0] : null;
+  const command = commands.length === 1 ? commands[0] : (commands.length === 0 ? null : undefined);
+
+  let mode = "unsupported";
+  if (problems.length === 0) {
+    if (publish === "." && command === null) mode = "repository-root";
+    else if (publish === "dist" && command === "npm run build") mode = "generated-dist";
+  }
+  return { publish, command, mode, problems };
+}
+
+/**
+ * The active deployment state, parsed once on first use.
+ *
+ * Lazy because this helper sits above the file-reading helpers it needs; a plain
+ * const here would evaluate at load time and crash. Memoised so every section
+ * sees one consistent answer.
+ */
+let _deploy = null;
+function deployState() {
+  if (_deploy) return _deploy;
+  const file = path.join(ROOT, "netlify.toml");
+  _deploy = fs.existsSync(file)
+    ? parseDeploymentState(fs.readFileSync(file, "utf8"))
+    : { publish: null, command: null, mode: "unsupported", problems: ["netlify.toml is missing"] };
+  return _deploy;
+}
+
+/**
+ * Explain why a state is not one of the two supported ones. Kept separate from
+ * the parser so the message can name the specific danger.
+ */
+function describeUnsupportedDeployment(state) {
+  if (state.problems.length) return state.problems.join("; ");
+  if (state.publish === "dist" && state.command === null) {
+    return 'publish = "dist" with NO build command — dist/ is gitignored and absent from a '
+      + 'clean checkout, so Netlify would publish an empty directory and the site would go down. '
+      + 'Add command = "npm run build" in the same commit.';
+  }
+  if (state.publish === "dist" && state.command === "") {
+    return 'publish = "dist" with an EMPTY build command — nothing would generate dist/.';
+  }
+  if (state.publish === "dist") {
+    return `publish = "dist" but the command is ${JSON.stringify(state.command)}; `
+      + 'the generated-dist state requires exactly "npm run build".';
+  }
+  if (state.publish === "." && state.command !== null) {
+    return `publish = "." with a build command (${JSON.stringify(state.command)}) — the repository-root `
+      + "state serves the hand-written files and must not run a build.";
+  }
+  return `publish = ${JSON.stringify(state.publish)} is neither "." nor "dist".`;
+}
+
 /* ------------------------------------------------------------------ helpers */
 
 const read = (rel) => fs.readFileSync(path.join(ROOT, rel), "utf8");
@@ -550,9 +688,22 @@ if (exists("netlify.toml")) {
   assert(!/force\s*=\s*true/.test(toml),
     "the Polish 404 rule is not forced (real /pl/ pages still resolve)",
     "netlify.toml uses force = true, which would intercept valid Polish pages");
-  assert(!/^\s*command\s*=/m.test(toml),
-    "no build command declared (site stays a plain static deploy)",
-    "netlify.toml declares a build command — the site has no build step");
+  // The build command is state-dependent, not permanently forbidden: the
+  // repository-root deployment must have none, the generated-dist deployment must
+  // have exactly `npm run build`. See parseDeploymentState().
+  if (deployState().mode === "repository-root") {
+    assert(deployState().command === null,
+      "repository-root deployment declares no build command (the site is served as-is)",
+      "repository-root deployment declares a build command", deployState().command);
+  } else if (deployState().mode === "generated-dist") {
+    assert(deployState().command === "npm run build",
+      'generated-dist deployment declares command = "npm run build"',
+      "generated-dist deployment has the wrong build command", deployState().command);
+  } else {
+    assert(false,
+      "the Netlify build configuration is one of the two supported states",
+      `unsupported Netlify deployment configuration — ${describeUnsupportedDeployment(deployState())}`);
+  }
 }
 
 assert(exists("robots.txt") && !/Disallow/.test(read("robots.txt")),
@@ -748,13 +899,20 @@ if (!exists("dist")) {
       "no unplanned generated HTML file collides with an existing public page",
       "generated HTML would overwrite a public page if dist/ were published", htmlCollides);
 
-    // The collision above is only safe while Netlify still publishes the
-    // repository root. This is the check that keeps it safe.
-    if (exists("netlify.toml")) {
-      assert(/publish\s*=\s*"\.?"/.test(read("netlify.toml")),
-        "Netlify still publishes the repository root, so generated pages are not served",
-        "netlify.toml no longer publishes '.' — migrated pages under dist/ would go live unreviewed");
-    }
+    // The "collision" above describes generated pages sharing a filename with a
+    // public page. Whether that matters depends on the deployment mode:
+    //
+    //   repository-root  the hand-written files are served and dist/ is not, so
+    //                    a collision means nothing — it is the intended overlap.
+    //   generated-dist   the generated files ARE the site; the root copies are
+    //                    kept only as the rollback surface and comparison
+    //                    baseline, so the overlap is again intended.
+    //
+    // Either way what must hold is that the deployment is in one of the two
+    // supported states, which is what is asserted here.
+    assert(deployState().mode !== "unsupported",
+      `Netlify deployment mode is valid: ${deployState().mode}`,
+      `unsupported Netlify deployment configuration — ${describeUnsupportedDeployment(deployState())}`);
 
     // Passthrough assets must be byte-identical copies. If one ever differs,
     // the build has modified a shared asset rather than copying it.
@@ -2971,7 +3129,12 @@ if (exists("dist")) {
     changed = execFileSync("git", ["status", "--porcelain", "--",
       "index.html", "pl/index.html", "events.html", "pl/events.html",
       ...EXPECTED_EVENT_SLUGS.flatMap((s) => [`event-${s}.html`, `pl/event-${s}.html`]),
-      "sitemap.xml", "netlify.toml", "content/announcements"],
+      // netlify.toml is deliberately NOT in this list: deployment configuration is
+      // protected by the central deployment-state validator (parseDeploymentState),
+      // which permits exactly the two supported states and rejects every partial
+      // cutover. A blanket "never changes" rule here would forbid the approved
+      // cutover itself. Every other file below stays protected.
+      "sitemap.xml", "content/announcements"],
       { cwd: ROOT, encoding: "utf8" })
       .split("\n").map((l) => l.trim()).filter(Boolean);
   } catch {
@@ -3988,7 +4151,12 @@ if (!exists("dist")) {
     // css/style.css is permitted to change in Phase 14, but ONLY additively and
     // ONLY for the archive-disclosure block — asserted separately below.
     const untouched = gitDiff(["status", "--porcelain", "--",
-      "js/main.js", "assets", "sitemap.xml", "robots.txt", "netlify.toml",
+      // netlify.toml is deliberately NOT in this list: deployment configuration is
+      // protected by the central deployment-state validator (parseDeploymentState),
+      // which permits exactly the two supported states and rejects every partial
+      // cutover. A blanket "never changes" rule here would forbid the approved
+      // cutover itself. Every other file below stays protected.
+      "js/main.js", "assets", "sitemap.xml", "robots.txt",
       "index.html", "pl/index.html", "events.html", "pl/events.html",
       "event-business-forum.html", "pl/event-business-forum.html",
       "content/announcements"]);
@@ -4396,11 +4564,16 @@ if (!exists("dist")) {
     const { execFileSync } = require("child_process");
     let changed = null;
     try {
-      changed = execFileSync("git", ["status", "--porcelain", "--", "sitemap.xml", "robots.txt", "netlify.toml"],
+      // netlify.toml is deliberately NOT in this list: deployment configuration is
+      // protected by the central deployment-state validator (parseDeploymentState),
+      // which permits exactly the two supported states and rejects every partial
+      // cutover. A blanket "never changes" rule here would forbid the approved
+      // cutover itself. Every other file below stays protected.
+      changed = execFileSync("git", ["status", "--porcelain", "--", "sitemap.xml", "robots.txt"],
         { cwd: ROOT, encoding: "utf8" }).split("\n").map((l) => l.trim()).filter(Boolean);
     } catch { changed = null; }
     if (changed === null) ok("git unavailable — sitemap guard skipped");
-    else assert(changed.length === 0, "sitemap.xml, robots.txt and netlify.toml are unchanged",
+    else assert(changed.length === 0, "sitemap.xml and robots.txt are unchanged",
       "this phase modified deployment or sitemap files", changed);
   }
 
@@ -4999,12 +5172,65 @@ section("33. Deployment tree and cutover readiness (Phase 15)");
     }
   }
 
-  /* -- deployment config is untouched -------------------------------------- */
+  /* -- deployment state ----------------------------------------------------- */
   {
     const toml = read("netlify.toml");
-    assert(/publish\s*=\s*"\."/.test(toml),
-      "Netlify still publishes the repository root — the cutover is a separate commit",
-      "the Netlify publish directory was changed by this phase");
+
+    // Exactly two supported states; both halves of a partial cutover are invalid.
+    assert(deployState().mode !== "unsupported",
+      `Netlify deployment mode is valid: ${deployState().mode}`,
+      `unsupported Netlify deployment configuration — ${describeUnsupportedDeployment(deployState())}`);
+
+    // Mode-specific preconditions. These are what make each state SAFE, so they
+    // are asserted whenever that state is active — not just at cutover time.
+    if (deployState().mode === "generated-dist") {
+      const gitignore = exists(".gitignore") ? read(".gitignore") : "";
+      assert(/^dist\/?\s*$/m.test(gitignore),
+        "dist/ is git-ignored, so generated output never enters the repository",
+        "dist/ is not git-ignored while it is the published directory");
+
+      const { execFileSync } = require("child_process");
+      let tracked = null;
+      try {
+        tracked = execFileSync("git", ["ls-files", "dist"], { cwd: ROOT, encoding: "utf8" })
+          .split("\n").map((l) => l.trim()).filter(Boolean);
+      } catch { tracked = null; }
+      if (tracked === null) ok("git unavailable — dist/ tracking check skipped");
+      else assert(tracked.length === 0,
+        "zero files under dist/ are tracked by git",
+        "generated output is tracked by git while dist/ is the published directory", tracked.slice(0, 10));
+
+      // Netlify runs `npm run build`, so everything it needs must be declared.
+      const pkg = JSON.parse(read("package.json"));
+      const declared = { ...(pkg.dependencies || {}), ...(pkg.devDependencies || {}) };
+      const REQUIRED = ["@11ty/eleventy", "js-yaml", "markdown-it"];
+      const missingDeps = REQUIRED.filter((d) => !declared[d]);
+      assert(missingDeps.length === 0,
+        `every build dependency is declared in package.json (${REQUIRED.join(", ")})`,
+        "a build dependency is missing from package.json — Netlify would fail to build", missingDeps);
+      assert(typeof (pkg.scripts || {}).build === "string" && pkg.scripts.build.trim() !== "",
+        `package.json declares the build script the command runs (${(pkg.scripts || {}).build})`,
+        "package.json has no build script for `npm run build` to invoke");
+
+      // engines.node must still satisfy what the dependencies require.
+      const enginesNode = ((pkg.engines || {}).node) || null;
+      assert(!!enginesNode,
+        `package.json declares engines.node (${enginesNode}) — Netlify's Node version source`,
+        "package.json declares no engines.node, so the Netlify Node version would be an unknown default");
+      if (enginesNode) {
+        const floor = Number((String(enginesNode).match(/(\d+)/) || [])[1]);
+        let required = 0;
+        for (const dep of REQUIRED) {
+          const pj = path.join(ROOT, "node_modules", dep, "package.json");
+          if (!fs.existsSync(pj)) continue;
+          const e = (JSON.parse(fs.readFileSync(pj, "utf8")).engines || {}).node;
+          if (e) required = Math.max(required, Number((String(e).match(/(\d+)/) || [])[1]) || 0);
+        }
+        assert(Number.isFinite(floor) && floor >= required,
+          `engines.node (${enginesNode}) satisfies the dependencies' minimum (Node ${required})`,
+          `engines.node (${enginesNode}) is below the Node ${required} the build dependencies require`);
+      }
+    }
     assert(/from\s*=\s*"\/pl\/\*"/.test(toml) && /to\s*=\s*"\/pl\/404\.html"/.test(toml)
       && /status\s*=\s*404/.test(toml),
       "the Polish 404 fallback rule is unchanged",
@@ -5017,22 +5243,10 @@ section("33. Deployment tree and cutover readiness (Phase 15)");
       "the Polish fallback is still non-forced, so real Polish pages win before it",
       "the fallback became forced, which would intercept the whole Polish site");
 
-    // THE CUTOVER TRAP.
-    //
-    // dist/ is gitignored and untracked, and netlify.toml currently has no build
-    // `command`. Switching `publish` to "dist" WITHOUT adding one would make
-    // Netlify clone the repo, find no dist/, run no build, and publish an empty
-    // directory — the site would go down. The two changes are inseparable, so this
-    // asserts they move together whenever the switch is eventually made.
-    const publishesDist = /publish\s*=\s*"dist"/.test(tomlCode);
-    const hasCommand = /^\s*command\s*=/m.test(tomlCode);
-    assert(!publishesDist || hasCommand,
-      publishesDist
-        ? "netlify.toml publishes dist/ AND declares a build command"
-        : "netlify.toml still publishes the root, so no build command is required yet",
-      "netlify.toml publishes dist/ but declares NO build command — dist/ is gitignored, "
-      + "so Netlify would deploy an empty directory. Add `command = \"npm run build\"` "
-      + "in the same commit. See docs/CUTOVER_READINESS.md §14.");
+    // The cutover trap — `publish = "dist"` without a build command, which would
+    // deploy an empty directory — is now rejected by parseDeploymentState() as an
+    // unsupported mode, asserted at the top of this block and again in section 11.
+    // It is not repeated here.
   }
 
   /* -- live public files are untouched -------------------------------------- */
@@ -5045,12 +5259,17 @@ section("33. Deployment tree and cutover readiness (Phase 15)");
         "team.html", "pl/team.html", "members.html", "pl/members.html",
         "announcements.html", "pl/announcements.html", "contact.html", "pl/contact.html",
         "404.html", "pl/404.html", "sitemap.xml", "robots.txt", "site.webmanifest",
-        "netlify.toml", "css", "js", "assets"],
+      // netlify.toml is deliberately NOT in this list: deployment configuration is
+      // protected by the central deployment-state validator (parseDeploymentState),
+      // which permits exactly the two supported states and rejects every partial
+      // cutover. A blanket "never changes" rule here would forbid the approved
+      // cutover itself. Every other file below stays protected.
+        "css", "js", "assets"],
         { cwd: ROOT, encoding: "utf8" }).split("\n").map((l) => l.trim()).filter(Boolean);
     } catch { changed = null; }
     if (changed === null) ok("git unavailable — live-file guard skipped");
     else assert(changed.length === 0,
-      "every live public file, asset and the deployment config are unchanged",
+      "every live public file and asset is unchanged (deployment config is checked by mode, above)",
       "this phase modified a live public file", changed);
   }
 }
