@@ -74,6 +74,9 @@ en:
   hero_summary: "An evening of critical thinking and constructive debate at the Polish Institute and Sikorski Museum."
   card_summary: "An academic debate on polarisation and disinformation, opened by a keynote from Professor Nicholas O'Shaughnessy and followed by an Oxford-style debate and guided tours of the Institute's collections."
   card_image_alt: "The audience during the academic debate at the Polish Institute and Sikorski Museum"
+  # The homepage timeline uses a short, venue-flavoured label that is
+  # genuinely different from the event title — not a duplicate of it.
+  timeline_title: "Debate at the Sikorski Institute"
   timeline_summary: "An Oxford-style debate on polarisation and disinformation, opened by Prof. Nicholas O'Shaughnessy."
   date_label: "Date"
   venue_label: "Venue"
@@ -129,6 +132,9 @@ pl:
   hero_summary: "Wieczór krytycznego myślenia i konstruktywnej debaty w Instytucie Polskim i Muzeum im. gen. Sikorskiego."
   card_summary: "Debata akademicka o polaryzacji i dezinformacji, otwarta wykładem profesora Nicholasa O'Shaughnessy'ego, po którym odbyła się debata w stylu oksfordzkim oraz oprowadzanie po zbiorach Instytutu."
   card_image_alt: "Widownia podczas debaty akademickiej w Instytucie Polskim i Muzeum im. gen. Sikorskiego"
+  # The homepage timeline uses a short, venue-flavoured label that is
+  # genuinely different from the event title — not a duplicate of it.
+  timeline_title: "Debata w Instytucie Sikorskiego"
   timeline_summary: "Debata w stylu oksfordzkim o polaryzacji i dezinformacji, otwarta wykładem prof. Nicholasa O'Shaughnessy'ego."
   date_label: "Data"
   venue_label: "Miejsce"

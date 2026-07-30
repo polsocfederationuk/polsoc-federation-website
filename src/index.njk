@@ -1,0 +1,43 @@
+---
+layout: layouts/base.njk
+
+pagination:
+  data: locales
+  size: 1
+  alias: locale
+
+# Explicit permalinks preserving the live public URLs: / and /pl/.
+permalink: "{{ locale.urlPrefix }}index.html"
+---
+{#
+  The bilingual homepage.
+
+  SECTION ORDER IS FIXED HERE and matches the live pages exactly:
+
+    hero → ticker → about → statistics → pillars → event timeline
+         → featured event → testimonials → partners → call to action
+
+  It is not stored in the record, because the homepage is a designed page rather
+  than a page builder: a marketing officer fills these sections in, and cannot
+  reorder or remove them.
+
+  The event timeline is the only section whose items come from elsewhere — the
+  canonical event records — so the homepage can never disagree with the events
+  listing or a detail page.
+#}
+{#- `t` is set by the base layout, but the layout wraps this content AFTER it has
+    rendered, so partials included here need their own binding. -#}
+{%- set t = ui[locale.code] -%}
+{%- set home = records.pages.home -%}
+{%- set c = home[locale.code] -%}
+{%- set seasonShort = eventListing.current.academicYear -%}
+{% include "partials/home/hero.njk" %}
+{% include "partials/home/ticker.njk" %}
+{% include "partials/home/about.njk" %}
+{% include "partials/home/statistics.njk" %}
+{% include "partials/home/pillars.njk" %}
+{% include "partials/home/event-timeline.njk" %}
+{% include "partials/home/featured-event.njk" %}
+{% include "partials/home/testimonials.njk" %}
+{% include "partials/home/partners.njk" %}
+{% include "partials/home/cta.njk" %}

@@ -228,12 +228,23 @@ function pageImagePaths() {
   const dir = path.join(__dirname, "content", "pages");
   if (!fs.existsSync(dir)) return [];
   const paths = new Set();
+  // Walk the WHOLE record: the homepage nests images inside pillars, the featured
+  // gallery and the partner list, and a top-level-only scan silently missed six of
+  // them. Any string under an image-named key that points at /assets/ is copied.
+  const IMAGE_KEY = /^(hero_image|og_image|card_image|image|photo|logo|src|background|shield_image)$/;
+  const walk = (node, key) => {
+    if (typeof node === "string") {
+      if (IMAGE_KEY.test(String(key)) && node.startsWith("/assets/")) {
+        paths.add(node.replace(/^\/+/, ""));
+      }
+      return;
+    }
+    if (Array.isArray(node)) { node.forEach((v) => walk(v, key)); return; }
+    if (node && typeof node === "object") for (const k of Object.keys(node)) walk(node[k], k);
+  };
   for (const file of fs.readdirSync(dir).sort()) {
     if (!/\.ya?ml$/i.test(file)) continue;
-    const rec = yaml.load(fs.readFileSync(path.join(dir, file), "utf8")) || {};
-    for (const key of ["hero_image", "og_image", "card_image"]) {
-      if (rec[key]) paths.add(String(rec[key]).replace(/^\/+/, ""));
-    }
+    walk(yaml.load(fs.readFileSync(path.join(dir, file), "utf8")) || {}, null);
   }
   return [...paths].sort();
 }
@@ -451,6 +462,30 @@ module.exports = function (eleventyConfig) {
    * Records store each part trimmed; the separator belongs to the renderer.
    */
   eleventyConfig.addFilter("eventTitle", (localised) => eventTitle(localised));
+
+  /**
+   * The homepage-visible subset of an already-grouped, already-ordered event list.
+   *
+   * The homepage shows only `show_on_homepage: true` events, and only from the
+   * current academic year — the events page is the archive, so the timeline never
+   * grows a disclosure. Order is inherited from the grouping helper (the record's
+   * `order`, scoped to its year), because the live homepage timeline and the live
+   * listing are in the SAME order; no separate homepage order exists.
+   */
+  eleventyConfig.addFilter("homepageEvents", (events) =>
+    (events || []).filter((e) => e.show_on_homepage === true)
+  );
+
+  /**
+   * Prose stored as blank-line-separated paragraphs → an array.
+   *
+   * Lets a record hold readable multi-paragraph copy without embedding the `<br>`
+   * markup the live page happens to use to separate them. The template decides how
+   * paragraphs are joined; the record just says where they break.
+   */
+  eleventyConfig.addFilter("paragraphs", (text) =>
+    String(text || "").trim().split(/\n\s*\n/).map((p) => p.replace(/\s+/g, " ").trim()).filter(Boolean)
+  );
 
   /**
    * "2025/26" → "2025 / 2026", the long form the listing hero uses.

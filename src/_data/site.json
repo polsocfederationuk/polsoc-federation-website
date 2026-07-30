@@ -1,27 +1,48 @@
 {
   "_comment": "Site-wide invariants. Values are identical in both languages; anything that differs per locale lives in ui.json.",
-
   "domain": "https://polsocfederation.pl",
   "shortName": "Federation of Polish Student Societies UK",
   "logo": "/assets/logo.svg",
   "email": "contact@polsocfederation.pl",
   "charityNumber": "1166785",
   "themeColor": "#d7282f",
-
   "_academicYear": "Deliberately NOT here. The current academic year is content, not site configuration, and lives in content/settings/academic-year.yaml as records.settings.academicYear.current. A Phase 2 placeholder sat here saying 2026/27 and was already contradicting the 2025/26 roster; two sources of truth for the same fact is exactly the bug this architecture exists to prevent.",
-
   "fontsHref": "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Manrope:wght@400;500;600;700&family=Instrument+Serif:ital@1&family=Bodoni+Moda:wght@700;900&display=swap",
-
   "_defaultOgImage": "The shared Federation banner, 1200x630. Pages with their own photo override ogImage and omit the width/height fields.",
   "defaultOgImage": "/assets/social/og-image.png",
   "defaultOgImageWidth": 1200,
   "defaultOgImageHeight": 630,
-
   "social": {
     "instagram": "https://www.instagram.com/federac_ja/",
     "linkedin": "https://www.linkedin.com/company/federation-of-polish-student-societies-in-the-uk",
     "facebook": "https://www.facebook.com/FederationOfPolishStudentSocietiesUK/"
   },
-
-  "lambertUrl": "https://thelambert.org"
+  "lambertUrl": "https://thelambert.org",
+  "_organizationComment": "Shared Organization JSON-LD fields for the homepage. The primary name is the Polish legal name on BOTH language pages — deliberate on the live site. sameAs holds exactly the three confirmed Federation profiles; separate initiatives (Polish Business Forum, The Lambert) are not Federation-level profiles and must not be added here. The address is reproduced from the live pages for production equivalence; whether it belongs in Organization structured data is an open governance/SEO question, and keeping it here means it can be removed in ONE place. See docs/HOMEPAGE_MIGRATION.md sections 11-13.",
+  "organization": {
+    "name": "Federacja Polskich Stowarzyszeń Studenckich w Wielkiej Brytanii",
+    "alternateName": [
+      "Federation of Polish Student Societies UK",
+      "Federation of Polish Student Societies in the United Kingdom"
+    ],
+    "logo": "/assets/icons/icon-512.png",
+    "image": "/assets/photos/christmas-dinner-group.jpg",
+    "email": "contact@polsocfederation.pl",
+    "foundingDate": "2013",
+    "identifier": {
+      "name": "UK Charity Commission number",
+      "value": "1166785"
+    },
+    "address": {
+      "streetAddress": "238-246 King St",
+      "addressLocality": "London",
+      "postalCode": "W6 0RF",
+      "addressCountry": "GB"
+    },
+    "sameAs": [
+      "https://www.instagram.com/federac_ja/",
+      "https://www.linkedin.com/company/federation-of-polish-student-societies-in-the-uk",
+      "https://www.facebook.com/FederationOfPolishStudentSocietiesUK/"
+    ]
+  }
 }

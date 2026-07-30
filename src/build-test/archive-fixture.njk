@@ -1,0 +1,87 @@
+---
+layout: layouts/base.njk
+
+# SYNTHETIC FIXTURE — not a public page and not real content.
+#
+# The events listing already generates previous-season <details> disclosures, but
+# only one academic year exists, so no real page renders them and the Phase 14
+# styles would otherwise be untestable in a browser. This fixture renders the
+# same markup from invented events so the disclosure CSS can be checked at every
+# width, with a keyboard, and with JavaScript disabled.
+#
+# The events below are FICTIONAL and deliberately live in this template rather
+# than in content/events/, so they can never reach a real listing, timeline,
+# sitemap or feed. Nothing here is linked from the site.
+pagination:
+  data: locales
+  size: 1
+  alias: locale
+
+permalink: "build-test/{{ locale.urlPrefix }}archive-fixture.html"
+eleventyExcludeFromCollections: true
+
+eleventyComputed:
+  urlPattern: "/build-test/{prefix}archive-fixture.html"
+  pageTitle: "Archive disclosure fixture — not a public page"
+  pageDescription: "Synthetic fixture for the events archive disclosure styles."
+  ogImageAlt: "Synthetic fixture"
+  noindex: true
+---
+{%- set t = ui[locale.code] -%}
+{%- set page = records.pages.events[locale.code] -%}
+{#
+  Two invented archived seasons, each with a couple of invented events. The markup
+  mirrors src/events.njk's archive branch exactly — .event-archive wrapper, one
+  <details class="event-archive-year"> per season, cards inside .event-list — so
+  testing this fixture tests the real thing.
+#}
+{%- set fixture = [
+  { year: "2024/25", long: "2024 / 2025", events: [
+      { slug: "example-winter-gala", title: "Example Winter Gala", date: "12 December 2024", venue: "Example Hall, Bloomsbury",
+        summary: "A fictional event used only to exercise the archive disclosure styles at every width." },
+      { slug: "example-autumn-social", title: "An Example Autumn Social With A Deliberately Long Title To Test Wrapping", date: "3 October 2024", venue: "Example Venue, Waterloo",
+        summary: "A second fictional event, with a long title and summary, so text wrapping inside an expanded disclosure can be checked." }
+    ] },
+  { year: "2023/24", long: "2023 / 2024", events: [
+      { slug: "example-spring-forum", title: "Example Spring Forum", date: "18 April 2024", venue: "Example Business School",
+        summary: "A fictional event in a second archived season, so the ordering of multiple disclosures can be checked." }
+    ] }
+] -%}
+
+<section class="page-hero hero-photo">
+  <div class="container">
+    <span class="eyebrow">Synthetic fixture</span>
+    <h1>Archive disclosure <span class="fancy">fixture</span></h1>
+    <p class="lead">
+      Not a public page. The seasons and events below are fictional and exist only
+      to exercise the <code>.event-archive</code> styles.
+    </p>
+  </div>
+</section>
+
+<section class="section has-watermark">
+  <span class="watermark" aria-hidden="true">2025/26</span>
+  <div class="container">
+    <div class="event-archive">
+      <h2>{{ page.archive_heading }}</h2>
+{%- for season in fixture %}
+      <details class="event-archive-year">
+        <summary>{{ page.archive_summary | replace("{season}", season.long) }}</summary>
+        <div class="event-list">
+{%- for event in season.events %}
+          <article class="event-card reveal">
+            <div class="ph"><img src="/assets/pbf/stage.jpg" alt="Placeholder photograph for a fictional fixture event"></div>
+            <div class="event-body">
+              <span class="event-date">{{ event.date }} · {{ event.venue }}</span>
+              <h2><a href="#{{ event.slug }}">{{ event.title }}</a></h2>
+              <p>{{ event.summary }}</p>
+              <a class="btn btn-primary" href="#{{ event.slug }}">{{ page.read_more }} <span class="arrow">→</span></a>
+            </div>
+          </article>
+{%- endfor %}
+        </div>
+      </details>
+{%- endfor %}
+    </div>
+  </div>
+</section>

@@ -1,0 +1,297 @@
+# ===========================================================================
+# HOMEPAGE — one bilingual record.
+#
+# Generated from the two live homepages during the Phase 14 migration; no
+# prose, label, alt text or partner name was retyped. See
+# docs/HOMEPAGE_MIGRATION.md.
+#
+# SECTION ORDER is fixed by src/index.njk, not by this record: the homepage is
+# a designed page, not a page builder.
+#
+# The event timeline is NOT here. It is generated from content/events/*.yaml so
+# the homepage, the listing and the detail pages cannot disagree about a date,
+# a venue or a title.
+# ===========================================================================
+
+slug: home
+published: true
+
+# ---- hero -----------------------------------------------------------------
+hero:
+  shield_image: "/assets/logo.svg"
+  shield_alt: ""                # decorative: the brand name sits beside it
+  primary_link: "events.html"
+  secondary_link: "members.html"
+
+# ---- ticker ---------------------------------------------------------------
+# The stripe's phrases, stored ONCE. The live markup repeats the run twice for a
+# seamless loop; that repetition is IT machinery (src/_data/homeTechnical.js).
+# The whole ticker is aria-hidden on the live pages, so it is decorative.
+ticker:
+  phrases:
+    - { en: "By students", pl: "Przez studentów" }
+    - { en: "For students", pl: "Dla studentów" }
+    - { en: "Est. 2013", pl: "Od 2013" }
+    - { en: "Uniting Polish societies across the UK", pl: "Łączymy polskie stowarzyszenia w Wielkiej Brytanii" }
+
+# ---- about ----------------------------------------------------------------
+about:
+  photo: "/assets/photos/christmas-dinner-group.jpg"
+
+# ---- statistics -----------------------------------------------------------
+# `value`/`suffix`/`plain` drive js/main.js's animated counters. `plain: true`
+# suppresses the thousands separator so the founding year is not "2,013".
+statistics:
+  - key: founded
+    value: 2013
+    suffix: null
+    plain: true
+    label: { en: "Established", pl: "Rok założenia" }
+  - key: students
+    value: 7000
+    suffix: "+"
+    plain: false
+    label: { en: "Students from all around the UK", pl: "Studentów z całej Wielkiej Brytanii" }
+  - key: societies
+    value: 30
+    suffix: "+"
+    plain: false
+    label: { en: "Polish student societies", pl: "Polskich stowarzyszeń studenckich" }
+  - key: flagship_events
+    value: 5
+    suffix: "+"
+    plain: false
+    label: { en: "Flagship events per year", pl: "Wydarzeń flagowych rocznie" }
+
+# ---- pillars --------------------------------------------------------------
+pillars:
+  - key: representation
+    number: "01"
+    background: "/assets/home/students-conversation.jpg"
+    title: { en: "Representation", pl: "Reprezentacja" }
+    body: { en: "We represent the interests of Polish students before public and private bodies in the UK, Poland and the EU — from embassies to employers.", pl: "Reprezentujemy interesy polskich studentów przed instytucjami publicznymi i prywatnymi w Wielkiej Brytanii, Polsce i Unii Europejskiej — od ambasad po pracodawców." }
+  - key: community
+    number: "02"
+    background: "/assets/home/christmas-dancing.jpg"
+    title: { en: "Community", pl: "Wspólnota" }
+    body: { en: "We connect Polish societies at universities nationwide, supporting local communities and organising with them at a national level.", pl: "Łączymy polskie stowarzyszenia z uczelni w całym kraju, wspierając lokalne społeczności i organizując z nimi wydarzenia na skalę ogólnokrajową." }
+  - key: flagship-events
+    number: "03"
+    background: "/assets/home/pbf-question.jpg"
+    title: { en: "Flagship events", pl: "Wydarzenia flagowe" }
+    body: { en: "From the Polish Business Forum at London Business School to the Christmas Dinner at Ognisko — events that bring hundreds of students together.", pl: "Od Polish Business Forum w London Business School po Kolację Wigilijną w Ognisku Polskim — wydarzenia, które gromadzą setki studentów." }
+
+# ---- featured event -------------------------------------------------------
+featured_event:
+  slug: business-forum          # the canonical event this band highlights
+  logo: "/assets/pbf/pbf-logo-full.png"
+  logo_alt: "Polish Business Forum"   # a wordmark; identical in both languages
+  link: "event-business-forum.html"
+  gallery:
+    - src: "/assets/pbf/audience.jpg"
+      alt: { en: "A full audience during a Polish Business Forum session", pl: "Pełna widownia podczas sesji Polish Business Forum" }
+    - src: "/assets/pbf/finance-panel.jpg"
+      alt: { en: "The finance panel on stage at the Forum", pl: "Panel finansowy na scenie Forum" }
+    - src: "/assets/pbf/speaker-question.jpg"
+      alt: { en: "A speaker taking a question from the audience", pl: "Prelegent odpowiadający na pytanie z widowni" }
+    - src: "/assets/pbf/bal-1.jpg"
+      alt: { en: "Guests at the Polish Business Forum Ball at The Landmark London", pl: "Goście Balu Polish Business Forum w The Landmark London" }
+
+# ---- testimonials ---------------------------------------------------------
+# Slide order. The first slide's `active` class is applied by the template.
+testimonials:
+  - key: pbf-attendee
+    quote: { en: "The quality of the conference and the calibre of the speakers at the Polish Business Forum went beyond any expectations.", pl: "Poziom konferencji i klasa prelegentów na Polish Business Forum przerosły wszelkie oczekiwania." }
+    who: { en: "Attendee", pl: "Uczestniczka" }
+    role: { en: "Polish Business Forum 2026", pl: "Polish Business Forum 2026" }
+  - key: partner
+    quote: { en: "Partnering with the Federation allowed us to hire top Polish talent from British universities.", pl: "Współpraca z Federacją pozwoliła nam zatrudnić najlepsze polskie talenty z brytyjskich uczelni." }
+    who: { en: "Partner", pl: "Partner" }
+    role: { en: "of the Federation", pl: "Federacji" }
+  - key: kcl-student
+    quote: { en: "I've met so many new friends through attending the Federation's events.", pl: "Dzięki wydarzeniom Federacji poznałam mnóstwo nowych znajomych." }
+    who: { en: "Student", pl: "Studentka" }
+    role: { en: "King's College London", pl: "King's College London" }
+  - key: qmul-student
+    quote: { en: "Everyone was always so open and welcoming — I felt at home, even though I was worried when moving away for university.", pl: "Wszyscy byli otwarci i życzliwi — poczułem się jak w domu, choć bałem się wyjazdu na studia." }
+    who: { en: "Student", pl: "Student" }
+    role: { en: "Queen Mary University of London", pl: "Queen Mary University of London" }
+
+# ---- partners -------------------------------------------------------------
+# Each logo stored ONCE. The marquee repeats the rendered set for a seamless
+# loop; that count is IT machinery in src/_data/homeTechnical.js, never here.
+# `name` doubles as the accessible name and is a proper noun, so it is shared.
+partners:
+  - key: lbs
+    name: "London Business School"
+    image: "/assets/pbf/sponsors/lbs.jpg"
+    url: null                   # the live logos are not linked
+  - key: pko-bp
+    name: "PKO Bank Polski"
+    image: "/assets/pbf/sponsors/pko-bp.jpg"
+    url: null                   # the live logos are not linked
+  - key: bank-pekao
+    name: "Bank Pekao"
+    image: "/assets/pbf/sponsors/bank-pekao.png"
+    url: null                   # the live logos are not linked
+  - key: velobank
+    name: "VeloBank"
+    image: "/assets/pbf/sponsors/velobank.png"
+    url: null                   # the live logos are not linked
+  - key: occ
+    name: "OC&C Strategy Consultants"
+    image: "/assets/pbf/sponsors/occ.webp"
+    url: null                   # the live logos are not linked
+  - key: legimi
+    name: "Legimi"
+    image: "/assets/pbf/sponsors/legimi.jpg"
+    url: null                   # the live logos are not linked
+  - key: heatpex
+    name: "HEATPEX"
+    image: "/assets/pbf/sponsors/heatpex.jpg"
+    url: null                   # the live logos are not linked
+  - key: ntfy
+    name: "ntfy"
+    image: "/assets/pbf/sponsors/ntfy.png"
+    url: null                   # the live logos are not linked
+  - key: wspolnota-polska
+    name: "Stowarzyszenie Wspólnota Polska"
+    image: "/assets/pbf/sponsors/wspolnota-polska.png"
+    url: null                   # the live logos are not linked
+
+# ---- section watermarks ---------------------------------------------------
+# Stored per locale because the Polish page translates some of them.
+watermarks:
+  about: { en: "EST. 2013", pl: "OD 2013" }
+  featured: { en: "PBF", pl: "PBF" }
+  voices: { en: "VOICES", pl: "GŁOSY" }
+  # The timeline watermark is the academic year and comes from
+  # content/settings/academic-year.yaml, not from here.
+
+# ===========================================================================
+# LOCALISED PAGE COPY
+# ===========================================================================
+
+en:
+  # --- hero ---------------------------------------------------------------
+  hero_eyebrow: "UK Registered Charity · Est. 2013"
+  hero_title_line_1: "BY STUDENTS."
+  hero_title_line_2: "FOR STUDENTS."      # rendered with .accent
+  hero_lead: "We unite Polish student societies across British universities — advocating for, representing and supporting Polish students and everyone passionate about Polish culture in the UK."
+  hero_primary_button: "See what we do"
+  hero_secondary_button: "Our member societies"
+  scroll_hint: "Scroll"
+
+  # --- about --------------------------------------------------------------
+  about_eyebrow: "Who we are"
+  about_title: { lead: "One federation. A", fancy: "nationwide", tail: " community.", break_after: "One federation.", lead_after: "A" }
+  # Two paragraphs separated by a blank line in the live markup.
+  about_body: |
+    The Federation of Polish Societies is a UK Charity Commission-registered charity, focused around the integration of Polish students, and those interested in Polish culture, studying at British universities. Our aim is to advocate for, represent and help Polish students in the UK.
+
+    We were established in 2013 to help foster collaboration between different Polish student communities in the UK and represent their interests before both public and private bodies in the UK, Poland and the EU.
+  about_photo_alt: "Federation members and friends at the annual Christmas Dinner at Ognisko in South Kensington"
+  about_caption: "Christmas Dinner 2025 · Ognisko, London"
+
+  # --- statistics ---------------------------------------------------------
+  stats_eyebrow: "The Federation in numbers"
+
+  # --- pillars ------------------------------------------------------------
+  pillars_eyebrow: "What we do"
+  pillars_title: { lead: "Advocate. Connect.", fancy: "Celebrate." }
+
+  # --- event timeline (items come from content/events/*.yaml) -------------
+  timeline_eyebrow: "The year at a glance"
+  timeline_title: { lead: "Twelve months of", fancy: "community" }
+
+  # --- featured event -----------------------------------------------------
+  featured_eyebrow: "Highlight of the year"
+  featured_title: { lead: "Polish Business Forum", fancy: "2026" }
+  # The Forum theme is a protected name and stays English in both languages.
+  featured_lead_before: "Over 300 students, professionals and leaders gathered at London Business School under the theme"
+  featured_lead_emphasis: "“Polish Golden Age: From Emerging to Leading”"
+  featured_lead_after: "— with speakers from Goldman Sachs, Microsoft, EBRD and more."
+  featured_label: "Explore the Forum"
+
+  # --- testimonials -------------------------------------------------------
+  testimonials_eyebrow: "What people say"
+
+  # --- partners -----------------------------------------------------------
+  partners_eyebrow: "Our partners"
+  partners_title: { lead: "In good", fancy: "company" }
+  partners_lead: "The organisations we're proud to call our partners — supporting our events, our members and our mission throughout the year."
+
+  # --- call to action -----------------------------------------------------
+  cta_heading: "Is your society one of us yet?"
+  cta_body: "Local Polish societies are the backbone of our membership. Join the Federation and plug your community into a nationwide network."
+  cta_label: "Get in touch"
+
+  # --- SEO and social -----------------------------------------------------
+  seo_title: "Federacja Polskich Stowarzyszeń Studenckich w Wielkiej Brytanii | FPSS UK"
+  seo_description: "The Federation of Polish Student Societies UK unites Polish student societies at British universities — representing Polish students and running national events."
+  og_image_alt: "Federation of Polish Student Societies in the UK — By Students. For Students."
+
+  # --- Organization JSON-LD (localised half) ------------------------------
+  schema_description: "A UK Charity Commission-registered charity uniting Polish student societies across British universities, representing and supporting Polish students in the United Kingdom."
+
+pl:
+  # --- hero ---------------------------------------------------------------
+  hero_eyebrow: "Organizacja charytatywna w UK · Od 2013"
+  hero_title_line_1: "PRZEZ STUDENTÓW."
+  hero_title_line_2: "DLA STUDENTÓW."      # rendered with .accent
+  hero_lead: "Zrzeszamy polskie stowarzyszenia studenckie na brytyjskich uczelniach — działamy na rzecz polskich studentów, reprezentujemy ich i wspieramy wszystkich, którym bliska jest polska kultura w Wielkiej Brytanii."
+  hero_primary_button: "Zobacz, co robimy"
+  hero_secondary_button: "Nasze stowarzyszenia"
+  scroll_hint: "Przewiń"
+
+  # --- about --------------------------------------------------------------
+  about_eyebrow: "Kim jesteśmy"
+  about_title: { lead: "Jedna federacja. Wspólnota w", fancy: "całym kraju", tail: ".", break_after: "Jedna federacja.", lead_after: "Wspólnota w" }
+  # Two paragraphs separated by a blank line in the live markup.
+  about_body: |
+    Federacja Polskich Stowarzyszeń Studenckich jest organizacją charytatywną zarejestrowaną w brytyjskiej Charity Commission. Skupiamy się na integracji polskich studentów oraz osób zainteresowanych polską kulturą, studiujących na brytyjskich uczelniach. Naszym celem jest reprezentowanie i wspieranie polskich studentów w Wielkiej Brytanii.
+
+    Powstaliśmy w 2013 roku, aby wspierać współpracę między polskimi społecznościami studenckimi w Wielkiej Brytanii i reprezentować ich interesy przed instytucjami publicznymi i prywatnymi w Wielkiej Brytanii, Polsce i Unii Europejskiej.
+  about_photo_alt: "Członkowie i przyjaciele Federacji na dorocznej Kolacji Wigilijnej w Ognisku Polskim w South Kensington"
+  about_caption: "Kolacja Wigilijna 2025 · Ognisko Polskie, Londyn"
+
+  # --- statistics ---------------------------------------------------------
+  stats_eyebrow: "Federacja w liczbach"
+
+  # --- pillars ------------------------------------------------------------
+  pillars_eyebrow: "Czym się zajmujemy"
+  pillars_title: { lead: "Reprezentujemy. Łączymy.", fancy: "Świętujemy." }
+
+  # --- event timeline (items come from content/events/*.yaml) -------------
+  timeline_eyebrow: "Rok w skrócie"
+  timeline_title: { lead: "Dwanaście miesięcy", fancy: "wspólnoty" }
+
+  # --- featured event -----------------------------------------------------
+  featured_eyebrow: "Wydarzenie roku"
+  featured_title: { lead: "Polish Business Forum", fancy: "2026" }
+  # The Forum theme is a protected name and stays English in both languages.
+  featured_lead_before: "Ponad 300 studentów, profesjonalistów i liderów spotkało się w London Business School pod hasłem"
+  featured_lead_emphasis: "„Polish Golden Age: From Emerging to Leading”"
+  featured_lead_after: "— z prelegentami z Goldman Sachs, Microsoft, EBRD i wielu innych."
+  featured_label: "Poznaj Forum"
+
+  # --- testimonials -------------------------------------------------------
+  testimonials_eyebrow: "Co mówią o nas"
+
+  # --- partners -----------------------------------------------------------
+  partners_eyebrow: "Nasi partnerzy"
+  partners_title: { lead: "W dobrym", fancy: "towarzystwie" }
+  partners_lead: "Organizacje, które z dumą nazywamy naszymi partnerami — wspierają nasze wydarzenia, naszych członków i naszą misję przez cały rok."
+
+  # --- call to action -----------------------------------------------------
+  cta_heading: "Czy Wasze stowarzyszenie jest już z nami?"
+  cta_body: "Lokalne polskie stowarzyszenia są fundamentem naszego członkostwa. Dołączcie do Federacji i włączcie swoją społeczność w ogólnokrajową sieć."
+  cta_label: "Napisz do nas"
+
+  # --- SEO and social -----------------------------------------------------
+  seo_title: "Federacja Polskich Stowarzyszeń Studenckich w Wielkiej Brytanii"
+  seo_description: "Zrzeszamy polskie stowarzyszenia studenckie na brytyjskich uczelniach — reprezentujemy i wspieramy polskich studentów oraz organizujemy wydarzenia ogólnokrajowe."
+  og_image_alt: "Federacja Polskich Stowarzyszeń Studenckich w Wielkiej Brytanii — Przez studentów. Dla studentów."
+
+  # --- Organization JSON-LD (localised half) ------------------------------
+  schema_description: "Organizacja charytatywna zarejestrowana w brytyjskiej Charity Commission, zrzeszająca polskie stowarzyszenia studenckie na uczelniach w Wielkiej Brytanii, reprezentująca i wspierająca polskich studentów."

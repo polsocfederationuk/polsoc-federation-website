@@ -1,0 +1,37 @@
+{#
+  The quotes carousel.
+
+  js/main.js finds `.quote-slide` elements, moves `active` between them and fills
+  the empty `.quote-dots` with indicators — so the empty div is required, not an
+  oversight. The first slide carries `active` in the markup as the initial state.
+
+  The decorative opening quotation mark is a template glyph, not content.
+
+  Attribution is stored as `who` + `role` because the live markup renders them as
+  a label and a nested <span>, styled differently. No photographs, biographies or
+  links exist on the live page and none are invented here.
+
+  Expects: home, locale, c, t
+#}
+<section class="section has-watermark tex-light">
+  <span class="watermark" aria-hidden="true">{{ home.watermarks.voices[locale.code] }}</span>
+  <div class="container">
+    <div class="section-head center reveal">
+      <span class="eyebrow">{{ c.testimonials_eyebrow }}</span>
+    </div>
+    <div class="quotes reveal">
+      <span class="quote-mark" aria-hidden="true">&ldquo;</span>
+{%- for item in home.testimonials %}
+      <div class="quote-slide{% if loop.first %} active{% endif %}">
+        <blockquote>{{ item.quote[locale.code] }}</blockquote>
+        <div class="quote-who">{{ item.who[locale.code] }}<span>{{ item.role[locale.code] }}</span></div>
+      </div>
+{%- endfor %}
+      <div class="quote-nav">
+        <button class="quote-arrow quote-prev" aria-label="{{ t.home.quotePrev }}">←</button>
+        <div class="quote-dots"></div>
+        <button class="quote-arrow quote-next" aria-label="{{ t.home.quoteNext }}">→</button>
+      </div>
+    </div>
+  </div>
+</section>

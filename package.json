@@ -19,7 +19,8 @@
     "compare:events-standard": "node scripts/compare-standard-events.js",
     "compare:business-forum": "node scripts/compare-business-forum.js",
     "test:event-groups": "node scripts/test-event-listing-groups.js",
-    "compare:events-listing": "node scripts/compare-events-listing.js"
+    "compare:events-listing": "node scripts/compare-events-listing.js",
+    "compare:homepage": "node scripts/compare-homepage.js"
   },
   "engines": {
     "node": ">=18"

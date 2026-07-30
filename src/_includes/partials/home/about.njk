@@ -1,0 +1,36 @@
+{#
+  "Who we are" — the introductory band.
+
+  The heading breaks across two lines around the `.fancy` word, so it is stored as
+  its parts rather than as one string containing a <br>. The body is two paragraphs
+  separated in the live markup by a doubled <br>, which is preserved exactly: it is
+  the existing visible layout, not something to modernise in a migration.
+
+  Expects: home, locale, c
+#}
+<section class="section has-watermark">
+  <span class="watermark" aria-hidden="true">{{ home.watermarks.about[locale.code] }}</span>
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow">{{ c.about_eyebrow }}</span>
+      <h2 class="section-title">{{ c.about_title.break_after }}<br>{{ c.about_title.lead_after }} <span class="fancy">{{ c.about_title.fancy }}</span>{{ c.about_title.tail }}</h2>
+    </div>
+    <div class="hero-grid" style="align-items: start;">
+      <p class="lead reveal reveal-d1">
+{%- for para in c.about_body | paragraphs %}
+        {{ para }}
+{%- if not loop.last %}
+        <br><br>
+{%- endif %}
+{%- endfor %}
+      </p>
+      <figure class="photo-feature reveal reveal-d2">
+        <div class="photo-wrap">
+          <img src="{{ home.about.photo }}"
+               alt="{{ c.about_photo_alt }}">
+        </div>
+        <figcaption><span class="cap-dot" aria-hidden="true"></span> {{ c.about_caption }}</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>

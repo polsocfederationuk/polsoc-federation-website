@@ -61,6 +61,9 @@ en:
   hero_summary: "The opening social of the year — where the community meets."
   card_summary: "The opening social of the year — around 200 Polish students met for drinks and conversation at Mamuśka! in London Waterloo, where the new committee was introduced."
   card_image_alt: "Polish students at the Icebreaker social at Mamuśka! in London Waterloo"
+  # The homepage timeline uses a short, venue-flavoured label that is
+  # genuinely different from the event title — not a duplicate of it.
+  timeline_title: "Icebreaker at Mamuśka!"
   timeline_summary: "~200 students open the year with drinks in Waterloo and meet the new committee."
   date_label: "Date"
   venue_label: "Venue"
@@ -94,6 +97,9 @@ pl:
   hero_summary: "Pierwsze spotkanie towarzyskie w roku — tam, gdzie poznaje się społeczność."
   card_summary: "Pierwsze spotkanie towarzyskie w roku — około 200 polskich studentów spotkało się na rozmowach w Mamuśka! na londyńskim Waterloo, gdzie przedstawiono nowy zarząd."
   card_image_alt: "Polscy studenci na spotkaniu Icebreaker w Mamuśka! na londyńskim Waterloo"
+  # The homepage timeline uses a short, venue-flavoured label that is
+  # genuinely different from the event title — not a duplicate of it.
+  timeline_title: "Icebreaker w Mamuśka!"
   timeline_summary: "Około 200 studentów otwiera rok akademicki na Waterloo i poznaje nowy zarząd."
   date_label: "Data"
   venue_label: "Miejsce"

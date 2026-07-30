@@ -1,0 +1,15 @@
+{#
+  Closing call-to-action band.
+
+  Expects: c
+#}
+<section class="section" style="padding-top: 0;">
+  <div class="container">
+    <div class="cta-band reveal">
+      <h2>{{ c.cta_heading }}</h2>
+      <p>{{ c.cta_body }}</p>
+      {#- Relative on purpose: from /pl/ this resolves to the Polish contact page. -#}
+      <a class="btn btn-light" href="contact.html">{{ c.cta_label }} <span class="arrow">→</span></a>
+    </div>
+  </div>
+</section>

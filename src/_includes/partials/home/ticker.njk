@@ -1,0 +1,26 @@
+{#
+  Marquee ticker.
+
+  `.ticker-clip` is load-bearing: it clips the stripe's overhang so a rotated,
+  over-wide element cannot widen the document. Removing it reintroduces horizontal
+  page overflow, which is why the live markup carries the same wrapper and why the
+  validator checks for it rather than trusting the CSS.
+
+  The phrase run is stored ONCE in the record and repeated `tickerRuns` times here,
+  because the CSS translation needs a second copy in place as the first leaves.
+  That count is IT machinery (src/_data/homeTechnical.js), not content.
+
+  The whole ticker is aria-hidden, so assistive technology never reaches either
+  copy — the repetition raises no accessibility question on this page.
+
+  Expects: home, locale, homeTechnical
+#}
+<div class="ticker-clip">
+  <div class="ticker" aria-hidden="true">
+    <div class="ticker-track">
+{%- for run in range(0, homeTechnical.tickerRuns) %}
+      <span>{% for phrase in home.ticker.phrases %}{{ phrase[locale.code] }} <span class="dot"></span> {% endfor %}</span>
+{%- endfor %}
+    </div>
+  </div>
+</div>

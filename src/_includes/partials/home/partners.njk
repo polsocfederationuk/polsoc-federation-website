@@ -1,0 +1,44 @@
+{#
+  The partner marquee.
+
+  Each partner is stored ONCE in the record. js/main.js wraps the strip's scroll
+  position at `scrollWidth / 2`, which hard-codes exactly two identical sequences,
+  so the repetition is animation machinery and lives in
+  src/_data/homeTechnical.js — never in content, and never in a CMS field. Storing
+  the duplicate set in YAML would let someone add a partner in one place and
+  silently break the loop.
+
+  The repeated set is aria-hidden with empty alt so each partner is announced once.
+
+  NOTE: unlike the Business Forum page's carousels, the homepage marquee carries no
+  `data-autoscroll` attribute. That matches the live markup exactly and is
+  reproduced rather than normalised.
+
+  Expects: home, locale, c, t, homeTechnical
+#}
+<section class="section" style="padding-bottom: 60px;">
+  <div class="container">
+    <div class="section-head center reveal">
+      <span class="eyebrow">{{ c.partners_eyebrow }}</span>
+      <h2 class="section-title">{{ c.partners_title.lead }} <span class="fancy">{{ c.partners_title.fancy }}</span></h2>
+      <p class="lead">
+        {{ c.partners_lead }}
+      </p>
+    </div>
+
+    <div class="pbf-carousel-wrap reveal">
+    <button class="car-arrow car-prev" type="button" aria-label="{{ t.home.partnersPrev }}">←</button>
+    <div class="pbf-carousel" aria-label="{{ t.home.partnersLabel }}">
+{%- for set in range(0, homeTechnical.partnerMarqueeSets) %}
+{%- if set > 0 %}
+      <!-- duplicate set for the seamless loop -->
+{%- endif %}
+{%- for partner in home.partners %}
+      <div class="pbf-logo-tile"{% if set > 0 %} aria-hidden="true"{% endif %}><img src="{{ partner.image }}" alt="{% if set == 0 %}{{ partner.name }}{% endif %}"></div>
+{%- endfor %}
+{%- endfor %}
+    </div>
+    <button class="car-arrow car-next" type="button" aria-label="{{ t.home.partnersNext }}">→</button>
+    </div>
+  </div>
+</section>

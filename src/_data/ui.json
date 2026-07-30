@@ -1,9 +1,14 @@
 {
   "_comment": "Every visible or assistive string in the shared chrome, per locale. Copied VERBATIM from the current live pages — see docs/SHARED_CHROME_MIGRATION.md for the source of each. Do not reword: these are the live site's strings.",
-
   "en": {
     "logoAlt": "Federation of Polish Student Societies in the UK logo",
-    "brandRows": ["Federation", "of Polish", "Student", "Societies", "in the UK"],
+    "brandRows": [
+      "Federation",
+      "of Polish",
+      "Student",
+      "Societies",
+      "in the UK"
+    ],
     "mainNavLabel": "Main navigation",
     "toggleMenuLabel": "Toggle menu",
     "changeLanguageLabel": "Change language",
@@ -55,15 +60,27 @@
         "linkedin": "LinkedIn",
         "facebook": "Facebook"
       }
+    },
+    "home": {
+      "quotePrev": "Previous quote",
+      "quoteNext": "Next quote",
+      "partnersLabel": "Partner logos",
+      "partnersPrev": "Scroll partners backwards",
+      "partnersNext": "Scroll partners forwards",
+      "emptySeason": "This season’s events are being planned — the first will appear here soon.",
+      "allEventsLabel": "See all events"
     }
   },
-
   "_ariaPatternComment": "{name} is substituted with the member's FULL name. Until Phase 5 it was a per-member stored string that was usually just a first name, which gave the two members called Maksymilian the identical accessible name \"Email Maksymilian\" on the same page. Using the full name removes that collision and lets the patterns be applied uniformly. See docs/TEAM_ACCESSIBILITY_REMEDIATION.md.",
-
-
   "pl": {
     "logoAlt": "Logo Federacji Polskich Stowarzyszeń Studenckich w Wielkiej Brytanii",
-    "brandRows": ["Federacja", "Polskich", "Stowarzyszeń", "Studenckich", "w Wielkiej Brytanii"],
+    "brandRows": [
+      "Federacja",
+      "Polskich",
+      "Stowarzyszeń",
+      "Studenckich",
+      "w Wielkiej Brytanii"
+    ],
     "mainNavLabel": "Nawigacja główna",
     "toggleMenuLabel": "Przełącz menu",
     "changeLanguageLabel": "Zmień język",
@@ -119,6 +136,15 @@
         "linkedin": "LinkedIn",
         "facebook": "Facebook"
       }
+    },
+    "home": {
+      "quotePrev": "Poprzedni cytat",
+      "quoteNext": "Następny cytat",
+      "partnersLabel": "Logotypy partnerów",
+      "partnersPrev": "Przewiń partnerów wstecz",
+      "partnersNext": "Przewiń partnerów dalej",
+      "emptySeason": "Wydarzenia tego sezonu są w przygotowaniu — pierwsze pojawią się tutaj wkrótce.",
+      "allEventsLabel": "Zobacz wszystkie wydarzenia"
     }
   }
 }

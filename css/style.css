@@ -2798,3 +2798,66 @@ a.card:hover h3 { color: var(--red); }
   .lang-switch { font-size: 0.78rem; gap: 4px; }
   .lang-switch a { padding: 5px 5px; }
 }
+
+/* ==========================================================================
+   Events archive disclosures  (added in Phase 14)
+   --------------------------------------------------------------------------
+   Styles the previous-season <details> controls that src/events.njk already
+   generates. NOTHING on the current live pages matches these selectors — only
+   one academic year exists, so no archive markup is emitted yet — which is why
+   this block can be added without touching the live events pages.
+
+   Native <details>/<summary> is kept: the browser's own disclosure is keyboard
+   accessible, works with JavaScript disabled and stays findable by in-page
+   search. The default marker is NOT hidden, so no custom indicator is needed.
+   ========================================================================== */
+
+.event-archive { margin-top: 72px; }
+
+.event-archive > h2 {
+  font-family: var(--font-display);
+  font-size: clamp(1.15rem, 2.4vw, 1.5rem);
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 18px;
+}
+
+.event-archive-year {
+  border-top: 1px solid var(--line);
+  /* Keeps a long Polish summary from pushing the page sideways. */
+  max-width: 100%;
+}
+.event-archive-year:last-of-type { border-bottom: 1px solid var(--line); }
+
+.event-archive-year > summary {
+  /* `list-item` preserves the native marker while allowing padding. */
+  display: list-item;
+  list-style-position: inside;
+  cursor: pointer;
+  padding: 18px 4px;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  /* A comfortable touch target without changing the marker. */
+  min-height: 44px;
+  transition: color 0.2s var(--ease);
+  overflow-wrap: break-word;
+}
+.event-archive-year > summary:hover { color: var(--red); }
+.event-archive-year[open] > summary { color: var(--ink); }
+
+/* Matches the language switcher's focus treatment. */
+.event-archive-year > summary:focus-visible {
+  outline: 2px solid var(--red);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Expanded content reuses the normal card grid; no card restyling here. */
+.event-archive-year > .event-list { padding: 8px 0 30px; }
+
+@media (max-width: 600px) {
+  .event-archive { margin-top: 52px; }
+  .event-archive-year > summary { padding: 15px 2px; font-size: 0.95rem; }
+}

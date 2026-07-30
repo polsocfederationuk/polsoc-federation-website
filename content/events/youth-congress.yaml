@@ -79,6 +79,9 @@ en:
   hero_summary: "A day of dialogue for young Poles in the UK — in the spirit of Poland's National Independence Day."
   card_summary: "A one-day conference with the Embassy of the Republic of Poland — panels on finance, leadership and geopolitics, closed with a Chopin recital in the spirit of Poland's National Independence Day."
   card_image_alt: "The Polish Youth Congress team on stage at Ognisko Polskie"
+  # The homepage timeline uses a short, venue-flavoured label that is
+  # genuinely different from the event title — not a duplicate of it.
+  timeline_title: "Polish Youth Congress"
   timeline_summary: "A day of panels with the Polish Embassy, closed with a Chopin recital for Independence Day."
   date_label: "Date"
   venue_label: "Venue"
@@ -126,6 +129,9 @@ pl:
   hero_summary: "Dzień dialogu młodych Polaków w Wielkiej Brytanii — w duchu Narodowego Święta Niepodległości."
   card_summary: "Jednodniowa konferencja z Ambasadą Rzeczypospolitej Polskiej — panele o finansach, przywództwie i geopolityce, zakończone recitalem chopinowskim w duchu Narodowego Święta Niepodległości."
   card_image_alt: "Zespół Polish Youth Congress na scenie w Ognisku Polskim"
+  # The homepage timeline uses a short, venue-flavoured label that is
+  # genuinely different from the event title — not a duplicate of it.
+  timeline_title: "Polish Youth Congress"
   timeline_summary: "Dzień paneli dyskusyjnych z Ambasadą RP, zakończony recitalem chopinowskim z okazji Święta Niepodległości."
   date_label: "Data"
   venue_label: "Miejsce"

@@ -77,6 +77,9 @@ en:
   hero_summary: "Wigilia away from home — a Polish Christmas Eve feast for 100 students."
   card_summary: "Our flagship Christmas celebration — 100 Polish students sat down to a traditional three-course meal at the Ognisko Restaurant, followed by drinks and Christmas carol singing."
   card_image_alt: "Students seated for the candlelit Christmas Dinner at Ognisko"
+  # The homepage timeline uses a short, venue-flavoured label that is
+  # genuinely different from the event title — not a duplicate of it.
+  timeline_title: "Christmas Dinner at Ognisko"
   timeline_summary: "100 students, a traditional three-course wigilia and carol singing in South Kensington."
   date_label: "Date"
   venue_label: "Venue"
@@ -126,6 +129,9 @@ pl:
   hero_summary: "Wigilia z dala od domu — polska kolacja wigilijna dla 100 studentów."
   card_summary: "Nasze flagowe świąteczne spotkanie — 100 polskich studentów zasiadło do tradycyjnej, trzydaniowej kolacji w restauracji Ognisko Polskie, a potem przyszedł czas na rozmowy i wspólne kolędowanie."
   card_image_alt: "Studenci przy stole podczas Kolacji Wigilijnej przy świecach w Ognisku Polskim"
+  # The homepage timeline uses a short, venue-flavoured label that is
+  # genuinely different from the event title — not a duplicate of it.
+  timeline_title: "Kolacja Wigilijna w Ognisku Polskim"
   timeline_summary: "100 studentów, tradycyjna trzydaniowa wigilia i wspólne kolędowanie w South Kensington."
   date_label: "Data"
   venue_label: "Miejsce"

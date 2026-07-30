@@ -1,0 +1,24 @@
+{#
+  The statistics band.
+
+  `data-count` / `data-suffix` / `data-plain` are read by js/main.js's animated
+  counters. `data-plain` suppresses the thousands separator — without it the
+  founding year renders as "2,013". The literal 0 is the pre-animation value and
+  is what shows if JavaScript never runs; it is not a placeholder.
+
+  Machine values live in the record; nothing stores a formatted display string.
+
+  Expects: home, locale, c
+#}
+<section class="section stats-photo">
+  <div class="container">
+    <div class="section-head center reveal">
+      <span class="eyebrow">{{ c.stats_eyebrow }}</span>
+    </div>
+    <div class="stats-grid">
+{%- for stat in home.statistics %}
+      <div class="stat reveal{% if loop.index0 > 0 %} reveal-d{{ loop.index0 }}{% endif %}"><div class="stat-number" data-count="{{ stat.value }}"{% if stat.suffix %} data-suffix="{{ stat.suffix }}"{% endif %}{% if stat.plain %} data-plain{% endif %}>0</div><div class="stat-label">{{ stat.label[locale.code] }}</div></div>
+{%- endfor %}
+    </div>
+  </div>
+</section>

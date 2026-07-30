@@ -1,0 +1,40 @@
+{#
+  Homepage hero.
+
+  The three blobs, the ring and the scroll hint are fixed decorative structure
+  owned by this template — they carry no content and are not record fields. The
+  shield image is deliberately `alt=""`: the brand name is already in the heading
+  and the nav, so describing it again would be noise for a screen reader.
+
+  Expects: home (record), c (localised half), t (ui strings)
+#}
+<section class="hero">
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+  <div class="container hero-grid">
+    <div>
+      <span class="eyebrow">{{ c.hero_eyebrow }}</span>
+      <h1>
+        <span class="line"><span>{{ c.hero_title_line_1 }}</span></span>
+        <span class="line"><span class="accent"><span>{{ c.hero_title_line_2 }}</span></span></span>
+      </h1>
+      <p class="lead">
+        {{ c.hero_lead }}
+      </p>
+      <div class="hero-cta">
+        {#- Relative on purpose: from /pl/ these resolve to the Polish pages. -#}
+        <a class="btn btn-primary" href="{{ home.hero.primary_link }}">{{ c.hero_primary_button }} <span class="arrow">→</span></a>
+        <a class="btn btn-ghost" href="{{ home.hero.secondary_link }}">{{ c.hero_secondary_button }}</a>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="hero-ring"></div>
+      <img class="hero-shield" src="{{ home.hero.shield_image }}" alt="{{ home.hero.shield_alt }}">
+    </div>
+  </div>
+  <div class="scroll-hint" aria-hidden="true">
+    <div class="wheel"></div>
+    {{ c.scroll_hint }}
+  </div>
+</section>

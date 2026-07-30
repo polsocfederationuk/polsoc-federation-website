@@ -1,0 +1,35 @@
+{#
+  The featured-event band (the Business Forum highlight).
+
+  A homepage section, not a second copy of the Forum's detail page: it carries the
+  wordmark, a heading, one lead paragraph and four photographs. The record names
+  the event by slug so the link cannot drift from the canonical page.
+
+  The Forum theme inside <em> is a protected name and stays English in both
+  languages, so the lead is stored as three parts rather than one string with
+  markup in it — the emphasis is structure, not content.
+
+  Expects: home, locale, c
+#}
+<section class="section home-pbf has-watermark">
+  <span class="watermark" aria-hidden="true">{{ home.watermarks.featured[locale.code] }}</span>
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow">{{ c.featured_eyebrow }}</span>
+      <img class="home-pbf-logo" src="{{ home.featured_event.logo }}" alt="{{ home.featured_event.logo_alt }}">
+      <h2 class="section-title">{{ c.featured_title.lead }} <span class="fancy">{{ c.featured_title.fancy }}</span></h2>
+      <p class="lead">
+        {{ c.featured_lead_before }} <em>{{ c.featured_lead_emphasis }}</em>
+        {{ c.featured_lead_after }}
+      </p>
+    </div>
+    <div class="gallery-compact reveal">
+{%- for image in home.featured_event.gallery %}
+      <div class="ph"><img src="{{ image.src }}" alt="{{ image.alt[locale.code] }}"></div>
+{%- endfor %}
+    </div>
+    <div style="margin-top: 34px;" class="reveal">
+      <a class="btn btn-primary" href="{{ home.featured_event.link }}">{{ c.featured_label }} <span class="arrow">→</span></a>
+    </div>
+  </div>
+</section>

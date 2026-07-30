@@ -1,0 +1,31 @@
+{#
+  "What we do" — the heading band and the three full-bleed pillars.
+
+  Two <section> elements on the live page, kept as two because the heading sits in
+  a normal `.section .container` and the pillars are a full-width strip outside it.
+
+  The numeral and the backdrop are shared; the words are localised. The backdrop is
+  a CSS background on an aria-hidden div, exactly as live, so it needs no alt text.
+
+  Expects: home, locale, c
+#}
+<section class="section" style="padding-bottom: 56px;">
+  <div class="container">
+    <div class="section-head center reveal" style="margin-bottom: 0;">
+      <span class="eyebrow">{{ c.pillars_eyebrow }}</span>
+      <h2 class="section-title" style="margin-bottom: 0;">{{ c.pillars_title.lead }} <span class="fancy">{{ c.pillars_title.fancy }}</span></h2>
+    </div>
+  </div>
+</section>
+<section class="pillars">
+{%- for pillar in home.pillars %}
+  <div class="pillar">
+    <div class="pillar-bg" style="background-image: url('{{ pillar.background }}');" aria-hidden="true"></div>
+    <div class="pillar-inner reveal{% if loop.index0 > 0 %} reveal-d{{ loop.index0 }}{% endif %}">
+      <span class="pillar-num">{{ pillar.number }}</span>
+      <h3>{{ pillar.title[locale.code] }}</h3>
+      <p>{{ pillar.body[locale.code] }}</p>
+    </div>
+  </div>
+{%- endfor %}
+</section>
