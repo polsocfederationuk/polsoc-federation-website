@@ -47,7 +47,7 @@ const loadCollection = (dirName) => {
     .map((file) => {
       const raw = fs.readFileSync(path.join(dir, file), "utf8");
       const parsed = yaml.load(raw) || {};
-      return {
+      const record = {
         ...parsed,
         // Provenance, useful for error messages and for a future CMS.
         _source: `content/${dirName}/${file}`,
@@ -55,6 +55,21 @@ const loadCollection = (dirName) => {
         // field is filled in.
         slug: parsed.slug || file.replace(/\.ya?ml$/i, ""),
       };
+
+      // "No photograph" has two spellings on disk and one meaning.
+      //
+      // A hand-written record says `photo: null`. Decap omits the key entirely
+      // when an editor selects no image — it has no way to write an explicit
+      // null, which Phase 17A verified directly. Both mean the same thing, so
+      // the distinction is normalised away here, at the one boundary where
+      // records enter the build, rather than in every template that touches a
+      // photograph.
+      //
+      // This does not touch the YAML: the file keeps whichever form it has, and
+      // no record is rewritten to match the other. See docs/CMS_FOUNDATION.md §9.
+      if (dirName === "team" && record.photo === undefined) record.photo = null;
+
+      return record;
     });
 };
 

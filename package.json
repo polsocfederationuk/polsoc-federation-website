@@ -26,7 +26,14 @@
     "audit:dist": "node scripts/audit-dist.js",
     "crawl:dist": "node scripts/crawl-dist.js",
     "audit:public-parity": "node scripts/audit-public-parity.js",
-    "compare:sitemap": "node scripts/compare-sitemap.js"
+    "compare:sitemap": "node scripts/compare-sitemap.js",
+    "build:cms": "node scripts/build-cms.js",
+    "cms:proxy": "node scripts/cms-proxy.js",
+    "cms:serve": "node scripts/cms-serve.js",
+    "validate:cms": "node scripts/validate-cms.js",
+    "cms:check": "node scripts/cms-check.js",
+    "test:cms-roundtrip": "node scripts/test-cms-roundtrip.js",
+    "test:team-rules": "node scripts/test-team-rules.js"
   },
   "engines": {
     "node": ">=18"
@@ -34,6 +41,8 @@
   "license": "UNLICENSED",
   "devDependencies": {
     "@11ty/eleventy": "^3.1.6",
+    "decap-cms": "3.15.1",
+    "decap-server": "3.10.0",
     "js-yaml": "^4.3.0",
     "markdown-it": "^14.3.0"
   }

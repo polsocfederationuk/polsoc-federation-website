@@ -193,7 +193,21 @@ down — delete the file, and delete the headshot too if it is no longer used.
 
 ## 9. A member with no photograph
 
-Set `photo: null` explicitly, and omit `photo_alt` from both language blocks.
+Set `photo: null` explicitly, or omit the `photo` key entirely, and omit
+`photo_alt` from both language blocks.
+
+> **Amended in Phase 17A.1.** This section originally required an explicit
+> `photo: null` so that "no photograph" was a recorded decision rather than an
+> oversight. Decap has no way to write an explicit null — it omits an empty image
+> field — so requiring one meant hand-editing YAML after creating any
+> photograph-less member through the CMS. The two spellings are now treated as
+> the same thing: `src/_data/records.js` normalises a missing key to `null` at
+> load, and `scripts/validate.js` accepts either. A *populated* value is still
+> validated exactly as strictly as before. See `docs/CMS_FOUNDATION.md` §9.
+>
+> Existing records were not rewritten. Stefan Gayda-Pimlott still carries an
+> explicit `photo: null`, which remains the clearer form when writing YAML by
+> hand.
 
 The card then renders the placeholder used by the live site:
 

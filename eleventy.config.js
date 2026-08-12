@@ -847,6 +847,40 @@ module.exports = function (eleventyConfig) {
     eleventyConfig.ignores.add("src/build-test/**");
   }
 
+  // ---------------------------------------------------------------------
+  // THE ADMIN PANEL IS NOT PRODUCTION OUTPUT.
+  //
+  // src/admin/ generates the local Decap CMS entry point. It is development
+  // tooling: it is configured against a local file-system proxy that writes
+  // directly into the working tree, and it carries no authentication whatever.
+  // Publishing it would put an unauthenticated content editor on the public
+  // internet.
+  //
+  // A normal build therefore IGNORES it completely, exactly as it ignores the
+  // fixtures — so `npm run build` cannot emit dist/admin/ even by accident.
+  // `CMS_DEV=1` opts in, and is only ever set by the `cms:*` npm scripts.
+  //
+  // See docs/CMS_FOUNDATION.md §2.
+  // ---------------------------------------------------------------------
+  const CMS_DEV = process.env.CMS_DEV === "1" && !FIXTURES;
+  if (CMS_DEV) {
+    // The Decap browser bundle, vendored from the pinned package rather than
+    // loaded from a CDN. The whole directory is copied, not just the entry
+    // file: the bundle is code-split into lazily-loaded chunks that resolve
+    // relative to itself, and a missing chunk breaks a widget at the moment an
+    // editor uses it.
+    //
+    // `decap-cms`, not `decap-cms-app`: the latter is a UMD module that leaves
+    // React and ReactDOM as externals and does not initialise itself, so it
+    // cannot be dropped straight into a <script> tag. `decap-cms` is the
+    // self-contained browser build.
+    eleventyConfig.addPassthroughCopy({
+      "node_modules/decap-cms/dist": "admin",
+    });
+  } else {
+    eleventyConfig.ignores.add("src/admin/**");
+  }
+
   return {
     dir: {
       input: "src",

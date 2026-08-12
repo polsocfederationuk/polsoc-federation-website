@@ -1209,11 +1209,12 @@ for (const m of current) {
       missingShared.push(`${m.slug}: ${f}`);
     }
   }
-  if (!("photo" in m)) missingShared.push(`${m.slug}: photo (may be null, but must be present)`);
+  // `photo` is deliberately NOT required to be present — see the photograph
+  // block below. Absent and explicitly null both mean "no photograph".
   if (!("published" in m)) missingShared.push(`${m.slug}: published`);
 }
 assert(missingShared.length === 0,
-  `all ${SHARED_REQUIRED.length + 2} shared invariant fields are present on every member`,
+  `all ${SHARED_REQUIRED.length + 1} shared invariant fields are present on every member`,
   "members missing a required shared field", missingShared);
 
 const badOrder = current.filter((m) => !Number.isInteger(m.order)).map((m) => `${m.slug}: ${m.order}`);
@@ -1241,8 +1242,36 @@ assert(copiedRole.length === 0,
   "no Polish role is a copy of its English counterpart",
   "identical English and Polish roles — a translation is probably missing", copiedRole);
 
-const withPhoto = current.filter((m) => m.photo);
-const withoutPhoto = current.filter((m) => !m.photo);
+/* -- photographs ------------------------------------------------------------
+ *
+ * THE RULE: `photo` may be ABSENT or explicitly NULL — both mean "this member
+ * has no photograph". If present and non-null it must be a real Team asset.
+ *
+ * Absence became a legitimate spelling in Phase 17A.1. A hand-written record
+ * says `photo: null`; Decap omits the key entirely when an editor selects no
+ * image, and has no way to write an explicit null. Rejecting the CMS's natural
+ * output would have meant hand-editing YAML after every photograph-less member
+ * — which is exactly the work the CMS exists to remove.
+ *
+ * What did NOT relax: anything that is present must still be a root-relative
+ * path under /assets/team/ that resolves to a real file. An empty string, an
+ * external URL, a /pl/-prefixed path, a Windows path or a non-string scalar are
+ * all still failures, and are reported separately so the message names the
+ * actual problem.
+ *
+ * See docs/CMS_FOUNDATION.md §9.
+ * ------------------------------------------------------------------------- */
+
+/** "none" | "path" | "empty" | "type" — the four states `photo` can be in. */
+function photoState(m) {
+  if (!("photo" in m) || m.photo === null) return "none";
+  if (typeof m.photo !== "string") return "type";
+  if (m.photo.trim() === "") return "empty";
+  return "path";
+}
+
+const withPhoto = current.filter((m) => photoState(m) === "path");
+const withoutPhoto = current.filter((m) => photoState(m) === "none");
 
 const missingAlt = withPhoto.filter((m) => !(m.en && m.en.photo_alt) || !(m.pl && m.pl.photo_alt))
   .map((m) => m.slug);
@@ -1250,10 +1279,28 @@ assert(missingAlt.length === 0,
   `all ${withPhoto.length} members with a photograph have English and Polish alt text`,
   "members with a photograph but no localised alt text", missingAlt);
 
-assert(withoutPhoto.every((m) => m.photo === null),
-  `a null photograph is accepted (${withoutPhoto.length} member: ${withoutPhoto.map((m) => m.name).join(", ") || "none"})`,
-  "a member without a photograph uses something other than an explicit null",
-  withoutPhoto.map((m) => `${m.slug}: ${JSON.stringify(m.photo)}`));
+{
+  const absent = withoutPhoto.filter((m) => !("photo" in m));
+  const explicit = withoutPhoto.filter((m) => m.photo === null);
+  assert(true,
+    `a photograph-less member may omit \`photo\` or set it to null ` +
+    `(${withoutPhoto.length}: ${explicit.length} explicit null, ${absent.length} absent)`);
+}
+
+// A value that is present but unusable. These would previously have been caught
+// by the "must be an explicit null" rule; now that absence is legal, they need
+// naming in their own right or they would slip through as "no photograph".
+const emptyPhoto = current.filter((m) => photoState(m) === "empty")
+  .map((m) => `${m.slug}: ${JSON.stringify(m.photo)}`);
+assert(emptyPhoto.length === 0,
+  "no member uses an empty string for a photograph (omit the key or use null)",
+  "empty-string photograph values", emptyPhoto);
+
+const typedPhoto = current.filter((m) => photoState(m) === "type")
+  .map((m) => `${m.slug}: ${JSON.stringify(m.photo)} (${typeof m.photo})`);
+assert(typedPhoto.length === 0,
+  "every photograph value is a string or null, never a number, boolean or list",
+  "photograph values of the wrong type", typedPhoto);
 
 const strayAlt = withoutPhoto.filter((m) => (m.en && m.en.photo_alt) || (m.pl && m.pl.photo_alt))
   .map((m) => m.slug);
@@ -1261,7 +1308,29 @@ assert(strayAlt.length === 0,
   "no photograph-less member carries alt text for an image that does not exist",
   "alt text on a member with no photograph", strayAlt);
 
-const badPhotoPath = withPhoto.filter((m) => !String(m.photo).startsWith("/assets/team/"))
+// Reported separately from the general prefix rule so the failure message says
+// what is actually wrong rather than "not root-relative".
+const externalPhoto = withPhoto.filter((m) => /^[a-z][a-z0-9+.-]*:\/\//i.test(m.photo) || m.photo.startsWith("//"))
+  .map((m) => `${m.slug}: ${m.photo}`);
+assert(externalPhoto.length === 0,
+  "no photograph is hotlinked from an external site",
+  "external photograph URLs — headshots must be files in this repository", externalPhoto);
+
+const windowsPhoto = withPhoto.filter((m) => /^[A-Za-z]:[\\/]/.test(m.photo) || m.photo.includes("\\"))
+  .map((m) => `${m.slug}: ${m.photo}`);
+assert(windowsPhoto.length === 0,
+  "no photograph path is an absolute local filesystem path",
+  "local filesystem paths — these exist only on one machine", windowsPhoto);
+
+// The /pl/ bug class: a page-relative path resolves to /pl/assets/… from the
+// Polish page and 404s.
+const localisedPhoto = withPhoto.filter((m) => m.photo.startsWith("/pl/") || m.photo.includes("/pl/assets/"))
+  .map((m) => `${m.slug}: ${m.photo}`);
+assert(localisedPhoto.length === 0,
+  "no photograph path is language-prefixed (/pl/assets/… would 404)",
+  "language-prefixed photograph paths", localisedPhoto);
+
+const badPhotoPath = withPhoto.filter((m) => !m.photo.startsWith("/assets/team/"))
   .map((m) => `${m.slug}: ${m.photo}`);
 assert(badPhotoPath.length === 0,
   "every photograph path is root-relative under /assets/team/",

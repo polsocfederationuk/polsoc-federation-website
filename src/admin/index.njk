@@ -1,0 +1,171 @@
+---
+# The local admin entry point.
+#
+# Emitted ONLY when CMS_DEV=1 — a normal build ignores src/admin/ entirely, so
+# no /admin/ page reaches dist/ and therefore none can ever be deployed. See
+# docs/CMS_FOUNDATION.md §2.
+#
+# Deliberately NOT using the shared site layout: the admin panel must not pull
+# in the public navigation, the site stylesheet or js/main.js. It is a tool, not
+# a page of the website.
+permalink: /admin/index.html
+eleventyExcludeFromCollections: true
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Belt and braces. This file is never deployed, but if it ever escaped it
+         must not be indexed. -->
+    <meta name="robots" content="noindex, nofollow, noarchive, noimageindex" />
+    <title>Federation Content Manager</title>
+    <style>
+      /* The banner is the only styling here. Everything else is Decap's own. */
+      .cms-local-banner {
+        font: 600 13px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+        background: #7a2020;
+        color: #fff;
+        padding: 8px 14px;
+        margin: 0;
+        text-align: center;
+      }
+      .cms-local-banner code {
+        font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+        background: rgba(255, 255, 255, 0.16);
+        padding: 1px 5px;
+        border-radius: 3px;
+      }
+    </style>
+  </head>
+  <body>
+    <p class="cms-local-banner">
+      Local development only — edits are written straight to the files in your
+      working copy. Nothing here is published. Review with
+      <code>git diff</code> before committing.
+    </p>
+
+    <!--
+      Decap CMS {{ cmsConfig.decapVersion }}, served from this directory rather than a CDN.
+
+      The bundle is copied out of node_modules/decap-cms/dist/ by
+      eleventy.config.js, so the exact version is the one pinned in
+      package.json and frozen in package-lock.json. There is no `latest` URL to
+      drift, and the panel works with no network connection.
+
+      It reads ./config.yml on load and initialises itself; there is no init
+      script here, and therefore no place for a credential to be typed.
+    -->
+    <script src="./decap-cms.js"></script>
+
+    <!--
+      DUPLICATE RECORD ID GUARD.
+
+      Without this, typing an ID that already exists does not overwrite the other
+      record — Decap writes `jane-example-1.yaml` instead — but it leaves
+      `slug: jane-example` inside that file, so the filename and the slug
+      disagree and `npm run validate` rejects the result. The editor gets no
+      warning until then.
+
+      This blocks the save instead, using two public interfaces and no private
+      ones: `CMS.registerEventListener` with the documented `preSave` event, and
+      the local proxy's own `entriesByFolder` action — the same request Decap
+      itself makes to list a collection. `persistEntry` awaits the preSave
+      handler as its first statement with no try/catch, so a handler that throws
+      aborts the save and surfaces the message.
+
+      Nothing here is patched, wrapped or replaced, so a Decap upgrade cannot
+      silently change its behaviour: if `preSave` ever stopped firing the guard
+      would simply stop running, and scripts/cms-check.js still catches the same
+      collision from the command line.
+
+      Local development only, exactly like the rest of this page.
+    -->
+    <script>
+      (function () {
+        "use strict";
+
+        var PROXY = {{ cmsConfig.proxyUrl | dump | safe }};
+        var FOLDER = {{ cmsConfig.guard.folder | dump | safe }};
+        var EXTENSION = {{ cmsConfig.guard.extension | dump | safe }};
+        var BRANCH = {{ cmsConfig.guard.branch | dump | safe }};
+        var ID_PATTERN = new RegExp({{ cmsConfig.guard.pattern | dump | safe }});
+
+        if (typeof window.CMS === "undefined") return;
+
+        /** The entry's own file path, or "" for a record being created. */
+        function pathOf(entry) {
+          if (!entry) return "";
+          if (typeof entry.get === "function") return entry.get("path") || "";
+          return entry.path || "";
+        }
+
+        /** Field values, whether Decap hands over an Immutable map or a plain object. */
+        function dataOf(entry) {
+          if (!entry) return {};
+          if (typeof entry.getIn === "function") {
+            var d = entry.get("data");
+            return d && typeof d.toJS === "function" ? d.toJS() : d || {};
+          }
+          return entry.data || {};
+        }
+
+        /** Ask the proxy which files the Team collection currently holds. */
+        function existingPaths() {
+          return fetch(PROXY, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              action: "entriesByFolder",
+              params: { branch: BRANCH, folder: FOLDER, extension: EXTENSION, depth: 1 },
+            }),
+          })
+            .then(function (r) { return r.ok ? r.json() : []; })
+            .then(function (entries) {
+              return (entries || []).map(function (e) {
+                return e && e.file && e.file.path;
+              }).filter(Boolean);
+            })
+            // A guard that cannot reach the proxy must not block legitimate work.
+            // scripts/cms-check.js is the backstop.
+            .catch(function () { return null; });
+        }
+
+        window.CMS.registerEventListener({
+          name: "preSave",
+          handler: function (props) {
+            var entry = props && props.entry;
+            var data = dataOf(entry);
+            var slug = data && data.slug;
+
+            // Only the Team collection stores its identity this way. Site
+            // settings is a file collection with a fixed path.
+            if (!slug || typeof slug !== "string") return;
+
+            if (!ID_PATTERN.test(slug)) {
+              throw new Error(
+                'Record ID "' + slug + '" is not valid. Use lowercase letters, ' +
+                "numbers and single hyphens only — for example jane-example."
+              );
+            }
+
+            var target = FOLDER + "/" + slug + "." + EXTENSION;
+            var ownPath = pathOf(entry);
+
+            return existingPaths().then(function (paths) {
+              if (paths === null) return;                    // proxy unreachable
+              if (paths.indexOf(target) === -1) return;       // no such record
+              if (ownPath === target) return;                 // editing that record
+
+              throw new Error(
+                "A Team record with this ID already exists (" + target + "). " +
+                "Use a different Record ID — for example " + slug + "-2026-27 " +
+                "for another committee year. The existing record has not been changed."
+              );
+            });
+          },
+        });
+      })();
+    </script>
+  </body>
+</html>

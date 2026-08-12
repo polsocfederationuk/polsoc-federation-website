@@ -1,0 +1,21 @@
+---
+# The Decap CMS collection configuration.
+#
+# GENERATED — do not hand-edit this output. The schema lives in
+# src/_data/cmsConfig.js, which derives the team-group options from
+# content/settings/team-groups.yaml so the CMS and the site cannot disagree
+# about which groups exist.
+#
+# Emitted ONLY when CMS_DEV=1. A normal `npm run build` ignores src/admin/
+# entirely, so the deployment tree contains no admin panel and no local-backend
+# configuration. See docs/CMS_FOUNDATION.md §2.
+permalink: /admin/config.yml
+eleventyExcludeFromCollections: true
+---
+# ---------------------------------------------------------------------------
+# GENERATED FILE — edit src/_data/cmsConfig.js instead.
+#
+# Local development only. This file exists because CMS_DEV=1 was set for the
+# build that produced it; it is never part of the deployed site.
+# ---------------------------------------------------------------------------
+{{ cmsConfig.yaml | safe }}
