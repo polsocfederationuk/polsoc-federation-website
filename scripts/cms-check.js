@@ -242,21 +242,390 @@ for (const r of ok) {
   }
 }
 
+/* ===========================================================================
+   ANNOUNCEMENTS
+   =========================================================================== */
+
+const annCollection = config.collections.find((c) => c.name === "announcements");
+const ANN_DIR = annCollection.folder;
+const ANN_EXT = annCollection.extension;
+const ANN_ID_RE = new RegExp(annCollection.fields.find((f) => f.name === "slug").pattern[0]);
+const ANN_ASSETS = "assets/announcements";
+
+/** Canonical event slugs — what an announcement's event link may point at. */
+const eventSlugs = (() => {
+  const dir = path.join(ROOT, "content", "events");
+  if (!fs.existsSync(dir)) return [];
+  return fs.readdirSync(dir).filter((f) => /\.ya?ml$/i.test(f))
+    .map((f) => {
+      try { return (yaml.load(fs.readFileSync(path.join(dir, f), "utf8")) || {}).slug; }
+      catch { return null; }
+    })
+    .filter(Boolean);
+})();
+
+const annDir = path.join(ROOT, ANN_DIR);
+const annFiles = fs.existsSync(annDir)
+  ? fs.readdirSync(annDir).filter((f) => /\.ya?ml$/i.test(f)).sort()
+  : [];
+
+const annRecords = annFiles.map((file) => {
+  let data = null;
+  let parseError = null;
+  try {
+    data = yaml.load(fs.readFileSync(path.join(annDir, file), "utf8")) || {};
+  } catch (e) {
+    parseError = e.message.split("\n")[0];
+  }
+  return { file, rel: `${ANN_DIR}/${file}`, data, parseError };
+});
+
+for (const r of annRecords) {
+  if (r.parseError) {
+    problem(r.rel, "the file is not valid YAML", r.parseError,
+      `Fix the syntax, or restore it with \`git checkout -- ${r.rel}\`.`);
+  }
+}
+const annOk = annRecords.filter((r) => !r.parseError);
+
+/* -- A1. Record ID, filename, duplicates ----------------------------------- */
+
+for (const r of annOk) {
+  const stored = r.data.slug;
+  if (stored === undefined) {
+    problem(r.rel, "no Record ID is stored", "the `slug` field is missing",
+      `Add "slug: ${r.file.replace(/\.ya?ml$/i, "")}" to the file, or set the Record ID in the CMS.`);
+    continue;
+  }
+  if (typeof stored !== "string" || !ANN_ID_RE.test(stored)) {
+    problem(r.rel, "the Record ID is not filename-safe",
+      `"${stored}" does not match ${ANN_ID_RE.source}`,
+      "Use lowercase letters, numbers and single hyphens only.");
+    continue;
+  }
+  const expected = `${stored}.${ANN_EXT}`;
+  if (r.file === expected) continue;
+
+  const collision = new RegExp(`^${stored.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}-\\d+\\.${ANN_EXT}$`).test(r.file);
+  const conflictExists = annFiles.includes(expected);
+  if (collision && conflictExists) {
+    problem(r.rel, "this looks like a duplicate-ID collision",
+      `stored Record ID "${stored}" — but that ID already belongs to ${ANN_DIR}/${expected}`,
+      `Decide which announcement this is. If it is a DIFFERENT one, give it a unique ` +
+      `Record ID (for example "${stored}-2026-27") and rename the file to match. If it was ` +
+      `created by mistake, delete ${r.rel}. ${ANN_DIR}/${expected} has not been modified.`);
+  } else {
+    problem(r.rel, "the filename and the stored Record ID disagree",
+      `file "${r.file}" vs slug "${stored}" (expected ${expected})`,
+      conflictExists
+        ? `${ANN_DIR}/${expected} already exists, so choose a different Record ID.`
+        : `Rename the file to ${expected}, or change the Record ID to "${r.file.replace(/\.ya?ml$/i, "")}".`);
+  }
+}
+
+{
+  const bySlug = new Map();
+  for (const r of annOk) {
+    if (r.data.slug === undefined) continue;
+    if (!bySlug.has(r.data.slug)) bySlug.set(r.data.slug, []);
+    bySlug.get(r.data.slug).push(r);
+  }
+  for (const [slug, group] of bySlug) {
+    if (group.length < 2) continue;
+    problem(group.map((g) => g.rel).join(" + "), "two announcements claim the same Record ID",
+      `Record ID "${slug}" is stored in ${group.length} files: ${group.map((g) => g.file).join(", ")}`,
+      `Record IDs must be unique. Give one a different ID and rename its file to match.`);
+  }
+}
+
+/* -- A2. Academic year and same-year ordering ------------------------------ */
+
+const AY_RE = /^(\d{4})\/(\d{2})$/;
+for (const r of annOk) {
+  const y = r.data.academic_year;
+  const m = AY_RE.exec(String(y));
+  if (!m) {
+    problem(r.rel, "the academic year is malformed", `"${y}"`,
+      'Use the form 2025/26 — four digits, a slash, then the following year\'s last two digits.');
+  } else if (m[2] !== String((Number(m[1]) + 1) % 100).padStart(2, "0")) {
+    problem(r.rel, "the academic year does not span consecutive years", `"${y}"`,
+      `The second half must be the year after the first — ${m[1]}/${String((Number(m[1]) + 1) % 100).padStart(2, "0")}.`);
+  }
+}
+
+{
+  // Ordering is scoped to (academic year, published). The same position in a
+  // different year is correct and must not be reported.
+  const byYear = new Map();
+  for (const r of annOk) {
+    if (r.data.published !== true) continue;
+    const y = r.data.academic_year;
+    if (!y) continue;
+    if (!byYear.has(y)) byYear.set(y, new Map());
+    const orders = byYear.get(y);
+    if (!orders.has(r.data.order)) orders.set(r.data.order, []);
+    orders.get(r.data.order).push(r);
+  }
+  for (const [year, orders] of byYear) {
+    for (const [order, group] of orders) {
+      if (group.length < 2) continue;
+      problem(group.map((g) => g.rel).join(" + "),
+        "two published announcements share a display position in the same year",
+        `position ${order} is used ${group.length} times in ${year}`,
+        "Give each announcement in an academic year its own position. Positions restart " +
+        "at 1 for every year, so a clash with a different year is not a problem.");
+    }
+  }
+  for (const [year, orders] of byYear) {
+    notes.push(`${year}: ${[...orders.keys()].length} published announcement position(s)`);
+  }
+}
+
+/* -- A3. Publication date --------------------------------------------------- */
+
+for (const r of annOk) {
+  const d = r.data.published_date;
+  let iso = null;
+  if (typeof d === "string") iso = d;
+  else if (d instanceof Date && !Number.isNaN(d.getTime())) {
+    const midnight = d.getUTCHours() === 0 && d.getUTCMinutes() === 0 &&
+      d.getUTCSeconds() === 0 && d.getUTCMilliseconds() === 0;
+    if (midnight) iso = d.toISOString().slice(0, 10);
+    else {
+      problem(r.rel, "the publication date carries a time", d.toISOString(),
+        "Announcement dates are calendar days only. Set it to the form 2026-05-14.");
+      continue;
+    }
+  }
+  if (iso === null || !/^\d{4}-\d{2}-\d{2}$/.test(iso)) {
+    problem(r.rel, "the publication date is not a calendar date", JSON.stringify(d),
+      "Use the form 2026-05-14 (year-month-day).");
+  }
+}
+
+/* -- A4. Media -------------------------------------------------------------- */
+
+function checkAnnouncementImage(r, value, label) {
+  if (value === undefined || value === null) return;
+  if (typeof value !== "string") {
+    problem(r.rel, `${label} is the wrong type`, `${JSON.stringify(value)} (${typeof value})`,
+      "Choose an image in the CMS, or remove the field.");
+    return;
+  }
+  if (value.trim() === "") {
+    problem(r.rel, `${label} is an empty string`, "neither a picture nor an absence",
+      "Remove the field, set it to null, or choose an image.");
+    return;
+  }
+  if (/^[a-z][a-z0-9+.-]*:\/\//i.test(value) || value.startsWith("//")) {
+    problem(r.rel, `${label} is hotlinked from another site`, value,
+      `Download the image, add it to ${ANN_ASSETS}/, and choose it in the CMS.`);
+    return;
+  }
+  if (/^[A-Za-z]:[\\/]/.test(value) || value.includes("\\")) {
+    problem(r.rel, `${label} is a path on somebody's own computer`, value,
+      "That file does not exist for anyone else. Upload the image through the CMS.");
+    return;
+  }
+  if (value.startsWith("/pl/") || value.includes("/pl/assets/")) {
+    problem(r.rel, `${label} is language-prefixed`, value,
+      `Announcement images are shared between both languages. Use /${ANN_ASSETS}/… with no /pl/ prefix.`);
+    return;
+  }
+  // Any folder under /assets/ is legitimate, not only assets/announcements/.
+  // Several real announcements reuse event imagery — /assets/pbf/stage.jpg,
+  // /assets/debata/networking.jpg — and requiring one folder would make those
+  // records uneditable. New uploads still land in assets/announcements/, which
+  // is what the CMS's media_folder controls.
+  if (!value.startsWith("/assets/")) {
+    problem(r.rel, `${label} is not a site asset`, value,
+      "Announcement images are stored as /assets/…, for example " +
+      `/${ANN_ASSETS}/<file> for a new upload.`);
+    return;
+  }
+  if (!fs.existsSync(path.join(ROOT, value.replace(/^\/+/, "")))) {
+    problem(r.rel, `${label} is missing`, `${value} does not exist on disk`,
+      "Re-upload the image through the CMS, or clear the field.");
+  }
+}
+
+for (const r of annOk) {
+  checkAnnouncementImage(r, r.data.image, "the main image");
+  const extra = r.data.extra_images;
+  if (extra !== undefined && extra !== null && !Array.isArray(extra)) {
+    problem(r.rel, "extra images is not a list", JSON.stringify(extra),
+      "Extra images must be a list of image paths.");
+  } else {
+    for (const [i, x] of (extra || []).entries()) {
+      checkAnnouncementImage(r, x, `extra image ${i + 1}`);
+    }
+  }
+  // Presentation fields.
+  const fit = r.data.image_fit;
+  const validFit = annCollection.fields.find((f) => f.name === "image_fit").options.map((o) => o.value);
+  if (fit !== undefined && fit !== null && !validFit.includes(fit)) {
+    problem(r.rel, "the image fit is not a supported value", JSON.stringify(fit),
+      `Supported values: ${validFit.join(", ")}, or leave it empty.`);
+  }
+  const bg = r.data.image_background;
+  if (bg !== undefined && bg !== null && !/^#[0-9a-fA-F]{6}$/.test(String(bg))) {
+    problem(r.rel, "the image backdrop is not a hex colour", JSON.stringify(bg),
+      "Use a six-digit hex colour such as #001f62, or leave it empty.");
+  }
+}
+
+/* -- A5. Destination links -------------------------------------------------- */
+
+// The types a FILE may contain — deliberately not the list the CMS offers.
+// The form also offers an editor-only "none", which the pre-save normaliser
+// turns into `link: null`; a file that still says `type: none` means that
+// normalisation did not run, which is a fault worth naming rather than
+// accepting because the dropdown happened to include the word.
+const validLinkTypes = cms.SUPPORTED_LINK_TYPES;
+const editorOnlyType = cms.LINK_TYPE_NONE;
+
+for (const r of annOk) {
+  const link = r.data.link;
+  if (link === undefined || link === null) continue;
+  if (typeof link !== "object" || Array.isArray(link)) {
+    problem(r.rel, "the destination link is malformed", JSON.stringify(link),
+      "A link is a type plus either a Federation event or an external address.");
+    continue;
+  }
+  const { type } = link;
+  if (type === editorOnlyType) {
+    problem(r.rel, `the link type is not supported ("${editorOnlyType}" is editor-only)`,
+      `"${editorOnlyType}" should have become \`link: null\` when the announcement was saved`,
+      "Open the announcement in the CMS, confirm the destination is No link, and save " +
+      "again. If it persists, the pre-save normalisation is not running.");
+    continue;
+  }
+  if (!validLinkTypes.includes(type)) {
+    problem(r.rel, "the link type is not supported", JSON.stringify(type),
+      `Supported types: ${validLinkTypes.join(", ")}.`);
+    continue;
+  }
+  if (type === "event") {
+    if (!link.event_slug) {
+      problem(r.rel, "the event link names no event", "`event_slug` is missing",
+        "Choose a Federation event, or change the link type.");
+    } else if (!eventSlugs.includes(link.event_slug)) {
+      problem(r.rel, `event slug "${link.event_slug}" does not exist`,
+        `no record in content/events/ has that slug (available: ${eventSlugs.join(", ")})`,
+        "Choose an existing Federation event or remove the event link.");
+    }
+    if (link.url) {
+      problem(r.rel, "the event link also carries an external address", String(link.url),
+        "An announcement links to one destination. Clear the external address.");
+    }
+  }
+  if (type === "external") {
+    const url = String(link.url || "");
+    if (!link.url) {
+      problem(r.rel, "the external link has no address", "`url` is missing",
+        "Enter a full https:// address, or change the link type.");
+    } else if (/^(javascript|data|file|vbscript):/i.test(url)) {
+      problem(r.rel, "the external address uses an unsafe scheme", url,
+        "Only https:// addresses are accepted. This value would be rendered into the page.");
+    } else if (!/^https:\/\/[^\s"'<>]+$/.test(url)) {
+      problem(r.rel, "the external address is not a valid https:// URL", url,
+        "Use a full address beginning with https://");
+    }
+    if (link.event_slug) {
+      problem(r.rel, "the external link also names a Federation event", String(link.event_slug),
+        "An announcement links to one destination. Clear the event.");
+    }
+  }
+  // A link with no label renders a button with no words on it.
+  for (const loc of ["en", "pl"]) {
+    if (!(r.data[loc] && r.data[loc].link_label)) {
+      problem(r.rel, `the ${loc === "en" ? "English" : "Polish"} button has no label`,
+        `${loc}.link_label is empty but a destination link is set`,
+        "Add a short button label in both languages, e.g. Read more / Czytaj więcej.");
+    }
+  }
+}
+
+/* -- A6. Bilingual completeness --------------------------------------------- */
+
+for (const r of annOk) {
+  for (const loc of ["en", "pl"]) {
+    const block = r.data[loc];
+    if (!block || typeof block !== "object") {
+      problem(r.rel, `the ${loc === "en" ? "English" : "Polish"} content is missing`,
+        `\`${loc}\` is absent`, "Both languages are required for every announcement.");
+      continue;
+    }
+    for (const f of ["title", "subtitle", "body"]) {
+      if (!block[f] || String(block[f]).trim() === "") {
+        problem(r.rel, `${loc}.${f} is empty`, `every announcement needs a ${f} in both languages`,
+          `Fill in the ${loc === "en" ? "English" : "Polish"} ${f}.`);
+      }
+    }
+    // The body is Markdown and is rendered with raw HTML disabled; a stored tag
+    // would appear as literal text on the page.
+    if (block.body && /<[a-z][^>]*>/i.test(String(block.body))) {
+      problem(r.rel, `${loc}.body contains HTML`,
+        String(block.body).match(/<[a-z][^>]*>/i)[0],
+        "Announcement bodies are Markdown. HTML is not rendered and will show as " +
+        "literal text — use **bold**, *italic* and [link](https://…) instead.");
+    }
+  }
+}
+
+/* -- A7. Publication state -------------------------------------------------- */
+
+for (const r of annOk) {
+  if (typeof r.data.published !== "boolean") {
+    problem(r.rel, "the published flag is not a true/false value", JSON.stringify(r.data.published),
+      "Set the Published toggle in the CMS.");
+  }
+  if (r.data.signups_closed !== undefined && typeof r.data.signups_closed !== "boolean") {
+    problem(r.rel, "the registration-closed flag is not a true/false value",
+      JSON.stringify(r.data.signups_closed), "Set the Registration closed toggle in the CMS.");
+  }
+}
+
+/* -- A8. Stray test content ------------------------------------------------- */
+
+{
+  const suspicious = annFiles.filter((f) => /cms-announcement|cms-careers|cms-test|cms-noimage|cms-event|cms-external|cms-extra|dummy|delete-?me/i.test(f));
+  if (suspicious.length) {
+    problem(suspicious.map((f) => `${ANN_DIR}/${f}`).join(", "),
+      "test announcements are still in the repository", suspicious.join(", "),
+      "Delete them before committing — they would otherwise be published as real news.");
+  }
+  const strayImages = fs.existsSync(path.join(ROOT, ANN_ASSETS))
+    ? fs.readdirSync(path.join(ROOT, ANN_ASSETS))
+      .filter((f) => /cms-test|cms-announcement|dummy|delete-?me/i.test(f))
+    : [];
+  if (strayImages.length) {
+    problem(`${ANN_ASSETS}/${strayImages.join(", ")}`,
+      "test images are still in the repository", strayImages.join(", "),
+      "Delete them before committing.");
+  }
+}
+
 /* -- output ---------------------------------------------------------------- */
 
 console.log("\n" + "=".repeat(78));
-console.log("  CMS CONTENT CHECK — Team records");
+console.log("  CMS CONTENT CHECK — Team and Announcements");
 console.log("=".repeat(78));
-console.log(`\n  ${files.length} record(s) in ${TEAM_DIR}\n`);
+console.log(`\n  ${files.length} team record(s) in ${TEAM_DIR}`);
+console.log(`  ${annFiles.length} announcement(s) in ${ANN_DIR}\n`);
 
 for (const n of notes) console.log(`  note  ${n}`);
 if (notes.length) console.log("");
 
 if (problems.length === 0) {
-  console.log("  Nothing to fix. Every Team record has a unique, filename-safe Record ID,");
-  console.log("  and every photograph is either absent or a real image in assets/team/.\n");
+  console.log("  Nothing to fix.");
+  console.log("    Team          — unique filename-safe Record IDs; every photograph absent");
+  console.log("                    or a real image in assets/team/.");
+  console.log("    Announcements — unique Record IDs; valid academic years; no repeated");
+  console.log("                    position within a year; every event link resolves; every");
+  console.log("                    image a real file under /assets/.\n");
   console.log("=".repeat(78));
-  console.log(`  PASS — ${files.length} records, 0 problems`);
+  console.log(`  PASS — ${files.length + annFiles.length} records, 0 problems`);
   console.log("=".repeat(78) + "\n");
   process.exit(0);
 }
@@ -270,7 +639,7 @@ for (const p of problems) {
 }
 console.log("  " + "-".repeat(74));
 console.log("\n" + "=".repeat(78));
-console.log(`  FAIL — ${problems.length} problem(s) in ${files.length} records`);
+console.log(`  FAIL — ${problems.length} problem(s) in ${files.length + annFiles.length} records`);
 console.log("  Nothing was renamed, moved or deleted; fix these by hand.");
 console.log("=".repeat(78) + "\n");
 process.exit(1);

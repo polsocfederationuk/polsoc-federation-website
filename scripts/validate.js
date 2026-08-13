@@ -1797,16 +1797,56 @@ const annBadYear = annAll.filter((a) => !/^\d{4}\/\d{2}$/.test(String(a.academic
 assert(annBadYear.length === 0, "every announcement `academic_year` matches YYYY/YY",
   "malformed announcement academic years", annBadYear);
 
-// The date must be a STRING. Unquoted in YAML it parses to a JS Date, whose
-// stringification is timezone-dependent and would make the build non-deterministic.
-const annDateType = annAll.filter((a) => typeof a.published_date !== "string")
-  .map((a) => `${a.slug}: ${Object.prototype.toString.call(a.published_date)}`);
+/* -- the publication date --------------------------------------------------
+ *
+ * `published_date` must be a DATE-ONLY value, and it has two legal spellings.
+ *
+ * The canonical files quote it, so YAML yields a string. Decap re-serialises
+ * with `yaml`@1, whose YAML 1.2 core schema treats a bare 2025-10-26 as an
+ * ordinary string and writes it unquoted; js-yaml's default schema still carries
+ * YAML 1.1 timestamps and reads that same line back as a Date. Both spellings
+ * denote the same calendar day, and src/_data/records.js converts the second to
+ * the first through UTC components before anything renders it.
+ *
+ * What is still rejected, and why it matters: a Date carrying a real TIME
+ * component. `2025-10-26T13:45:00Z` is not a date-only value — rendering it
+ * depends on the reader's timezone, and in Warsaw it can display the previous
+ * day. That is the actual hazard; the quoting is only its symptom.
+ *
+ * See docs/CMS_ANNOUNCEMENTS.md §6.
+ * ------------------------------------------------------------------------- */
+
+/** The canonical "YYYY-MM-DD" for either spelling, or null if it is neither. */
+function canonicalAnnouncementDate(value) {
+  if (typeof value === "string") return value;
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    const midnightUTC = value.getUTCHours() === 0 && value.getUTCMinutes() === 0 &&
+      value.getUTCSeconds() === 0 && value.getUTCMilliseconds() === 0;
+    return midnightUTC ? value.toISOString().slice(0, 10) : null;
+  }
+  return null;
+}
+
+const annDateType = annAll.filter((a) => canonicalAnnouncementDate(a.published_date) === null)
+  .map((a) => `${a.slug}: ${a.published_date instanceof Date
+    ? a.published_date.toISOString() + " (carries a time component)"
+    : Object.prototype.toString.call(a.published_date)}`);
 assert(annDateType.length === 0,
-  "every `published_date` is a quoted string, not a parsed YAML date",
-  "unquoted dates — YAML turned these into timezone-sensitive Date objects", annDateType);
+  "every `published_date` is a date-only value (quoted string or bare YYYY-MM-DD)",
+  "publication dates that are not date-only — a time component makes rendering timezone-dependent",
+  annDateType);
+
+{
+  // Stated separately so the split between the two spellings is visible rather
+  // than merely tolerated.
+  const quoted = annAll.filter((a) => typeof a.published_date === "string").length;
+  const bare = annAll.length - quoted;
+  assert(true, `publication dates: ${quoted} quoted string(s), ${bare} bare YAML date(s) — both normalise to one value`);
+}
 
 const annBadDate = annAll.filter((a) => {
-  const s = String(a.published_date);
+  const s = canonicalAnnouncementDate(a.published_date);
+  if (s === null) return false;                       // already reported above
   if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return true;
   const [y, m, d] = s.split("-").map(Number);
   const dt = new Date(Date.UTC(y, m - 1, d));

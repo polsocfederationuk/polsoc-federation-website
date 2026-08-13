@@ -56,6 +56,30 @@ const loadCollection = (dirName) => {
         slug: parsed.slug || file.replace(/\.ya?ml$/i, ""),
       };
 
+      // "No date shift" — the announcement publication date.
+      //
+      // The canonical files quote it (`published_date: "2025-10-26"`) so YAML
+      // reads a string. Decap re-serialises with `yaml`@1, which follows the
+      // YAML 1.2 core schema, considers a bare 2025-10-26 an ordinary string and
+      // writes it WITHOUT quotes. js-yaml's default schema still carries YAML
+      // 1.1 timestamps, so it reads that same line back as a Date — and a Date
+      // stringifies in the machine's local zone, which is exactly the
+      // non-determinism the isoDate filter exists to prevent. On a machine in
+      // Warsaw it can render the previous calendar day.
+      //
+      // Converting through UTC components restores the identical string, so both
+      // spellings mean one date and the build cannot drift. A Date carrying a
+      // real time component is left alone: that is a genuine loss of date-only
+      // meaning, and scripts/validate.js rejects it by name rather than having it
+      // silently rounded here. See docs/CMS_ANNOUNCEMENTS.md §6.
+      if (dirName === "announcements" && record.published_date instanceof Date) {
+        const d = record.published_date;
+        if (d.getUTCHours() === 0 && d.getUTCMinutes() === 0 &&
+            d.getUTCSeconds() === 0 && d.getUTCMilliseconds() === 0) {
+          record.published_date = d.toISOString().slice(0, 10);
+        }
+      }
+
       // "No photograph" has two spellings on disk and one meaning.
       //
       // A hand-written record says `photo: null`. Decap omits the key entirely
@@ -68,6 +92,18 @@ const loadCollection = (dirName) => {
       // This does not touch the YAML: the file keeps whichever form it has, and
       // no record is rewritten to match the other. See docs/CMS_FOUNDATION.md §9.
       if (dirName === "team" && record.photo === undefined) record.photo = null;
+
+      // The same absent-or-null equivalence for announcements. Every canonical
+      // record spells "nothing here" as an explicit null (or an empty list);
+      // Decap omits an optional field that an editor left empty. Both mean the
+      // same thing, and normalising here keeps that difference out of every
+      // template and filter downstream. No file is rewritten either way.
+      if (dirName === "announcements") {
+        for (const key of ["image", "image_position", "image_fit", "image_background", "link"]) {
+          if (record[key] === undefined) record[key] = null;
+        }
+        if (record.extra_images === undefined) record.extra_images = [];
+      }
 
       return record;
     });

@@ -527,9 +527,13 @@ section("11. The admin panel is development-only (proved by building)");
     assert(/registerEventListener/.test(markup) && /"preSave"/.test(markup),
       "the duplicate-ID guard uses Decap's public preSave event",
       "the duplicate-ID guard is missing from the admin page");
-    assert(/A Team record with this ID already exists/.test(markup),
+    assert(/with this ID already exists/.test(markup) &&
+      /The existing record has not been changed/.test(markup),
       "the guard gives the editor a specific message naming the conflict",
       "the guard has no editor-facing message");
+    assert(/COLLECTIONS/.test(markup) && /entriesByFolder/.test(markup),
+      "the guard covers every folder collection, not just one",
+      "the guard is hardcoded to a single collection");
     assert(!/CMS\.__|_reduxStore|\.prototype\.|Object\.defineProperty\(window\.CMS/.test(markup),
       "the guard does not monkey-patch Decap internals",
       "the guard reaches into Decap's internals");
@@ -543,6 +547,296 @@ section("11. The admin panel is development-only (proved by building)");
   assert(restore.status === 0 && !fs.existsSync(rel("dist/admin")),
     `dist/ was rebuilt in the normal production state (${normalCount} files, no admin/)`,
     "failed to restore dist/ to the production build");
+}
+
+/* =================================================================== 13 */
+section("13. Announcements collection (Phase 17B)");
+
+const ann = config.collections.find((c) => c.name === "announcements");
+const annField = (name) => ((ann && ann.fields) || []).find((f) => f.name === name);
+
+assert(ann !== undefined, "an Announcements collection exists", "no Announcements collection");
+assert(ann && ann.folder === "content/announcements",
+  "it points at the canonical content/announcements/",
+  `it points at ${ann && ann.folder}`);
+assert(exists("content/announcements"), "content/announcements/ exists on disk",
+  "the announcements folder is missing");
+assert(ann && ann.extension === "yaml" && ann.format === "yaml",
+  "announcements are stored as pure YAML",
+  `extension/format are ${ann && ann.extension}/${ann && ann.format}`);
+assert(ann && ann.create === true, "creating announcements is enabled",
+  "announcement creation is disabled");
+assert(ann && ann.slug === "{{fields.slug}}",
+  "the filename is the record's own Record ID",
+  `the slug template is ${JSON.stringify(ann && ann.slug)}`);
+{
+  const onDisk = [...new Set(fs.readdirSync(rel("content/announcements"))
+    .filter((f) => /\.ya?ml$/i.test(f)).map((f) => f.split(".").pop().toLowerCase()))];
+  assert(onDisk.length === 1 && onDisk[0] === ann.extension,
+    `the declared extension matches every record on disk (.${ann.extension})`,
+    "the declared extension does not match the records on disk", onDisk.join(", "));
+}
+assert(ann && /academic_year/.test(String(ann.summary)),
+  "the collection summary shows the academic year",
+  "the summary does not distinguish academic years", ann && ann.summary);
+
+/* -- academic year and ordering -------------------------------------------- */
+{
+  const y = annField("academic_year");
+  assert(y && y.required === true && y.widget === "string" && Array.isArray(y.pattern),
+    "academic_year is a required, format-validated, visible string",
+    "academic_year is missing, optional, hidden or unvalidated");
+  assert(y && !/20\d\d/.test(String(y.pattern[0])),
+    "the year pattern hardcodes no specific year (future years need no config change)",
+    "the year pattern is locked to specific years");
+  assert(y && /never change this on an old announcement/i.test(String(y.hint)),
+    "the year field warns against re-yearing an old announcement",
+    "the year field has no archive warning");
+
+  const o = annField("order");
+  assert(o && o.widget === "number" && o.value_type === "int",
+    "display position is a whole-number field",
+    "display position is not an integer field");
+  assert(o && /within this academic year only/i.test(String(o.hint)),
+    "the ordering hint states the real scope (per academic year)",
+    "the ordering hint does not describe the scope the build uses");
+}
+
+/* -- bilingual, one record --------------------------------------------------- */
+{
+  for (const [name, label] of [["en", "English"], ["pl", "Polish"]]) {
+    const blk = annField(name);
+    assert(blk && blk.widget === "object", `${label} content is a nested object widget`,
+      `the ${name} block is not an object widget`);
+    const names = ((blk && blk.fields) || []).map((f) => f.name);
+    for (const f of ["title", "subtitle", "body", "link_label"]) {
+      assert(names.includes(f), `${name}.${f} exists`, `${name}.${f} is missing`);
+    }
+  }
+  assert(ann.i18n === undefined,
+    "Decap i18n is NOT enabled on announcements (storage layout stays fixed)",
+    "Decap i18n is enabled on announcements");
+  const asText = JSON.stringify(ann);
+  assert(!/content\/announcements\/(en|pl)\b/.test(asText) && !/\.en\.yaml|\.pl\.yaml/.test(asText),
+    "no per-language announcement folder or filename is configured",
+    "a per-language announcement path appears in the configuration");
+  const split = fs.readdirSync(rel("content/announcements"))
+    .filter((f) => /[-.](en|pl)\.ya?ml$/i.test(f) || /^(en|pl)[-.]/i.test(f));
+  assert(split.length === 0, "no language-split announcement exists on disk",
+    "language-split announcements found", split.join(", "));
+}
+
+/* -- Markdown safety --------------------------------------------------------- */
+{
+  for (const loc of ["en", "pl"]) {
+    const body = (annField(loc).fields || []).find((f) => f.name === "body");
+    assert(body && body.widget === "markdown", `${loc}.body uses the Markdown widget`,
+      `${loc}.body is a ${body && body.widget} widget`);
+    assert(body && Array.isArray(body.editor_components) && body.editor_components.length === 0,
+      `${loc}.body offers no editor components (no HTML block)`,
+      `${loc}.body exposes editor components`);
+    const buttons = (body && body.buttons) || [];
+    assert(buttons.length > 0 && !buttons.some((b) => /code-block|image|html/i.test(b)),
+      `${loc}.body's toolbar is limited to safe inline formatting`,
+      `${loc}.body offers a button that can introduce markup`, buttons.join(", "));
+  }
+  // The actual security boundary lives in the build, not the CMS.
+  const cfg = read("eleventy.config.js");
+  assert(/html:\s*false/.test(cfg),
+    "markdown-it is still configured with html: false (raw HTML is not rendered)",
+    "the Markdown renderer no longer disables raw HTML");
+  assert(!/html:\s*true/.test(cfg),
+    "no Markdown renderer in the build enables raw HTML",
+    "a Markdown renderer enables raw HTML");
+}
+
+/* -- media ------------------------------------------------------------------- */
+{
+  const img = annField("image");
+  assert(img && img.widget === "image" && img.required === false,
+    "the main image is an optional image field",
+    "the main image field is missing or required");
+  assert(img && img.media_folder === "/assets/announcements" &&
+    img.public_folder === "/assets/announcements",
+    "uploads go to the existing announcement asset folder",
+    `uploads would go to ${img && img.media_folder}`);
+  assert(img && img.choose_url === false,
+    "arbitrary URL insertion is disabled for the main image",
+    "editors could paste an external image URL");
+  assert(!("default" in (img || {})),
+    "the main image declares no `default` (Decap would not honour one)",
+    "the main image declares a default Decap ignores");
+
+  const extra = annField("extra_images");
+  assert(extra && extra.widget === "list",
+    "extra images are an ordered list", "extra images are not a list widget");
+  assert(extra && extra.field && extra.field.widget === "image",
+    "each extra image is an image field", "extra images are not image fields");
+  assert(extra && extra.field && extra.field.choose_url === false,
+    "extra images cannot be external URLs either",
+    "extra images allow arbitrary URLs");
+  assert(extra && !extra.fields,
+    "extra images stay a list of plain paths, matching the canonical records",
+    "extra images were restructured into objects");
+
+  assert(!/\/pl\/assets/.test(JSON.stringify(ann)),
+    "no /pl/assets/ path can be produced by the announcements configuration",
+    "a /pl/assets/ path appears in the configuration");
+
+  // The build normalises an absent optional field to null, as for Team photos.
+  const rec = read("src/_data/records.js");
+  assert(/dirName === "announcements"/.test(rec) && /record\[key\] === undefined\) record\[key\] = null/.test(rec),
+    "the build normalises absent announcement fields to null",
+    "src/_data/records.js does not normalise absent announcement fields");
+}
+
+/* -- image presentation ------------------------------------------------------ */
+{
+  const fit = annField("image_fit");
+  assert(fit && fit.widget === "select", "image fit is a select, not free text",
+    "image fit is free text and could take any CSS value");
+  const values = (fit.options || []).map((o) => o.value);
+  const supported = (read("scripts/validate.js").match(/SUPPORTED_FIT = new Set\(\[([^\]]*)\]/) || [])[1] || "";
+  const fromValidator = supported.split(",").map((s) => s.trim().replace(/^["']|["']$/g, "")).filter(Boolean);
+  assert(JSON.stringify(values) === JSON.stringify(fromValidator),
+    `image-fit options match scripts/validate.js exactly (${values.join(", ")})`,
+    "the CMS image-fit options have drifted from the validator",
+    `cms: ${values.join(", ")} | validator: ${fromValidator.join(", ")}`);
+  assert((fit.options || []).every((o) => o.label && o.label !== o.value),
+    "image fit shows a human label rather than the raw stored value",
+    "image fit exposes the raw value as its label");
+
+  const bg = annField("image_background");
+  assert(bg && Array.isArray(bg.pattern) && /#/.test(bg.pattern[0]),
+    "the backdrop colour is validated as a hex colour",
+    "the backdrop colour accepts arbitrary CSS");
+
+  // image_position is deliberately free text — three real records use CSS
+  // percentages that no finite list could contain.
+  const pos = annField("image_position");
+  assert(pos && pos.widget === "string" && pos.required === false,
+    "the image focal point stays optional free text (real records use percentages)",
+    "the image focal point was restricted to a fixed list");
+}
+
+/* -- destination links -------------------------------------------------------- */
+{
+  const link = annField("link");
+  assert(link && link.widget === "object" && link.required === false,
+    "the destination link is an optional object",
+    "the destination link is missing or required");
+  const sub = (n) => (link.fields || []).find((f) => f.name === n);
+
+  const type = sub("type");
+  assert(type && type.widget === "select", "the link destination is a select",
+    "the link destination is free text");
+  const types = (type.options || []).map((o) => o.value);
+  const vSupported = (read("scripts/validate.js").match(/SUPPORTED_LINK_TYPES = new Set\(\[([^\]]*)\]/) || [])[1] || "";
+  const vTypes = vSupported.split(",").map((s) => s.trim().replace(/^["']|["']$/g, "")).filter(Boolean);
+
+  // "none" is an editor-only choice: it is how somebody undoes a destination,
+  // and the pre-save normaliser turns it into `link: null` before anything is
+  // written. Every OTHER offered value must be a type the repository stores.
+  assert(types[0] === cms.LINK_TYPE_NONE,
+    'the first destination option is the editor-only "no link" choice',
+    `the first option is ${JSON.stringify(types[0])}`);
+  assert(!vTypes.includes(cms.LINK_TYPE_NONE),
+    '"none" is never a stored link type — the validator would reject it',
+    'the validator accepts "none" as a stored type');
+  const stored = types.filter((t) => t !== cms.LINK_TYPE_NONE);
+  const unknown = stored.filter((t) => !vTypes.includes(t));
+  assert(unknown.length === 0,
+    `every offered destination is a type the repository stores (${stored.join(", ")})`,
+    "the CMS offers a link type the validator does not accept", unknown.join(", "));
+  assert(stored.includes("event") && stored.includes("external"),
+    "both real destinations are offered (Federation event, External website)",
+    "a real destination is missing from the CMS");
+  assert((type.options || []).every((o) => o.label && o.label !== o.value),
+    "each destination shows a human label rather than its stored value",
+    "a destination option exposes its raw value");
+  assert(type.default === cms.LINK_TYPE_NONE,
+    "a new announcement defaults to having no link",
+    `the default destination is ${JSON.stringify(type.default)}`);
+
+  // The normaliser itself, and the fact that the admin page runs the same source.
+  {
+    const n = cms.normaliseAnnouncementLink;
+    assert(typeof n === "function", "the link normaliser is exported for testing",
+      "normaliseAnnouncementLink is not exported");
+    assert(n({ type: "none", event_slug: "icebreaker", url: "https://x.example/" }) === null,
+      "choosing No link discards a stale event and URL");
+    assert(JSON.stringify(n({ type: "event", event_slug: "icebreaker", url: "https://x.example/" }))
+      === JSON.stringify({ type: "event", event_slug: "icebreaker" }),
+      "choosing Federation event discards a stale external URL");
+    assert(JSON.stringify(n({ type: "external", url: "https://x.example/", event_slug: "icebreaker" }))
+      === JSON.stringify({ type: "external", url: "https://x.example/" }),
+      "choosing External website discards a stale event slug");
+
+    const admin = read("src/admin/index.njk");
+    assert(/cmsConfig\.normaliseLinkSource/.test(admin),
+      "the admin page embeds the normaliser source rather than a second copy",
+      "the admin page carries its own copy of the normalisation logic");
+    if (exists("dist/admin/index.html")) {
+      const built = read("dist/admin/index.html");
+      assert(/function normaliseAnnouncementLink/.test(built),
+        "the built admin page contains the normaliser",
+        "the normaliser is missing from the built admin page");
+    }
+  }
+
+  const ev = sub("event_slug");
+  assert(ev && ev.widget === "select", "the event link is a select of real events",
+    "the event link is free text");
+  const evValues = (ev.options || []).map((o) => o.value).sort();
+  const onDisk = fs.readdirSync(rel("content/events")).filter((f) => /\.ya?ml$/i.test(f))
+    .map((f) => jsyaml.load(read(`content/events/${f}`)) || {})
+    .filter((e) => e.published === true).map((e) => e.slug).sort();
+  assert(JSON.stringify(evValues) === JSON.stringify(onDisk),
+    `event options are derived from the canonical event records (${evValues.length})`,
+    "the event options have drifted from content/events/",
+    `cms: ${evValues.join(", ")} | disk: ${onDisk.join(", ")}`);
+  assert((ev.options || []).every((o) => o.label && o.label !== o.value),
+    "each event shows its human title rather than its slug",
+    "an event option exposes the raw slug as its label");
+  assert(!(ev.options || []).some((o) => /\.html$/.test(String(o.value))),
+    "event links store a slug, never a generated .html URL",
+    "an event option stores a generated URL");
+
+  const url = sub("url");
+  assert(url && Array.isArray(url.pattern), "the external address is pattern-validated",
+    "the external address accepts anything");
+  const re = new RegExp(url.pattern[0]);
+  const unsafe = ["javascript:alert(1)", "data:text/html,x", "file:///etc/passwd",
+    "vbscript:x", "http://insecure.example/", "//protocol-relative.example/"]
+    .filter((u) => re.test(u));
+  assert(unsafe.length === 0,
+    "the external-address pattern rejects javascript:, data:, file: and non-https schemes",
+    "the pattern accepts an unsafe scheme", unsafe.join(" | "));
+  assert(re.test("https://example.com/") && re.test("https://twojapolonia.tvp.pl/a,90510126"),
+    "the pattern accepts ordinary https:// addresses",
+    "the pattern rejects a legitimate https URL");
+}
+
+/* -- publication state -------------------------------------------------------- */
+{
+  const pub = annField("published");
+  assert(pub && pub.widget === "boolean", "publication state is a boolean toggle",
+    "publication state is not a boolean");
+  const closed = annField("signups_closed");
+  assert(closed && closed.widget === "boolean", "registration state is a boolean toggle",
+    "registration state is not a boolean");
+  assert(closed && /does not close just because/i.test(String(closed.hint)),
+    "the registration toggle states that it is not inferred from the date",
+    "the registration toggle has no guidance");
+
+  const date = annField("published_date");
+  assert(date && date.widget === "string" && Array.isArray(date.pattern),
+    "the publication date is a validated string, not a timezone-sensitive datetime widget",
+    `the publication date uses the ${date && date.widget} widget`);
+  assert(date && new RegExp(date.pattern[0]).test("2026-05-14") &&
+    !new RegExp(date.pattern[0]).test("2026-05-14T00:00:00.000Z"),
+    "the date pattern accepts a calendar day and rejects a timestamp",
+    "the date pattern would accept a timestamp");
 }
 
 /* =================================================================== 12 */

@@ -33,7 +33,8 @@
     "validate:cms": "node scripts/validate-cms.js",
     "cms:check": "node scripts/cms-check.js",
     "test:cms-roundtrip": "node scripts/test-cms-roundtrip.js",
-    "test:team-rules": "node scripts/test-team-rules.js"
+    "test:team-rules": "node scripts/test-team-rules.js",
+    "test:announcement-rules": "node scripts/test-announcement-rules.js"
   },
   "engines": {
     "node": ">=18"

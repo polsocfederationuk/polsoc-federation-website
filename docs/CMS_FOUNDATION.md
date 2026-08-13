@@ -652,7 +652,12 @@ unchanged.
 | `npm run cms:check` | **Content integrity after editing, in editor language** |
 | `npm run test:cms-roundtrip` | Prove a CMS save cannot corrupt a record |
 | `npm run test:team-rules` | Negative controls for the photo and Record ID rules |
+| `npm run test:announcement-rules` | Negative controls for the announcement rules |
 | `npm run build` | **Normal build — contains no `/admin/`** |
+
+> **Announcements** were added in Phase 17B — see `docs/CMS_ANNOUNCEMENTS.md`
+> for that collection's schema, its academic-year and ordering rules, Markdown
+> safety, imagery, event and external links, and the publication-date trap.
 
 ## Files in this phase
 

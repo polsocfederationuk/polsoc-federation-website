@@ -86,12 +86,16 @@ eleventyExcludeFromCollections: true
         "use strict";
 
         var PROXY = {{ cmsConfig.proxyUrl | dump | safe }};
-        var FOLDER = {{ cmsConfig.guard.folder | dump | safe }};
-        var EXTENSION = {{ cmsConfig.guard.extension | dump | safe }};
         var BRANCH = {{ cmsConfig.guard.branch | dump | safe }};
-        var ID_PATTERN = new RegExp({{ cmsConfig.guard.pattern | dump | safe }});
+        // Every folder collection whose filename is its own Record ID.
+        var COLLECTIONS = {{ cmsConfig.guard.collections | dump | safe }};
 
         if (typeof window.CMS === "undefined") return;
+
+        // The announcement link normaliser, embedded verbatim from
+        // src/_data/cmsConfig.js so the browser runs the same function
+        // scripts/test-announcement-rules.js exercises.
+        {{ cmsConfig.normaliseLinkSource | safe }}
 
         /** The entry's own file path, or "" for a record being created. */
         function pathOf(entry) {
@@ -110,14 +114,19 @@ eleventyExcludeFromCollections: true
           return entry.data || {};
         }
 
-        /** Ask the proxy which files the Team collection currently holds. */
-        function existingPaths() {
+        /** Ask the proxy which files a collection's folder currently holds. */
+        function existingPaths(collection) {
           return fetch(PROXY, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               action: "entriesByFolder",
-              params: { branch: BRANCH, folder: FOLDER, extension: EXTENSION, depth: 1 },
+              params: {
+                branch: BRANCH,
+                folder: collection.folder,
+                extension: collection.extension,
+                depth: 1,
+              },
             }),
           })
             .then(function (r) { return r.ok ? r.json() : []; })
@@ -137,31 +146,81 @@ eleventyExcludeFromCollections: true
             var entry = props && props.entry;
             var data = dataOf(entry);
             var slug = data && data.slug;
-
-            // Only the Team collection stores its identity this way. Site
-            // settings is a file collection with a fixed path.
-            if (!slug || typeof slug !== "string") return;
-
-            if (!ID_PATTERN.test(slug)) {
-              throw new Error(
-                'Record ID "' + slug + '" is not valid. Use lowercase letters, ' +
-                "numbers and single hyphens only — for example jane-example."
-              );
-            }
-
-            var target = FOLDER + "/" + slug + "." + EXTENSION;
             var ownPath = pathOf(entry);
 
-            return existingPaths().then(function (paths) {
-              if (paths === null) return;                    // proxy unreachable
-              if (paths.indexOf(target) === -1) return;       // no such record
-              if (ownPath === target) return;                 // editing that record
+            /*
+              LINK NORMALISATION.
 
-              throw new Error(
-                "A Team record with this ID already exists (" + target + "). " +
-                "Use a different Record ID — for example " + slug + "-2026-27 " +
-                "for another committee year. The existing record has not been changed."
+              Decap's object widget remembers every sub-field it has ever held,
+              so an editor who picks a Federation event and then switches to an
+              external address leaves the slug behind — and there is no reliable
+              clear control to remove it by hand. Reducing the link to exactly
+              one destination here is what makes the destination reversible.
+
+              The handler's return value becomes the entry's data (see
+              persistEntry -> invokePreSaveEvent), so returning the corrected
+              data is the documented way to do this. The value is returned
+              synchronously below only when nothing else needs checking;
+              otherwise it is carried through the duplicate-ID promise.
+            */
+            var normalisedData = null;
+            if (entry && typeof entry.get === "function" && ("link" in data)) {
+              var current = data.link;
+              var cleaned = normaliseAnnouncementLink(
+                current && typeof current.toJS === "function" ? current.toJS() : current
               );
+              if (JSON.stringify(cleaned) !== JSON.stringify(
+                current && typeof current.toJS === "function" ? current.toJS() : current
+              )) {
+                normalisedData = entry.get("data").set("link", cleaned);
+              }
+            }
+
+            // Which collection is this? Site settings is a file collection with
+            // a fixed path and no Record ID, so it is simply not matched.
+            if (!slug || typeof slug !== "string") return normalisedData || undefined;
+
+            var collection = null;
+            for (var i = 0; i < COLLECTIONS.length; i++) {
+              if (ownPath && ownPath.indexOf(COLLECTIONS[i].folder + "/") === 0) {
+                collection = COLLECTIONS[i];
+                break;
+              }
+            }
+            // A record being created has no path yet. Checking every folder is
+            // correct rather than lazy: an ID must be unique within its own
+            // collection, and testing them all costs one request each.
+            var candidates = collection ? [collection] : COLLECTIONS;
+
+            for (var j = 0; j < candidates.length; j++) {
+              if (!new RegExp(candidates[j].pattern).test(slug)) {
+                throw new Error(
+                  'Record ID "' + slug + '" is not valid. Use lowercase letters, ' +
+                  "numbers and single hyphens only — for example spring-careers-evening."
+                );
+              }
+            }
+
+            return Promise.all(candidates.map(function (c) {
+              return existingPaths(c).then(function (paths) {
+                if (paths === null) return null;              // proxy unreachable
+                var target = c.folder + "/" + slug + "." + c.extension;
+                if (paths.indexOf(target) === -1) return null; // no such record
+                if (ownPath === target) return null;           // editing that record
+                return { collection: c, target: target };
+              });
+            })).then(function (hits) {
+              var clash = hits.filter(Boolean)[0];
+              if (clash) {
+                throw new Error(
+                  "A " + clash.collection.label + " with this ID already exists (" +
+                  clash.target + "). Use a different Record ID — for example " +
+                  slug + "-2026-27 for another academic year. " +
+                  "The existing record has not been changed."
+                );
+              }
+              // Undefined leaves the data untouched; anything else replaces it.
+              return normalisedData || undefined;
             });
           },
         });
