@@ -606,13 +606,318 @@ for (const r of annOk) {
   }
 }
 
+/* ===========================================================================
+   STANDARD EVENTS
+   =========================================================================== */
+
+const evCollection = config.collections.find((c) => c.name === "standard_events");
+const EV_DIR = evCollection.folder;
+const EV_EXT = evCollection.extension;
+const EV_ID_RE = new RegExp(evCollection.fields.find((f) => f.name === "slug").pattern[0]);
+
+const evDir = path.join(ROOT, EV_DIR);
+const evFiles = fs.existsSync(evDir)
+  ? fs.readdirSync(evDir).filter((f) => /\.ya?ml$/i.test(f)).sort()
+  : [];
+
+const evRecords = evFiles.map((file) => {
+  let data = null;
+  let parseError = null;
+  try { data = yaml.load(fs.readFileSync(path.join(evDir, file), "utf8")) || {}; }
+  catch (e) { parseError = e.message.split("\n")[0]; }
+  return { file, rel: `${EV_DIR}/${file}`, data, parseError };
+});
+
+for (const r of evRecords) {
+  if (r.parseError) {
+    problem(r.rel, "the file is not valid YAML", r.parseError,
+      `Fix the syntax, or restore it with \`git checkout -- ${r.rel}\`.`);
+  }
+}
+const evOk = evRecords.filter((r) => !r.parseError);
+const evStandard = evOk.filter((r) => r.data.event_family === cms.STANDARD_FAMILY);
+const evForum = evOk.filter((r) => r.data.event_family === "polish-business-forum");
+
+/* -- E1. families and templates -------------------------------------------- */
+
+for (const r of evOk) {
+  const fam = r.data.event_family;
+  if (fam !== cms.STANDARD_FAMILY && fam !== "polish-business-forum") {
+    problem(r.rel, "the event family is not recognised", JSON.stringify(fam),
+      `Events are either "${cms.STANDARD_FAMILY}" or "polish-business-forum".`);
+    continue;
+  }
+  const expectedTemplate = fam === cms.STANDARD_FAMILY ? cms.STANDARD_TEMPLATE : "business-forum";
+  if (r.data.template !== expectedTemplate) {
+    problem(r.rel, "the family and template disagree",
+      `event_family "${fam}" with template "${r.data.template}"`,
+      `A ${fam} event must use the ${expectedTemplate} template. This pair decides ` +
+      "which page design renders the event and is not an editorial choice.");
+  }
+}
+
+/* -- E2. identity ----------------------------------------------------------- */
+
+for (const r of evOk) {
+  const stored = r.data.slug;
+  if (stored === undefined) {
+    problem(r.rel, "no Record ID is stored", "the `slug` field is missing",
+      `Add "slug: ${r.file.replace(/\.ya?ml$/i, "")}" to the file.`);
+    continue;
+  }
+  if (typeof stored !== "string" || !EV_ID_RE.test(stored)) {
+    problem(r.rel, "the Record ID is not filename-safe",
+      `"${stored}" does not match ${EV_ID_RE.source}`,
+      "Use lowercase letters, numbers and single hyphens only.");
+    continue;
+  }
+  const expected = `${stored}.${EV_EXT}`;
+  if (r.file === expected) continue;
+  const collision = new RegExp(`^${stored.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}-\\d+\\.${EV_EXT}$`).test(r.file);
+  const conflict = evFiles.includes(expected);
+  problem(r.rel,
+    collision && conflict ? "this looks like a duplicate-ID collision"
+      : "the filename and the stored Record ID disagree",
+    `file "${r.file}" vs slug "${stored}"`,
+    collision && conflict
+      ? `That ID already belongs to ${EV_DIR}/${expected}. If this is a different ` +
+        `edition, give it a year-qualified ID such as "${stored}-2026-27" and rename ` +
+        `the file to match. ${EV_DIR}/${expected} has not been modified.`
+      : `Rename the file to ${expected}, or change the Record ID to "${r.file.replace(/\.ya?ml$/i, "")}".`);
+}
+{
+  const bySlug = new Map();
+  for (const r of evOk) {
+    if (r.data.slug === undefined) continue;
+    if (!bySlug.has(r.data.slug)) bySlug.set(r.data.slug, []);
+    bySlug.get(r.data.slug).push(r);
+  }
+  for (const [slug, group] of bySlug) {
+    if (group.length < 2) continue;
+    problem(group.map((g) => g.rel).join(" + "), "two events claim the same Record ID",
+      `Record ID "${slug}" is stored in ${group.length} files`,
+      "Record IDs must be unique. Give one a year-qualified ID and rename its file.");
+  }
+}
+
+/* -- E3. academic years and year-scoped ordering ---------------------------- */
+
+for (const r of evOk) {
+  const m = AY_RE.exec(String(r.data.academic_year));
+  if (!m) {
+    problem(r.rel, "the academic year is malformed", JSON.stringify(r.data.academic_year),
+      "Use the form 2025/26.");
+  } else if (m[2] !== String((Number(m[1]) + 1) % 100).padStart(2, "0")) {
+    problem(r.rel, "the academic year does not span consecutive years",
+      JSON.stringify(r.data.academic_year),
+      `The second half must be the year after the first — ${m[1]}/${String((Number(m[1]) + 1) % 100).padStart(2, "0")}.`);
+  }
+}
+{
+  const byYear = new Map();
+  for (const r of evStandard) {
+    if (r.data.published !== true) continue;
+    const y = r.data.academic_year;
+    if (!y) continue;
+    if (!byYear.has(y)) byYear.set(y, new Map());
+    const o = byYear.get(y);
+    if (!o.has(r.data.order)) o.set(r.data.order, []);
+    o.get(r.data.order).push(r);
+  }
+  for (const [year, orders] of byYear) {
+    for (const [order, group] of orders) {
+      if (group.length < 2) continue;
+      problem(group.map((g) => g.rel).join(" + "),
+        "two published events share a position in the same academic year",
+        `position ${order} is used ${group.length} times in ${year}`,
+        "Give each event in a year its own position. Positions restart at 1 each " +
+        "year, so a clash with a different year is not a problem.");
+    }
+    notes.push(`${year}: ${[...orders.keys()].length} published standard event position(s)`);
+  }
+}
+
+/* -- E3b. published future-year events --------------------------------------- */
+/* The CMS refuses to save this state, so reaching it means a file was edited by
+ * hand. It is worth naming clearly because the consequence is a FATAL build —
+ * which also takes `npm run cms:serve` down, leaving no way back in through the
+ * CMS. */
+
+{
+  const current = cms.currentAcademicYear();
+  for (const r of evStandard) {
+    const problem = cms.futurePublishProblem(r.data, current);
+    if (!problem) continue;
+    problem_future(r, problem);
+  }
+  function problem_future(r, p) {
+    problem(r.rel, "a future year's event is already published",
+      `this event is ${p.eventYear} but the website's current academic year is ${p.currentYear}`,
+      `Open it in the CMS and switch Published off, or change the current academic ` +
+      `year to ${p.eventYear} in Site settings once the Federation is ready. ` +
+      `Until then the events listing cannot build.`);
+  }
+}
+
+/* -- E4. dates -------------------------------------------------------------- */
+
+for (const r of evOk) {
+  for (const field of ["start_date", "end_date"]) {
+    const d = r.data[field];
+    if (d === null || d === undefined) continue;
+    if (d instanceof Date) {
+      const midnight = d.getUTCHours() === 0 && d.getUTCMinutes() === 0 &&
+        d.getUTCSeconds() === 0 && d.getUTCMilliseconds() === 0;
+      if (!midnight) {
+        problem(r.rel, `${field} carries a time`, d.toISOString(),
+          "Event dates are calendar days only. Set it to the form 2026-02-10.");
+      }
+      continue;
+    }
+    if (typeof d !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(d)) {
+      problem(r.rel, `${field} is not a calendar date`, JSON.stringify(d),
+        "Use the form 2026-02-10 (year-month-day).");
+    }
+  }
+}
+
+/* -- E5. section alignment --------------------------------------------------- */
+
+for (const r of evStandard) {
+  const msg = cms.checkEventSectionAlignment(r.data);
+  if (!msg) continue;
+  problem(r.rel, "the section lists are out of alignment",
+    msg.split("\n").filter(Boolean).slice(1, 5).join(" / "),
+    "The English, Polish and shared section lists must describe the same sections " +
+    "in the same order. Open the event in the CMS and correct the list that differs.");
+}
+
+/* -- E6. media and links ----------------------------------------------------- */
+
+function checkEventAsset(r, value, label) {
+  if (value === undefined || value === null) return;
+  if (typeof value !== "string") {
+    problem(r.rel, `${label} is the wrong type`, `${JSON.stringify(value)} (${typeof value})`,
+      "Choose an image in the CMS, or clear the field.");
+    return;
+  }
+  if (value.trim() === "") {
+    problem(r.rel, `${label} is an empty string`, "neither an image nor an absence",
+      "Clear the field entirely, or choose an image.");
+    return;
+  }
+  if (/^[a-z][a-z0-9+.-]*:\/\//i.test(value) || value.startsWith("//")) {
+    problem(r.rel, `${label} is hotlinked from another site`, value,
+      "Download the image, add it to assets/events/, and choose it in the CMS.");
+    return;
+  }
+  if (/^[A-Za-z]:[\\/]/.test(value) || value.includes("\\")) {
+    problem(r.rel, `${label} is a path on somebody's own computer`, value,
+      "That file does not exist for anyone else. Upload it through the CMS.");
+    return;
+  }
+  if (value.startsWith("/pl/") || value.includes("/pl/assets/")) {
+    problem(r.rel, `${label} is language-prefixed`, value,
+      "Event images are shared between both languages. Use /assets/… with no /pl/ prefix.");
+    return;
+  }
+  if (!value.startsWith("/assets/")) {
+    problem(r.rel, `${label} is not a site asset`, value,
+      "Event images are stored as /assets/…, for example /assets/events/<file>.");
+    return;
+  }
+  if (!fs.existsSync(path.join(ROOT, value.replace(/^\/+/, "")))) {
+    problem(r.rel, `${label} is missing`, `${value} does not exist on disk`,
+      "Re-upload the image through the CMS, or clear the field.");
+  }
+}
+
+for (const r of evStandard) {
+  checkEventAsset(r, r.data.card_image, "the card image");
+  checkEventAsset(r, r.data.og_image, "the social sharing image");
+  checkEventAsset(r, r.data.hero_image, "the hero image");
+  for (const [i, s] of (r.data.sections || []).entries()) {
+    for (const [k, img] of ((s || {}).images || []).entries()) {
+      checkEventAsset(r, img && img.src, `gallery section ${i + 1}, image ${k + 1}`);
+    }
+  }
+  for (const [i, co] of (r.data.co_organisers || []).entries()) {
+    checkEventAsset(r, co && co.logo, `co-organiser ${i + 1} logo`);
+    if (!(co && co.alt && co.alt.en && co.alt.pl)) {
+      problem(r.rel, `co-organiser ${i + 1} is not named in both languages`,
+        JSON.stringify(co && co.alt),
+        "Every partner logo needs an organisation name in English and Polish.");
+    }
+  }
+  for (const [label, url] of [["Instagram link", r.data.instagram_permalink],
+    ["album link", r.data.album_url],
+    ["registration link", (r.data.registration || {}).url]]) {
+    if (!url) continue;
+    const v = String(url);
+    if (/^(javascript|data|file|vbscript):/i.test(v)) {
+      problem(r.rel, `the ${label} uses an unsafe scheme`, v,
+        "Only https:// addresses are accepted. This value is rendered into the page.");
+    } else if (!/^https:\/\/[^\s"'<>]+$/.test(v)) {
+      problem(r.rel, `the ${label} is not a valid https:// URL`, v,
+        "Use a full address beginning with https://");
+    }
+  }
+}
+
+/* -- E7. bilingual completeness ---------------------------------------------- */
+
+for (const r of evStandard) {
+  for (const loc of ["en", "pl"]) {
+    const b = r.data[loc];
+    const label = loc === "en" ? "English" : "Polish";
+    if (!b || typeof b !== "object") {
+      problem(r.rel, `the ${label} content is missing`, `\`${loc}\` is absent`,
+        "Both languages are required for every event.");
+      continue;
+    }
+    for (const f of ["date_label", "venue_label", "hero_summary", "card_summary",
+      "card_image_alt", "timeline_title", "timeline_summary", "seo_title",
+      "seo_description", "og_image_alt", "schema_description"]) {
+      if (!b[f] || String(b[f]).trim() === "") {
+        problem(r.rel, `${loc}.${f} is empty`, `every event needs this in both languages`,
+          `Fill in the ${label} value.`);
+      }
+    }
+    if (!b.title_lead && !b.title_fancy) {
+      problem(r.rel, `the ${label} title has no parts`, "title_lead and title_fancy are both empty",
+        "An event needs at least the first part of its title.");
+    }
+  }
+  const venue = r.data.venue || {};
+  if (!(venue.name && venue.name.en && venue.name.pl)) {
+    problem(r.rel, "the venue is not named in both languages", JSON.stringify(venue.name),
+      "Give the venue's English and Polish names.");
+  }
+  if (!(venue.locality && venue.locality.en && venue.locality.pl)) {
+    problem(r.rel, "the town is not named in both languages", JSON.stringify(venue.locality),
+      "Give the town's English and Polish names, e.g. London / Londyn.");
+  }
+}
+
+/* -- E8. stray test content --------------------------------------------------- */
+
+{
+  const suspicious = evFiles.filter((f) => /cms-standard|cms-event|cms-test|zz-|dummy|delete-?me/i.test(f));
+  if (suspicious.length) {
+    problem(suspicious.map((f) => `${EV_DIR}/${f}`).join(", "),
+      "test events are still in the repository", suspicious.join(", "),
+      "Delete them before committing — they would otherwise appear as real events.");
+  }
+}
+
 /* -- output ---------------------------------------------------------------- */
 
 console.log("\n" + "=".repeat(78));
-console.log("  CMS CONTENT CHECK — Team and Announcements");
+console.log("  CMS CONTENT CHECK — Team, Announcements and Events");
 console.log("=".repeat(78));
 console.log(`\n  ${files.length} team record(s) in ${TEAM_DIR}`);
-console.log(`  ${annFiles.length} announcement(s) in ${ANN_DIR}\n`);
+console.log(`  ${annFiles.length} announcement(s) in ${ANN_DIR}`);
+console.log(`  ${evStandard.length} standard event(s) + ${evForum.length} Polish Business Forum in ${EV_DIR}\n`);
 
 for (const n of notes) console.log(`  note  ${n}`);
 if (notes.length) console.log("");
@@ -623,9 +928,11 @@ if (problems.length === 0) {
   console.log("                    or a real image in assets/team/.");
   console.log("    Announcements — unique Record IDs; valid academic years; no repeated");
   console.log("                    position within a year; every event link resolves; every");
-  console.log("                    image a real file under /assets/.\n");
+  console.log("                    image a real file under /assets/.");
+  console.log("    Events        — standard family only; the three section lists aligned;");
+  console.log("                    year-scoped positions; every image and link resolves.\n");
   console.log("=".repeat(78));
-  console.log(`  PASS — ${files.length + annFiles.length} records, 0 problems`);
+  console.log(`  PASS — ${files.length + annFiles.length + evFiles.length} records, 0 problems`);
   console.log("=".repeat(78) + "\n");
   process.exit(0);
 }
@@ -639,7 +946,7 @@ for (const p of problems) {
 }
 console.log("  " + "-".repeat(74));
 console.log("\n" + "=".repeat(78));
-console.log(`  FAIL — ${problems.length} problem(s) in ${files.length + annFiles.length} records`);
+console.log(`  FAIL — ${problems.length} problem(s) in ${files.length + annFiles.length + evFiles.length} records`);
 console.log("  Nothing was renamed, moved or deleted; fix these by hand.");
 console.log("=".repeat(78) + "\n");
 process.exit(1);

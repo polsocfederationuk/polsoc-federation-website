@@ -26,17 +26,10 @@
 const fs = require("fs");
 const path = require("path");
 const yaml = require("js-yaml");
+// The single interpretation of an academic year — see src/_data/academicYear.js.
+const { parseAcademicYear } = require("./academicYear");
+const { normaliseRecordDates } = require("./dateOnly");
 
-/** "2025/26" → 2025, and only if the second half really is the next year. */
-function parseAcademicYear(value) {
-  const m = /^(\d{4})\/(\d{2})$/.exec(String(value || ""));
-  if (!m) return null;
-  const start = Number(m[1]);
-  // The trailing pair must be the last two digits of start + 1, so "2025/27"
-  // and "2025/25" are rejected rather than silently sorted somewhere.
-  const expected = String((start + 1) % 100).padStart(2, "0");
-  return m[2] === expected ? start : null;
-}
 
 /**
  * Group published, listing-visible events by academic year.
@@ -124,7 +117,7 @@ function loadRecords() {
     .readdirSync(EVENTS_DIR)
     .sort()                                       // deterministic, then re-sorted by `order`
     .filter((f) => /\.ya?ml$/i.test(f))
-    .map((f) => ({
+    .map((f) => normaliseRecordDates({
       ...(yaml.load(fs.readFileSync(path.join(EVENTS_DIR, f), "utf8")) || {}),
       _source: `content/events/${f}`,
     }));

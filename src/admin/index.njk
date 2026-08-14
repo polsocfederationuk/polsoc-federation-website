@@ -97,6 +97,50 @@ eleventyExcludeFromCollections: true
         // scripts/test-announcement-rules.js exercises.
         {{ cmsConfig.normaliseLinkSource | safe }}
 
+        // The standard-event section alignment guard, likewise embedded from
+        // src/_data/cmsConfig.js so scripts/test-event-rules.js exercises the
+        // same function the editor runs.
+        {{ cmsConfig.sectionGuardSource | safe }}
+
+        // Completes the canonical no-registration block on a standard event.
+        // Also embedded from src/_data/cmsConfig.js.
+        {{ cmsConfig.registrationSource | safe }}
+
+        // The academic-year rule, embedded from src/_data/academicYear.js.
+        {{ cmsConfig.academicYearSource | safe }}
+
+        var SETTINGS_FILE = {{ cmsConfig.settingsFile | dump | safe }};
+        // The value at build time, used only if the live read fails.
+        var FALLBACK_CURRENT_YEAR = {{ cmsConfig.currentAcademicYear | dump | safe }};
+
+        /**
+         * The CURRENT academic year, read from the settings file through the
+         * proxy rather than from the build-time snapshot — an editor who has just
+         * rolled the year over in Site settings has not necessarily rebuilt, and
+         * a stale value here would block a save that is now perfectly legal.
+         */
+        function readCurrentAcademicYear() {
+          return fetch(PROXY, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              action: "getEntry",
+              params: { branch: BRANCH, path: SETTINGS_FILE },
+            }),
+          })
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (entry) {
+              var raw = entry && entry.data;
+              if (typeof raw !== "string") return FALLBACK_CURRENT_YEAR;
+              // One key, one line. A full YAML parser in the admin bundle would
+              // be a lot of machinery for `current: "2025/26"`, and the format is
+              // pinned by scripts/validate.js.
+              var m = raw.match(/^\s*current\s*:\s*["']?(\d{4}\/\d{2})["']?\s*$/m);
+              return m ? m[1] : FALLBACK_CURRENT_YEAR;
+            })
+            .catch(function () { return FALLBACK_CURRENT_YEAR; });
+        }
+
         /** The entry's own file path, or "" for a record being created. */
         function pathOf(entry) {
           if (!entry) return "";
@@ -163,22 +207,68 @@ eleventyExcludeFromCollections: true
               synchronously below only when nothing else needs checking;
               otherwise it is carried through the duplicate-ID promise.
             */
+            /*
+              SECTION ALIGNMENT.
+
+              Checked before anything else, and never repaired. A standard event
+              keeps its sections in three index-aligned arrays that Decap cannot
+              keep in step; if they have drifted, refusing the save is the only
+              option that does not either invent content or throw some away.
+            */
+            var alignment = checkEventSectionAlignment(data);
+            if (alignment) throw new Error(alignment);
+
+            /*
+              FUTURE-YEAR PUBLISH.
+
+              The events listing refuses to build a published event whose academic
+              year is later than the configured current year. That refusal is
+              fatal, and it takes `npm run cms:serve` down with it — so an editor
+              who saved such a record could not reopen the CMS to undo it, and
+              would need somebody to edit YAML by hand.
+
+              Checked here BEFORE the file is written. The build rule stays where
+              it is as the backstop for hand-edited files.
+            */
+            var futureCheck = data.event_family === "standard"
+              ? readCurrentAcademicYear().then(function (current) {
+                  var problem = futurePublishProblem(data, current);
+                  if (problem) throw new Error(futurePublishMessage(problem));
+                })
+              : Promise.resolve();
+
+            /*
+              Corrections applied on the way out. Each one only replaces a value
+              the editor cannot reasonably be asked to get right by hand, and
+              each leaves everything else exactly as typed.
+            */
             var normalisedData = null;
-            if (entry && typeof entry.get === "function" && ("link" in data)) {
-              var current = data.link;
-              var cleaned = normaliseAnnouncementLink(
-                current && typeof current.toJS === "function" ? current.toJS() : current
-              );
-              if (JSON.stringify(cleaned) !== JSON.stringify(
-                current && typeof current.toJS === "function" ? current.toJS() : current
-              )) {
-                normalisedData = entry.get("data").set("link", cleaned);
+            var working = entry && typeof entry.get === "function" ? entry.get("data") : null;
+
+            if (working && ("link" in data)) {
+              var cleaned = normaliseAnnouncementLink(data.link);
+              if (JSON.stringify(cleaned) !== JSON.stringify(data.link)) {
+                working = working.set("link", cleaned);
+                normalisedData = working;
+              }
+            }
+
+            // A standard event keeps the canonical registration block even
+            // though the editor never sees it — Decap drops null-valued keys, so
+            // the hidden field's default can arrive incomplete.
+            if (working) {
+              var registration = ensureEventRegistration(data);
+              if (registration) {
+                working = working.set("registration", registration);
+                normalisedData = working;
               }
             }
 
             // Which collection is this? Site settings is a file collection with
             // a fixed path and no Record ID, so it is simply not matched.
-            if (!slug || typeof slug !== "string") return normalisedData || undefined;
+            if (!slug || typeof slug !== "string") {
+              return futureCheck.then(function () { return normalisedData || undefined; });
+            }
 
             var collection = null;
             for (var i = 0; i < COLLECTIONS.length; i++) {
@@ -201,6 +291,7 @@ eleventyExcludeFromCollections: true
               }
             }
 
+            return futureCheck.then(function () {
             return Promise.all(candidates.map(function (c) {
               return existingPaths(c).then(function (paths) {
                 if (paths === null) return null;              // proxy unreachable
@@ -212,8 +303,11 @@ eleventyExcludeFromCollections: true
             })).then(function (hits) {
               var clash = hits.filter(Boolean)[0];
               if (clash) {
+                // "An event" / "A team member" — the label is data, so the
+                // article has to follow it rather than being hard-coded.
+                var article = /^[aeiou]/i.test(clash.collection.label) ? "An " : "A ";
                 throw new Error(
-                  "A " + clash.collection.label + " with this ID already exists (" +
+                  article + clash.collection.label + " with this ID already exists (" +
                   clash.target + "). Use a different Record ID — for example " +
                   slug + "-2026-27 for another academic year. " +
                   "The existing record has not been changed."
@@ -221,6 +315,7 @@ eleventyExcludeFromCollections: true
               }
               // Undefined leaves the data untouched; anything else replaces it.
               return normalisedData || undefined;
+            });
             });
           },
         });

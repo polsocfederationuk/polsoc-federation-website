@@ -3271,7 +3271,16 @@ const BF_ONLY_KEYS = ["business_forum", "edition_number", "partner_categories",
 const evFiles = fs.existsSync(path.join(ROOT, EV_DIR))
   ? fs.readdirSync(path.join(ROOT, EV_DIR)).filter((f) => /\.ya?ml$/i.test(f)).sort()
   : [];
-const evAll = evFiles.map((f) => ({ _file: `${EV_DIR}/${f}`, ...loadYaml(`${EV_DIR}/${f}`) }));
+/* Event dates have two legal spellings on disk — the quoted string the canonical
+ * files use, and the bare YYYY-MM-DD Decap writes, which js-yaml resolves to a
+ * midnight-UTC Date. Normalising here, once, means every rule below can simply
+ * treat start_date as a string, instead of each one growing its own Date branch.
+ * The type itself is still policed separately, so a Date carrying a real time
+ * component is reported rather than quietly accepted.
+ * See src/_data/dateOnly.js and docs/CMS_EVENTS.md §12. */
+const { normaliseRecordDates: evNormaliseDates } = require("../src/_data/dateOnly.js");
+const evAll = evFiles.map((f) =>
+  evNormaliseDates({ _file: `${EV_DIR}/${f}`, ...loadYaml(`${EV_DIR}/${f}`) }));
 const evStd = evAll.filter((e) => e.published === true && e.event_family === "standard");
 
 assert(evStd.length === 4,
@@ -3312,11 +3321,40 @@ assert(evBadYear.length === 0, 'every standard event is academic_year "2025/26"'
 
 /* -- dates ------------------------------------------------------------------ */
 
-const evDateType = evStd.filter((e) => typeof e.start_date !== "string")
-  .map((e) => `${e.slug}: ${Object.prototype.toString.call(e.start_date)}`);
-assert(evDateType.length === 0,
-  "every start_date is a quoted string, not a YAML-parsed Date",
-  "unquoted event dates — YAML turned these into timezone-sensitive Date objects", evDateType);
+/* An event date must be DATE-ONLY, and it has two legal spellings — the same
+ * situation as announcement dates, for the same reason.
+ *
+ * The canonical files quote it, so YAML yields a string. Decap re-serialises
+ * with `yaml`@1, whose YAML 1.2 core schema treats a bare 2025-12-08 as an
+ * ordinary string and writes it unquoted; js-yaml's default schema still carries
+ * YAML 1.1 timestamps and reads that line back as a Date. Both denote the same
+ * calendar day, and src/_data/records.js converts the second to the first
+ * through UTC components before anything renders it.
+ *
+ * Still rejected: a Date carrying a real TIME component. That is not a date-only
+ * value, and rendering it depends on the reader's timezone — in Warsaw it can
+ * show the previous day. The time is the hazard; the quoting is its symptom.
+ *
+ * See docs/CMS_EVENTS.md §12. */
+const evBadDateType = evStd.filter((e) => {
+  const v = e.start_date;
+  if (typeof v === "string") return false;
+  if (v instanceof Date && !Number.isNaN(v.getTime())) {
+    return !(v.getUTCHours() === 0 && v.getUTCMinutes() === 0 &&
+      v.getUTCSeconds() === 0 && v.getUTCMilliseconds() === 0);
+  }
+  return true;
+}).map((e) => `${e.slug}: ${e.start_date instanceof Date
+  ? e.start_date.toISOString() + " (carries a time component)"
+  : Object.prototype.toString.call(e.start_date)}`);
+assert(evBadDateType.length === 0,
+  "every start_date is a date-only value (quoted string or bare YYYY-MM-DD)",
+  "event dates that are not date-only — a time component makes rendering timezone-dependent",
+  evBadDateType);
+{
+  const quoted = evStd.filter((e) => typeof e.start_date === "string").length;
+  assert(true, `event dates: ${quoted} quoted string(s), ${evStd.length - quoted} bare YAML date(s) — both normalise to one value`);
+}
 const evBadPrec = evStd.filter((e) => !EV_PRECISION.has(e.date_precision))
   .map((e) => `${e.slug}: ${e.date_precision}`);
 assert(evBadPrec.length === 0, `every date_precision is one of ${[...EV_PRECISION].join(", ")}`,

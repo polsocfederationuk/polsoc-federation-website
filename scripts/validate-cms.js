@@ -534,7 +534,9 @@ section("11. The admin panel is development-only (proved by building)");
     assert(/COLLECTIONS/.test(markup) && /entriesByFolder/.test(markup),
       "the guard covers every folder collection, not just one",
       "the guard is hardcoded to a single collection");
-    assert(!/CMS\.__|_reduxStore|\.prototype\.|Object\.defineProperty\(window\.CMS/.test(markup),
+    // Reaching into Decap specifically — not any use of Object.prototype, which
+    // the embedded helpers legitimately use for hasOwnProperty checks.
+    assert(!/CMS\.__|_reduxStore|window\.CMS\.[a-z]+\s*=|CMS\.[A-Za-z]+\.prototype|Object\.defineProperty\(\s*window\.CMS/.test(markup),
       "the guard does not monkey-patch Decap internals",
       "the guard reaches into Decap's internals");
   }
@@ -837,6 +839,269 @@ assert(ann && /academic_year/.test(String(ann.summary)),
     !new RegExp(date.pattern[0]).test("2026-05-14T00:00:00.000Z"),
     "the date pattern accepts a calendar day and rejects a timestamp",
     "the date pattern would accept a timestamp");
+}
+
+/* =================================================================== 14 */
+section("14. Standard Events collection (Phase 17C-a)");
+
+const ev = config.collections.find((c) => c.name === "standard_events");
+const evField = (n) => ((ev && ev.fields) || []).find((f) => f.name === n);
+const evLocale = (loc, n) => ((evField(loc) || {}).fields || []).find((f) => f.name === n);
+
+assert(ev !== undefined, "a Standard Events collection exists", "no Standard Events collection");
+assert(ev && ev.folder === "content/events",
+  "it points at the canonical content/events/", `it points at ${ev && ev.folder}`);
+assert(ev && ev.extension === "yaml" && ev.format === "yaml",
+  "events are stored as pure YAML", `extension/format are ${ev && ev.extension}/${ev && ev.format}`);
+assert(ev && ev.create === true, "creating events is enabled", "event creation is disabled");
+assert(ev && ev.slug === "{{fields.slug}}",
+  "the filename is the record's own Record ID", `the slug template is ${JSON.stringify(ev && ev.slug)}`);
+assert(ev && /academic_year/.test(String(ev.summary)),
+  "the collection summary shows the academic year", ev && ev.summary);
+
+/* -- Business Forum exclusion ---------------------------------------------- */
+{
+  assert(ev && ev.filter && ev.filter.field === "event_family" &&
+    ev.filter.value === cms.STANDARD_FAMILY,
+    `the collection is filtered to event_family: ${cms.STANDARD_FAMILY}`,
+    `filter is ${JSON.stringify(ev && ev.filter)}`);
+
+  const onDisk = fs.readdirSync(rel("content/events")).filter((f) => /\.ya?ml$/i.test(f))
+    .map((f) => jsyaml.load(read(`content/events/${f}`)) || {});
+  const forum = onDisk.filter((e) => e.event_family === "polish-business-forum");
+  const standard = onDisk.filter((e) => e.event_family === cms.STANDARD_FAMILY);
+  assert(forum.length === 1 && standard.length === 4,
+    `content/events/ holds ${standard.length} standard events and ${forum.length} Business Forum`,
+    "unexpected event family counts");
+  assert(!forum.some((e) => e.event_family === ev.filter.value),
+    "the Business Forum record cannot match the collection filter",
+    "the Business Forum would appear in the standard collection");
+
+  // No Business Forum field may be reachable from this form.
+  const asText = JSON.stringify(ev);
+  for (const bespoke of ["business_forum", "performers", "carouselSets", "partner_tier",
+    "statistics", "forum_ball", "photographers"]) {
+    assert(!asText.includes(bespoke),
+      `no Business Forum field is exposed: ${bespoke}`,
+      `the standard form exposes ${bespoke}`);
+  }
+}
+
+/* -- technical invariants --------------------------------------------------- */
+{
+  for (const [name, value] of [["event_family", cms.STANDARD_FAMILY],
+    ["template", cms.STANDARD_TEMPLATE], ["date_precision", "day"]]) {
+    const f = evField(name);
+    assert(f && f.widget === "hidden", `${name} is a hidden technical field`,
+      `${name} is a ${f && f.widget} widget`);
+    assert(f && f.default === value, `${name} defaults to ${JSON.stringify(value)}`,
+      `${name} defaults to ${JSON.stringify(f && f.default)}`);
+  }
+  assert((evField("organiser") || {}).widget === "hidden",
+    "organiser is fixed rather than retyped on every event",
+    "organiser is editable free text");
+
+  // Nothing that belongs to the rendering layer may be exposed.
+  const asText = JSON.stringify(ev);
+  for (const leak of ["jsonld", "json_ld", "@type", "schema.org", "AttendanceMode",
+    "hreflang", "og:", "canonical", "urlPattern", "njk"]) {
+    assert(!asText.includes(leak), `no rendering internal is exposed: ${leak}`,
+      `the form exposes ${leak}`);
+  }
+}
+
+/* -- identity and years ------------------------------------------------------ */
+{
+  const slug = evField("slug");
+  assert(slug && slug.required === true && Array.isArray(slug.pattern),
+    "the Record ID is required and pattern-validated", "the Record ID is unvalidated");
+  const re = new RegExp(slug.pattern[0]);
+  assert(!["Christmas Dinner", "christmas_dinner", "../x", "CHRISTMAS"].some((v) => re.test(v)),
+    "the Record ID pattern rejects spaces, capitals, underscores and traversal");
+  assert(re.test("christmas-dinner") && re.test("christmas-dinner-2026-27"),
+    "the Record ID pattern accepts an annual edition ID");
+  assert(slug && /new record each year/i.test(String(slug.hint)),
+    "the Record ID hint explains annual editions",
+    "the Record ID hint does not mention annual editions");
+
+  const y = evField("academic_year");
+  assert(y && y.required === true && y.widget === "string" && Array.isArray(y.pattern),
+    "academic year is a required, validated, visible string",
+    "academic year is missing, hidden or unvalidated");
+  assert(y && !/20\d\d/.test(String(y.pattern[0])),
+    "the year pattern hardcodes no specific year");
+  assert(y && /never change this on a past event/i.test(String(y.hint)),
+    "the year field warns against re-yearing a past event");
+
+  const order = evField("order");
+  assert(order && order.widget === "number" && order.value_type === "int",
+    "display position is a whole-number field", "display position is not an integer field");
+  assert(order && /within this academic year/i.test(String(order.hint)),
+    "the ordering hint states the year-scoped rule");
+}
+
+/* -- dates ------------------------------------------------------------------- */
+{
+  for (const name of ["start_date", "end_date"]) {
+    const d = evField(name);
+    assert(d && d.widget === "string" && Array.isArray(d.pattern),
+      `${name} is a validated string, not a timezone-sensitive datetime widget`,
+      `${name} uses the ${d && d.widget} widget`);
+    const re = new RegExp(d.pattern[0]);
+    assert(re.test("2026-02-10") && !re.test("2026-02-10T00:00:00.000Z"),
+      `${name} accepts a calendar day and rejects a timestamp`);
+  }
+  assert(!JSON.stringify(ev).includes('"datetime"'),
+    "no date field uses Decap's datetime widget",
+    "a datetime widget could introduce a timezone shift");
+}
+
+/* -- bilingual, one record ---------------------------------------------------- */
+{
+  for (const [loc, label] of [["en", "English"], ["pl", "Polish"]]) {
+    const blk = evField(loc);
+    assert(blk && blk.widget === "object", `${label} content is a nested object widget`,
+      `the ${loc} block is not an object widget`);
+    const names = ((blk && blk.fields) || []).map((f) => f.name);
+    for (const f of ["title_lead", "title_fancy", "title_tail", "timeline_title",
+      "card_summary", "hero_summary", "sections", "schema_description"]) {
+      assert(names.includes(f), `${loc}.${f} exists`, `${loc}.${f} is missing`);
+    }
+  }
+  assert(ev.i18n === undefined, "Decap i18n is NOT enabled on events",
+    "Decap i18n is enabled on events");
+  assert(!/content\/events\/(en|pl)\b/.test(JSON.stringify(ev)),
+    "no per-language event folder is configured");
+  const split = fs.readdirSync(rel("content/events"))
+    .filter((f) => /[-.](en|pl)\.ya?ml$/i.test(f));
+  assert(split.length === 0, "no language-split event exists on disk", split.join(", "));
+}
+
+/* -- title parts -------------------------------------------------------------- */
+{
+  for (const loc of ["en", "pl"]) {
+    for (const part of ["title_lead", "title_fancy", "title_tail"]) {
+      const f = evLocale(loc, part);
+      assert(f && f.widget === "string", `${loc}.${part} is preserved as its own field`,
+        `${loc}.${part} was collapsed or removed`);
+      assert(f && f.label && !/title_/.test(f.label),
+        `${loc}.${part} has a human label rather than its storage key`, f && f.label);
+    }
+    // Each locale's hint is written in its own language, so the wording differs.
+    const spacingHint = String((evLocale(loc, "title_lead") || {}).hint);
+    assert(/single spaces|pojedynczą spacją/i.test(spacingHint),
+      `${loc}: the title hint explains that spacing is added automatically`,
+      `${loc}.title_lead has no spacing guidance`, spacingHint);
+  }
+  assert(!(evField("title") || evLocale("en", "title")),
+    "no single combined `title` field was introduced",
+    "a combined title field would change how spacing works");
+}
+
+/* -- sections ------------------------------------------------------------------ */
+{
+  const shared = evField("sections");
+  assert(shared && shared.widget === "list" && Array.isArray(shared.types),
+    "the shared section structure is a typed list",
+    "the shared section list is missing or untyped");
+  const sharedTypes = (shared.types || []).map((t) => t.name).sort();
+  assert(JSON.stringify(sharedTypes) === JSON.stringify([...cms.SECTION_TYPES].sort()),
+    `the shared list offers exactly the canonical section types (${cms.SECTION_TYPES.join(", ")})`,
+    "shared section types have drifted", sharedTypes.join(", "));
+
+  for (const loc of ["en", "pl"]) {
+    const l = evLocale(loc, "sections");
+    assert(l && l.widget === "list" && Array.isArray(l.types),
+      `${loc}.sections is a typed list`, `${loc}.sections is missing or untyped`);
+    const types = (l.types || []).map((t) => t.name).sort();
+    assert(JSON.stringify(types) === JSON.stringify(sharedTypes),
+      `${loc}.sections offers the same types as the shared list`,
+      `${loc} section types differ from the shared list`, types.join(", "));
+    assert(/all three lists/i.test(String(l.hint)),
+      `${loc}.sections warns that the three lists must match`,
+      `${loc}.sections has no alignment warning`);
+  }
+  assert(/TWO LEVELS OF EDITING/.test(String(shared.hint)),
+    "the section help distinguishes ordinary from structural editing",
+    "the section help does not explain the two levels");
+
+  // The guard itself.
+  const g = cms.checkEventSectionAlignment;
+  assert(typeof g === "function", "the alignment guard is exported for testing",
+    "checkEventSectionAlignment is not exported");
+  assert(g({ event_family: "standard", sections: [{ type: "prose" }],
+    en: { sections: [{ type: "prose" }] }, pl: { sections: [] } }) !== null,
+    "the guard rejects a count mismatch");
+  assert(g({ event_family: "standard", sections: [{ type: "prose" }],
+    en: { sections: [{ type: "prose" }] }, pl: { sections: [{ type: "prose" }] } }) === null,
+    "the guard accepts an aligned record");
+  const admin = read("src/admin/index.njk");
+  assert(/cmsConfig\.sectionGuardSource/.test(admin),
+    "the admin page embeds the guard source rather than a second copy",
+    "the admin page carries its own copy of the alignment logic");
+  assert(/checkEventSectionAlignment\(data\)/.test(admin) && /throw new Error\(alignment\)/.test(admin),
+    "the guard blocks the save rather than repairing the record",
+    "the guard does not block saves");
+  for (const repair of ["push(", "splice(", "sections.length ="]) {
+    assert(!new RegExp(`alignment[\\s\\S]{0,400}${repair.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`).test(admin),
+      `the guard performs no ${repair} repair`, `the guard appears to mutate sections`);
+  }
+}
+
+/* -- media, links, visibility --------------------------------------------------- */
+{
+  for (const name of ["card_image", "og_image", "hero_image"]) {
+    const f = evField(name);
+    assert(f && f.widget === "image", `${name} is an image field`, `${name} is not an image field`);
+    assert(f && f.choose_url === false, `${name} cannot be an external URL`,
+      `${name} allows arbitrary URLs`);
+    // Event images deliberately have no field-level media folder: the four real
+    // events draw from assets/announcements/, assets/social/, assets/wigilia/
+    // and assets/yc/, so a private folder would have offered an editor nothing
+    // to reuse — the picker showed "No assets found" on a new event. They
+    // inherit the global assets/ root instead, and validation accepts any
+    // /assets/… path that resolves.
+    const effective = f && (f.public_folder || config.public_folder);
+    assert(String(effective).startsWith("/assets"),
+      `${name} stores a root-relative /assets path (inherited: ${effective})`,
+      `${name} stores ${effective}`);
+    assert(f && f.media_folder === undefined,
+      `${name} inherits the global media folder rather than a private one`,
+      `${name} pins a private media folder`);
+  }
+  assert(!/\/pl\/assets/.test(JSON.stringify(ev)),
+    "no /pl/assets/ path can be produced by the events configuration");
+
+  for (const name of ["instagram_permalink", "album_url"]) {
+    const f = evField(name);
+    assert(f && Array.isArray(f.pattern), `${name} is pattern-validated`, `${name} is unvalidated`);
+    const re = new RegExp(f.pattern[0]);
+    const unsafe = ["javascript:alert(1)", "data:text/html,x", "file:///etc/passwd", "vbscript:x"]
+      .filter((u) => re.test(u));
+    assert(unsafe.length === 0, `${name} rejects unsafe schemes`, unsafe.join(" | "));
+  }
+
+  const co = evField("co_organisers");
+  assert(co && co.widget === "list" && Array.isArray(co.fields),
+    "co-organisers stay a list of structured objects",
+    "co-organisers were flattened");
+  const coNames = (co.fields || []).map((f) => f.name).sort();
+  assert(JSON.stringify(coNames) === JSON.stringify(["alt", "logo"]),
+    "each co-organiser keeps its logo and bilingual name", coNames.join(", "));
+
+  for (const name of ["published", "show_in_listing", "show_on_homepage", "show_in_archive", "flagship"]) {
+    const f = evField(name);
+    assert(f && f.widget === "boolean", `${name} is an editorial on/off control`,
+      `${name} is not a boolean`);
+    assert(f && f.label && f.label !== name,
+      `${name} has a human label`, `${name} shows its storage key`);
+  }
+
+  const sn = evLocale("en", "schema_name");
+  assert(sn && sn.required === false && /Leave blank unless/i.test(String(sn.hint)),
+    "the structured-data name override is optional and explained",
+    "the structured-data override is missing or unexplained");
+  assert(sn && !/json/i.test(String(sn.hint)), "the override hint exposes no JSON syntax");
 }
 
 /* =================================================================== 12 */

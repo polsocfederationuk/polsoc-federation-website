@@ -29,6 +29,7 @@
 const fs = require("fs");
 const path = require("path");
 const yaml = require("js-yaml");
+const academicYear = require("./academicYear");
 
 const ROOT = path.join(__dirname, "..", "..");
 
@@ -36,6 +37,13 @@ const ROOT = path.join(__dirname, "..", "..");
  * script; 8081 is decap-server's own default. */
 const PROXY_PORT = 8081;
 const PROXY_URL = `http://localhost:${PROXY_PORT}/api/v1`;
+
+/** The configured current academic year, read fresh from the settings file. */
+function currentAcademicYear() {
+  const file = path.join(ROOT, "content", "settings", "academic-year.yaml");
+  if (!fs.existsSync(file)) return null;
+  return (yaml.load(fs.readFileSync(file, "utf8")) || {}).current || null;
+}
 
 /* ---------------------------------------------------------------------------
    Group options, derived from the ONE central definition.
@@ -276,6 +284,179 @@ function teamFields() {
       ],
     },
   ];
+}
+
+/* ---------------------------------------------------------------------------
+   Standard events.
+
+   The four `event_family: standard` records. The Polish Business Forum is a
+   different family with its own template and its own bespoke fields, and it is
+   excluded from this collection entirely — see docs/CMS_EVENTS.md §2.
+   --------------------------------------------------------------------------- */
+
+const STANDARD_FAMILY = "standard";
+const STANDARD_TEMPLATE = "standard";
+const BUSINESS_FORUM_FAMILY = "polish-business-forum";
+
+/** The section types the standard template renders, from the real records. */
+const SECTION_TYPES = ["prose", "heading", "gallery", "album", "instagram"];
+
+/**
+ * The inert registration block every standard event carries.
+ *
+ * Kept as data rather than typed twice, because it is both the hidden field's
+ * default and what ensureEventRegistration() completes a record with.
+ */
+const CANONICAL_REGISTRATION = { state: "none", type: null, url: null, email: null };
+
+/**
+ * Give a standard event the canonical no-registration block.
+ *
+ * Decap drops keys whose value is null, so a hidden field's default alone can
+ * arrive as `{state: "none"}` with the three null siblings missing. The stored
+ * schema keeps all four, so they are completed here rather than left to differ
+ * from every existing record.
+ *
+ * Only ever ADDS the canonical shape to a standard event that lacks it: a record
+ * that already carries a registration block — including any hand-authored
+ * non-`none` one — is returned untouched. Nothing is overwritten.
+ *
+ * Pure and plain-JS: the admin page embeds this source and the tests import this
+ * function, so what is tested is what runs.
+ */
+function ensureEventRegistration(data) {
+  if (!data || data.event_family !== "standard") return null;
+
+  var current = data.registration;
+  var complete = current && typeof current === "object" && !Array.isArray(current) &&
+    "state" in current && "type" in current && "url" in current && "email" in current;
+  if (complete) return null;
+
+  var next = { state: "none", type: null, url: null, email: null };
+  if (current && typeof current === "object" && !Array.isArray(current)) {
+    // Preserve anything already set; only fill the gaps.
+    for (var k in next) {
+      if (Object.prototype.hasOwnProperty.call(current, k) && current[k] !== undefined) {
+        next[k] = current[k];
+      }
+    }
+  }
+  return next;
+}
+
+const SECTIONS_HELP =
+  "TWO LEVELS OF EDITING. Changing the words inside a section — a paragraph, a " +
+  "heading, an image description — is ordinary and safe. ADDING, REMOVING or " +
+  "REORDERING sections is an advanced change, because the same change must be " +
+  "made in all three lists: Section structure, English sections and Polish " +
+  "sections. They are matched by position, and the CMS does NOT keep them in " +
+  "step for you. If they stop matching, the save is refused and nothing is lost.";
+
+/* ---------------------------------------------------------------------------
+   Standard event sections — the alignment guard.
+   --------------------------------------------------------------------------- */
+
+/**
+ * Check that a standard event's three section arrays still describe the same
+ * sections in the same order.
+ *
+ * WHY THIS EXISTS
+ * ---------------
+ * A standard event stores its sections as THREE parallel arrays:
+ *
+ *   sections[]      shared structure — type, layout, gallery image paths
+ *   en.sections[]   the English prose, headings and gallery alt text
+ *   pl.sections[]   the Polish equivalents
+ *
+ * src/event.njk pairs them strictly by index (`c.sections[loop.index0]`), so
+ * position N in all three must describe the same section. Decap has no way to
+ * keep three lists in step: an editor who adds a section to one and not the
+ * others produces a record whose Polish page silently renders the wrong content
+ * — or nothing at all.
+ *
+ * This is deliberately a BLOCKING check and never a repair. Inserting a missing
+ * section, deleting an unmatched one, reordering an array or copying one
+ * language into the other would all "fix" the save while destroying or
+ * fabricating content. Refusing to save loses nothing: the editor still has
+ * their work on screen.
+ *
+ * Pure and plain-JS on purpose: the admin page embeds this exact source and
+ * scripts/test-event-rules.js imports this exact function, so the behaviour that
+ * is tested is the behaviour that ships.
+ *
+ * @param {object} data  the event record as the form currently holds it
+ * @returns {string|null} an editor-facing message, or null when aligned
+ */
+function checkEventSectionAlignment(data) {
+  if (!data || data.event_family !== "standard") return null;
+
+  var shared = data.sections;
+  var en = data.en && data.en.sections;
+  var pl = data.pl && data.pl.sections;
+
+  // A standard event with no sections at all is a different problem, and the
+  // repository validator reports it. Nothing to compare here.
+  if (!Array.isArray(shared) || !Array.isArray(en) || !Array.isArray(pl)) return null;
+
+  var header = "Event sections are out of alignment.\n\n";
+  var footer = "\n\nAll three section lists must describe the same section in the " +
+    "same position. The event has not been saved.";
+
+  /* -- 1. counts ----------------------------------------------------------- */
+
+  if (shared.length !== en.length || shared.length !== pl.length) {
+    var msg = header +
+      "Shared sections: " + shared.length + "\n" +
+      "English sections: " + en.length + "\n" +
+      "Polish sections: " + pl.length + "\n";
+
+    var most = Math.max(shared.length, en.length, pl.length);
+    var missing = [];
+    if (shared.length < most) missing.push("Shared structure is missing section " + (shared.length + 1));
+    if (en.length < most) missing.push("English is missing section " + (en.length + 1));
+    if (pl.length < most) missing.push("Polish is missing section " + (pl.length + 1));
+    if (missing.length) msg += "\n" + missing.join("\n");
+    return msg + footer;
+  }
+
+  /* -- 2. the type sequence ------------------------------------------------- */
+
+  for (var i = 0; i < shared.length; i++) {
+    var s = (shared[i] || {}).type;
+    var e = (en[i] || {}).type;
+    var p = (pl[i] || {}).type;
+    if (s === e && s === p) continue;
+    return header +
+      "Section " + (i + 1) + ":\n" +
+      "Shared structure: " + (s || "(none)") + "\n" +
+      "English structure: " + (e || "(none)") + "\n" +
+      "Polish structure: " + (p || "(none)") +
+      "\n\nCorrect the section that does not match, or undo the structural change" +
+      " before saving." + footer;
+  }
+
+  /* -- 3. gallery alt-text parity ------------------------------------------- */
+  /* The images live in the shared section; their alt text lives in each locale.
+   * If those drift, a photograph loses its accessible description in one
+   * language — a silent accessibility regression that nothing else would catch. */
+
+  for (var j = 0; j < shared.length; j++) {
+    if ((shared[j] || {}).type !== "gallery") continue;
+    var images = (shared[j].images || []).length;
+    var enAlts = ((en[j] || {}).alts || []).length;
+    var plAlts = ((pl[j] || {}).alts || []).length;
+    if (images === enAlts && images === plAlts) continue;
+    return header +
+      "Section " + (j + 1) + " is a gallery, and its descriptions do not match its images.\n\n" +
+      "Images: " + images + "\n" +
+      "English descriptions: " + enAlts + "\n" +
+      "Polish descriptions: " + plAlts +
+      "\n\nEvery image needs one description in each language, in the same order," +
+      " or a photograph will be left with no description for screen readers." +
+      footer;
+  }
+
+  return null;
 }
 
 /* ---------------------------------------------------------------------------
@@ -598,6 +779,398 @@ function announcementFields() {
 }
 
 /* ---------------------------------------------------------------------------
+   Standard event fields.
+   --------------------------------------------------------------------------- */
+
+const EVENT_SLUG_HINT =
+  "The unique identifier for THIS edition of the event. It becomes the filename, " +
+  "so it must not match one that already exists. A recurring event gets a NEW " +
+  "record each year: christmas-dinner for 2025/26, then christmas-dinner-2026-27 " +
+  "for the next. The earlier edition stays exactly as it is.";
+
+const EVENT_YEAR_HINT =
+  "The academic year this edition belongs to, e.g. 2025/26. Never change this on " +
+  "a past event to reuse it — that would erase that year from the archive. " +
+  "You CAN prepare next year's events early, but switch Published OFF until the " +
+  "new season starts: the events listing refuses to build a published event whose " +
+  "year is later than the current one.";
+
+/** Localised section entries. Types mirror the shared list exactly. */
+function localisedSectionTypes(lang) {
+  const t = (en, pl) => (lang === "pl" ? pl : en);
+  return [
+    {
+      label: t("Paragraphs", "Akapity"), name: "prose",
+      fields: [
+        { label: "type", name: "type", widget: "hidden", default: "prose" },
+        {
+          label: t("Text", "Tekst"), name: "body", widget: "markdown", required: true,
+          hint: t("Markdown. HTML is not rendered and would show as literal text.",
+            "Markdown. HTML nie jest obsługiwany."),
+          buttons: ["bold", "italic", "link", "bulleted-list", "numbered-list", "quote"],
+          editor_components: [], modes: ["rich_text"],
+        },
+      ],
+    },
+    {
+      label: t("Heading", "Nagłówek"), name: "heading",
+      fields: [
+        { label: "type", name: "type", widget: "hidden", default: "heading" },
+        { label: t("Small label above", "Etykieta nad nagłówkiem"), name: "eyebrow", widget: "string", required: false },
+        { label: t("Heading — before highlighted part", "Nagłówek — przed wyróżnieniem"), name: "title_lead", widget: "string", required: false },
+        { label: t("Highlighted part", "Wyróżniona część"), name: "title_fancy", widget: "string", required: false },
+      ],
+    },
+    {
+      label: t("Photo gallery", "Galeria zdjęć"), name: "gallery",
+      fields: [
+        { label: "type", name: "type", widget: "hidden", default: "gallery" },
+        {
+          label: t("Image descriptions", "Opisy zdjęć"), name: "alts",
+          widget: "list", required: false,
+          field: { label: t("Description", "Opis"), name: "alt", widget: "string" },
+          hint: t("One description per image, in the same order as the images in " +
+            "Section structure. Used by screen readers.",
+            "Jeden opis na zdjęcie, w tej samej kolejności co zdjęcia w strukturze sekcji."),
+        },
+      ],
+    },
+    {
+      label: t("Photo album link", "Odnośnik do albumu"), name: "album",
+      fields: [{ label: "type", name: "type", widget: "hidden", default: "album" }],
+    },
+    {
+      label: "Instagram", name: "instagram",
+      fields: [{ label: "type", name: "type", widget: "hidden", default: "instagram" }],
+    },
+  ];
+}
+
+/** The localised half of a standard event. */
+function eventLocaleFields(lang) {
+  const t = (en, pl) => (lang === "pl" ? pl : en);
+  return [
+    {
+      label: t("Title — before highlighted part", "Tytuł — przed wyróżnieniem"),
+      name: "title_lead", widget: "string", required: false,
+      hint: t("The title is assembled from up to three parts with single spaces " +
+        "between them. Do not add spaces yourself.",
+        "Tytuł składa się z maksymalnie trzech części oddzielonych pojedynczą spacją."),
+    },
+    {
+      label: t("Highlighted part of title", "Wyróżniona część tytułu"),
+      name: "title_fancy", widget: "string", required: false,
+      hint: t("Shown in the accent style. Leave empty for a plain title.",
+        "Wyświetlana w stylu akcentowanym. Zostaw puste dla zwykłego tytułu."),
+    },
+    {
+      label: t("Title — after highlighted part", "Tytuł — po wyróżnieniu"),
+      name: "title_tail", widget: "string", required: false,
+      hint: t("Only needed when the highlighted part sits in the middle, " +
+        'e.g. Annual / Christmas / Dinner.', "Potrzebne tylko, gdy wyróżnienie jest w środku."),
+    },
+    { label: t("Small label above the title", "Etykieta nad tytułem"), name: "eyebrow", widget: "string", required: false },
+    { label: t("Date, as written", "Data zapisana słownie"), name: "date_label", widget: "string", required: true },
+    { label: t("Venue label", "Etykieta miejsca"), name: "venue_label", widget: "string", required: true },
+    { label: t("Summary on the event page", "Podsumowanie na stronie wydarzenia"), name: "hero_summary", widget: "text", required: true },
+    { label: t("Summary on the events-listing card", "Podsumowanie na karcie"), name: "card_summary", widget: "text", required: true },
+    { label: t("Card image description", "Opis zdjęcia karty"), name: "card_image_alt", widget: "string", required: true },
+    { label: t("Short title for the homepage timeline", "Krótki tytuł na oś czasu"), name: "timeline_title", widget: "string", required: true,
+      hint: t("The concise label the homepage uses — usually shorter than the full title.",
+        "Zwięzła etykieta używana na stronie głównej.") },
+    { label: t("Homepage timeline summary", "Podsumowanie na osi czasu"), name: "timeline_summary", widget: "text", required: true },
+    {
+      label: t("Key facts", "Najważniejsze informacje"), name: "facts",
+      widget: "list", required: false,
+      fields: [
+        { label: t("Label", "Etykieta"), name: "label", widget: "string" },
+        { label: t("Value", "Wartość"), name: "value", widget: "string" },
+      ],
+    },
+    { label: t("Co-organisers label", "Etykieta współorganizatorów"), name: "co_organisers_label", widget: "string", required: false },
+    { label: t("Album button label", "Etykieta przycisku albumu"), name: "album", widget: "string", required: false },
+    { label: t("Back link", "Odnośnik powrotny"), name: "back_link", widget: "string", required: true },
+    { label: t("Back link at the foot of the page", "Odnośnik powrotny na dole"), name: "back_link_bottom", widget: "string", required: true },
+    {
+      label: t("English sections", "Sekcje polskie"), name: "sections",
+      widget: "list", required: true, types: localisedSectionTypes(lang),
+      typeKey: "type", hint: SECTIONS_HELP,
+    },
+    /* -- search engines and social ---------------------------------------- */
+    { label: t("Browser tab / search title", "Tytuł w wyszukiwarce"), name: "seo_title", widget: "string", required: true },
+    { label: t("Search-result description", "Opis w wynikach wyszukiwania"), name: "seo_description", widget: "text", required: true },
+    { label: t("Social image description", "Opis obrazu społecznościowego"), name: "og_image_alt", widget: "string", required: true },
+    {
+      label: t("Structured-data description", "Opis dla danych strukturalnych"),
+      name: "schema_description", widget: "text", required: true,
+      hint: t("The description search engines show for the event itself.",
+        "Opis wydarzenia pokazywany przez wyszukiwarki."),
+    },
+    {
+      label: t("Structured-data name override", "Nadpisanie nazwy w danych strukturalnych"),
+      name: "schema_name", widget: "string", required: false,
+      hint: t("Advanced. Leave blank unless the search-engine event name needs to " +
+        "differ from the visible page title.",
+        "Zaawansowane. Zostaw puste, chyba że nazwa dla wyszukiwarek ma się różnić od tytułu."),
+    },
+  ];
+}
+
+function standardEventFields() {
+  return [
+    /* -- identity, hidden invariants --------------------------------------- */
+    {
+      label: "Record ID — must be unique", name: "slug", widget: "string", required: true,
+      hint: EVENT_SLUG_HINT,
+      pattern: ["^[a-z0-9]+(-[a-z0-9]+)*$", "Lowercase letters, numbers and single hyphens only."],
+    },
+    // Rendering architecture, not content. Fixed so an editor cannot turn a
+    // standard event into a Business Forum by accident, in either direction.
+    { label: "event_family", name: "event_family", widget: "hidden", default: STANDARD_FAMILY },
+    { label: "template", name: "template", widget: "hidden", default: STANDARD_TEMPLATE },
+    // Every current record is a single-day event; the template reads this to
+    // decide how to print the date. Nothing in the schema supports another value.
+    { label: "date_precision", name: "date_precision", widget: "hidden", default: "day" },
+    { label: "organiser", name: "organiser", widget: "hidden", default: "Federation of Polish Student Societies UK" },
+
+    { label: "Academic year", name: "academic_year", widget: "string", required: true,
+      hint: EVENT_YEAR_HINT, pattern: ACADEMIC_YEAR_PATTERN },
+    {
+      label: "Date", name: "start_date", widget: "string", required: true,
+      // A validated string, not Decap's datetime widget — the same decision as
+      // announcements. A date-only value must not be able to shift a calendar
+      // day on a machine in Warsaw. See docs/CMS_EVENTS.md §12.
+      pattern: ["^\\d{4}-\\d{2}-\\d{2}$", "Use the form 2026-02-10 (year-month-day)."],
+      hint: "The day the event happens, as 2026-02-10. No time — the page prints " +
+        "the wording you enter under Date, as written.",
+    },
+    { label: "End date", name: "end_date", widget: "string", required: false,
+      pattern: ["^\\d{4}-\\d{2}-\\d{2}$", "Use the form 2026-02-11, or leave empty."],
+      hint: "Only for events spanning more than one day. Leave empty otherwise." },
+    {
+      label: "Display position", name: "order", widget: "number", required: true,
+      value_type: "int", min: 1, step: 1,
+      hint: "Position within this academic year. Next year's events start again at 1.",
+    },
+
+    /* -- visibility --------------------------------------------------------- */
+    { label: "Published", name: "published", widget: "boolean", required: false, default: true,
+      hint: "Unpublish to hide the event everywhere while keeping the record. An " +
+        "event for a FUTURE academic year must stay unpublished until that year " +
+        "becomes current — src/_data/eventListing.js refuses to build otherwise." },
+    { label: "Show in the events listing", name: "show_in_listing", widget: "boolean", required: false, default: true },
+    { label: "Show on the homepage timeline", name: "show_on_homepage", widget: "boolean", required: false, default: true },
+    { label: "Keep in the season archive", name: "show_in_archive", widget: "boolean", required: false, default: true,
+      hint: "Past editions stay reachable through the archive when this is on." },
+    { label: "Flagship event", name: "flagship", widget: "boolean", required: false, default: false,
+      hint: "Reserved for the Federation's headline event of the year." },
+
+    /* -- venue -------------------------------------------------------------- */
+    {
+      label: "Venue", name: "venue", widget: "object", required: true, collapsed: false,
+      fields: [
+        {
+          label: "Venue name", name: "name", widget: "object", required: true,
+          fields: [
+            { label: "English", name: "en", widget: "string", required: true },
+            { label: "Polski", name: "pl", widget: "string", required: true,
+              hint: "Some venues keep the same name in both languages; others do not. " +
+                "Write the Polish form if there is one." },
+          ],
+        },
+        { label: "Neighbourhood", name: "neighbourhood", widget: "string", required: false,
+          hint: "e.g. South Kensington, Waterloo. Leave empty if not useful." },
+        {
+          label: "Town or city", name: "locality", widget: "object", required: true,
+          fields: [
+            { label: "English", name: "en", widget: "string", required: true },
+            { label: "Polski", name: "pl", widget: "string", required: true },
+          ],
+        },
+        { label: "Country code", name: "country", widget: "string", required: true,
+          pattern: ["^[A-Z]{2}$", "Two capital letters, e.g. GB."] },
+        { label: "Show the town in the key facts", name: "show_locality_in_facts",
+          widget: "boolean", required: false },
+      ],
+    },
+
+    /* -- imagery ------------------------------------------------------------ */
+    {
+      label: "Card image", name: "card_image", widget: "image", required: true,
+      // No field-level media folder: event images legitimately live in several
+
+      // places (assets/announcements/, assets/social/, assets/wigilia/, assets/yc/),
+
+      // so the picker inherits the global assets/ root and an editor can reuse any
+
+      // of them. A private assets/events/ folder would have shown "No assets found"
+
+      // on a new event. Validation accepts any /assets/… path that resolves.
+
+      choose_url: false,
+      hint: "Shown on the events listing. Existing events keep their images where " +
+        "they already live, and you can pick any of them here.",
+    },
+    {
+      label: "Social sharing image", name: "og_image", widget: "image", required: true,
+      // No field-level media folder: event images legitimately live in several
+
+      // places (assets/announcements/, assets/social/, assets/wigilia/, assets/yc/),
+
+      // so the picker inherits the global assets/ root and an editor can reuse any
+
+      // of them. A private assets/events/ folder would have shown "No assets found"
+
+      // on a new event. Validation accepts any /assets/… path that resolves.
+
+      choose_url: false,
+      hint: "Used when the page is shared on social media.",
+    },
+    {
+      label: "Hero image", name: "hero_image", widget: "image", required: false,
+      // No field-level media folder: event images legitimately live in several
+
+      // places (assets/announcements/, assets/social/, assets/wigilia/, assets/yc/),
+
+      // so the picker inherits the global assets/ root and an editor can reuse any
+
+      // of them. A private assets/events/ folder would have shown "No assets found"
+
+      // on a new event. Validation accepts any /assets/… path that resolves.
+
+      choose_url: false,
+      hint: "Optional. None of the current events use one.",
+    },
+
+    /* -- links -------------------------------------------------------------- */
+    { label: "Instagram post", name: "instagram_permalink", widget: "string", required: false,
+      pattern: ["^https://www\\.instagram\\.com/\\S+$|^$",
+        "A full https://www.instagram.com/… address, or leave empty."],
+      hint: "The post embedded in the Instagram section." },
+    { label: "Photo album link", name: "album_url", widget: "string", required: false,
+      pattern: ["^https://[^\\s\"'<>]+$|^$", "A full https:// address, or leave empty."],
+      hint: "Where the Album button points. Leave empty if there is no album." },
+
+    /* -- co-organisers ------------------------------------------------------ */
+    {
+      label: "Co-organisers", name: "co_organisers", widget: "list", required: false,
+      label_singular: "co-organiser",
+      hint: "Partner organisations shown with their logos. Leave empty if none.",
+      fields: [
+        {
+          label: "Logo", name: "logo", widget: "image", required: true,
+          // No field-level media folder: event images legitimately live in several
+
+          // places (assets/announcements/, assets/social/, assets/wigilia/, assets/yc/),
+
+          // so the picker inherits the global assets/ root and an editor can reuse any
+
+          // of them. A private assets/events/ folder would have shown "No assets found"
+
+          // on a new event. Validation accepts any /assets/… path that resolves.
+
+          choose_url: false,
+        },
+        {
+          label: "Organisation name", name: "alt", widget: "object", required: true,
+          fields: [
+            { label: "English", name: "en", widget: "string", required: true },
+            { label: "Polski", name: "pl", widget: "string", required: true },
+          ],
+        },
+      ],
+    },
+
+    /* -- registration ------------------------------------------------------- */
+    {
+      /*
+        REGISTRATION IS DELIBERATELY HIDDEN.
+
+        All four standard events store the same inert structure, and no
+        standard-event rendering path was found that does anything with a
+        non-`none` state. Offering an editor a control whose effect is unproven
+        invites them to set something that silently does nothing — worse than not
+        offering it at all.
+
+        The field is NOT removed from the stored schema: hidden widgets still
+        serialise, so a record created here keeps the canonical shape, and
+        ensureEventRegistration() fills in the sub-fields Decap would otherwise
+        omit. Existing records are untouched, and scripts/validate.js still
+        rejects a malformed registration block if a file is hand-edited.
+
+        This says nothing about the Business Forum, which is out of scope.
+        See docs/CMS_EVENTS.md §19.
+      */
+      label: "registration", name: "registration", widget: "hidden",
+      default: CANONICAL_REGISTRATION,
+    },
+
+    /* -- section structure --------------------------------------------------- */
+    {
+      label: "Section structure", name: "sections", widget: "list", required: true,
+      typeKey: "type", hint: SECTIONS_HELP,
+      types: [
+        {
+          label: "Paragraphs", name: "prose",
+          fields: [
+            { label: "type", name: "type", widget: "hidden", default: "prose" },
+            { label: "Spacing", name: "style", widget: "string", required: false,
+              hint: "Layout only. Leave exactly as it is unless you know what it does." },
+          ],
+        },
+        {
+          label: "Heading", name: "heading",
+          fields: [
+            { label: "type", name: "type", widget: "hidden", default: "heading" },
+            { label: "Spacing", name: "style", widget: "string", required: false },
+          ],
+        },
+        {
+          label: "Photo gallery", name: "gallery",
+          fields: [
+            { label: "type", name: "type", widget: "hidden", default: "gallery" },
+            { label: "Spacing", name: "style", widget: "string", required: false },
+            { label: "Show the Instagram post inside this grid", name: "instagram_in_grid",
+              widget: "boolean", required: false, default: false },
+            {
+              label: "Images", name: "images", widget: "list", required: true,
+              hint: "Each image needs a description in BOTH languages, in this same " +
+                "order, under English sections and Polish sections.",
+              fields: [
+                { label: "Image", name: "src", widget: "image", required: true,
+                  choose_url: false },
+                { label: "Wide (spans two columns)", name: "wide", widget: "boolean",
+                  required: false, default: false },
+              ],
+            },
+          ],
+        },
+        {
+          label: "Photo album link", name: "album",
+          fields: [
+            { label: "type", name: "type", widget: "hidden", default: "album" },
+            { label: "Spacing", name: "style", widget: "string", required: false },
+          ],
+        },
+        {
+          label: "Instagram", name: "instagram",
+          fields: [
+            { label: "type", name: "type", widget: "hidden", default: "instagram" },
+            { label: "Spacing", name: "style", widget: "string", required: false },
+          ],
+        },
+      ],
+    },
+
+    /* -- localised ----------------------------------------------------------- */
+    { label: "English", name: "en", widget: "object", required: true, collapsed: false,
+      fields: eventLocaleFields("en") },
+    { label: "Polski", name: "pl", widget: "object", required: true, collapsed: false,
+      fields: eventLocaleFields("pl") },
+  ];
+}
+
+/* ---------------------------------------------------------------------------
    The configuration object.
    --------------------------------------------------------------------------- */
 function buildConfig() {
@@ -666,6 +1239,40 @@ function buildConfig() {
           { label: "Team group", field: "group" },
         ],
         fields: teamFields(),
+      },
+      {
+        name: "standard_events",
+        label: "Events",
+        label_singular: "event",
+        description:
+          "The Federation's standard events, one record per edition. The Polish " +
+          "Business Forum is not here — it has its own page design and its own " +
+          "editor. Adding next year's edition never changes this year's.",
+        folder: "content/events",
+        create: true,
+        // Deleting an event deletes a piece of the Federation's history. Unpublish
+        // instead; the record stays and the archive keeps working.
+        delete: false,
+        extension: "yaml",
+        format: "yaml",
+        slug: "{{fields.slug}}",
+        identifier_field: "slug",
+        // THIS is what keeps the Business Forum out. Decap's `filter` hides any
+        // record whose field does not match, so the bespoke record never appears
+        // in this collection and cannot be opened through it. The hidden
+        // event_family default means a record created here is always standard.
+        filter: { field: "event_family", value: STANDARD_FAMILY },
+        // The concise homepage label, not the assembled title parts. Decap's
+        // summary templates cannot join conditionally, so interpolating
+        // title_lead/fancy/tail produces a doubled space when the highlighted
+        // part is empty (Icebreaker) and drops the tail entirely (Annual
+        // Christmas *Dinner*) — the very spacing class of defect this event
+        // family has already suffered once. timeline_title is a single canonical
+        // string that reads well on its own.
+        summary: "{{fields.en.timeline_title}} — {{fields.academic_year}}",
+        sortable_fields: ["academic_year", "start_date", "order"],
+        view_groups: [{ label: "Academic year", field: "academic_year" }],
+        fields: standardEventFields(),
       },
       {
         name: "announcements",
@@ -796,6 +1403,20 @@ module.exports = () => ({
   // Function.prototype.toString rather than keeping a second copy is what makes
   // "the tested code is the shipped code" true rather than aspirational.
   normaliseLinkSource: normaliseAnnouncementLink.toString(),
+  // Likewise for the standard-event section guard.
+  sectionGuardSource: checkEventSectionAlignment.toString(),
+  // The academic-year rule, embedded from src/_data/academicYear.js so the
+  // browser, cms:check and the build all read a year the same way.
+  academicYearSource: [
+    academicYear.parseAcademicYear.toString(),
+    academicYear.futurePublishProblem.toString(),
+    academicYear.futurePublishMessage.toString(),
+  ].join("\n\n"),
+  // Where the central setting lives, so the guard can read the CURRENT value
+  // rather than one frozen at build time.
+  settingsFile: "content/settings/academic-year.yaml",
+  currentAcademicYear: currentAcademicYear(),
+  registrationSource: ensureEventRegistration.toString(),
 });
 
 // Named exports for the test and validation scripts, which need the pieces
@@ -804,6 +1425,16 @@ module.exports.buildConfig = buildConfig;
 module.exports.configYaml = configYaml;
 module.exports.decapVersion = decapVersion;
 module.exports.normaliseAnnouncementLink = normaliseAnnouncementLink;
+module.exports.checkEventSectionAlignment = checkEventSectionAlignment;
+module.exports.parseAcademicYear = academicYear.parseAcademicYear;
+module.exports.futurePublishProblem = academicYear.futurePublishProblem;
+module.exports.futurePublishMessage = academicYear.futurePublishMessage;
+module.exports.currentAcademicYear = currentAcademicYear;
+module.exports.ensureEventRegistration = ensureEventRegistration;
+module.exports.CANONICAL_REGISTRATION = CANONICAL_REGISTRATION;
+module.exports.SECTION_TYPES = SECTION_TYPES;
+module.exports.STANDARD_FAMILY = STANDARD_FAMILY;
+module.exports.STANDARD_TEMPLATE = STANDARD_TEMPLATE;
 module.exports.OFFERED_LINK_TYPES = OFFERED_LINK_TYPES;
 module.exports.SUPPORTED_LINK_TYPES = SUPPORTED_LINK_TYPES;
 module.exports.LINK_TYPE_NONE = LINK_TYPE_NONE;
