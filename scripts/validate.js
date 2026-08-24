@@ -104,7 +104,8 @@ function stripTomlComments(src) {
  * Returns { publish, command, mode, problems[] }. `command` is `null` when no
  * key is declared and `""` when one is declared empty — a meaningful difference,
  * because an empty command is a broken build, not the absence of one.
- * `mode` is "repository-root", "generated-dist", or "unsupported".
+ * `mode` is "repository-root", "generated-dist", "production-cms" or
+ * "unsupported".
  */
 function parseDeploymentState(tomlSource) {
   const problems = [];
@@ -146,10 +147,28 @@ function parseDeploymentState(tomlSource) {
   const publish = publishes.length === 1 ? publishes[0] : null;
   const command = commands.length === 1 ? commands[0] : (commands.length === 0 ? null : undefined);
 
+  /*
+    THREE SUPPORTED STATES, not two (Phase 17D.1).
+
+      repository-root   the old site, served from the checkout as-is
+      generated-dist    Eleventy builds the public site, no admin panel
+      production-cms    Eleventy builds the public site AND the content manager
+
+    The third was added when the CMS went online. It is a different command
+    because it is a different output: `npm run build:production` sets
+    CMS_TARGET=production, which is the only thing that puts dist/admin/ and the
+    same-origin backend into the deployment tree, and it then re-reads what it
+    produced to prove no local endpoint or credential went with it.
+
+    A command that is neither remains unsupported. That is the point of pinning
+    it: publish and command have to agree, and this is where a half-finished
+    cutover gets caught.
+  */
   let mode = "unsupported";
   if (problems.length === 0) {
     if (publish === "." && command === null) mode = "repository-root";
     else if (publish === "dist" && command === "npm run build") mode = "generated-dist";
+    else if (publish === "dist" && command === "npm run build:production") mode = "production-cms";
   }
   return { publish, command, mode, problems };
 }
@@ -187,7 +206,8 @@ function describeUnsupportedDeployment(state) {
   }
   if (state.publish === "dist") {
     return `publish = "dist" but the command is ${JSON.stringify(state.command)}; `
-      + 'the generated-dist state requires exactly "npm run build".';
+      + 'a generated-dist deployment requires exactly "npm run build", and a '
+      + 'production-cms deployment exactly "npm run build:production".';
   }
   if (state.publish === "." && state.command !== null) {
     return `publish = "." with a build command (${JSON.stringify(state.command)}) — the repository-root `
@@ -699,9 +719,18 @@ if (exists("netlify.toml")) {
     assert(deployState().command === "npm run build",
       'generated-dist deployment declares command = "npm run build"',
       "generated-dist deployment has the wrong build command", deployState().command);
+  } else if (deployState().mode === "production-cms") {
+    /*
+      The production-CMS deployment builds the admin panel as well, which is the
+      one build that is ALLOWED to put /admin/ into the deployment tree. The
+      command itself proves the intent: nothing else sets CMS_TARGET=production.
+    */
+    assert(deployState().command === "npm run build:production",
+      'production-cms deployment declares command = "npm run build:production"',
+      "production-cms deployment has the wrong build command", deployState().command);
   } else {
     assert(false,
-      "the Netlify build configuration is one of the two supported states",
+      "the Netlify build configuration is one of the supported states",
       `unsupported Netlify deployment configuration — ${describeUnsupportedDeployment(deployState())}`);
   }
 }
@@ -892,9 +921,18 @@ if (!exists("dist")) {
       ...["sikorski-debate", "christmas-dinner", "youth-congress", "icebreaker", "business-forum"]
         .flatMap((s) => [`event-${s}.html`, `pl/event-${s}.html`])];
 
+    /*
+      OPERATIONAL PAGES ARE NOT MIGRATIONS (Phase 17D.1).
+
+      A production build also emits the content manager and the staff login
+      page. Neither is a migrated public page — nothing on the live site
+      corresponds to them — so they belong beside the build-test exclusion
+      rather than on a list of pages that replaced something.
+    */
+    const OPERATIONAL = (f) => f === "staff-login/index.html" || f.startsWith("admin/");
     const generatedHtml = distFiles.filter((f) => f.endsWith(".html"));
     const strayHtml = generatedHtml.filter(
-      (f) => !f.startsWith("build-test/") && !MIGRATED.includes(f)
+      (f) => !f.startsWith("build-test/") && !OPERATIONAL(f) && !MIGRATED.includes(f)
     );
     assert(strayHtml.length === 0,
       `all ${generatedHtml.length} generated HTML files are either under build-test/ or on the migrated allowlist (${MIGRATED.join(", ")})`,
@@ -932,6 +970,12 @@ if (!exists("dist")) {
       "js/team-filter.js": "src/js/team-filter.js",
       "js/announcements-page.js": "src/js/announcements-page.js",
       "js/members-page.js": "src/js/members-page.js",
+      /*
+        The @netlify/identity bundle the staff login page loads. Renamed on the
+        way out — it is generated by scripts/build-identity.js from the pinned
+        package, and the copy must still be byte-identical to what that produced.
+      */
+      "staff-login/netlify-identity.js": "src/admin/netlify-identity.bundle.js",
     };
     // Build PRODUCTS, not copies: these are rendered from templates and have no
     // byte-identical source, so they are excluded from the copy check and
@@ -949,7 +993,15 @@ if (!exists("dist")) {
     // built from the route inventory, so it deliberately differs from the
     // hand-maintained root file and must not be hash-compared against it.
     const GENERATED_NON_HTML = new Set([...GENERATED_ASSETS, "sitemap.xml"]);
-    const copied = distFiles.filter((f) => !f.endsWith(".html") && !GENERATED_NON_HTML.has(f));
+    /*
+      The content manager is copied from node_modules, not from this repository
+      (Phase 17D.1), so there is no source file here to hash it against. What
+      matters about it is that it is the PINNED build and that it carries no
+      credential — asserted by scripts/audit-dist.js and by the production
+      build script, both of which read the generated files back.
+    */
+    const copied = distFiles.filter((f) =>
+      !f.endsWith(".html") && !GENERATED_NON_HTML.has(f) && !f.startsWith("admin/"));
     const altered = copied.filter((f) => {
       const source = PASSTHROUGH_SOURCE[f] || f;
       return !exists(source) || hash("dist/" + f) !== hash(source);
@@ -5521,14 +5573,16 @@ section("33. Deployment tree and cutover readiness (Phase 15)");
   {
     const toml = read("netlify.toml");
 
-    // Exactly two supported states; both halves of a partial cutover are invalid.
+    // Both halves of a partial cutover are invalid, in every state.
     assert(deployState().mode !== "unsupported",
       `Netlify deployment mode is valid: ${deployState().mode}`,
       `unsupported Netlify deployment configuration — ${describeUnsupportedDeployment(deployState())}`);
 
     // Mode-specific preconditions. These are what make each state SAFE, so they
     // are asserted whenever that state is active — not just at cutover time.
-    if (deployState().mode === "generated-dist") {
+    // The dist/-publishing states share these preconditions: the production-CMS
+    // deployment is the generated-dist one plus an admin panel.
+    if (deployState().mode === "generated-dist" || deployState().mode === "production-cms") {
       const gitignore = exists(".gitignore") ? read(".gitignore") : "";
       assert(/^dist\/?\s*$/m.test(gitignore),
         "dist/ is git-ignored, so generated output never enters the repository",

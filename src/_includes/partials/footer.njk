@@ -41,6 +41,22 @@
     </div>
     <div class="footer-bottom">
       <span>{{ t.footer.copyright | safe }}</span>
+      {#-
+        Staff login (Phase 17D.1). The way in to the content manager for
+        committee officers, sitting with the secondary footer text rather than
+        being advertised anywhere prominent.
+
+        Not a secret: the address is public and the security is invite-only
+        accounts, verified roles and a server-side role check, not an
+        unguessable URL. `rel="nofollow"` and the page's own noindex keep it out
+        of search results, which is tidiness rather than access control.
+      -#}
+      {#-
+        Root-relative, and the same address in both languages: there is one
+        login page, not an English one and a Polish one. The widget on it
+        follows the browser, and it resolves identically from / and from /pl/.
+      -#}
+      <span><a class="footer-staff-login" href="/staff-login/" rel="nofollow">{{ t.footer.staffLogin }}</a></span>
       <span>polsocfederation.pl</span>
     </div>
   </div>

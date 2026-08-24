@@ -1698,18 +1698,73 @@ section("15. The fixed event page and the conditional Registration block (17C.5A
 }
 
 /* =================================================================== 12 */
-section("12. Netlify configuration untouched by this phase");
+section("12. Netlify configuration");
 
+/*
+  THIS ASSERTION CHANGED IN PHASE 17D.1, DELIBERATELY.
+
+  Every CMS phase up to 17C.5B was local-only, so netlify.toml being unmodified
+  was the proof that nothing had leaked into production. Phase 17D.1 IS the
+  production integration: the CMS is served from the deployment, so netlify.toml
+  now legitimately routes /api/cms, guards /admin/* by role and sets security
+  headers.
+
+  "Unchanged" is therefore no longer the right question. These are: does it
+  carry a credential, does it protect the admin, and does it still do the things
+  the public site depends on?
+*/
 {
   const toml = read("netlify.toml");
-  assert(!/admin|decap|cms/i.test(toml),
-    "netlify.toml mentions no admin panel, Decap or CMS",
-    "netlify.toml has acquired CMS configuration");
-  const diff = spawnSync("git", ["diff", "--name-only", "HEAD", "--", "netlify.toml"],
-    { cwd: ROOT, encoding: "utf8" });
-  assert((diff.stdout || "").trim() === "",
-    "netlify.toml is unmodified relative to HEAD",
-    "netlify.toml has been modified", (diff.stdout || "").trim());
+  /*
+    Comments stripped for the rule checks below. This file EXPLAINS at length
+    why it does not use `force = true`, and a search for that string would
+    otherwise find the explanation and report the very thing it rules out.
+  */
+  const active = toml.split(/\r?\n/).filter((l) => !/^\s*#/.test(l)).join("\n");
+
+  /*
+    NO SECRET IN A TRACKED FILE. netlify.toml is in the repository; every
+    credential belongs in the Netlify UI. Checked by name and by shape, because
+    a key pasted here would be a published key.
+  */
+  assert(!/CMS_GITHUB_PRIVATE_KEY\s*=|BEGIN [A-Z ]*PRIVATE KEY|ghp_|nfp_|ghs_/.test(toml),
+    "netlify.toml contains no credential",
+    "netlify.toml appears to contain a secret");
+  assert(!/\[build\.environment\]/.test(toml) || !/CMS_GITHUB/.test(toml),
+    "no CMS credential is declared as a build environment variable",
+    "netlify.toml declares CMS credentials inline");
+
+  /* The admin is guarded at the edge, and the guard comes before the fallback. */
+  const roleRule = toml.indexOf("conditions = {Role");
+  const loginFallback = toml.indexOf('to = "/staff-login/"');
+  assert(roleRule > -1, "/admin/* is role-conditioned at the edge",
+    "netlify.toml does not restrict /admin/* by role");
+  assert(loginFallback > -1 && roleRule < loginFallback,
+    "an unauthorised visitor falls through to the login page, not into the CMS",
+    "the role rule does not precede the login fallback — order decides which wins");
+  assert(/Role = \["editor", "admin"\]/.test(toml),
+    "only editors and admins may open the content manager",
+    "the admin role condition is not editor/admin");
+
+  /* The API is a function, and nothing may frame the CMS. */
+  assert(/from = "\/api\/cms"/.test(toml) && /functions\/cms/.test(toml),
+    "/api/cms is served by the CMS function", "the CMS API is not routed");
+  assert(/frame-ancestors 'none'/.test(toml),
+    "the content manager cannot be framed by another site",
+    "no frame-ancestors restriction on /admin/");
+  assert(/X-Robots-Tag = "noindex/.test(toml),
+    "the admin and login routes are marked noindex at the edge",
+    "no noindex header on the operational routes");
+
+  /* What the public site still depends on, unchanged by this phase. */
+  assert(/from = "\/pl\/\*"/.test(toml) && /status = 404/.test(toml),
+    "the Polish 404 rule survives", "the Polish 404 rule was lost");
+  assert(!/force\s*=\s*true/.test(active),
+    "no redirect is forced, so real Polish pages still resolve",
+    "a forced redirect would intercept the Polish site");
+  assert(/publish = "dist"/.test(toml) && /command = "npm run build:production"/.test(toml),
+    "the build publishes dist/ with the production-CMS command",
+    "publish and command disagree — see scripts/validate.js parseDeploymentState()");
 }
 
 /* =================================================================== out */

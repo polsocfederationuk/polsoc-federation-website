@@ -36,6 +36,9 @@ const ROOT = path.join(__dirname, "..", "..");
 /* The local proxy. Port and host are matched by package.json's `cms:proxy`
  * script; 8081 is decap-server's own default. */
 const PROXY_PORT = 8081;
+/** The branch Netlify builds the public site from. */
+const PRODUCTION_BRANCH = process.env.CMS_GITHUB_BRANCH || "main";
+
 const PROXY_URL = `http://localhost:${PROXY_PORT}/api/v1`;
 
 /** The configured current academic year, read fresh from the settings file. */
@@ -2027,16 +2030,41 @@ const FIELD_LIMITS = {
 };
 
 function buildConfig() {
+  /*
+    LOCAL OR PRODUCTION, DECIDED BY ONE EXPLICIT FLAG.
+
+    CMS_TARGET=production is set only by the production build script. Nothing
+    infers the mode from whether a GitHub credential happens to be present in
+    the environment: a developer with those variables exported must still get
+    the local backend, or a local experiment becomes a public commit.
+
+    BOTH modes use Decap’s built-in `proxy` backend, which is the whole reason
+    this works. It posts {branch, action, params} to one URL and accepts a
+    ROOT-RELATIVE one — so locally it talks to scripts/cms-server.js on
+    127.0.0.1, and in production to a same-origin Netlify Function at /api/cms.
+    Same pinned, tested, built-in backend either way; no custom adapter written
+    against an API Decap documents as unfinalised.
+
+    Same-origin also means the browser sends the session cookie with every
+    request without the backend knowing anything about authentication.
+  */
+  const production = process.env.CMS_TARGET === "production";
   const config = {
-    // The local file-system proxy. This is NOT a production backend: there is no
-    // OAuth client, no Git Gateway, no Netlify Identity and no token anywhere.
-    // decap-server runs in its default `fs` mode, which writes files and does not
-    // commit, so the CMS cannot create git history on its own.
-    backend: {
-      name: "proxy",
-      proxy_url: PROXY_URL,
-      branch: "feature/admin-cms",
-    },
+    backend: production
+      ? {
+        name: "proxy",
+        // Root-relative on purpose: same origin as /admin/, so the Netlify
+        // Identity session cookie is sent and there is no CORS surface at all.
+        proxy_url: "/api/cms",
+        branch: PRODUCTION_BRANCH,
+      }
+      : {
+        // decap-server in its default `fs` mode: writes files, does not commit.
+        // No OAuth client, no Git Gateway, no Identity, no token anywhere.
+        name: "proxy",
+        proxy_url: PROXY_URL,
+        branch: "feature/admin-cms",
+      },
 
     // Where the built-in media library uploads by default. The Team photograph
     // field overrides both of these so headshots stay in assets/team/.
@@ -2363,6 +2391,9 @@ module.exports = () => ({
   // The collapsed overrides drawer, one per language block.
   advancedDrawerScript: adminAsset("advanced-drawer.js"),
   // Bulk manage — its own page, its own assets. See docs/CMS_BULK_MANAGE.md.
+  // The production Staff login page. See src/staff-login.njk.
+  staffLoginScript: adminAsset("staff-login.js"),
+  staffLoginStyles: adminAsset("staff-login.css"),
   bulkScript: adminAsset("bulk.js"),
   bulkStyles: adminAsset("bulk.css"),
   bulkLinkScript: adminAsset("bulk-link.js"),
@@ -2385,7 +2416,20 @@ module.exports = () => ({
   brandColourStyles: adminAsset("brand-colour.css"),
   brandPalette: brandPalette(),
   proxyPort: PROXY_PORT,
-  proxyUrl: PROXY_URL,
+  /*
+    WHERE THE ADMIN PAGE ITSELF MAKES REQUESTS.
+
+    Two enhancers talk to the backend directly rather than through Decap: the
+    duplicate-ID guard, which lists a collection before a save, and the
+    registration preview, which reads one event. They use the same action
+    protocol, so they follow the same URL — the local server locally, and the
+    same-origin function in production.
+
+    Derived from the backend that was just built, so the two cannot disagree:
+    a production admin pointed at a developer machine would be a CMS that looks
+    fine and silently does nothing.
+  */
+  proxyUrl: buildConfig().backend.proxy_url,
   guard: guardSettings(),
   // The literal source of normaliseAnnouncementLink, embedded in the admin page
   // so the browser runs the same function the tests import. Deriving it with

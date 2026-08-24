@@ -120,13 +120,31 @@ function routes() {
   return out;
 }
 
-/** Routes that exist but must NEVER appear in the sitemap. */
+/**
+ * Routes that exist but must NEVER appear in the sitemap.
+ *
+ * Two kinds. The 404 pages are content that only ever answers a miss. The
+ * staff login page is OPERATIONAL: it is how committee officers reach the
+ * content manager, it is deliberately reachable and deliberately not a page of
+ * the website, and it has no Polish counterpart because there is one login
+ * page, not one per language.
+ *
+ * Being out of the sitemap is tidiness, not access control — /admin/ is guarded
+ * by invite-only accounts and a server-side role check. See
+ * docs/CMS_PRODUCTION.md §6.
+ */
 const NOINDEX_ROUTES = LOCALES.map((l) => ({
   locale: l.code,
   path: `${l.urlPrefix}404.html`,
   file: `${l.urlPrefix}404.html`,
   reason: "noindex by design",
-}));
+})).concat([{
+  locale: "en",
+  path: "staff-login/",
+  file: "staff-login/index.html",
+  reason: "operational route: the way in to the content manager",
+  operational: true,
+}]);
 
 module.exports = () => ({
   domain: "https://polsocfederation.pl",

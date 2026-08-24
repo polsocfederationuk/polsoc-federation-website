@@ -1,0 +1,106 @@
+---
+# Staff login — the way in to the production content manager.
+#
+# OUTSIDE the protected /admin/ path on purpose. A visitor who is not signed in
+# has to land somewhere that will actually load, and a page that is itself
+# behind the role check would give them Netlify's raw 401 instead of a sentence
+# they can act on. Invitation and recovery links land here too, and the person
+# following one has no role yet.
+#
+# The sign-in form is ours; @netlify/identity owns the credentials, the tokens
+# and the cookies. It is a headless library with no UI of its own — see
+# src/admin/staff-login.js.
+#
+# Deliberately NOT using the shared site layout: this must not pull in the
+# public navigation or js/main.js, and it must not appear in any listing.
+permalink: /staff-login/index.html
+eleventyExcludeFromCollections: true
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- An operational route, not content. Never indexed, and excluded from the
+         sitemap by src/_data/publicRoutes.js. -->
+    <meta name="robots" content="noindex, nofollow, noarchive" />
+    <title>Staff login — Federation of Polish Student Societies in the UK</title>
+    <link rel="icon" href="{{ site.logo }}" />
+    <style>
+{{ cmsConfig.staffLoginStyles | safe }}
+    </style>
+  </head>
+  <body>
+    <main class="login">
+      <img class="login-logo" src="{{ site.logo }}" alt="" />
+      <h1>Federation of Polish Student Societies in the UK</h1>
+      <p class="login-lead" id="login-lead">Staff login</p>
+
+      <p class="login-note">
+        Sign in with the account you were invited with. Accounts are created by
+        the Federation — there is no public sign-up.
+      </p>
+
+      <p class="login-message login-notice" id="login-notice" role="status" hidden></p>
+      <p class="login-message login-problem" id="login-problem" role="alert" hidden></p>
+
+      {#-
+        Hidden until the script decides what this visit is: an ordinary sign-in,
+        an invitation, or a password reset. Showing an e-mail box to somebody
+        following an invitation link would be asking the wrong question.
+      -#}
+      <form class="login-form" id="login-form" hidden>
+        <div class="login-field">
+          <label for="login-email">E-mail address</label>
+          <input type="email" id="login-email" name="email" autocomplete="username"
+                 required autocapitalize="none" spellcheck="false" />
+        </div>
+        <div class="login-field">
+          <label for="login-password">Password</label>
+          <input type="password" id="login-password" name="password"
+                 autocomplete="current-password" required />
+        </div>
+        <button type="submit" class="login-button" id="login-submit"
+                data-label="Sign in">Sign in</button>
+      </form>
+
+      {#-
+        External sign-in providers.
+
+        DISCOVERED, NOT HARD-CODED. The script asks Netlify Identity which
+        providers this site actually has enabled (getSettings) and renders a
+        button for each. A button for a provider nobody configured would take a
+        person to an error page, and a provider enabled later would need a code
+        change to appear.
+
+        Whichever provider is used, access still depends on an invited account
+        carrying a role: signing in proves who somebody is, not that they were
+        invited.
+      -#}
+      <div class="login-providers" id="login-providers" hidden></div>
+
+      <p class="login-help">
+        <button type="button" class="login-link" id="login-forgot">Forgot password</button>
+      </p>
+
+      <p class="login-help">
+        Trouble signing in? Ask the Federation President or the person who
+        invited you. <a href="/">Back to the website</a>
+      </p>
+    </main>
+
+    <!--
+      @netlify/identity, bundled from the pinned package by
+      scripts/build-identity.js and served from this origin.
+
+      Not a CDN script and not the legacy netlify-identity-widget: the version
+      is fixed by package-lock rather than by whatever a third party serves
+      today, and the page's Content-Security-Policy needs no foreign script
+      origin at all.
+    -->
+    <script src="/staff-login/netlify-identity.js"></script>
+    <script>
+{{ cmsConfig.staffLoginScript | safe }}
+    </script>
+  </body>
+</html>

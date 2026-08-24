@@ -49,7 +49,23 @@ function walk(dir = "") {
   }
   return out;
 }
-const FILES = walk().sort();
+const ALL_FILES = walk().sort();
+
+/*
+  THE CONTENT MANAGER IS NOT CRAWLABLE CONTENT (Phase 17D.1).
+
+  `npm run build:production` puts the online CMS into dist/admin/. It is a
+  bundled application: about ninety lazily-loaded chunks, source maps, and HTML
+  that is deliberately not a route of the website. Crawling it for canonical
+  tags and hreflang pairs would be asking a program to be a page.
+
+  Its own invariants — complete, noindex, pointing at the production backend —
+  are asserted in scripts/audit-dist.js instead.
+
+  A plain `npm run build` produces no admin/ at all, so on that build this
+  removes nothing and every existing check runs exactly as before.
+*/
+const FILES = ALL_FILES.filter((f) => !f.startsWith("admin/"));
 // Case-exact set, plus a lowercase map so a case-only mismatch is reported as
 // such rather than as a plain "missing file".
 const EXACT = new Set(FILES);
@@ -201,7 +217,20 @@ check("no reference escapes the public root with ../", escapes.length === 0, esc
 check("no /pl/assets/ path anywhere", plAssetPaths.length === 0, plAssetPaths);
 check("no link targets a source file", sourceTargets.length === 0, sourceTargets);
 check("no link targets a build fixture", fixtureTargets.length === 0, fixtureTargets);
-check("no link crosses from Polish to English", crossLanguage.length === 0, crossLanguage);
+/*
+  The staff login page is deliberately shared. There is ONE login page, not an
+  English one and a Polish one — the sign-in widget follows the browser, and a
+  committee officer signing in is not reading the website. A Polish page linking
+  to it is not a reader being dropped into English mid-journey, which is what
+  this check exists to catch.
+*/
+const crossLanguageContent = crossLanguage.filter((entry) =>
+  !/\/staff-login\//.test(String(entry)));
+check("no link crosses from Polish to English",
+  crossLanguageContent.length === 0, crossLanguageContent);
+check("the only shared route is the staff login page",
+  crossLanguage.every((entry) => /\/staff-login\//.test(String(entry))),
+  crossLanguage.filter((entry) => !/\/staff-login\//.test(String(entry))));
 check("every resolved fragment exists on its target page", badFragments.length === 0, badFragments);
 check("every referenced file has a plausible MIME type", badMime.length === 0, badMime);
 check("no referenced file is zero bytes", zeroByte.length === 0, zeroByte);
@@ -209,7 +238,10 @@ check("no referenced file is zero bytes", zeroByte.length === 0, zeroByte);
 /* ------------------------------------------------------------- metadata */
 
 const indexable = new Map(publicRoutes.routes().map((r) => [r.file, r]));
-const noindex = new Set(publicRoutes.noindexRoutes().map((r) => r.file));
+const noindexRoutes = publicRoutes.noindexRoutes();
+const noindex = new Set(noindexRoutes.filter((r) => !r.operational).map((r) => r.file));
+/** Routes that exist to be used, not read — see publicRoutes.NOINDEX_ROUTES. */
+const operational = new Set(noindexRoutes.filter((r) => r.operational).map((r) => r.file));
 
 const metaProblems = [];
 const jsonLdProblems = [];
@@ -246,6 +278,20 @@ for (const f of htmlFiles) {
     if (/<meta name="robots"[^>]*noindex/i.test(head)) metaProblems.push(`${f}: indexable route is marked noindex`);
     if (one("<title>") !== 1) metaProblems.push(`${f}: expected exactly one <title>`);
     if (one('<meta name="description"') !== 1) metaProblems.push(`${f}: expected exactly one meta description`);
+  } else if (operational.has(f)) {
+    /*
+      An operational route: the staff login page. Not content, so it carries no
+      canonical and no hreflang — but unlike a 404 it must also be NOFOLLOW,
+      because there is nothing beyond it a crawler should follow into.
+    */
+    if (!/<meta name="robots"[^>]*noindex/i.test(head)) {
+      metaProblems.push(`${f}: an operational route must be noindex`);
+    }
+    if (!/<meta name="robots"[^>]*nofollow/i.test(head)) {
+      metaProblems.push(`${f}: an operational route must be nofollow`);
+    }
+    if (one('<link rel="canonical"') !== 0) metaProblems.push(`${f}: must have no canonical`);
+    if (one('<link rel="alternate" hreflang') !== 0) metaProblems.push(`${f}: must have no hreflang`);
   } else if (noindex.has(f)) {
     // The deliberate inverse.
     if (!/<meta name="robots" content="noindex, follow">/.test(head)) metaProblems.push(`${f}: 404 must be "noindex, follow"`);

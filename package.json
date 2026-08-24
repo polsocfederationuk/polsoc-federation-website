@@ -5,6 +5,8 @@
   "description": "Static bilingual website for the Federation of Polish Student Societies in the UK. The live site is still the hand-written HTML at the repository root; the Eleventy build under src/ + content/ currently generates only architectural proof pages into dist/. See docs/BUILD_ARCHITECTURE.md.",
   "scripts": {
     "build": "eleventy",
+    "build:identity": "node scripts/build-identity.js",
+    "build:production": "node scripts/build-production.js",
     "clean": "node scripts/clean.js",
     "validate": "node scripts/validate.js",
     "compare:chrome": "node scripts/compare-chrome.js",
@@ -38,6 +40,7 @@
     "test:event-rules": "node scripts/test-event-rules.js",
     "test:event-content": "node scripts/test-event-content.js",
     "test:bulk": "node scripts/test-bulk.js",
+    "test:cms-production": "node scripts/test-cms-production.js",
     "cms:dev": "node scripts/cms-dev.js",
     "cms:smoke": "node scripts/cms-smoke.js"
   },
@@ -49,7 +52,11 @@
     "@11ty/eleventy": "^3.1.6",
     "decap-cms": "3.15.1",
     "decap-server": "3.10.0",
+    "esbuild": "^0.28.2",
     "js-yaml": "^4.3.0",
     "markdown-it": "^14.3.0"
+  },
+  "dependencies": {
+    "@netlify/identity": "^2.0.0"
   }
 }
