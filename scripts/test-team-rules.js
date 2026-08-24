@@ -358,6 +358,67 @@ section("4. This test left nothing behind");
     afterHash === baselineHash ? null : "a real record was modified");
 }
 
+/* ===========================================================================
+   Photograph focus (Phase 17C.3)
+
+   The square team crop can now be pointed at a face that sits off-centre. The
+   property that matters most is what happens when nobody sets one: all
+   twenty-one existing members must render exactly as they did before, which
+   means no style attribute at all rather than an explicit centre.
+   =========================================================================== */
+
+section("Photograph focus (Phase 17C.3)");
+
+{
+  const F = require(path.join(ROOT, "src", "_data", "focalPoint.js"));
+  const yaml = require("js-yaml");
+
+  const live = fs.readdirSync(TEAM_DIR)
+    .filter((f) => /\.ya?ml$/i.test(f) && !f.startsWith(PREFIX))
+    .map((f) => ({ f, d: yaml.load(fs.readFileSync(path.join(TEAM_DIR, f), "utf8")) || {} }));
+
+  const withFocus = live.filter((r) => r.d.photo_focus !== undefined && r.d.photo_focus !== null);
+  check(withFocus.length === 0,
+    "no existing member carries a photograph focus, so none of their pages change",
+    `${live.length} members, ${withFocus.length} with a focus`);
+
+  check(F.focalStyleAttr(undefined) === "" && F.focalStyleAttr(null) === "",
+    "a member with no focus produces no style attribute at all",
+    "absent means unchanged, not centred");
+
+  // A focus that IS set must render, and only from validated numbers.
+  check(F.focalStyleAttr({ x: 70, y: 15 }) === ' style="object-position: 70% 15%"',
+    "a chosen focus renders as one safe style attribute",
+    F.focalStyleAttr({ x: 70, y: 15 }));
+  for (const bad of [{ x: -5, y: 50 }, { x: 50, y: 120 }, { x: null, y: null }, "url(x)", "top"]) {
+    check(F.focalStyleAttr(bad) === "",
+      `a member focus of ${JSON.stringify(bad)} is refused rather than rendered`, "no attribute");
+  }
+
+  // The template must ask the shared helper rather than build the attribute.
+  const card = fs.readFileSync(
+    path.join(ROOT, "src", "_includes", "partials", "team-card.njk"), "utf8");
+  check(/photo_focus \| focalStyleAttr/.test(card),
+    "the team card renders the focus through the shared helper",
+    "one renderer, not string-building in a template");
+  check(!/object-position:\s*\{\{/.test(card),
+    "the team card never interpolates a value straight into a style attribute",
+    "no raw interpolation");
+
+  // The CMS must offer the control, framed as the real square crop.
+  const cms = require(path.join(ROOT, "src", "_data", "cmsConfig.js"));
+  const team = cms.buildConfig().collections.find((c) => c.name === "team");
+  const focus = (team.fields || []).find((f) => f.name === "photo_focus");
+  check(focus && focus.widget === "focalPoint",
+    "the Team form offers the visual focus control", `widget: ${focus && focus.widget}`);
+  check(focus && focus.required === false,
+    "the focus is optional, so nobody must revisit an existing member", "optional");
+  check(focus && Array.isArray(focus.frames) && focus.frames.length === 1 &&
+    focus.frames[0].ratio_w === focus.frames[0].ratio_h,
+    "the preview frame is square, matching the real team crop",
+    focus && focus.frames ? JSON.stringify(focus.frames[0]) : "no frames");
+}
+
 /* -- output ---------------------------------------------------------------- */
 
 console.log("\n" + "=".repeat(78));

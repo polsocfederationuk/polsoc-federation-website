@@ -580,9 +580,40 @@ for (const r of annOk) {
     problem(r.rel, "the published flag is not a true/false value", JSON.stringify(r.data.published),
       "Set the Published toggle in the CMS.");
   }
-  if (r.data.signups_closed !== undefined && typeof r.data.signups_closed !== "boolean") {
-    problem(r.rel, "the registration-closed flag is not a true/false value",
-      JSON.stringify(r.data.signups_closed), "Set the Registration closed toggle in the CMS.");
+  /*
+    Registration replaced the old on/off switch in Phase 17C.3. Reported in the
+    editor's own words, like everything else in this file — an editor reading
+    this has a form in front of them, not a YAML file.
+  */
+  const reg = r.data.registration;
+  const STATES = ["none", "coming_soon", "open", "closed"];
+  const STATE_WORDS = {
+    none: "No registration", coming_soon: "Coming soon", open: "Open", closed: "Closed",
+  };
+  if (reg !== undefined && reg !== null) {
+    if (typeof reg !== "object" || Array.isArray(reg)) {
+      problem(r.rel, "the Registration section is not filled in properly",
+        JSON.stringify(reg), "Open the record and set the Registration status.");
+    } else {
+      if (reg.state !== undefined && STATES.indexOf(reg.state) === -1) {
+        problem(r.rel, "the Registration status is not one the website understands",
+          JSON.stringify(reg.state),
+          `Choose one of: ${STATES.map((s) => STATE_WORDS[s]).join(", ")}.`);
+      }
+      if (reg.state === "open" && !reg.url) {
+        problem(r.rel, "Registration is Open but there is no address to sign up at", null,
+          "Add the registration web address, or set the status to Coming soon.");
+      }
+      if (reg.state !== "open" && reg.url) {
+        problem(r.rel, "a sign-up address is stored on a record that is not open for registration",
+          JSON.stringify(reg.url),
+          "Set the status to Open, or clear the registration web address.");
+      }
+      if (reg.opens_on && reg.closes_on && reg.opens_on > reg.closes_on) {
+        problem(r.rel, "sign-ups close before they open",
+          `${reg.opens_on} → ${reg.closes_on}`, "Check the two sign-up dates.");
+      }
+    }
   }
 }
 
@@ -721,19 +752,25 @@ for (const r of evOk) {
     if (!y) continue;
     if (!byYear.has(y)) byYear.set(y, new Map());
     const o = byYear.get(y);
-    if (!o.has(r.data.order)) o.set(r.data.order, []);
-    o.get(r.data.order).push(r);
+    const day = String(r.data.start_date || "");
+    if (!o.has(day)) o.set(day, []);
+    o.get(day).push(r);
   }
-  for (const [year, orders] of byYear) {
-    for (const [order, group] of orders) {
-      if (group.length < 2) continue;
-      problem(group.map((g) => g.rel).join(" + "),
-        "two published events share a position in the same academic year",
-        `position ${order} is used ${group.length} times in ${year}`,
-        "Give each event in a year its own position. Positions restart at 1 each " +
-        "year, so a clash with a different year is not a problem.");
-    }
-    notes.push(`${year}: ${[...orders.keys()].length} published standard event position(s)`);
+  /*
+    THE POSITION-CLASH RULE IS GONE (Phase 17C.5A).
+
+    It used to tell an editor that two events shared a position and ask them to
+    renumber. Events are now shown newest first by date, so there is no position
+    to clash and nothing to renumber — and a check that asks somebody to maintain
+    a value the site ignores is worse than no check. Two events on one day is
+    ordinary and fine.
+
+    The count is still reported, because knowing how many published events a year
+    holds is useful when reviewing a season.
+  */
+  for (const [year, days] of byYear) {
+    const total = [...days.values()].reduce((n, g) => n + g.length, 0);
+    notes.push(`${year}: ${total} published standard event(s)`);
   }
 }
 

@@ -29,13 +29,17 @@
     "compare:sitemap": "node scripts/compare-sitemap.js",
     "build:cms": "node scripts/build-cms.js",
     "cms:proxy": "node scripts/cms-proxy.js",
-    "cms:serve": "node scripts/cms-serve.js",
+    "cms:serve": "node scripts/cms-server.js",
     "validate:cms": "node scripts/validate-cms.js",
     "cms:check": "node scripts/cms-check.js",
     "test:cms-roundtrip": "node scripts/test-cms-roundtrip.js",
     "test:team-rules": "node scripts/test-team-rules.js",
     "test:announcement-rules": "node scripts/test-announcement-rules.js",
-    "test:event-rules": "node scripts/test-event-rules.js"
+    "test:event-rules": "node scripts/test-event-rules.js",
+    "test:event-content": "node scripts/test-event-content.js",
+    "test:bulk": "node scripts/test-bulk.js",
+    "cms:dev": "node scripts/cms-dev.js",
+    "cms:smoke": "node scripts/cms-smoke.js"
   },
   "engines": {
     "node": ">=18"

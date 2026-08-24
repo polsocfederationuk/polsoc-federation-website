@@ -43,8 +43,9 @@ control anywhere in this form that can turn one into the other.
 ## 3. Creating an event
 
 **Events → New event.** Fill in the Record ID, academic year, date, position,
-venue, images, both languages, and the section lists. Nothing needs editing by
-hand afterwards.
+venue, images, and the writing in both languages. Nothing needs editing by hand
+afterwards, and nothing below the writing is required — gallery, registration,
+photo album and social posts are all optional and all start closed.
 
 ## 4. Record IDs
 
@@ -175,13 +176,60 @@ homepage timeline** controls whether the event appears there at all.
 That short title is also what the CMS shows in the events list, so each record is
 recognisable at a glance.
 
+## 11b. Images — one upload, several uses
+
+An event has three image fields, and they all draw from the same folder. That is
+what makes reuse work:
+
+| Field | What it is |
+|---|---|
+| **Main event image** | the event's photograph, shown on the events listing |
+| **Sharing image** | what appears when somebody shares the page |
+| **Hero image** | leave empty — see below |
+
+**Upload the photograph once.** Use Upload on the main image; the file is saved
+to `assets/events`. Then, in the sharing image, choose that *same file* from the
+library. Both fields store a path, and two fields are perfectly entitled to store
+the same one — nothing is copied and no second file is created.
+
+This is not a new trick. The Christmas Dinner and Business Forum records have
+pointed both fields at one photograph since before the CMS existed.
+
+Some events instead use the Federation's own sharing card rather than an event
+photo. Either is fine; pick whichever represents the event better.
+
+**Hero image should stay empty.** Standard event pages open with a typographic
+heading rather than a photograph, and no template displays this field — every
+current event leaves it blank. It remains in the form only so that saving a
+record cannot drop the key.
+
+### A limitation worth knowing
+
+The library lists only files sitting directly in `assets/events`. Photographs
+from earlier events live in their own folders (`assets/wigilia/`, `assets/yc/`
+and so on) and are not offered — the local content service does not look inside
+subfolders, and that is its behaviour rather than a setting. For a new event,
+upload the photograph and it will be there for every field on that record.
+
 ## 12. Date and venue
 
-**Date** is a calendar day, typed as `2026-02-10`. Year, month, day — no time.
+**Date** is chosen from a calendar. Click the field and pick the day.
 
-> It is a plain validated field rather than a date picker on purpose. A picker
-> applies a timezone, and on a machine in Warsaw a date-only value can slide to
-> the previous day. A typed calendar day cannot.
+**End date** is optional and empty for almost every event — fill it in only for
+something that genuinely runs across more than one day. To remove one you added,
+use the **Clear** button beside the field; the record then holds no end date at
+all, which is what a one-day event should look like.
+
+> Earlier phases used a typed field here, precisely because a date picker applies
+> a timezone and on a machine in Warsaw a date-only value can slide to the
+> previous day. That risk is real, and it is now handled rather than avoided: the
+> picker is configured to work in UTC, with no clock and a fixed year-month-day
+> output, so the day stored is the day chosen. Three settings do that work, and
+> `npm run validate:cms` asserts all three on every date field — removing any one
+> of them silently brings the old bug back.
+>
+> Clearing a date is also normalised on save: the widget writes an empty value,
+> and the CMS stores "no date" in the one form the rest of the repository uses.
 
 **Date, as written** is the wording readers see ("10 February 2026"), in each
 language. The two are independent: one is data, one is prose.
@@ -192,71 +240,77 @@ English and a Polish form — "Polish Institute and Sikorski Museum" /
 venue keeps one name in both languages, write the same text twice rather than
 leaving one empty.
 
-## 13. Sections — the two levels of editing
+## 13. The page an event makes
 
-An event's body is built from **sections**: paragraphs, headings, photo galleries,
-an album link, an Instagram post.
-
-Sections are stored in **three lists that must stay in step**:
+Every standard event page is laid out the same way, and you cannot reorder it:
 
 ```
-Section structure    the type of each section, its layout, gallery image files
-English sections     the English paragraphs, headings, image descriptions
-Polski sections      the Polish equivalents
+Header          title, eyebrow, date, venue, the key facts
+Main body       the writing — paragraphs, links, quotes, sub-headings, photos
+Gallery         a group of event photographs, if there are any
+Registration    the sign-up panel, if sign-ups are set up
+Photo album     the link to the full album, if there is one
+Social          Instagram, Facebook or LinkedIn posts about the event
+Navigation      the way back to the events listing
 ```
 
-They are matched **by position**: section 3 of the structure is described by
-section 3 of English and section 3 of Polish.
+**This replaced the old "sections" system**, where a page was assembled from a
+list of blocks and the same list had to be repeated three times — once for the
+structure, once for English, once for Polish — matched by position. Getting them
+out of step was easy and the consequences were quiet: a photograph could end up
+carrying the description of the one before it. There is nothing left to keep in
+step, so that class of mistake is gone.
 
-### Ordinary editing — safe
+Two pages changed as a result. The Sikorski Debate and the Youth Congress used to
+open with a gallery above the writing; their galleries now sit below it, like
+every other event.
 
-Changing the **words inside** an existing section. Rewrite a paragraph, fix a
-heading, correct an image description. Nothing structural changes, and it saves
-normally.
+### Main body
 
-### Structural editing — advanced
+One box per language, with a small toolbar. It handles everything the writing
+needs:
 
-**Adding, removing or reordering** sections. The same change must be made in all
-three lists. The CMS does **not** do this for you.
+| Button | What it does |
+|---|---|
+| **B** / *I* | bold and italic |
+| Link | a link — `https://` addresses only |
+| Heading | a sub-heading inside the writing |
+| Quote | a highlighted statement, set apart from the text |
+| Lists | bulleted or numbered |
+| Image | a photograph placed between paragraphs |
 
-If the lists stop matching, the save is refused with a message naming the
-problem — for example:
+The two language boxes are independent. Write the English, switch to Polski with
+the tabs at the top of the block, and write the Polish. Neither is derived from
+the other and neither is required to match the other's structure.
 
-```
-Event sections are out of alignment.
+### Advanced
 
-Shared sections: 3
-English sections: 3
-Polish sections: 2
+Underneath each language's fields there is a closed **Advanced** drawer holding
+the wording overrides — a different summary for the card, a different title for
+the homepage timeline, custom search and sharing text. Every one of them falls
+back to the **Summary** you have already written, so an ordinary event needs
+none of them and the drawer can stay shut.
 
-Polish is missing section 3.
-```
-
-or, when the order differs:
-
-```
-Section 3:
-Shared structure: gallery
-English structure: gallery
-Polish structure: prose
-```
-
-**Nothing is repaired automatically.** No section is inserted, deleted or
-reordered for you, and English is never copied into Polish. Refusing the save
-loses nothing — your work is still on screen. Guessing would either invent
-content or throw some away.
+The four existing events do use them, and their wording still wins. Opening the
+drawer shows you what they say.
 
 ## 14. Galleries
 
-A gallery's **images** live in Section structure; each image's **description**
-lives in the English and Polish lists, in the same order.
+A gallery is one optional block: a heading, a small label above it, and a list of
+photographs. It is **closed by default** on the form — most events have none.
 
-The counts must match: one description per image, per language. If they do not,
-the save is refused — otherwise a photograph would silently lose its description
-for screen-reader users.
+Each photograph carries **its own description, in both languages**, right beside
+the picture it belongs to. Nothing is matched by position any more, so a
+photograph cannot inherit the wrong description.
+
+**Full width** puts a photograph across both columns of the grid. Use it for a
+wide shot.
 
 Galleries are optional. The Icebreaker has none, and that is a valid event.
-Nothing forces you to add one.
+
+A photograph that belongs in the flow of the writing — one you want a paragraph
+either side of — goes in **Main body** instead. The gallery is for a genuine
+group of event pictures.
 
 ## 15. Images
 
@@ -265,7 +319,7 @@ Nothing forces you to add one.
 | Card image | The events listing |
 | Social sharing image | Link previews on social media |
 | Hero image | Optional; none of the current events use one |
-| Gallery images | Inside a gallery section |
+| Gallery images | In the gallery, or in the main body |
 | Co-organiser logos | Beside partner names |
 
 New uploads go to `assets/events/`. Existing events keep their images where they
@@ -325,49 +379,61 @@ Old editions stay on disk, unchanged, and remain reachable through the archive.
 
 - The **Record ID** of an existing event — it is the filename and the page address.
 - The **academic year** of a past event — create a new record instead.
-- The structure of a section list unless you change all three together.
-- Anything you do not recognise in **Section structure** — the spacing values are
-  layout, not content.
+- The **order of the page**. It is fixed for every event, on purpose.
 
 ## 21. Known limitations
 
-1. **The three section lists are not linked.** Decap cannot keep parallel lists in
-   step, so structural changes must be made three times. The guard makes a
-   mistake impossible to save, not impossible to make.
-2. **Section content and structure are edited in different places.** A paragraph's
-   text is under English/Polski; its position and spacing are under Section
-   structure. That follows the stored schema, which this phase deliberately did
-   not migrate.
+1. **The page order cannot be changed.** That is the point — every event now reads
+   the same way — but it does mean a page that genuinely wanted its gallery first
+   cannot have it. Two pages were reordered when this came in.
+2. **The main body is Markdown underneath.** The toolbar covers everything the
+   writing needs, but a paste from Word may bring formatting the editor drops.
+   Check the result before saving.
 3. **`title_tail` is rarely needed.** Only the Christmas Dinner uses it. It exists
    because that title has the highlighted word in the middle.
-4. **Gallery image order lives in Section structure.** Reordering images there
-   means reordering both description lists to match.
-5. **Registration is inert.** All four events store `state: none`; the Federation
-   has never run registration through the site. The field is exposed but untested
-   against a real open registration.
+4. **Registration has never run for real.** All four events store `state: none`.
+   The panel, the states and the dates are all implemented and tested, but no
+   Federation event has yet opened sign-ups through the site.
+5. **An announcement's preview of an event's registration is read when you open
+   it.** If somebody changes that event in another tab while you are looking, the
+   preview will not notice. What the site publishes always comes from the event's
+   own record at build time.
 6. Business Forum editing is out of scope until Phase 17C-b.
 
 ## Commands
 
 | Command | Does |
 |---|---|
-| `npm run cms:proxy` | Start the local proxy (terminal 1) |
-| `npm run cms:serve` | Build with `/admin/` and serve (terminal 2) |
+| `npm run cms:dev` | **Start the CMS** — see `docs/CMS_FOUNDATION.md` §3 |
+| `npm run cms:smoke` | Check a running CMS and say what is broken |
 | `npm run cms:check` | Content integrity, in editor language |
-| `npm run test:event-rules` | Title spacing, section alignment, media and link rules |
+| `npm run test:event-rules` | Title spacing, registration, media, link and date rules |
+| `npm run test:event-content` | Proves no words, links or photographs were lost in the rebuild |
 | `npm run validate` | The full repository validator |
 
 ## Files in this phase
 
 | File | | Purpose |
 |---|---|---|
-| `src/_data/cmsConfig.js` | modified | Events collection, section guard, event options |
+| `src/_data/cmsConfig.js` | modified | Events collection, guards, event options |
 | `src/_data/records.js` | modified | Event date normalisation |
-| `src/admin/index.njk` | modified | Section-alignment guard wired into pre-save |
+| `src/_data/registration.js` | modified | Which registration an announcement renders |
+| `src/admin/index.njk` | modified | Guards and enhancers wired into the admin page |
+| `src/admin/advanced-drawer.js` | new | The collapsed wording overrides, one per language |
+| `src/admin/registration-ux.js` | new | The Registration block, one question at a time |
+| `src/admin/image-units.js` | modified | The photo album, closed by default |
+| `src/admin/form-sections.js` | modified | Gallery section; the locale plan retired |
+| `src/_includes/partials/event/body.njk` | new | The main body |
+| `src/_includes/partials/event/gallery-fixed.njk` | new | The gallery region |
+| `scripts/migrate-event-body.js` | new | The one-off section → body + gallery migration |
+| `scripts/test-event-content.js` | new | Proves nothing was lost in the rebuild |
 | `scripts/cms-check.js` | modified | Standard Events integrity section |
 | `scripts/validate-cms.js` | modified | Events configuration assertions |
-| `scripts/test-event-rules.js` | new | Title, alignment, year, media and link rules |
-| `docs/CMS_EVENTS.md` | new | This document |
+| `scripts/test-event-rules.js` | modified | Title, registration, year, media and link rules |
+| `docs/CMS_EVENTS.md` | modified | This document |
 
-No canonical event YAML was changed, and the Polish Business Forum record was not
-touched.
+The four standard event records WERE rewritten by `scripts/migrate-event-body.js`:
+their `sections` arrays became a `body` per language plus an optional `gallery`.
+`npm run test:event-content` proves that every paragraph, link, photograph,
+description and heading on the live pages is still on the generated ones. The
+Polish Business Forum record was not touched.

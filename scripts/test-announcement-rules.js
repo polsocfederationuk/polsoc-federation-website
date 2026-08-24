@@ -83,7 +83,7 @@ function record(stem, over = {}) {
     image_fit: null,
     image_background: null,
     extra_images: [],
-    signups_closed: false,
+    registration: { state: "none", url: null, opens_on: null, closes_on: null },
     link: null,
     en: { title: "ZZ Rule Test", subtitle: "Temporary record.", body: "A paragraph." },
     pl: { title: "ZZ Test Regul", subtitle: "Rekord tymczasowy.", body: "Akapit." },
@@ -104,7 +104,13 @@ function record(stem, over = {}) {
   lines.push("extra_images:");
   if (!r.extra_images.length) lines[lines.length - 1] = "extra_images: []";
   else for (const x of r.extra_images) lines.push(`  - ${q(x)}`);
-  lines.push(`signups_closed: ${r.signups_closed}`);
+  // Registration replaced signups_closed in Phase 17C.3. Written out in full so
+  // a temporary record has the same shape as a real one — a test fixture that
+  // does not look like production is a test that proves less than it claims.
+  lines.push("registration:");
+  for (const k of ["state", "url", "opens_on", "closes_on"]) {
+    lines.push(`  ${k}: ${q(r.registration[k])}`);
+  }
   if (r.link === null) lines.push("link: null");
   else {
     lines.push("link:");
@@ -530,6 +536,281 @@ section("8. This test left nothing behind");
     after.filter((f) => f.startsWith(PREFIX)).join(", "));
   check(afterHash === baselineHash, "every real announcement is byte-identical to before the run",
     afterHash === baselineHash ? null : "a real announcement was modified");
+}
+
+/* ===========================================================================
+   Image focus (Phase 17C.3)
+
+   The stored value ends up inside a `style` attribute, so the parser is the
+   security boundary as well as the convenience: anything it does not recognise
+   must produce NOTHING rather than being passed through.
+
+   The legacy cases matter most. Five announcements already carry positions
+   written by hand, and every one of them has to keep rendering exactly as it
+   does on the published site.
+   =========================================================================== */
+
+section("Image focus (Phase 17C.3)");
+
+{
+  const F = require(path.join(ROOT, "src", "_data", "focalPoint.js"));
+
+  // -- every distinct value that exists in the repository today -------------
+  const yaml = require("js-yaml");
+  const stored = {};
+  for (const f of fs.readdirSync(ANN_DIR).filter((x) => /\.ya?ml$/i.test(x) && !x.startsWith(PREFIX))) {
+    const d = yaml.load(fs.readFileSync(path.join(ANN_DIR, f), "utf8")) || {};
+    const v = d.image_position === undefined ? null : d.image_position;
+    stored[JSON.stringify(v)] = (stored[JSON.stringify(v)] || 0) + 1;
+  }
+  const LEGACY = {
+    "null": null,
+    '"center top"': "50% 0%",
+    '"center 30%"': "50% 30%",
+    '"center 22%"': "50% 22%",
+  };
+  for (const key of Object.keys(stored)) {
+    check(Object.prototype.hasOwnProperty.call(LEGACY, key),
+      `a stored image focus this test knows about: ${key}`,
+      `${stored[key]} record(s)`);
+    if (!Object.prototype.hasOwnProperty.call(LEGACY, key)) continue;
+    const got = F.focalStyle(JSON.parse(key));
+    check(got === LEGACY[key],
+      `${key} still renders as ${LEGACY[key] === null ? "no attribute at all" : LEGACY[key]}`,
+      `${stored[key]} record(s) -> ${JSON.stringify(got)}`);
+  }
+
+  // -- accepted --------------------------------------------------------------
+  const ok = [
+    [null, null], [undefined, null], ["", null],
+    ["center", "50% 50%"], ["centre", "50% 50%"],
+    ["left top", "0% 0%"], ["right bottom", "100% 100%"],
+    ["center top", "50% 0%"], ["center 30%", "50% 30%"],
+    ["50% 50%", "50% 50%"], ["0% 0%", "0% 0%"], ["100% 100%", "100% 100%"],
+    [{ x: 0, y: 0 }, "0% 0%"], [{ x: 100, y: 100 }, "100% 100%"],
+    [{ x: 30, y: 75 }, "30% 75%"], [{ x: 50, y: 50 }, "50% 50%"],
+    [{ x: 33.4, y: 66.6 }, "33% 67%"],
+  ];
+  for (const [input, want] of ok) {
+    const got = F.focalStyle(input);
+    check(got === want, `accepted: ${JSON.stringify(input)}`,
+      `-> ${JSON.stringify(got)}`);
+  }
+
+  // -- refused ---------------------------------------------------------------
+  const bad = [
+    { x: -1, y: 50 }, { x: 50, y: 101 }, { x: "a", y: 5 }, { x: NaN, y: 0 },
+    { x: null, y: null }, {}, [50, 50], 42, true,
+    "50", "50%; background:url(x)", "calc(50% + 2px) 50%", "url(evil.png)",
+    "left center right", "top", "-10% 50%", "110% 0%", "50px 20px",
+    "expression(alert(1))", "50% 50%; }",
+  ];
+  for (const input of bad) {
+    const got = F.focalStyle(input);
+    check(got === null, `refused: ${JSON.stringify(input)}`,
+      got === null ? "no attribute produced" : `LEAKED ${JSON.stringify(got)}`);
+  }
+
+  // Nothing a refused value contains may reach a style attribute.
+  for (const input of bad) {
+    const attr = F.focalStyleAttr(input);
+    check(attr === "", `no style attribute for ${JSON.stringify(input)}`, "empty");
+  }
+  check(F.focalStyleAttr({ x: 30, y: 75 }) === ' style="object-position: 30% 75%"',
+    "a valid focus produces exactly one safe style attribute",
+    F.focalStyleAttr({ x: 30, y: 75 }));
+
+  // -- the admin widget parses the same way ----------------------------------
+  const widget = fs.readFileSync(path.join(ROOT, "src", "admin", "focal-point.js"), "utf8");
+  check(/typeof value\.get === "function"/.test(widget),
+    "the widget reads a stored pair through .get, so an Immutable value loads correctly",
+    "a saved focus reopens where it was left");
+  check(/registerWidget\("focalPoint"/.test(widget),
+    "the focus control is registered through the documented widget API",
+    "CMS.registerWidget");
+  for (const forbidden of ["store.getState", "__REDUX", "dispatch(", "document.querySelector('.css-"]) {
+    check(!widget.includes(forbidden),
+      `the focus control does not reach into Decap internals (${forbidden})`, "absent");
+  }
+  check(/value\.trim\(\)\.toLowerCase\(\)\.split/.test(widget),
+    "the widget parses with the same narrow rules as the renderer", "narrow parser");
+
+  // -- the widget must not reach the public site -----------------------------
+  for (const f of ["dist/js/main.js", "dist/js/announcements-page.js"]) {
+    const p = path.join(ROOT, f);
+    if (!fs.existsSync(p)) continue;
+    const t = fs.readFileSync(p, "utf8");
+    check(!/registerWidget|fed-focal/.test(t),
+      `no editor widget code reaches ${f}`, "public output is free of CMS code");
+  }
+}
+
+/* ===========================================================================
+   Registration (Phase 17C.3)
+
+   Negative controls against the REAL validator, in the same style as the rest of
+   this file: inject one specific defect and assert that rule's own wording
+   appears. The states are an editorial choice, so the rules that matter are the
+   ones about coherence — a Register button must have somewhere to go, and a
+   record that is not open must not be carrying a live sign-up address.
+   =========================================================================== */
+
+section("Registration replaces the sign-ups switch (Phase 17C.3)");
+
+{
+  const reg = (over) => ({ registration: { state: "none", url: null, opens_on: null, closes_on: null, ...over } });
+
+  rule({ name: "no registration", over: reg({}),
+    expect: "unknown registration states", shouldFire: false });
+  rule({ name: "coming soon", over: reg({ state: "coming_soon" }),
+    expect: "unknown registration states", shouldFire: false });
+  rule({ name: "open with an https address",
+    over: reg({ state: "open", url: "https://example.com/signup" }),
+    expect: "unknown registration states", shouldFire: false });
+  rule({ name: "closed", over: reg({ state: "closed" }),
+    expect: "unknown registration states", shouldFire: false });
+
+  rule({ name: "an unknown registration state", over: reg({ state: "maybe" }),
+    expect: "unknown registration states", shouldFire: true });
+  rule({ name: "open with nowhere to sign up", over: reg({ state: "open" }),
+    expect: "open registrations with nowhere to go", shouldFire: true });
+  rule({ name: "an insecure registration address",
+    over: reg({ state: "open", url: "http://example.com/signup" }),
+    expect: "unsafe or malformed registration addresses", shouldFire: true });
+  rule({ name: "a javascript: registration address",
+    over: reg({ state: "open", url: "javascript:alert(1)" }),
+    expect: "unsafe or malformed registration addresses", shouldFire: true });
+  rule({ name: "a sign-up address on a closed record",
+    over: reg({ state: "closed", url: "https://example.com/signup" }),
+    expect: "registration addresses on records that are not open", shouldFire: true });
+  rule({ name: "sign-ups that close before they open",
+    over: reg({ state: "coming_soon", opens_on: "2026-06-01", closes_on: "2026-05-01" }),
+    expect: "registrations that close before they open", shouldFire: true });
+  rule({ name: "sign-up dates in the right order",
+    over: reg({ state: "coming_soon", opens_on: "2026-05-01", closes_on: "2026-06-01" }),
+    expect: "registrations that close before they open", shouldFire: false });
+}
+
+{
+  // Details and registration are independent: both may be set at once, and the
+  // validator must not object to an announcement that carries the two.
+  const stem = `${PREFIX}-dual`;
+  try {
+    record(stem, {
+      registration: { state: "open", url: "https://example.com/signup", opens_on: null, closes_on: null },
+      link: { type: "event", event_slug: "icebreaker" },
+      en: { title: "ZZ Dual", subtitle: "Both.", body: "A paragraph.", link_label: "Explore the event" },
+      pl: { title: "ZZ Oba", subtitle: "Oba.", body: "Akapit.", link_label: "Zobacz wydarzenie" },
+    });
+    const out = runValidator();
+    const complaints = [
+      "unknown registration states", "open registrations with nowhere to go",
+      "registration addresses on records that are not open",
+      "unsafe or malformed registration addresses",
+    ].filter((m) => out.includes(m));
+    check(complaints.length === 0,
+      "accepted: an announcement with BOTH a details link and open registration",
+      complaints.length ? `objected: ${complaints.join(", ")}` : "the two are independent");
+  } finally { fs.rmSync(path.join(ANN_DIR, `${stem}.yaml`), { force: true }); }
+}
+
+{
+  // The migration's meaning: the eight records that were closed still are, and
+  // nothing else acquired a registration by accident.
+  const yaml = require("js-yaml");
+  const live = fs.readdirSync(ANN_DIR).filter((f) => /\.ya?ml$/i.test(f) && !f.startsWith(PREFIX))
+    .map((f) => yaml.load(fs.readFileSync(path.join(ANN_DIR, f), "utf8")) || {});
+  const closed = live.filter((a) => a.registration && a.registration.state === "closed");
+  const none = live.filter((a) => a.registration && a.registration.state === "none");
+  check(closed.length === 8, "the eight closed announcements are still closed after the migration",
+    `${closed.length} closed`);
+  check(none.length === live.length - 8,
+    "every other announcement has no registration, as before",
+    `${none.length} with no registration`);
+  check(live.every((a) => a.signups_closed === undefined),
+    "no record still carries the replaced sign-ups switch",
+    "one source of truth");
+  check(live.every((a) => !a.registration || a.registration.url === null),
+    "the migration invented no sign-up addresses",
+    "external links were not silently turned into registration links");
+}
+
+/* ===========================================================================
+   Language tabs (Phase 17C.3)
+
+   The English / Polski switcher is PRESENTATION. These assertions guard the one
+   property that matters: it must not be able to change, drop or reshape what is
+   stored. A switcher that loses the language an editor cannot currently see
+   would be worse than the long form it replaced.
+   =========================================================================== */
+
+section("Language tabs are presentation only (Phase 17C.3)");
+
+{
+  const tabsFile = path.join(ROOT, "src", "admin", "language-tabs.js");
+  check(fs.existsSync(tabsFile), "the language switcher exists as its own file",
+    "present");
+
+  const src = fs.existsSync(tabsFile) ? fs.readFileSync(tabsFile, "utf8") : "";
+
+  // Hiding keeps the React tree mounted. Removing, detaching or re-parenting a
+  // panel would unmount its controls and lose unsaved text.
+  check(/classList\.toggle\(HIDDEN_CLASS/.test(src),
+    "panels are hidden by class, so fields stay mounted and keep unsaved values",
+    "the switcher does not hide by class");
+  for (const forbidden of ["removeChild", "innerHTML =", "outerHTML", "replaceChild", "cloneNode"]) {
+    check(!src.includes(forbidden),
+      `the switcher never uses ${forbidden}, which would destroy unsaved input`,
+      "absent");
+  }
+
+  // The brief forbids reaching into Decap's internals.
+  for (const forbidden of ["store.getState", "__REDUX", "dispatch("]) {
+    check(!src.includes(forbidden),
+      `the switcher does not touch Decap internals (${forbidden})`,
+      "absent");
+  }
+
+  // Anchoring: semantic attributes and our own labels, never generated classes.
+  check(src.includes('aria-label="object field"'),
+    "panels are found by their accessibility role, not a generated class name",
+    "anchored on aria-label");
+  check(/nestingDepth\(c\) !== 0/.test(src),
+    "only TOP-LEVEL language objects count as panels, so venue.name.en is safe",
+    "nested fields excluded");
+
+  const cssFile = path.join(ROOT, "src", "admin", "language-tabs.css");
+  check(fs.existsSync(cssFile), "the switcher has its own stylesheet", "present");
+  const cssSrc = fs.existsSync(cssFile) ? fs.readFileSync(cssFile, "utf8") : "";
+  check(/@media[^{]*max-width/.test(cssSrc),
+    "the switcher has a narrow-screen rule, so it is usable on a phone",
+    "max-width rule present");
+  check(/min-height:\s*2\.75rem/.test(cssSrc),
+    "the tabs meet a touch-friendly target height", "44px target");
+
+  // Both assets must actually reach the admin page.
+  const admin = fs.readFileSync(path.join(ROOT, "src", "admin", "index.njk"), "utf8");
+  check(/cmsConfig\.languageTabsScript/.test(admin),
+    "the admin page embeds the switcher script", "embedded from its own file");
+  check(/cmsConfig\.languageTabsStyles/.test(admin),
+    "the admin page embeds the switcher styles", "embedded from its own file");
+}
+
+{
+  // The canonical shape must be untouched by any of this.
+  const cfg = require(path.join(ROOT, "src", "_data", "cmsConfig.js")).buildConfig();
+  const ann = cfg.collections.find((c) => c.name === "announcements");
+  const en = (ann.fields || []).find((f) => f.name === "en");
+  const pl = (ann.fields || []).find((f) => f.name === "pl");
+  check(en && en.widget === "object" && pl && pl.widget === "object",
+    "announcements still store en and pl as two objects in ONE record",
+    "one record, two objects");
+  check(en && en.label === "English" && pl && pl.label === "Polski",
+    "the language panels carry the labels the switcher looks for",
+    `${en && en.label} / ${pl && pl.label}`);
+  check(!JSON.stringify(cfg).includes('"i18n"'),
+    "Decap's own i18n is NOT enabled — one record still holds both languages",
+    "not enabled");
 }
 
 /* -- output ----------------------------------------------------------------- */

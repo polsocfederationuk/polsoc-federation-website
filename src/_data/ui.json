@@ -44,7 +44,11 @@
       "signupsClosed": "Sign-ups closed",
       "modalLabel": "Announcement",
       "closeLabel": "Close",
-      "extraImageAltPattern": "{title} — photo {n}"
+      "extraImageAltPattern": "{title} — photo {n}",
+      "registerLabel": "Register",
+      "registrationComingSoon": "Registration opening soon",
+      "registrationOpensOn": "Sign-ups open {date}",
+      "registrationClosesOn": "Sign-ups close {date}"
     },
     "members": {
       "emailLabel": "Email",
@@ -69,6 +73,22 @@
       "partnersNext": "Scroll partners forwards",
       "emptySeason": "This season’s events are being planned — the first will appear here soon.",
       "allEventsLabel": "See all events"
+    },
+    "socialPosts": {
+      "heading": "From social media",
+      "instagram": "View post on Instagram",
+      "facebook": "View post on Facebook",
+      "linkedin": "View post on LinkedIn"
+    },
+    "eventRegistration": {
+      "heading": "Registration",
+      "comingSoon": "Registration opening soon",
+      "open": "Registration open",
+      "closed": "Registration closed",
+      "register": "Register",
+      "opensOn": "Registration opens {date}",
+      "closesOn": "Registration closes {date}",
+      "closedOn": "Registration closed on {date}"
     }
   },
   "_ariaPatternComment": "{name} is substituted with the member's FULL name. Until Phase 5 it was a per-member stored string that was usually just a first name, which gave the two members called Maksymilian the identical accessible name \"Email Maksymilian\" on the same page. Using the full name removes that collision and lets the patterns be applied uniformly. See docs/TEAM_ACCESSIBILITY_REMEDIATION.md.",
@@ -118,7 +138,11 @@
       "signupsClosed": "Nabór zakończony",
       "modalLabel": "Ogłoszenie",
       "closeLabel": "Zamknij",
-      "extraImageAltPattern": "{title} — zdjęcie {n}"
+      "extraImageAltPattern": "{title} — zdjęcie {n}",
+      "registerLabel": "Zarejestruj się",
+      "registrationComingSoon": "Zapisy wkrótce",
+      "registrationOpensOn": "Zapisy otwierają się {date}",
+      "registrationClosesOn": "Zapisy kończą się {date}"
     },
     "_membersComment": "Transcribed verbatim from the live pl/members.html. Unlike the team page (see the aria note above), the Polish society cards were already correctly localised — both the visible labels and the aria-labels.",
     "members": {
@@ -145,6 +169,22 @@
       "partnersNext": "Przewiń partnerów dalej",
       "emptySeason": "Wydarzenia tego sezonu są w przygotowaniu — pierwsze pojawią się tutaj wkrótce.",
       "allEventsLabel": "Zobacz wszystkie wydarzenia"
+    },
+    "socialPosts": {
+      "heading": "W mediach społecznościowych",
+      "instagram": "Zobacz post na Instagramie",
+      "facebook": "Zobacz post na Facebooku",
+      "linkedin": "Zobacz post na LinkedIn"
+    },
+    "eventRegistration": {
+      "heading": "Zapisy",
+      "comingSoon": "Zapisy wkrótce",
+      "open": "Zapisy otwarte",
+      "closed": "Zapisy zamknięte",
+      "register": "Zarejestruj się",
+      "opensOn": "Zapisy otwierają się {date}",
+      "closesOn": "Zapisy zamykają się {date}",
+      "closedOn": "Zapisy zamknięte {date}"
     }
   }
 }

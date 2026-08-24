@@ -87,6 +87,12 @@ const loadCollection = (dirName) => {
           if (record[key] === undefined) record[key] = null;
         }
         if (record.extra_images === undefined) record.extra_images = [];
+        // A record saved without touching Registration has no block at all;
+        // "no registration" is what that means, and saying so here keeps the
+        // absent-or-null question out of every template downstream.
+        if (record.registration === undefined || record.registration === null) {
+          record.registration = { state: "none", url: null, opens_on: null, closes_on: null };
+        }
       }
 
       return record;

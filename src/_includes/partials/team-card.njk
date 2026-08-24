@@ -23,7 +23,7 @@
 #}
 {%- set m = member[locale.code] -%}
         <div class="{{ revealIndex | revealClass }}">
-          <div class="ph"{% if not member.photo %} data-label="{{ t.team.photoPlaceholderLabel }}"{% endif %}>{% if member.photo %}<img src="{{ member.photo | asset }}" alt="{{ m.photo_alt }}">{% endif %}</div>
+          <div class="ph"{% if not member.photo %} data-label="{{ t.team.photoPlaceholderLabel }}"{% endif %}>{% if member.photo %}<img src="{{ member.photo | asset }}" alt="{{ m.photo_alt }}"{{ member.photo_focus | focalStyleAttr | safe }}>{% endif %}</div>
           <div class="member-body">
             <div class="member-role">{{ m.role }}</div>
             <h3>{{ member.name }}</h3>

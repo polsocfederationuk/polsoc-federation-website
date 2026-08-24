@@ -1,0 +1,54 @@
+---
+# Bulk manage — the several-records-at-once screen.
+#
+# A page of our own rather than something grafted into Decap's collection list.
+# Decap 3.15.1 registers widgets, previews, backends, media libraries, locales,
+# event listeners and custom formats — and nothing else. There is no documented
+# way to add a page, a route, a sidebar entry or a list action, so the only way
+# to put checkboxes into its collection list would be to reach into generated
+# class names and internal state, which this repository has already learned not
+# to do. See docs/CMS_BULK_MANAGE.md §2.
+#
+# Emitted ONLY when CMS_DEV=1, exactly like the admin entry point beside it, so
+# no public build can ever produce it.
+permalink: /admin/bulk/index.html
+eleventyExcludeFromCollections: true
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow, noarchive, noimageindex" />
+    <title>Bulk manage — Federation Content Manager</title>
+    <style>
+{{ cmsConfig.bulkStyles | safe }}
+    </style>
+  </head>
+  <body>
+    <p class="cms-local-banner">
+      Local development only — changes are written straight to the files in your
+      working copy. Nothing here is published. Review with
+      <code>git diff</code> before committing.
+    </p>
+
+    <header class="bulk-header">
+      <a class="bulk-back" href="/admin/">&larr; Content manager</a>
+      <h1>Bulk manage</h1>
+      <p class="bulk-intro">
+        Hide, show or delete several records at once. Hiding is reversible;
+        deleting is not.
+      </p>
+    </header>
+
+    <main class="bulk" id="bulk-app">
+      <noscript>
+        <p class="bulk-note">This screen needs JavaScript.</p>
+      </noscript>
+    </main>
+
+    <script>
+{{ cmsConfig.bulkScript | safe }}
+    </script>
+  </body>
+</html>

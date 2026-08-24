@@ -100,16 +100,76 @@ function eventLinkOptions() {
 /* ---------------------------------------------------------------------------
    Academic year.
 
-   The CMS enforces the SHAPE ("YYYY/YY"); scripts/validate.js enforces the
-   ARITHMETIC (that the second half really is the following year). A regular
-   expression cannot add one to a number, so 2025/27 is refused by the validator
-   rather than by this pattern — see docs/CMS_FOUNDATION.md §10.
+   Since Phase 17C.2 the editor picks from a SELECT rather than typing. The
+   objection to a select was that somebody would have to edit an array each
+   summer — so the options are GENERATED (see academicYearOptions), running from
+   2025/26 through ten years past whatever is configured. Rolling the site over
+   extends the list instead of shifting it, so historical years stay selectable
+   and historical records stay editable.
 
-   Deliberately NOT a select of hard-coded years: a select would have to be
-   edited every summer, and an editor cannot add next year's committee if the
-   only permitted value is this year's.
+   The pattern below is kept for the validators and for any value that reaches a
+   file another way. scripts/validate.js still enforces the ARITHMETIC — that the
+   second half really is the following year — because a regular expression cannot
+   add one to a number. See docs/CMS_FOUNDATION.md §10.
    --------------------------------------------------------------------------- */
 const ACADEMIC_YEAR_PATTERN = ["^\\d{4}/\\d{2}$", 'Use the form 2025/26 — four digits, a slash, then two digits.'];
+
+/**
+ * The academic-year control every annual collection uses.
+ *
+ * A SELECT, not free text. A mistyped "2025/27" or "2025-26" used to reach the
+ * file and be caught only by the validator, long after the editor had moved on.
+ * Options come from one generator in src/_data/academicYear.js, so Team,
+ * Announcements, Events and Site settings cannot offer different years.
+ *
+ * The stored value is the option value itself — "2026/27" — never a display
+ * label, so nothing downstream has to translate it back.
+ */
+function academicYearField(name, label, hint, extra) {
+  return Object.assign({
+    label,
+    name,
+    widget: "select",
+    required: true,
+    options: academicYear.academicYearOptions(currentAcademicYear()),
+    hint,
+  }, extra || {});
+}
+
+/**
+ * A date-only calendar control.
+ *
+ * `datetime` with a date-only format and `picker_utc` gives a calendar without a
+ * clock and, critically, without timezone conversion — the stored string stays
+ * exactly YYYY-MM-DD, which dateOnly.js, the validators and the JSON-LD all
+ * depend on. Free typing was the previous behaviour and let a value like
+ * 20/05/2026 reach a file.
+ *
+ * Year-month-day ordering is stated in the hint: the picker renders in Decap's
+ * own format, and forcing a slashed display is not worth risking the stored
+ * value. See docs/CMS_EVENTS.md.
+ *
+ * Every field built here registers its name in DATE_FIELD_NAMES, which the
+ * pre-save guard uses to turn a cleared date into `null`. Registering at
+ * construction rather than in a hand-kept list means a date field added later is
+ * covered the moment it exists.
+ */
+const DATE_FIELD_NAMES = [];
+
+function dateOnlyField(name, label, required, hint) {
+  if (DATE_FIELD_NAMES.indexOf(name) === -1) DATE_FIELD_NAMES.push(name);
+  return {
+    label,
+    name,
+    widget: "datetime",
+    required: Boolean(required),
+    date_format: "YYYY-MM-DD",
+    time_format: false,
+    format: "YYYY-MM-DD",
+    picker_utc: true,
+    hint,
+  };
+}
 
 const YEAR_HINT =
   "The committee year this membership belongs to, e.g. 2025/26. " +
@@ -153,15 +213,7 @@ function teamFields() {
       pattern: ["^[a-z0-9]+(-[a-z0-9]+)*$",
         "Lowercase letters, numbers and single hyphens only — e.g. jane-example-2026-27."],
     },
-    {
-      label: "Academic year",
-      name: "academic_year",
-      widget: "string",
-      required: true,
-      default: "",
-      hint: YEAR_HINT,
-      pattern: ACADEMIC_YEAR_PATTERN,
-    },
+    academicYearField("academic_year", "Academic year", YEAR_HINT),
     {
       label: "Team group",
       name: "group",
@@ -222,6 +274,29 @@ function teamFields() {
         "the card shows initials instead.",
     },
     {
+      /*
+        Added in Phase 17C.3, and OPTIONAL in the strongest sense: every one of
+        the twenty-one existing members leaves it empty, and an empty value
+        renders exactly what the site renders today — no style attribute at all,
+        so their pages are byte-identical. Nobody has to go back and set a focus
+        on a photograph that already looks right.
+
+        Stored as a coordinate pair rather than a position string. Unlike the
+        announcement field, this one has no history in the published site, so it
+        can use the plainer representation from the start.
+      */
+      label: "Photograph focus",
+      name: "photo_focus",
+      widget: "focalPoint",
+      required: false,
+      image_field: "photo",
+      value_format: "coords",
+      // Measured from css/style.css: `.member .ph { aspect-ratio: 1 }`.
+      frames: [{ label: "On the team card", ratio_w: 1, ratio_h: 1 }],
+      hint: "Only needed if the square crop cuts someone's face awkwardly. " +
+        "Leave it centred otherwise — most photographs need nothing here.",
+    },
+    {
       label: "E-mail address",
       name: "email",
       widget: "string",
@@ -264,18 +339,16 @@ function teamFields() {
       name: "pl",
       widget: "object",
       required: true,
-      collapsed: false,
       fields: [
         {
-          label: "Nazwa funkcji (po polsku)",
+          label: "Role title (Polish)",
           name: "role",
           widget: "string",
           required: true,
-          hint: "Musi być prawdziwym tłumaczeniem, a nie kopią wersji angielskiej — " +
-            "walidator odrzuca identyczne pary.",
+          hint: "np. Wiceprezes, Koordynator Wydarzeń.",
         },
         {
-          label: "Tekst alternatywny zdjęcia (po polsku)",
+          label: "Photograph alt text (Polish)",
           name: "photo_alt",
           widget: "string",
           required: false,
@@ -342,6 +415,74 @@ function ensureEventRegistration(data) {
     }
   }
   return next;
+}
+
+/**
+ * A date the editor cleared must be stored as `null`, never as "".
+ *
+ * Decap's datetime widget writes an empty string when its Clear button is used.
+ * The repository's canonical absent-date is `null` — that is what every
+ * hand-written file holds, what scripts/validate.js documents, and what
+ * `end_date: null` means to a reader of the YAML. Letting "" through would give
+ * the same file two spellings for "no end date", which is how a validator that
+ * checks one form and a template that checks the other end up disagreeing.
+ *
+ * Only exactly-empty values are touched, and only on registered date fields:
+ * a real date is never rewritten. Returns null when nothing needed changing, so
+ * the caller can leave the entry untouched.
+ *
+ * Pure and plain-JS: the admin page embeds this source and the tests import this
+ * function, so what is tested is what runs.
+ */
+function blankDatesToNull(data, dateFieldNames) {
+  if (!data || typeof data !== "object") return null;
+  var names = dateFieldNames || DATE_FIELD_NAMES;
+  var changed = [];
+  for (var i = 0; i < names.length; i++) {
+    var key = names[i];
+    if (!Object.prototype.hasOwnProperty.call(data, key)) continue;
+    var v = data[key];
+    // "" and "   " only. undefined is Decap not having the key at all, which is
+    // a different thing and not ours to invent a value for.
+    if (typeof v === "string" && v.trim() === "") changed.push(key);
+  }
+  return changed.length ? changed : null;
+}
+
+/**
+ * The canonical spelling of a colour: lowercase `#rrggbb`.
+ *
+ * The Brand colour control shows a live caption of what a typed value means, but
+ * it deliberately does NOT rewrite the box under the editor's cursor while they
+ * are typing. Canonicalising here instead means the stored value is correct
+ * however it was entered — `#ABC`, `AABBCC` and `#AaBbCc` all land as
+ * `#aabbcc` — and it keeps working even if a value ever arrives from somewhere
+ * other than the widget.
+ *
+ * A value that is not a colour at all is left completely alone: the widget's own
+ * validator refuses the save and tells the editor, and silently inventing a
+ * colour here would hide that.
+ *
+ * Returns null when nothing needed changing, so the caller can leave the entry
+ * untouched.
+ *
+ * Pure and plain-JS: the admin page embeds this source and the tests import this
+ * function, so what is tested is what runs.
+ */
+/** Every field whose stored value is a CSS colour. One entry today; a list so
+    17C-b can add the Business Forum fields without touching the guard. */
+const COLOUR_FIELD_NAMES = ["image_background"];
+
+function canonicalColour(value) {
+  if (typeof value !== "string") return null;
+  var v = value.trim().toLowerCase();
+  if (!v) return null;
+  if (v.charAt(0) !== "#") v = "#" + v;
+  if (/^#[0-9a-f]{3}$/.test(v)) {
+    v = "#" + v.charAt(1) + v.charAt(1) + v.charAt(2) + v.charAt(2) + v.charAt(3) + v.charAt(3);
+  }
+  if (!/^#[0-9a-f]{6}$/.test(v)) return null;      // not a colour — not ours to fix
+  return v === value ? null : v;                    // already canonical?
 }
 
 const SECTIONS_HELP =
@@ -494,6 +635,209 @@ const SUPPORTED_LINK_TYPES = ["event", "page", "external"];
 const LINK_TYPE_NONE = "none";
 const OFFERED_LINK_TYPES = [LINK_TYPE_NONE, "event", "external"];
 
+/* ---------------------------------------------------------------------------
+   Registration — announcements.
+   --------------------------------------------------------------------------- */
+
+const REGISTRATION_NONE = "none";
+
+/**
+ * The four states an announcement's sign-ups can be in.
+ *
+ * `none` is a real state, not a missing value: most announcements are notices
+ * with nothing to sign up for, and saying so explicitly is what lets the other
+ * three mean something.
+ *
+ * Order matters only for the dropdown, which reads as a life cycle: nothing,
+ * then not yet, then now, then over.
+ */
+const REGISTRATION_STATES = [REGISTRATION_NONE, "coming_soon", "open", "closed"];
+
+/**
+ * What the event picker shows for each event.
+ *
+ * A constant because two things depend on it agreeing exactly: Decap renders it
+ * as the option label, and eventRegistrationIndex() below renders the same
+ * string as the key an editor's choice is looked up by. Written twice, the
+ * preview would go blank the first time somebody adjusted the wording.
+ */
+const EVENT_PICKER_LABEL = "{{en.timeline_title}} — {{start_date}}";
+
+/** What a record with no registration looks like on disk. */
+const CANONICAL_REGISTRATION_NONE = Object.freeze({
+  state: REGISTRATION_NONE, url: null, opens_on: null, closes_on: null,
+});
+
+/**
+ * The four registration controls, shared by Announcements and Standard Events.
+ *
+ * Phase 17C.5A.2 gave standard events a real registration section. Writing a
+ * second set of controls would have produced two definitions of "open" that
+ * drift the first time one is changed, so both collections build their fields
+ * here and both are validated by normaliseRegistration() below.
+ *
+ * Only the wording differs, because the sentence that helps an editor is not
+ * the same on an event page as on an announcement card.
+ *
+ * @param {"event"|"announcement"} kind
+ */
+function registrationFields(kind) {
+  const onEvent = kind === "event";
+  const thing = onEvent ? "event" : "announcement";
+  return [
+    {
+      label: "Registration status",
+      name: "state",
+      widget: "select",
+      required: false,
+      default: REGISTRATION_NONE,
+      options: REGISTRATION_STATES.map((v) => ({
+        label: v === "none" ? "No registration — no sign-up button"
+          : v === "coming_soon" ? "Coming soon — sign-ups have not opened"
+            : v === "open" ? "Open — people can register now"
+              : "Closed — sign-ups have ended",
+        value: v,
+      })),
+      hint: "You choose this. It does NOT change on its own when a date passes: " +
+        "the website is built as fixed files, so a status that changed by itself " +
+        `would be wrong until somebody rebuilt the site. Blank means no ` +
+        `registration, which is normal for most ${thing}s.`,
+    },
+    {
+      label: "Registration web address",
+      name: "url",
+      widget: "string",
+      required: false,
+      // https only. This becomes a button rendered into the page, so other
+      // schemes must not be reachable.
+      pattern: ["^https://[^\s\"'<>]+$|^$",
+        "Must be a full https:// address, or leave it empty."],
+      hint: "Needed only when the status is Open — that is what the Register " +
+        "button points at. Ignored for the other statuses.",
+    },
+    dateOnlyField("opens_on", "Sign-ups open on", false,
+      "Optional. Shown to readers when sign-ups have not opened yet. " +
+      "Setting it does NOT open registration — change the status for that."),
+    dateOnlyField("closes_on", "Sign-ups close on", false,
+      "Optional. Shown to readers as a deadline. Setting it does NOT close " +
+      "registration — change the status for that."),
+  ];
+}
+
+/**
+ * Put a registration block into its canonical shape, or report why it cannot be.
+ *
+ * Two jobs, deliberately in one place so the CMS guard and the validator cannot
+ * disagree about what a valid registration is:
+ *
+ *   - TIDYING. Decap keeps every sub-field it has ever shown, so an editor who
+ *     types a URL, then switches the status to Closed, would otherwise leave a
+ *     live sign-up address in a record that claims to be closed. Only the fields
+ *     that belong to the chosen state survive; the rest become null. Cleared
+ *     dates arrive as "" from the date picker and become null here too.
+ *
+ *   - REFUSING. Some combinations cannot be rendered honestly — Open with no
+ *     address gives a Register button that goes nowhere, and a closing date
+ *     before the opening date describes a sign-up that was never open.
+ *
+ * @returns {{registration: object}|{error: string}}
+ *
+ * Pure and plain-JS: the admin page embeds this source and the tests import this
+ * function, so what is tested is what runs.
+ */
+function normaliseRegistration(raw) {
+  var r = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
+
+  /*
+    WHERE DOES THIS REGISTRATION COME FROM? (Phase 17C.5A.2)
+
+    An announcement may either describe its own sign-up or point at a Federation
+    event that owns one. Pointing means storing a REFERENCE and nothing else —
+    copying the event's status, address and dates into the announcement would
+    create two copies of one fact, and they would drift the first time somebody
+    changed the event.
+
+    `source: "own"` is never written. An absent source already means "its own",
+    which is what all twenty-eight migrated records mean, so they needed no
+    rewriting and a newly saved announcement keeps the same minimal shape.
+  */
+  /*
+    NOTHING TO SIGN UP FOR (Phase 17C.5A.3).
+
+    Chosen explicitly rather than reached by leaving the status blank, so the
+    editor answers one question instead of meeting four controls they do not
+    need. Whatever the draft still carries from an earlier choice is dropped —
+    that is the same tidying the states below get, applied to the whole block.
+
+    The stored shape is the canonical empty one, with no source key: identical
+    to what the twenty-eight migrated announcements already contain, so this
+    choice never rewrites a record into a new dialect.
+  */
+  if (String(r.source || "") === "none") {
+    return { registration: { state: REGISTRATION_NONE, url: null,
+      opens_on: null, closes_on: null } };
+  }
+
+  if (String(r.source || "") === "event") {
+    var eventSlug = typeof r.event_slug === "string" ? r.event_slug.trim() : "";
+    if (!eventSlug) {
+      return { error:
+        "Registration is set to come from a Federation event, but no event is " +
+        "selected.\n\nChoose the event, or change registration to Other event " +
+        "to enter the details here." };
+    }
+    // Only the reference is stored. The status, address and dates live on the
+    // event and are read from it at build time.
+    return { registration: { source: "event", event_slug: eventSlug } };
+  }
+
+  var state = typeof r.state === "string" && r.state ? r.state : REGISTRATION_NONE;
+  if (REGISTRATION_STATES.indexOf(state) === -1) {
+    return { error: 'Unknown registration status "' + state + '".' };
+  }
+
+  var blank = function (v) {
+    return v === undefined || v === null || (typeof v === "string" && v.trim() === "");
+  };
+  var text = function (v) { return blank(v) ? null : String(v).trim(); };
+
+  var url = text(r.url);
+  var opens = text(r.opens_on);
+  var closes = text(r.closes_on);
+
+  // Only "open" keeps an address. Every other state is a statement, not a link,
+  // so a leftover URL is dropped rather than carried into a closed record.
+  if (state !== "open") url = null;
+
+  if (state === "open") {
+    if (!url) {
+      return { error:
+        "Registration is set to Open, but there is no registration web address.\n\n" +
+        "Add the address people should use to sign up, or change the status to " +
+        "Coming soon while you wait for it." };
+    }
+    if (!/^https:\/\/[^\s"'<>]+$/.test(url)) {
+      return { error:
+        'The registration web address must start with https:// — "' + url +
+        '" does not.\n\nThis becomes a button on the public website, so it has ' +
+        "to be a normal secure web address." };
+    }
+  }
+
+  var isDate = function (v) { return v === null || /^\d{4}-\d{2}-\d{2}$/.test(v); };
+  if (!isDate(opens) || !isDate(closes)) {
+    return { error: "Sign-up dates must be a calendar day chosen from the picker." };
+  }
+  if (opens && closes && opens > closes) {
+    // Plain string comparison is correct for YYYY-MM-DD and avoids timezones.
+    return { error:
+      "Sign-ups cannot close before they open.\n\n" +
+      "Opening date: " + opens + "\nClosing date: " + closes };
+  }
+
+  return { registration: { state: state, url: url, opens_on: opens, closes_on: closes } };
+}
+
 /**
  * Reduce a link to exactly one destination, or to nothing.
  *
@@ -565,27 +909,9 @@ function announcementFields() {
       pattern: ["^[a-z0-9]+(-[a-z0-9]+)*$",
         "Lowercase letters, numbers and single hyphens only."],
     },
-    {
-      label: "Academic year",
-      name: "academic_year",
-      widget: "string",
-      required: true,
-      hint: ANN_YEAR_HINT,
-      pattern: ACADEMIC_YEAR_PATTERN,
-    },
-    {
-      label: "Publication date",
-      name: "published_date",
-      // A validated STRING, not Decap's datetime widget, and not by accident.
-      // The datetime widget hands back either a Date or a formatted value and
-      // applies a timezone; a date-only editorial value must not be able to
-      // shift a calendar day on a machine in Warsaw. A plain pattern-checked
-      // string cannot. See docs/CMS_ANNOUNCEMENTS.md §6.
-      widget: "string",
-      required: true,
-      pattern: ["^\\d{4}-\\d{2}-\\d{2}$", "Use the form 2026-05-14 (year-month-day)."],
-      hint: "The date shown on the card, as 2026-05-14. Year, month, day — no time.",
-    },
+    academicYearField("academic_year", "Academic year", ANN_YEAR_HINT),
+    dateOnlyField("published_date", "Publication date", true,
+      "Pick the date from the calendar. Stored as year-month-day, e.g. 2026-05-14."),
     {
       label: "Display position",
       name: "order",
@@ -617,15 +943,41 @@ function announcementFields() {
       hint: "Optional. Announcements without an image render a text-only card.",
     },
     {
-      label: "Image focal point",
+      /*
+        A VISUAL control since Phase 17C.3.
+
+        This was a free-text box in which an editor was expected to type
+        `center 30%`. That is CSS, and asking a non-technical editor to write it
+        — with no way to see what it did — was the clearest example of the
+        interface leaking its implementation.
+
+        The stored value is UNCHANGED: still the same object-position string the
+        live site's generated data file already holds. That is deliberate. The
+        announcement comparison checks those strings byte for byte against the
+        published site, so re-expressing "center 30%" as "50% 30%" would rewrite
+        published output to say exactly the same thing differently. The widget
+        parses the string, edits it as two percentages, and writes it back.
+
+        Both frames are shown because ONE stored value serves two different
+        crops — the listing card and the pop-up are not the same shape — and an
+        editor choosing a focus should see the compromise they are making rather
+        than discover it later.
+      */
+      label: "Image focus",
       name: "image_position",
-      widget: "string",
+      widget: "focalPoint",
       required: false,
-      // Free text on purpose: the canonical records hold CSS background-position
-      // values including percentages ("center 30%", "center 22%"), so a select
-      // would make three existing records uneditable.
-      hint: 'Optional CSS position, e.g. "center top" or "center 30%". Leave empty ' +
-        "unless the image is cropped badly.",
+      image_field: "image",
+      value_format: "css",
+      frames: [
+        // Measured from css/style.css: `.ann-card .ph` and `.modal-panel .ph`.
+        { label: "On the listing card", ratio_w: 16, ratio_h: 10 },
+        { label: "In the pop-up", ratio_w: 16, ratio_h: 8 },
+      ],
+      hint: "Which part of the picture matters most. The website crops images to " +
+        "fit, and this keeps the important part in view. Leave it centred unless " +
+        "something is being cut off. Note: this has no effect while Image fit is " +
+        "set to Contain, because the whole picture is shown.",
     },
     {
       label: "Image fit",
@@ -637,12 +989,18 @@ function announcementFields() {
         "graphics that must not be cropped.",
     },
     {
+      // The ONE field in the current CMS whose stored value is genuinely a CSS
+      // colour, so the only place the Brand colour control belongs today. The
+      // widget is written to be reused — Business Forum colour fields can adopt
+      // it in 17C-b without changing it — but inventing colour fields elsewhere
+      // merely for consistency would add controls nothing renders.
       label: "Image backdrop colour",
       name: "image_background",
-      widget: "string",
+      widget: "brandColour",
       required: false,
-      pattern: ["^#[0-9a-fA-F]{6}$", "Use a six-digit hex colour such as #001f62."],
-      hint: "Optional. Fills the space around a Contain image, e.g. #001f62.",
+      hint: "Optional. Fills the space around an image set to Contain — useful " +
+        "when a logo or poster would otherwise sit on white. Pick one of the " +
+        "site's colours, or set your own.",
     },
     {
       label: "Extra images",
@@ -662,14 +1020,77 @@ function announcementFields() {
       hint: "Shown in the announcement pop-up after the main image, in this order. " +
         "Drag to reorder.",
     },
+    /*
+      REGISTRATION — separate from the destination link below.
+
+      These are two different things and used to be conflated. "Where do I read
+      more about this?" and "how do I sign up?" can both apply to one
+      announcement, can point at different places, and can change independently:
+      a talk can have its programme on the Federation's own event page while
+      registration runs on an external form.
+
+      This replaced a single `signups_closed` on/off switch, which could only
+      express "closed" and had no way to say "opens next week" or "sign up here".
+
+      The state is ALWAYS an explicit editorial decision — see the hint. The site
+      is built as static files, so nothing re-renders when a date passes; a state
+      that flipped itself would simply be wrong until somebody rebuilt.
+    */
     {
-      label: "Registration closed",
-      name: "signups_closed",
-      widget: "boolean",
+      label: "Registration",
+      name: "registration",
+      widget: "object",
       required: false,
-      default: false,
-      hint: "Marks the sign-up as closed in both languages. Set this yourself — an " +
-        "announcement does not close just because its date has passed.",
+      collapsed: false,
+      hint: "Whether people can sign up, and where. This is separate from the " +
+        "destination link below — an announcement may have both a link to the " +
+        "details and a registration button.",
+      /*
+        WHERE THE REGISTRATION COMES FROM (Phase 17C.5A.2).
+
+        A Federation event owns its registration. An announcement about that
+        event points at it rather than repeating it, so the two can never say
+        different things. Choosing the Federation event stores nothing but the
+        reference; the status, address and dates are read from the event.
+
+        The event picker is Decap's documented `relation` widget, which reads
+        the collection through the backend — so an event saved a minute ago
+        appears without rebuilding the CMS.
+      */
+      fields: [
+        {
+          label: "Where registration is handled",
+          name: "source",
+          widget: "select",
+          required: false,
+          default: "none",
+          options: [
+            { label: "No registration — nothing to sign up for", value: "none" },
+            { label: "A Federation event — use that event's registration", value: "event" },
+            { label: "This announcement — enter the details here", value: "own" },
+          ],
+          hint: "Most announcements need nothing here. Choose the Federation " +
+            "event when this announcement is about one — its status and dates " +
+            "are then managed on the event and this announcement follows them, " +
+            "including sign-ups that have not opened yet.",
+        },
+        {
+          label: "Federation event",
+          name: "event_slug",
+          widget: "relation",
+          required: false,
+          collection: "standard_events",
+          value_field: "slug",
+          // What the editor reads in the list. The date distinguishes annual
+          // editions of an event that share a name.
+          display_fields: [EVENT_PICKER_LABEL],
+          search_fields: ["en.timeline_title", "slug", "start_date"],
+          options_length: 20,
+          hint: "Every Federation event can be chosen, including ones whose " +
+            "sign-ups have not opened yet — this announcement will show a " +
+            "registration panel as soon as the event has one.",
+        },
+      ].concat(registrationFields("announcement")),
     },
     {
       label: "Destination link",
@@ -694,8 +1115,15 @@ function announcementFields() {
             value: v,
           })),
           default: LINK_TYPE_NONE,
-          hint: "Choose No link to remove a destination you added by mistake. " +
-            "Federation event keeps the reader's language automatically.",
+          // Decap applies `default` only to NEW records. Reopening an existing
+          // announcement that has no link leaves this select visibly blank,
+          // because there is no link object to read a value from. The stored
+          // shape is deliberately `link: null` rather than an object full of
+          // empty strings, so the blank is explained rather than designed away.
+          hint: "Blank means this announcement has no button — that is normal for " +
+            "an announcement saved without a destination. Choose No link to remove " +
+            "a destination you added by mistake. Federation event keeps the " +
+            "reader's language automatically.",
         },
         {
           label: "Federation event",
@@ -849,7 +1277,7 @@ function localisedSectionTypes(lang) {
 /** The localised half of a standard event. */
 function eventLocaleFields(lang) {
   const t = (en, pl) => (lang === "pl" ? pl : en);
-  return [
+  const fields = [
     {
       label: t("Title — before highlighted part", "Tytuł — przed wyróżnieniem"),
       name: "title_lead", widget: "string", required: false,
@@ -869,42 +1297,183 @@ function eventLocaleFields(lang) {
       hint: t("Only needed when the highlighted part sits in the middle, " +
         'e.g. Annual / Christmas / Dinner.', "Potrzebne tylko, gdy wyróżnienie jest w środku."),
     },
-    { label: t("Small label above the title", "Etykieta nad tytułem"), name: "eyebrow", widget: "string", required: false },
-    { label: t("Date, as written", "Data zapisana słownie"), name: "date_label", widget: "string", required: true },
-    { label: t("Venue label", "Etykieta miejsca"), name: "venue_label", widget: "string", required: true },
-    { label: t("Summary on the event page", "Podsumowanie na stronie wydarzenia"), name: "hero_summary", widget: "text", required: true },
-    { label: t("Summary on the events-listing card", "Podsumowanie na karcie"), name: "card_summary", widget: "text", required: true },
-    { label: t("Card image description", "Opis zdjęcia karty"), name: "card_image_alt", widget: "string", required: true },
+    { label: t("Kind of event", "Rodzaj wydarzenia"), name: "eyebrow", widget: "string", required: false,
+      hint: t('The small line above the title — for example "Annual tradition" or "Conference".',
+        'Mała linia nad tytułem — na przykład „Doroczna tradycja”.') },
+    /*
+      BOILERPLATE, hidden from the editor (Phase 17C.4).
+
+      All four events carry identical values for these — "Date"/"Data",
+      "Venue"/"Miejsce" — because they are the headings of the facts panel, not
+      anything about a particular event. Asking an editor to retype them on every
+      new event was asking them to maintain the template.
+
+      Hidden rather than deleted: `widget: "hidden"` keeps the existing value on
+      an existing record and writes the default on a new one, which is the same
+      pattern `event_family`, `template` and `organiser` have always used here.
+      The stored files are unchanged.
+    */
+    { label: "Date label", name: "date_label", widget: "hidden", default: t("Date", "Data") },
+    { label: "Venue label", name: "venue_label", widget: "hidden", default: t("Venue", "Miejsce") },
+    /*
+      ONE SUMMARY FOR AN ORDINARY EVENT (Phase 17C.5A).
+
+      An editor used to write two descriptions here and a third for the homepage,
+      plus two more for search engines. An inventory of the four existing events
+      showed those are NOT duplicates — each carries deliberately different
+      wording in both languages — so nothing was merged and nothing was deleted.
+
+      Instead this new field became the source, and the two that were here became
+      optional overrides below. A new event needs Summary alone; the existing
+      four keep every authored variant, and their pages are byte-identical.
+      See src/_data/eventText.js for the fallback chain.
+    */
+    { label: t("Summary", "Podsumowanie"), name: "summary", widget: "text", required: false,
+      hint: t("A concise description of the event. Used on the Events page and near " +
+        "the top of the event page unless a custom version is set below.",
+      "Zwięzły opis wydarzenia. Używany na stronie Wydarzenia i u góry strony " +
+        "wydarzenia, chyba że poniżej ustawiono własną wersję.") },
+    { label: t("Event-page introduction — custom", "Wstęp na stronie wydarzenia — własny"),
+      name: "hero_summary", widget: "text", required: false,
+      hint: t("Optional. Leave empty to use the Summary.",
+        "Opcjonalne. Zostaw puste, aby użyć Podsumowania.") },
+    { label: t("Events-card description — custom", "Opis na karcie — własny"),
+      name: "card_summary", widget: "text", required: false,
+      hint: t("Optional. Leave empty to use the Summary.",
+        "Opcjonalne. Zostaw puste, aby użyć Podsumowania.") },
+    { label: t("Main image — alternative text", "Zdjęcie główne — tekst alternatywny"),
+      name: "card_image_alt", widget: "string", required: true,
+      hint: t("Describe what matters in the photograph for someone who cannot see it.",
+        "Opisz, co jest ważne na zdjęciu, dla osoby, która go nie widzi.") },
     { label: t("Short title for the homepage timeline", "Krótki tytuł na oś czasu"), name: "timeline_title", widget: "string", required: true,
       hint: t("The concise label the homepage uses — usually shorter than the full title.",
         "Zwięzła etykieta używana na stronie głównej.") },
-    { label: t("Homepage timeline summary", "Podsumowanie na osi czasu"), name: "timeline_summary", widget: "text", required: true },
+    /*
+      A genuinely tighter context, so it keeps its own field: the inventory
+      measured 77–109 characters here against 160–200 for card text. Optional
+      now, falling back to the card summary rather than to nothing.
+    */
+    { label: t("Short homepage description", "Krótki opis na stronie głównej"),
+      name: "timeline_summary", widget: "text", required: false,
+      hint: t("Shown on the homepage timeline, where space is tight — aim for about " +
+        "100 characters. Leave empty to reuse the card description.",
+      "Pokazywany na osi czasu na stronie głównej — około 100 znaków. " +
+        "Zostaw puste, aby użyć opisu z karty.") },
     {
-      label: t("Key facts", "Najważniejsze informacje"), name: "facts",
+      label: t("Quick information", "Krótkie informacje"), name: "facts",
       widget: "list", required: false,
+      // The summary is what the collapsed row shows. "Attendance — 100 students"
+      // tells an editor which fact they are looking at; "1 key facts" did not.
+      summary: "{{fields.label}} — {{fields.value}}",
+      label_singular: t("fact", "informacja"),
+      hint: t("Optional short facts shown near the top of the event page — for " +
+        'example "Attendance" and "100 students".',
+      "Krótkie informacje pokazywane u góry strony wydarzenia."),
       fields: [
-        { label: t("Label", "Etykieta"), name: "label", widget: "string" },
-        { label: t("Value", "Wartość"), name: "value", widget: "string" },
+        { label: t("Name", "Nazwa"), name: "label", widget: "string" },
+        { label: t("Detail", "Szczegół"), name: "value", widget: "string" },
       ],
     },
-    { label: t("Co-organisers label", "Etykieta współorganizatorów"), name: "co_organisers_label", widget: "string", required: false },
-    { label: t("Album button label", "Etykieta przycisku albumu"), name: "album", widget: "string", required: false },
-    { label: t("Back link", "Odnośnik powrotny"), name: "back_link", widget: "string", required: true },
-    { label: t("Back link at the foot of the page", "Odnośnik powrotny na dole"), name: "back_link_bottom", widget: "string", required: true },
+    /*
+      CO-ORGANISERS HEADING — a genuine override, but a rare one.
+
+      Three of the four events store nothing here and fall back to the template's
+      own heading; one says "In collaboration with" / "We współpracy z". So it is
+      real editorial content and cannot simply be hidden — but it does not belong
+      loose in the main form either. It stays optional, is named for what it does,
+      and explains what happens when it is left empty.
+    */
+    { label: t("Custom heading for co-organisers", "Własny nagłówek współorganizatorów"),
+      name: "co_organisers_label", widget: "string", required: false,
+      hint: t("Optional. Leave empty to use the standard heading.",
+        "Opcjonalne. Zostaw puste, aby użyć standardowego nagłówka.") },
+    /*
+      THE PHOTO ALBUM PANEL — and a real bug fixed on the way.
+
+      This was declared as a plain string called "Album button label", but the
+      two events that have an album store an OBJECT:
+      { heading, text, label }. Opening one of those events in the CMS and saving
+      it would have handed an object to a text control. The contents are genuine
+      editorial writing — a heading, a sentence and a button label, different for
+      each event — so they are now three named fields, beside the album address
+      in the "Photo album" section.
+    */
     {
-      label: t("English sections", "Sekcje polskie"), name: "sections",
-      widget: "list", required: true, types: localisedSectionTypes(lang),
-      typeKey: "type", hint: SECTIONS_HELP,
+      label: t("Photo album panel", "Panel albumu"), name: "album",
+      widget: "object", required: false, collapsed: true,
+      hint: t("Only for events with a photo album. Leave empty otherwise.",
+        "Tylko dla wydarzeń z albumem. W innym razie zostaw puste."),
+      fields: [
+        { label: t("Heading", "Nagłówek"), name: "heading", widget: "string", required: false },
+        { label: t("Introduction", "Wprowadzenie"), name: "text", widget: "text", required: false },
+        { label: t("Button text", "Tekst przycisku"), name: "label", widget: "string", required: false },
+      ],
+    },
+    /*
+      NAVIGATION BOILERPLATE, hidden from the editor (Phase 17C.4).
+
+      All four events carry the same two strings — "← All events" and
+      "← Back to all events", and their Polish equivalents. They are the page's
+      own navigation, not content about the event, and nobody should have to
+      maintain two copies of a back link per language per event.
+    */
+    { label: "Back link", name: "back_link", widget: "hidden",
+      default: t("← All events", "← Wszystkie wydarzenia") },
+    { label: "Back link at the foot of the page", name: "back_link_bottom", widget: "hidden",
+      default: t("← Back to all events", "← Wróć do wszystkich wydarzeń") },
+    /*
+      THE MAIN BODY (Phase 17C.5A.3).
+
+      This replaces the localised half of the three parallel section arrays. An
+      editor writes the description here as ordinary formatted text; the page
+      template owns where everything sits.
+
+      `richtext` rather than the older markdown widget: it opens as a WYSIWYG
+      editor, so nobody has to know Markdown to write a paragraph, add a link or
+      mark a sentence as important. What is stored is still Markdown, which is
+      what the build already renders safely with raw HTML disabled.
+    */
+    {
+      label: t("Main body", "Treść główna"), name: "body",
+      widget: "richtext", required: false,
+      // Only the formatting an event description actually needs. No code
+      // blocks, and no H1 — the event title is already the page's H1.
+      modes: ["rich_text"],
+      buttons: ["bold", "italic", "link", "heading-two", "quote",
+        "bulleted-list", "numbered-list"],
+      editor_components: ["image"],
+      hint: t("The full description of the event. Use Quote for an important " +
+        "statement you want to stand out, and add photographs between " +
+        "paragraphs where they help.",
+      "Pełny opis wydarzenia. Użyj cytatu, aby wyróżnić ważne zdanie, i dodaj " +
+        "zdjęcia pomiędzy akapitami."),
     },
     /* -- search engines and social ---------------------------------------- */
-    { label: t("Browser tab / search title", "Tytuł w wyszukiwarce"), name: "seo_title", widget: "string", required: true },
-    { label: t("Search-result description", "Opis w wynikach wyszukiwania"), name: "seo_description", widget: "text", required: true },
+    /*
+      SEARCH AND SHARING — all optional since Phase 17C.5A.
+
+      A new event needs none of these: the search title is generated from the
+      visible title, the event's calendar year and the organisation name, and the
+      search description falls back to the Summary. The four existing events
+      carry authored values, which are kept and simply act as overrides.
+    */
+    { label: t("Browser / search title — custom", "Tytuł w wyszukiwarce — własny"),
+      name: "seo_title", widget: "string", required: false,
+      hint: t("Optional. Leave empty and one is generated: event title, year, then " +
+        "the Federation's name.",
+      "Opcjonalne. Zostaw puste — tytuł zostanie wygenerowany.") },
+    { label: t("Search-result description — custom", "Opis w wyszukiwarce — własny"),
+      name: "seo_description", widget: "text", required: false,
+      hint: t("Optional. Leave empty to use the Summary.",
+        "Opcjonalne. Zostaw puste, aby użyć Podsumowania.") },
     { label: t("Social image description", "Opis obrazu społecznościowego"), name: "og_image_alt", widget: "string", required: true },
     {
-      label: t("Structured-data description", "Opis dla danych strukturalnych"),
-      name: "schema_description", widget: "text", required: true,
-      hint: t("The description search engines show for the event itself.",
-        "Opis wydarzenia pokazywany przez wyszukiwarki."),
+      // One level further down the chain than the search description, and
+      // optional for the same reason: it falls back to it.
+      label: t("Structured-data description — custom", "Opis danych strukturalnych — własny"),
+      name: "schema_description", widget: "text", required: false,
+      hint: t("Usually leave this blank. It uses the search description automatically.",
+        "Zwykle zostaw puste. Automatycznie używa opisu z wyszukiwarki."),
     },
     {
       label: t("Structured-data name override", "Nadpisanie nazwy w danych strukturalnych"),
@@ -914,6 +1483,32 @@ function eventLocaleFields(lang) {
         "Zaawansowane. Zostaw puste, chyba że nazwa dla wyszukiwarek ma się różnić od tytułu."),
     },
   ];
+
+  /*
+    ORDINARY FIRST, OVERRIDES LAST (Phase 17C.5A.2).
+
+    Decap renders fields in configuration order, so order IS the information
+    architecture. An editor writing a new event should meet the title, the one
+    Summary, the short homepage line, the quick facts and the album — and should
+    meet the six override boxes only after all of that, because every one of
+    them exists to say something DIFFERENT from what the record already derives.
+
+    Done here rather than with a collapsible drawer in the admin enhancer: this
+    is deterministic, needs no DOM, and cannot fail to apply. Nothing is hidden —
+    an editor who needs an override still finds it, at the bottom, where it
+    belongs.
+  */
+  const ORDINARY = ["title_lead", "title_fancy", "title_tail", "eyebrow",
+    "summary", "body", "timeline_summary", "facts", "album",
+    "card_image_alt", "og_image_alt"];
+  const rank = (f) => {
+    const i = ORDINARY.indexOf(f.name);
+    return i === -1 ? ORDINARY.length : i;
+  };
+  return fields
+    .map((f, i) => ({ f, i }))
+    .sort((a, b) => (rank(a.f) - rank(b.f)) || (a.i - b.i))
+    .map((x) => x.f);
 }
 
 function standardEventFields() {
@@ -933,25 +1528,25 @@ function standardEventFields() {
     { label: "date_precision", name: "date_precision", widget: "hidden", default: "day" },
     { label: "organiser", name: "organiser", widget: "hidden", default: "Federation of Polish Student Societies UK" },
 
-    { label: "Academic year", name: "academic_year", widget: "string", required: true,
-      hint: EVENT_YEAR_HINT, pattern: ACADEMIC_YEAR_PATTERN },
-    {
-      label: "Date", name: "start_date", widget: "string", required: true,
-      // A validated string, not Decap's datetime widget — the same decision as
-      // announcements. A date-only value must not be able to shift a calendar
-      // day on a machine in Warsaw. See docs/CMS_EVENTS.md §12.
-      pattern: ["^\\d{4}-\\d{2}-\\d{2}$", "Use the form 2026-02-10 (year-month-day)."],
-      hint: "The day the event happens, as 2026-02-10. No time — the page prints " +
-        "the wording you enter under Date, as written.",
-    },
-    { label: "End date", name: "end_date", widget: "string", required: false,
-      pattern: ["^\\d{4}-\\d{2}-\\d{2}$", "Use the form 2026-02-11, or leave empty."],
-      hint: "Only for events spanning more than one day. Leave empty otherwise." },
-    {
-      label: "Display position", name: "order", widget: "number", required: true,
-      value_type: "int", min: 1, step: 1,
-      hint: "Position within this academic year. Next year's events start again at 1.",
-    },
+    academicYearField("academic_year", "Academic year", EVENT_YEAR_HINT),
+    dateOnlyField("start_date", "Start date", true,
+      "Pick the day from the calendar. Stored as year-month-day, e.g. 2026-02-10. " +
+      "The wording readers see comes from \"Date, as written\" below."),
+    dateOnlyField("end_date", "End date", false,
+      "Only for events spanning more than one day. Leave empty otherwise."),
+    /*
+      DISPLAY POSITION IS GONE (Phase 17C.5A).
+
+      Events are shown newest first, by the date they happen. The hand-kept
+      number this replaced duplicated information the record already carried:
+      an editor had to know that the Christmas Dinner was third, keep that in
+      step with four other records, and a clash was a fatal build error.
+
+      Hidden rather than deleted, so the key still round-trips on the records
+      that carry it and nothing has to be rewritten. Nothing reads it — see
+      src/_data/eventListing.js, where the sort is now by `start_date`.
+    */
+    { label: "Display position", name: "order", widget: "hidden" },
 
     /* -- visibility --------------------------------------------------------- */
     { label: "Published", name: "published", widget: "boolean", required: false, default: true,
@@ -978,8 +1573,22 @@ function standardEventFields() {
                 "Write the Polish form if there is one." },
           ],
         },
-        { label: "Neighbourhood", name: "neighbourhood", widget: "string", required: false,
-          hint: "e.g. South Kensington, Waterloo. Leave empty if not useful." },
+        /*
+          LOCATION PLUMBING, kept out of the ordinary form (Phase 17C.5A.2).
+
+          An editor writing a new event should answer two questions — where is
+          it, and in which city. These three answered neither, and one of them
+          was actively dangerous: `neighbourhood` was declared as a string but
+          two records store an object ({en, pl}), so opening Christmas Dinner
+          or Icebreaker and saving would have handed an object to a text box.
+          Hiding it fixes that as well.
+
+          Hidden, never deleted: the values round-trip untouched, the venue
+          display filter and the JSON-LD keep reading them, and no historical
+          page changes. `hidden` is the pattern `event_family`, `template` and
+          `organiser` have always used here.
+        */
+        { label: "Neighbourhood", name: "neighbourhood", widget: "hidden" },
         {
           label: "Town or city", name: "locality", widget: "object", required: true,
           fields: [
@@ -987,66 +1596,154 @@ function standardEventFields() {
             { label: "Polski", name: "pl", widget: "string", required: true },
           ],
         },
-        { label: "Country code", name: "country", widget: "string", required: true,
-          pattern: ["^[A-Z]{2}$", "Two capital letters, e.g. GB."] },
+        /*
+          "GB" is not a fabricated default: every event in the repository carries
+          it, and the Federation is a UK organisation whose events happen in the
+          UK. It feeds `addressCountry` in the structured data, so it has to be
+          present — but it is not a question worth asking an editor each time.
+          An event abroad would need this reconsidering, which is a better
+          problem to have than a field nobody understands.
+        */
+        { label: "Country code", name: "country", widget: "hidden", default: "GB" },
         { label: "Show the town in the key facts", name: "show_locality_in_facts",
-          widget: "boolean", required: false },
+          widget: "hidden" },
       ],
     },
 
     /* -- imagery ------------------------------------------------------------ */
+    /*
+      A NOTE ON BROWSING IMAGES, which an earlier phase got wrong.
+
+      These fields used to inherit the global assets/ root, on the reasoning that
+      event images live in several places (assets/debata/, assets/wigilia/,
+      assets/yc/, assets/announcements/) and a shared root would let an editor
+      reuse any of them. Testing the media library in the browser showed that is
+      not what happens: decap-server lists only files sitting DIRECTLY in the
+      folder it is given, and never descends into subfolders. assets/ holds one
+      file at its top level, so the picker showed "No assets found" — and the
+      hint cheerfully told the editor they could pick any existing image.
+
+      Recursion is the local content service's behaviour, not something this
+      configuration can change. What it can do is make uploads land somewhere
+      predictable instead of at the root of assets/, so the folder becomes useful
+      as events are added, and say plainly what the editor should expect.
+
+      Existing records are unaffected: the stored value is a path string, and a
+      field's media folder governs only browsing and uploading, never the value
+      already in the file.
+    */
+    /*
+      ONE UPLOAD, SEVERAL USES.
+
+      All three fields browse and upload to the SAME folder, which is what makes
+      reuse work: upload the photograph once, then pick the very same file in the
+      other field. Nothing is copied and no second asset is created — the fields
+      store a path, and two fields may hold the same path.
+
+      This is not theoretical. christmas-dinner and business-forum each already
+      point the main image and the sharing image at one file, and have done since
+      before the CMS existed.
+    */
     {
-      label: "Card image", name: "card_image", widget: "image", required: true,
-      // No field-level media folder: event images legitimately live in several
-
-      // places (assets/announcements/, assets/social/, assets/wigilia/, assets/yc/),
-
-      // so the picker inherits the global assets/ root and an editor can reuse any
-
-      // of them. A private assets/events/ folder would have shown "No assets found"
-
-      // on a new event. Validation accepts any /assets/… path that resolves.
-
+      label: "Main event image", name: "card_image", widget: "image", required: true,
+      media_folder: "/assets/events",
+      public_folder: "/assets/events",
       choose_url: false,
-      hint: "Shown on the events listing. Existing events keep their images where " +
-        "they already live, and you can pick any of them here.",
+      hint: "The event's photograph, shown on the events listing. For a new event, " +
+        "use Upload — it is saved to assets/events, and you can then pick the same " +
+        "file again for the sharing image below. Photographs from earlier events " +
+        "live in their own folders and are not listed here.",
     },
     {
-      label: "Social sharing image", name: "og_image", widget: "image", required: true,
-      // No field-level media folder: event images legitimately live in several
+      /*
+        A focus for the LISTING CARD only.
 
-      // places (assets/announcements/, assets/social/, assets/wigilia/, assets/yc/),
+        The card is the one place the site itself crops an event photograph:
+        `.event-card .ph img` is `object-fit: cover` inside a cell the grid sizes
+        at 380 x 260 on a wide screen. The other two image fields deliberately do
+        NOT get one:
 
-      // so the picker inherits the global assets/ root and an editor can reuse any
+          - the hero image is null on every event and no standard-event template
+            renders it, so a focus would control nothing;
+          - the sharing image is handed to social networks as a plain URL. They
+            crop it however they choose, and this site cannot influence that.
+            Offering a control that quietly does nothing would be worse than
+            offering none.
 
-      // of them. A private assets/events/ folder would have shown "No assets found"
-
-      // on a new event. Validation accepts any /assets/… path that resolves.
-
-      choose_url: false,
-      hint: "Used when the page is shared on social media.",
+        Because a focus belongs to the ROLE and not to the file, one photograph
+        reused across fields can still be framed differently in each — no second
+        copy of the image is needed to get a different crop.
+      */
+      label: "Main image focus",
+      name: "card_image_focus",
+      widget: "focalPoint",
+      required: false,
+      image_field: "card_image",
+      value_format: "coords",
+      // The card is sized by the page rather than by a fixed ratio, so this is a
+      // representative shape: 380 x 260, the desktop grid cell. Marked as
+      // approximate in the editor rather than pretending to be exact.
+      frames: [{ label: "On the events listing", ratio_w: 380, ratio_h: 260, approximate: true }],
+      hint: "Which part of the photograph matters most on the events listing. " +
+        "Leave it centred unless something important is being cut off.",
     },
     {
-      label: "Hero image", name: "hero_image", widget: "image", required: false,
-      // No field-level media folder: event images legitimately live in several
-
-      // places (assets/announcements/, assets/social/, assets/wigilia/, assets/yc/),
-
-      // so the picker inherits the global assets/ root and an editor can reuse any
-
-      // of them. A private assets/events/ folder would have shown "No assets found"
-
-      // on a new event. Validation accepts any /assets/… path that resolves.
-
+      label: "Sharing image (used when the page is shared)", name: "og_image",
+      widget: "image", required: true,
+      media_folder: "/assets/events",
+      public_folder: "/assets/events",
       choose_url: false,
-      hint: "Optional. None of the current events use one.",
+      hint: "Shown when somebody shares the page on social media. You can choose " +
+        "the SAME file as the main image above — do not upload it a second time. " +
+        "Some events instead use the Federation's own sharing card; either is fine.",
+    },
+    {
+      /*
+        HIDDEN, because it controls nothing (Phase 17C.4).
+
+        Every event stores null here and no standard-event template renders it —
+        the pages open with a typographic heading by design. Phase 17C.3 left it
+        visible with a hint saying "leave this empty", which is still an image
+        picker an editor has to read, decide about and ignore. An inert control
+        is worse than no control.
+
+        Kept as a hidden field so the key round-trips exactly as it does today.
+      */
+      label: "Hero image", name: "hero_image", widget: "hidden", default: null,
     },
 
     /* -- links -------------------------------------------------------------- */
+    /*
+      SOCIAL POSTS — one public post per platform (Phase 17C.5A).
+
+      A generic `social_posts` list was considered and rejected. Instagram is
+      not only a top-level value: it is also a SECTION TYPE, and the section
+      renderer reads `event.instagram_permalink` directly. Moving it into a
+      list would have meant reworking the three-array section architecture
+      that every alignment guard in this repository protects, for a feature no
+      event needs yet — no current event references more than one post on any
+      platform.
+
+      So Facebook and LinkedIn are siblings of the field that already worked.
+      Existing Instagram data is untouched, and the CMS presents all three as
+      one Social posts group.
+
+      Each pattern pins its own platform: a LinkedIn address in the Facebook
+      box is refused, as is any scheme other than https. The templates build
+      their own markup from these values and never render editor text as HTML.
+    */
     { label: "Instagram post", name: "instagram_permalink", widget: "string", required: false,
-      pattern: ["^https://www\\.instagram\\.com/\\S+$|^$",
-        "A full https://www.instagram.com/… address, or leave empty."],
-      hint: "The post embedded in the Instagram section." },
+      pattern: ["^https://www\\.instagram\\.com/(p|reel|tv)/[A-Za-z0-9_-]+/?(\\?\\S*)?$|^$",
+        "A public Instagram post address, for example https://www.instagram.com/p/ABC123/ — or leave empty."],
+      hint: "Public post only. A private or deleted post shows a link instead of an embed." },
+    { label: "Facebook post", name: "facebook_permalink", widget: "string", required: false,
+      pattern: ["^https://(www\\.)?facebook\\.com/\\S+$|^$",
+        "A public Facebook post address on facebook.com — or leave empty."],
+      hint: "Public post only. If Facebook will not embed it, the page shows a link to it." },
+    { label: "LinkedIn post", name: "linkedin_permalink", widget: "string", required: false,
+      pattern: ["^https://(www\\.)?linkedin\\.com/(posts|feed/update)/\\S+$|^$",
+        "A public LinkedIn post address on linkedin.com — or leave empty."],
+      hint: "Public post only — one shared with Anyone. Otherwise the page shows a link." },
     { label: "Photo album link", name: "album_url", widget: "string", required: false,
       pattern: ["^https://[^\\s\"'<>]+$|^$", "A full https:// address, or leave empty."],
       hint: "Where the Album button points. Leave empty if there is no album." },
@@ -1101,66 +1798,118 @@ function standardEventFields() {
         This says nothing about the Business Forum, which is out of scope.
         See docs/CMS_EVENTS.md §19.
       */
-      label: "registration", name: "registration", widget: "hidden",
-      default: CANONICAL_REGISTRATION,
+      /*
+        A REAL REGISTRATION SECTION (Phase 17C.5A.2).
+
+        This was hidden while no public rendering existed — showing a control
+        that changed nothing would have been worse than showing none. The event
+        page now renders registration, so the section is editable, and it uses
+        the SAME four controls and the SAME validator as an announcement.
+
+        The two legacy keys stay as hidden fields. Every existing record carries
+        `type: null` and `email: null` from the original migration, and dropping
+        them from the schema would delete them from the file on the next save.
+        Nothing reads them; they simply round-trip.
+      */
+      label: "Registration", name: "registration", widget: "object",
+      required: false, collapsed: false,
+      hint: "Whether people can sign up for this event, and where. Leave the " +
+        "status as No registration for a past event or one that needs no sign-up.",
+      fields: registrationFields("event").concat([
+        { label: "type", name: "type", widget: "hidden", default: null },
+        { label: "email", name: "email", widget: "hidden", default: null },
+      ]),
     },
 
     /* -- section structure --------------------------------------------------- */
+    /*
+      THE GALLERY (Phase 17C.5A.3).
+
+      This replaces the shared half of the three parallel section arrays. ONE
+      ordered list of photographs, each carrying its own bilingual description
+      and its own layout flag — so the index-alignment problem that made the old
+      architecture dangerous simply cannot occur.
+
+      The template decides where the gallery sits on the page. An editor decides
+      which photographs are in it, and in what order.
+
+      A photograph that belongs in the flow of the writing goes in Main body
+      instead; this is for a genuine group of event pictures.
+    */
     {
-      label: "Section structure", name: "sections", widget: "list", required: true,
-      typeKey: "type", hint: SECTIONS_HELP,
-      types: [
+      label: "Gallery", name: "gallery", widget: "object", required: false,
+      collapsed: true,
+      summary: "Gallery",
+      hint: "A group of photographs from the event. Leave empty if there are none.",
+      fields: [
         {
-          label: "Paragraphs", name: "prose",
+          label: "Gallery heading", name: "heading", widget: "object", required: false,
           fields: [
-            { label: "type", name: "type", widget: "hidden", default: "prose" },
-            { label: "Spacing", name: "style", widget: "string", required: false,
-              hint: "Layout only. Leave exactly as it is unless you know what it does." },
+            { label: "English", name: "en", widget: "string", required: false },
+            { label: "Polski", name: "pl", widget: "string", required: false },
+          ],
+        },
+        /*
+          The decorative last words, exactly as the event's own title works.
+
+          The heading blocks this gallery replaced could highlight part of their
+          title — "Relive the *evening*" — and two events still do. Dropping it
+          would have quietly reset authored typography on live pages, so the
+          part is stored separately and added after the heading, which is what
+          the h1 has always done.
+        */
+        {
+          label: "Highlighted part", name: "heading_fancy", widget: "object",
+          required: false,
+          hint: "Optional. Added after the heading in the decorative face, the " +
+            "same way the event's own title highlights a word.",
+          fields: [
+            { label: "English", name: "en", widget: "string", required: false },
+            { label: "Polski", name: "pl", widget: "string", required: false },
           ],
         },
         {
-          label: "Heading", name: "heading",
+          label: "Small label above the heading", name: "eyebrow", widget: "object",
+          required: false,
           fields: [
-            { label: "type", name: "type", widget: "hidden", default: "heading" },
-            { label: "Spacing", name: "style", widget: "string", required: false },
+            { label: "English", name: "en", widget: "string", required: false },
+            { label: "Polski", name: "pl", widget: "string", required: false },
           ],
         },
         {
-          label: "Photo gallery", name: "gallery",
+          label: "Photographs", name: "images", widget: "list", required: false,
+          label_singular: "photograph",
+          summary: "{{fields.alt.en}}",
           fields: [
-            { label: "type", name: "type", widget: "hidden", default: "gallery" },
-            { label: "Spacing", name: "style", widget: "string", required: false },
-            { label: "Show the Instagram post inside this grid", name: "instagram_in_grid",
-              widget: "boolean", required: false, default: false },
             {
-              label: "Images", name: "images", widget: "list", required: true,
-              hint: "Each image needs a description in BOTH languages, in this same " +
-                "order, under English sections and Polish sections.",
+              label: "Photograph", name: "src", widget: "image", required: true,
+              media_folder: "/assets/events",
+              public_folder: "/assets/events",
+              choose_url: false,
+            },
+            {
+              label: "Description", name: "alt", widget: "object", required: true,
+              hint: "Describe what matters in this photograph for someone who cannot see it.",
               fields: [
-                { label: "Image", name: "src", widget: "image", required: true,
-                  choose_url: false },
-                { label: "Wide (spans two columns)", name: "wide", widget: "boolean",
-                  required: false, default: false },
+                { label: "English", name: "en", widget: "string", required: true },
+                { label: "Polski", name: "pl", widget: "string", required: true },
               ],
             },
-          ],
-        },
-        {
-          label: "Photo album link", name: "album",
-          fields: [
-            { label: "type", name: "type", widget: "hidden", default: "album" },
-            { label: "Spacing", name: "style", widget: "string", required: false },
-          ],
-        },
-        {
-          label: "Instagram", name: "instagram",
-          fields: [
-            { label: "type", name: "type", widget: "hidden", default: "instagram" },
-            { label: "Spacing", name: "style", widget: "string", required: false },
+            {
+              label: "Full width", name: "wide", widget: "boolean", required: false,
+              default: false,
+              hint: "Spans both columns of the grid. Good for a wide photograph.",
+            },
           ],
         },
       ],
     },
+    /*
+      The heading that used to introduce the Instagram block. Kept because it is
+      authored content — two events say "As seen on Instagram" above it — but
+      hidden, because it is not something a new event needs to think about.
+    */
+    { label: "Social heading", name: "social_heading", widget: "hidden" },
 
     /* -- localised ----------------------------------------------------------- */
     { label: "English", name: "en", widget: "object", required: true, collapsed: false,
@@ -1173,8 +1922,112 @@ function standardEventFields() {
 /* ---------------------------------------------------------------------------
    The configuration object.
    --------------------------------------------------------------------------- */
+/**
+ * Turn Decap's built-in preview pane off, for every collection.
+ *
+ * Two reasons, and either alone would be enough:
+ *
+ *   - It crashes. Saving an event raises "Failed to load preview: Cannot read
+ *     properties of undefined (reading 'get')" — Decap's generic preview cannot
+ *     render the index-aligned `sections` / `en.sections` / `pl.sections`
+ *     structure. The save itself succeeds, so the editor is shown a red error
+ *     for an operation that actually worked. Nothing is more corrosive to trust
+ *     in a tool than that.
+ *   - It would be misleading even when it works. These pages are rendered by
+ *     Eleventy from Nunjucks templates; Decap's preview knows none of that and
+ *     shows an unstyled field dump. An editor comparing it to the real page
+ *     would reasonably conclude the CMS had broken the design.
+ *
+ * A faithful preview would mean reimplementing the site's templates in React
+ * and keeping the two in step forever. Showing nothing is honest; showing
+ * something wrong is not. `npm run build` renders the real page.
+ *
+ * Applied by mapping over the collections rather than written into each one, so
+ * a collection added later cannot reintroduce the crash by omission.
+ */
+function withoutPreviewPane(collections) {
+  return collections.map((c) => Object.assign({}, c, { editor: { preview: false } }));
+}
+
+/**
+ * A label -> field-name map for every top-level field of every collection.
+ *
+ * The form-sections enhancer groups fields it can identify. Text inputs carry
+ * their field name in the input id, but booleans, objects, lists and image
+ * pickers do not — so most of the event form was unidentifiable and only two
+ * sections were built. Their LABELS are the other thing this repository owns,
+ * so they are handed to the browser as data rather than guessed at there.
+ *
+ * Built from the config itself, so a renamed label cannot leave the enhancer
+ * looking for wording that no longer exists.
+ */
+function fieldLabelMap(collections) {
+  const map = {};
+  for (const c of collections) {
+    for (const f of c.fields || []) {
+      if (f.label && f.name) map[String(f.label).trim()] = f.name;
+    }
+  }
+  return map;
+}
+
+/* ---------------------------------------------------------------------------
+   How long should each short text be?
+   --------------------------------------------------------------------------- */
+
+/**
+ * Recommended lengths, measured from the site rather than invented.
+ *
+ * Every figure below is at or above the LONGEST value already in the repository,
+ * so introducing these cannot make existing copy invalid — which was the whole
+ * risk of adding limits to content somebody has already written and published.
+ * The comment on each line records what the real content does.
+ *
+ * `hard` is deliberately absent almost everywhere. These layouts wrap: long text
+ * looks worse, it does not break, and a cap that blocks a save needs a stronger
+ * justification than "it would be tidier". The counter supports one, and the
+ * tests exercise it, but production configures none.
+ */
+const FIELD_LIMITS = {
+  /* -- standard events -------------------------------------------------- */
+  // Composed <h1>; the longest real title is 47 characters.
+  title_lead: { recommended: 60 },
+  title_fancy: { recommended: 40 },
+  title_tail: { recommended: 40 },
+  // "Annual tradition", "Academic debate" — real range 6–21.
+  eyebrow: { recommended: 40 },
+  /*
+    The Summary now feeds BOTH the listing card and the page introduction, so it
+    has to suit two contexts: hero text runs 59–104 characters, card text
+    162–200. A single figure cannot be ideal for both; 180 sits inside the card
+    range and reads as a full sentence at the top of the page, which is the
+    better compromise than optimising for either end.
+  */
+  summary: { recommended: 180 },
+  hero_summary: { recommended: 120 },   // real range 59–104
+  card_summary: { recommended: 210 },   // real range 162–200
+  timeline_title: { recommended: 45 },  // real range 21–35
+  timeline_summary: { recommended: 115 }, // real range 77–109, tight context
+  card_image_alt: { recommended: 125 }, // real range 56–87
+  og_image_alt: { recommended: 125 },   // real range 48–97
+  /*
+    Search guidance, not a technical ceiling — search engines truncate what they
+    show, they do not reject anything. Set above the longest existing value so a
+    deliberately fuller title is a nudge rather than an error.
+  */
+  seo_title: { recommended: 90 },        // real range 59–82
+  seo_description: { recommended: 165 }, // real range 133–154
+  schema_description: { recommended: 200 }, // real range 140–182
+  schema_name: { recommended: 70 },      // real range 15–31
+
+  /* -- announcements ----------------------------------------------------- */
+  title: { recommended: 75 },      // real range 30–64
+  subtitle: { recommended: 115 },  // real range 56–95
+  link_label: { recommended: 35 }, // real range 12–22
+};
+
 function buildConfig() {
-  return {
+  const config = {
     // The local file-system proxy. This is NOT a production backend: there is no
     // OAuth client, no Git Gateway, no Netlify Identity and no token anywhere.
     // decap-server runs in its default `fs` mode, which writes files and does not
@@ -1234,6 +2087,9 @@ function buildConfig() {
         // does carry readable labels.
         summary: "{{fields.name}} — {{fields.academic_year}} — {{fields.group}}",
         sortable_fields: ["academic_year", "group", "order", "name"],
+        // Grouped by year FIRST so past committees stay visible and obvious
+        // rather than being mixed in with the current one. Nothing is filtered:
+        // every record in content/team/ is listed, whatever its year.
         view_groups: [
           { label: "Academic year", field: "academic_year" },
           { label: "Team group", field: "group" },
@@ -1269,8 +2125,22 @@ function buildConfig() {
         // Christmas *Dinner*) — the very spacing class of defect this event
         // family has already suffered once. timeline_title is a single canonical
         // string that reads well on its own.
-        summary: "{{fields.en.timeline_title}} — {{fields.academic_year}}",
-        sortable_fields: ["academic_year", "start_date", "order"],
+        // The date is in the summary so the list reads chronologically at a
+        // glance and "Sort by → Start date" is obviously the useful choice.
+        summary: "{{fields.start_date}} · {{fields.en.timeline_title}} — {{fields.academic_year}}",
+        /*
+          Newest first, by the date the event happens (Phase 17C.5A).
+
+          `order` has gone from this list because it has gone from the editor:
+          the public listing now sorts by date, and offering a sort by a number
+          nobody maintains would only invite someone to wonder what it meant.
+          Decap 3.15.1 accepts only a plain array here — the object form with an
+          explicit default direction is a newer variant and made the whole
+          configuration fail to load. So the collection offers "Start date" as
+          the first sort choice and the editor picks the direction; the PUBLIC
+          listing is date-ordered regardless, which is what readers see.
+        */
+        sortable_fields: ["start_date", "academic_year"],
         view_groups: [{ label: "Academic year", field: "academic_year" }],
         fields: standardEventFields(),
       },
@@ -1296,6 +2166,8 @@ function buildConfig() {
         // campaign is otherwise indistinguishable from its predecessor.
         summary: "{{fields.academic_year}} — {{fields.en.title}} — {{fields.published_date}}",
         sortable_fields: ["academic_year", "published_date", "order"],
+        // Grouped by year so older announcements remain browsable once a second
+        // year exists. Nothing is filtered by the current year.
         view_groups: [
           { label: "Academic year", field: "academic_year" },
         ],
@@ -1312,14 +2184,7 @@ function buildConfig() {
             file: "content/settings/academic-year.yaml",
             description: ROLLOVER_WARNING,
             fields: [
-              {
-                label: "Current academic year",
-                name: "current",
-                widget: "string",
-                required: true,
-                hint: ROLLOVER_WARNING,
-                pattern: ACADEMIC_YEAR_PATTERN,
-              },
+              academicYearField("current", "Current academic year", ROLLOVER_WARNING),
               {
                 // Present so that saving this file cannot silently drop it.
                 // Decap serialises the fields it knows about; an unconfigured key
@@ -1331,8 +2196,8 @@ function buildConfig() {
                 field: {
                   label: "Academic year",
                   name: "year",
-                  widget: "string",
-                  pattern: ACADEMIC_YEAR_PATTERN,
+                  widget: "select",
+                  options: academicYear.academicYearOptions(currentAcademicYear()),
                 },
                 hint: "Every year that has content in the repository. Add the new " +
                   "year here when you roll over. Nothing reads this yet — it is the " +
@@ -1344,6 +2209,9 @@ function buildConfig() {
       },
     ],
   };
+
+  config.collections = withoutPreviewPane(config.collections);
+  return config;
 }
 
 /**
@@ -1391,10 +2259,131 @@ function guardSettings() {
   };
 }
 
+/**
+ * An admin-page asset, read from its own file.
+ *
+ * The editor enhancements live in real .js/.css files rather than as strings in
+ * this module: they are long enough to deserve syntax highlighting, and the
+ * tests read the same files. Embedding the contents keeps the admin page to a
+ * single script and stylesheet, which is what the "no CDN, no remote asset"
+ * assertions in scripts/validate-cms.js check for.
+ */
+function adminAsset(name) {
+  const file = path.join(ROOT, "src", "admin", name);
+  return fs.existsSync(file) ? fs.readFileSync(file, "utf8") : "";
+}
+
+/* ---------------------------------------------------------------------------
+   The brand palette offered by the colour control.
+   --------------------------------------------------------------------------- */
+
+/**
+ * The colours an editor is offered, READ FROM THE SITE'S OWN STYLESHEETS.
+ *
+ * Each entry names a custom property that css/style.css or css/pbf.css actually
+ * defines, and the value is whatever that file says today. Nothing is copied by
+ * hand, so the palette cannot drift away from the site: change `--red` in the
+ * stylesheet and the swatch changes with it.
+ *
+ * This is a CURATED list, not everything in the stylesheets. Those files contain
+ * dozens of incidental one-off shades; offering all of them would bury the few
+ * colours that actually mean something. The selection covers the categories an
+ * editor might reasonably want — the Federation red, the dark inks, the light
+ * backgrounds, the events navy and gold, and the Business Forum blues, which is
+ * where the one colour currently stored in content came from.
+ *
+ * A name missing from the stylesheet is dropped rather than guessed, so a
+ * renamed variable removes a swatch instead of shipping a stale colour.
+ */
+const BRAND_PALETTE_SOURCE = [
+  ["style.css", "--red", "Federation red"],
+  ["style.css", "--red-dark", "Federation red (dark)"],
+  ["style.css", "--red-deep", "Federation red (deepest)"],
+  ["style.css", "--ink", "Ink — near black"],
+  ["style.css", "--ink-soft", "Soft ink — dark grey"],
+  ["style.css", "--cream", "Cream — light background"],
+  ["style.css", "--line", "Line — pale border"],
+  ["style.css", "--white", "White"],
+  ["style.css", "--navy", "Events navy"],
+  ["style.css", "--navy-deep", "Events navy (deep)"],
+  ["style.css", "--gold", "Events gold"],
+  ["style.css", "--gold-soft", "Events gold (soft)"],
+  ["pbf.css", "--pbf-navy", "Business Forum navy"],
+  ["pbf.css", "--pbf-navy-deep", "Business Forum navy (deep)"],
+  ["pbf.css", "--pbf-silver", "Business Forum silver"],
+  ["pbf.css", "--pbf-ice", "Business Forum ice"],
+];
+
+function brandPalette() {
+  const cache = {};
+  const read = (file) => {
+    if (!(file in cache)) {
+      const p = path.join(ROOT, "css", file);
+      cache[file] = fs.existsSync(p) ? fs.readFileSync(p, "utf8") : "";
+    }
+    return cache[file];
+  };
+
+  const out = [];
+  const seen = new Set();
+  for (const [file, prop, name] of BRAND_PALETTE_SOURCE) {
+    const m = new RegExp(`${prop}\\s*:\\s*(#[0-9a-fA-F]{3,8})\\s*;`).exec(read(file));
+    if (!m) continue;                       // renamed or removed — drop it
+    let hex = m[1].toLowerCase();
+    // #abc -> #aabbcc, so every offered value is the canonical six digits.
+    if (/^#[0-9a-f]{3}$/.test(hex)) {
+      hex = "#" + hex[1] + hex[1] + hex[2] + hex[2] + hex[3] + hex[3];
+    }
+    if (!/^#[0-9a-f]{6}$/.test(hex) || seen.has(hex)) continue;
+    seen.add(hex);
+    out.push({ name, hex });
+  }
+  return out;
+}
+
 module.exports = () => ({
   config: buildConfig(),
   yaml: configYaml(),
   decapVersion: decapVersion(),
+  // The English / Polski switcher. Presentation only — see the file's header.
+  languageTabsScript: adminAsset("language-tabs.js"),
+  languageTabsStyles: adminAsset("language-tabs.css"),
+  // The Brand colour widget, and the palette it offers — read from the site's
+  // own stylesheets so a swatch cannot drift away from the real colour.
+  brandColourScript: adminAsset("brand-colour.js"),
+  // The image focus control — one widget, configured per field.
+  focalPointScript: adminAsset("focal-point.js"),
+  // One title field with a highlight picker, in place of three text boxes.
+  eventTitleScript: adminAsset("event-title.js"),
+  eventTitleStyles: adminAsset("event-title.css"),
+  // Section grouping, compact visibility and collapsing for the long forms.
+  formSectionsScript: adminAsset("form-sections.js"),
+  // Live length captions on short text fields.
+  // An image beside the words describing it, and its crop.
+  // The collapsed overrides drawer, one per language block.
+  advancedDrawerScript: adminAsset("advanced-drawer.js"),
+  // Bulk manage — its own page, its own assets. See docs/CMS_BULK_MANAGE.md.
+  bulkScript: adminAsset("bulk.js"),
+  bulkStyles: adminAsset("bulk.css"),
+  bulkLinkScript: adminAsset("bulk-link.js"),
+  bulkLinkStyles: adminAsset("bulk-link.css"),
+  registrationUxScript: adminAsset("registration-ux.js"),
+  registrationUxStyles: adminAsset("registration-ux.css"),
+  // Which option an editor has chosen, worked out from the label Decap shows.
+  registrationChoices: registrationChoices(),
+  // Which event each picker label belongs to. See eventRegistrationIndex().
+  eventPickerIndex: eventRegistrationIndex(),
+  advancedDrawerStyles: adminAsset("advanced-drawer.css"),
+  imageUnitsScript: adminAsset("image-units.js"),
+  imageUnitsStyles: adminAsset("image-units.css"),
+  charCountScript: adminAsset("char-count.js"),
+  charCountStyles: adminAsset("char-count.css"),
+  fieldLimits: FIELD_LIMITS,
+  fieldLabels: fieldLabelMap(buildConfig().collections),
+  formSectionsStyles: adminAsset("form-sections.css"),
+  focalPointStyles: adminAsset("focal-point.css"),
+  brandColourStyles: adminAsset("brand-colour.css"),
+  brandPalette: brandPalette(),
   proxyPort: PROXY_PORT,
   proxyUrl: PROXY_URL,
   guard: guardSettings(),
@@ -1417,11 +2406,117 @@ module.exports = () => ({
   settingsFile: "content/settings/academic-year.yaml",
   currentAcademicYear: currentAcademicYear(),
   registrationSource: ensureEventRegistration.toString(),
+  // Cleared dates become null rather than "". The field names are derived from
+  // the config itself, so the guard cannot fall behind a field added later.
+  blankDateSource: blankDatesToNull.toString(),
+  dateFieldNames: DATE_FIELD_NAMES.slice(),
+  // Colours are stored in one spelling however they were typed.
+  colourSource: canonicalColour.toString(),
+  colourFieldNames: COLOUR_FIELD_NAMES.slice(),
+  // Announcement registration: tidies the block and refuses states that cannot
+  // be rendered honestly. Named distinctly from `registrationSource` above,
+  // which is the standard-EVENT registration block and a different thing.
+  // The rules for an announcement that borrows an event's registration, shared
+  // with scripts/validate.js and cms:check so all three refuse the same things.
+  // The rules for an announcement that borrows an event's registration, shared
+  // with scripts/validate.js and cms:check so all three refuse the same things.
+  registrationReferenceSource: [
+    "var REG_SOURCE_EVENT = \"event\";",
+    require("./registration.js").sourceOf.toString(),
+    require("./registration.js").referencedEventSlug.toString(),
+  ].join("\n\n"),
+  announcementRegistrationSource: [
+    "var REGISTRATION_NONE = " + JSON.stringify(REGISTRATION_NONE) + ";",
+    "var REGISTRATION_STATES = " + JSON.stringify(REGISTRATION_STATES) + ";",
+    normaliseRegistration.toString(),
+  ].join("\n\n"),
 });
+
+/**
+ * The registration choices, read back out of the config we just built.
+ *
+ * The conditional editor needs to know which option an editor has picked, and a
+ * Decap select renders its LABEL, not its value — so the browser needs a way
+ * back. Deriving the table from the built config rather than retyping it means
+ * a label edited above cannot leave the editor showing the wrong fields.
+ *
+ * @returns {{source: object, state: object}} label -> value, per control
+ */
+function registrationChoices() {
+  const out = { source: {}, state: {} };
+  const collections = buildConfig().collections || [];
+  for (const collection of collections) {
+    const block = (collection.fields || []).find((f) => f.name === "registration");
+    if (!block) continue;
+    for (const field of block.fields || []) {
+      if (!out[field.name] || !Array.isArray(field.options)) continue;
+      for (const option of field.options) out[field.name][option.label] = option.value;
+    }
+  }
+  return out;
+}
+
+/**
+ * Every standard event, keyed by the label the picker shows for it.
+ *
+ * WHY A LOOKUP TABLE AT ALL
+ *
+ * Decap's relation widget stores the slug but renders the label, and the option
+ * elements it builds carry only the text — there is nowhere in the page to read
+ * the chosen slug back from. So the pairing has to come from the content, and
+ * this is the one place that can read the files with a real YAML parser.
+ *
+ * WHAT IS AND IS NOT LIVE
+ *
+ * The pairing is a snapshot, taken when the admin page is built. That is fine
+ * for what it is used for: a title changes when somebody deliberately renames an
+ * event, and restarting `npm run cms:dev` refreshes it.
+ *
+ * The registration VALUES here are a starting point only. The preview re-reads
+ * the chosen event's file through the local proxy before it draws anything, so
+ * what an editor sees is the event as it stands now, not as it stood at build
+ * time. That distinction matters — an editor who has just opened sign-ups on an
+ * event and then looked at an announcement must see the change.
+ *
+ * @returns {object} label -> { slug, state }
+ */
+function eventRegistrationIndex() {
+  const dir = path.join(__dirname, "..", "..", "content", "events");
+  const index = {};
+  let files = [];
+  try {
+    files = fs.readdirSync(dir).filter((f) => /\.ya?ml$/i.test(f));
+  } catch (err) {
+    // No events yet is a legitimate state for a fresh checkout, and an admin
+    // page that will not build is a much worse failure than a preview that
+    // says it cannot find anything.
+    return index;
+  }
+  for (const file of files) {
+    let record;
+    try {
+      record = yaml.load(fs.readFileSync(path.join(dir, file), "utf8"));
+    } catch (err) {
+      continue;
+    }
+    if (!record || record.event_family !== STANDARD_FAMILY) continue;
+    const label = EVENT_PICKER_LABEL
+      .replace("{{en.timeline_title}}", ((record.en || {}).timeline_title) || record.slug)
+      .replace("{{start_date}}", record.start_date || "");
+    index[label] = {
+      slug: record.slug,
+      state: ((record.registration || {}).state) || REGISTRATION_NONE,
+    };
+  }
+  return index;
+}
 
 // Named exports for the test and validation scripts, which need the pieces
 // without going through Eleventy's data cascade.
 module.exports.buildConfig = buildConfig;
+module.exports.registrationChoices = registrationChoices;
+module.exports.eventRegistrationIndex = eventRegistrationIndex;
+module.exports.EVENT_PICKER_LABEL = EVENT_PICKER_LABEL;
 module.exports.configYaml = configYaml;
 module.exports.decapVersion = decapVersion;
 module.exports.normaliseAnnouncementLink = normaliseAnnouncementLink;
@@ -1431,6 +2526,27 @@ module.exports.futurePublishProblem = academicYear.futurePublishProblem;
 module.exports.futurePublishMessage = academicYear.futurePublishMessage;
 module.exports.currentAcademicYear = currentAcademicYear;
 module.exports.ensureEventRegistration = ensureEventRegistration;
+module.exports.blankDatesToNull = blankDatesToNull;
+/**
+ * The registered date fields.
+ *
+ * A function rather than the bare array because the names are collected as
+ * `dateOnlyField` is CALLED, and that happens inside buildConfig(). A caller
+ * that reads the list before building the config would otherwise get an empty
+ * array and silently test nothing.
+ */
+module.exports.FIELD_LIMITS = FIELD_LIMITS;
+module.exports.brandPalette = brandPalette;
+module.exports.canonicalColour = canonicalColour;
+module.exports.COLOUR_FIELD_NAMES = COLOUR_FIELD_NAMES;
+module.exports.normaliseRegistration = normaliseRegistration;
+module.exports.REGISTRATION_STATES = REGISTRATION_STATES;
+module.exports.REGISTRATION_NONE = REGISTRATION_NONE;
+module.exports.CANONICAL_REGISTRATION_NONE = CANONICAL_REGISTRATION_NONE;
+module.exports.dateFieldNames = () => {
+  buildConfig();
+  return DATE_FIELD_NAMES.slice();
+};
 module.exports.CANONICAL_REGISTRATION = CANONICAL_REGISTRATION;
 module.exports.SECTION_TYPES = SECTION_TYPES;
 module.exports.STANDARD_FAMILY = STANDARD_FAMILY;

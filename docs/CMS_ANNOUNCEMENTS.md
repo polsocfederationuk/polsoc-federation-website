@@ -51,7 +51,7 @@ All 28 records carry all 14 top-level keys. Derived from the files, not assumed:
 | `image_fit` | `"contain"` \| null | optional | 4 records |
 | `image_background` | `"#rrggbb"` \| null | optional | 1 record (`#001f62`) |
 | `extra_images` | list of paths | optional | 25 empty, 2 one, 1 two |
-| `signups_closed` | boolean | **required** | 8 closed |
+| `registration` | object | **required** | 8 closed, 20 none |
 | `link` | object \| null | optional | 17 null, 9 event, 2 external |
 | `en` / `pl` | object | **required** | `title`, `subtitle`, `body`, optional `link_label` |
 
@@ -362,15 +362,102 @@ carries a URL, an external link that also names an event — because a file can
 always be edited by hand outside the CMS. Normalisation makes those states
 unreachable *through the CMS*; it does not make the check redundant.
 
-## 12. Registration and publication state
+## 12. Registration
+
+An announcement can carry **two separate actions**, and they answer different
+questions:
+
+| | Question | Where it goes |
+|---|---|---|
+| **Destination link** (§11) | "Where do I read more?" | usually a Federation event page |
+| **Registration** | "How do I sign up?" | usually an external form |
+
+They are independent. An announcement may have one, the other, both, or neither.
+A talk can have its programme on the Federation's own event page while
+registration runs on somebody else's form, and both buttons appear together.
+
+### First: where does registration come from?
+
+The block opens with one question and nothing else. Answer it and only the fields
+that answer needs appear.
+
+| Answer | What you fill in |
+|---|---|
+| **No registration** | nothing at all — this is the normal answer |
+| **A Federation event** | which event; its status and dates are read from there |
+| **This announcement** | the status, and whatever that status needs |
+
+**A Federation event** is the one worth knowing about. Choosing it stores nothing
+but a reference to that event, and the announcement then shows whatever the
+event's registration currently says. Change the event and every announcement
+pointing at it follows on the next build — there is only ever one copy of the
+answer, so the two can never disagree.
+
+Underneath the picker you will see a read-only summary of what that event says
+today. It is there to be checked, not edited: the values belong to the event.
+
+**You can point at an event whose sign-ups have not opened yet.** That is the
+usual case — the announcement goes out first and registration opens later. The
+announcement simply shows no sign-up panel until the event has one, and then
+starts showing it without being edited again.
+
+The one combination refused is pointing the **destination link** at one Federation
+event and the **registration** at a different one. A reader would meet a sign-up
+button for one event beside a "read more" link to another. Point both at the same
+event, or handle the sign-up on the announcement itself.
+
+### The four states
+
+| Status | What the reader sees |
+|---|---|
+| **No registration** | nothing — normal for most announcements |
+| **Coming soon** | a quiet "Zapisy wkrótce" / "Registration opening soon" marker |
+| **Open** | a **Register** / **Zarejestruj się** button |
+| **Closed** | the "Sign-ups closed" / "Nabór zakończony" marker |
+
+Only **Open** has a web address. Choosing any other status clears it — so a
+closed announcement can never be left pointing at a live sign-up form. If you
+switch back to Open you will need to enter the address again, which is
+deliberate: it is safer to retype an address than to publish a stale one.
+
+Labels are written for you in both languages. You never type "Register".
+
+### The status never changes by itself
+
+This is the one thing worth remembering. **You** decide the status; nothing
+changes it automatically.
+
+The website is built as a set of fixed files. Nothing runs on a schedule to
+re-check dates, so a status that decided for itself that sign-ups had closed
+would be wrong from the moment the date passed until somebody rebuilt the site —
+and nobody would notice. Explicit is slower by one click and never silently
+wrong.
+
+### Opening and closing dates
+
+Both are optional and both are shown to readers as supporting text. They do
+**not** open or close anything — they tell people when to expect sign-ups, and
+they let the CMS catch an obvious mistake: sign-ups cannot close before they
+open, and the record will not save if they do.
+
+Dates use the same calendar control as everywhere else in the CMS.
+
+### Publication is a different thing again
 
 | Field | Meaning |
 |---|---|
-| `signups_closed` | The sign-up is closed. Set deliberately — an announcement does **not** close because its date passed, and nothing infers it. |
-| `published` | Whether the record is public at all. Separate from the academic year (§3). |
+| `published` | Whether the record is public at all. Separate from the academic year (§3) and from registration. |
 
-Both are plain toggles, and both are consistent across the two languages by
-construction: one stored flag drives both.
+### What happened to "Sign-ups closed"
+
+There used to be a single on/off switch. It could only ever say "closed" — there
+was no way to say "opens next week", and nowhere to put a sign-up address, so
+editors had to smuggle registration into the destination link.
+
+The eight announcements that had that switch turned on are now **Closed**, and
+the other twenty have **No registration**. Nothing else changed: no destination
+link was treated as a registration address, because none of those eight had an
+external link in the first place. The pages they produce are unchanged.
 
 ## 13. What the checks cover
 

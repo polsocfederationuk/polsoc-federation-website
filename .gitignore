@@ -19,3 +19,10 @@ dist/
 # separate tree so a normal build — and therefore the deployment tree — can never
 # contain a test page. Development-only, exactly like dist/.
 .fixtures/
+
+# Local CMS development runtime (Phase 17C.2). Built by `npm run cms:dev` into a
+# tree of its own so that public build commands — clean, build, validate:cms —
+# cannot delete the files backing a CMS session an editor has open. Generated
+# output only; the CMS SOURCE lives in src/admin/ and src/_data/cmsConfig.js and
+# stays tracked.
+.cms/

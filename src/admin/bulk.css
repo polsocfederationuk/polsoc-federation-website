@@ -1,0 +1,217 @@
+/*
+  bulk.css — the Bulk Manage screen.
+
+  Its own page, so it carries its own small stylesheet rather than borrowing
+  Decap's. Admin only: css/style.css and css/pbf.css are live deployed files and
+  are not touched by this feature.
+
+  Rows rather than a table. The same information fits a phone in a column and a
+  laptop in a row, and a table wide enough for four columns would have needed
+  horizontal scrolling inside Decap's narrow shell.
+*/
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: #16181d;
+  background: #f4f5f7;
+}
+
+.cms-local-banner {
+  font: 600 13px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: #7a2020;
+  color: #fff;
+  padding: 8px 14px;
+  margin: 0;
+  text-align: center;
+}
+.cms-local-banner code {
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  background: rgba(255, 255, 255, 0.16);
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+.bulk-header {
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 0;
+}
+.bulk-header h1 { margin: 0.4rem 0 0.2rem; font-size: 1.6rem; }
+.bulk-back {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #3a5bd9;
+  text-decoration: none;
+}
+.bulk-back:hover { text-decoration: underline; }
+.bulk-intro { margin: 0; color: #5a5f6b; }
+
+.bulk { max-width: 62rem; margin: 0 auto; padding: 1rem; }
+
+/* -- controls ------------------------------------------------------------- */
+
+.bulk-controls-wrap {
+  background: #fff;
+  border: 1px solid #dfe2e8;
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+.bulk-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+}
+.bulk-field { display: flex; flex-direction: column; gap: 0.3rem; flex: 1 1 12rem; }
+.bulk-field label { font-size: 0.8rem; font-weight: 700; color: #5a5f6b; }
+.bulk-field select,
+.bulk-field input {
+  font: inherit;
+  padding: 0.5rem 0.6rem;
+  border: 2px solid #cfd4dd;
+  border-radius: 6px;
+  background: #fff;
+  min-height: 44px;
+}
+.bulk-field select:focus-visible,
+.bulk-field input:focus-visible { outline: 2px solid #3a5bd9; outline-offset: 1px; }
+.bulk-hint { margin: 0.8rem 0 0; font-size: 0.85rem; color: #5a5f6b; }
+
+/* -- list ----------------------------------------------------------------- */
+
+.bulk-list-wrap {
+  background: #fff;
+  border: 1px solid #dfe2e8;
+  border-radius: 10px;
+  padding: 1rem;
+}
+.bulk-list-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.8rem;
+}
+.bulk-count { margin: 0; font-size: 0.85rem; color: #5a5f6b; }
+.bulk-note { margin: 1rem 0; color: #5a5f6b; }
+
+.bulk-list { display: flex; flex-direction: column; gap: 0.4rem; }
+
+.bulk-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.8rem;
+  padding: 0.7rem;
+  border: 2px solid #e8eaee;
+  border-radius: 8px;
+}
+/*
+  A selected row is marked three ways — the checkbox itself, the border, and the
+  tint — so the selection is never conveyed by colour alone.
+*/
+.bulk-row-on { border-color: #3a5bd9; background: #f2f5ff; }
+.bulk-check { width: 20px; height: 20px; margin-top: 0.15rem; flex: 0 0 auto; }
+.bulk-row-body { min-width: 0; }
+.bulk-row-title { display: block; font-weight: 700; cursor: pointer; }
+.bulk-row-meta { margin: 0.15rem 0 0; font-size: 0.85rem; color: #5a5f6b; }
+.bulk-row-status { margin: 0.3rem 0 0; font-size: 0.82rem; font-weight: 600; }
+.bulk-on { color: #1d6b3f; }
+.bulk-off { color: #8a5a12; }
+
+/* -- actions -------------------------------------------------------------- */
+
+.bulk-actions {
+  position: sticky;
+  bottom: 0;
+  margin-top: 1rem;
+  padding: 0.9rem 1rem;
+  background: #fff;
+  border: 1px solid #dfe2e8;
+  border-radius: 10px;
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.06);
+}
+.bulk-selected { margin: 0 0 0.6rem; font-weight: 700; }
+.bulk-buttons { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+.bulk-btn {
+  font: inherit;
+  font-weight: 600;
+  min-height: 44px;
+  padding: 0.55rem 0.9rem;
+  border-radius: 7px;
+  border: 2px solid transparent;
+  cursor: pointer;
+}
+.bulk-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.bulk-btn:focus-visible { outline: 2px solid #16181d; outline-offset: 2px; }
+.bulk-btn-primary { background: #3a5bd9; color: #fff; }
+.bulk-btn-primary:not(:disabled):hover { background: #2f4bb8; }
+.bulk-btn-quiet { background: #fff; color: #16181d; border-color: #cfd4dd; }
+.bulk-btn-quiet:not(:disabled):hover { background: #f1f2f5; }
+/* Destructive, and it looks it. */
+.bulk-btn-danger { background: #a32020; color: #fff; }
+.bulk-btn-danger:not(:disabled):hover { background: #8a1b1b; }
+
+/* -- messages ------------------------------------------------------------- */
+
+.bulk-message {
+  margin-bottom: 1rem;
+  padding: 0.9rem 1rem;
+  border-radius: 10px;
+  border: 1px solid;
+  border-left-width: 5px;
+}
+.bulk-message-ok { background: #edf7f0; border-color: #1d6b3f; }
+.bulk-message-error { background: #fdf1f1; border-color: #a32020; }
+.bulk-message-title { margin: 0; font-weight: 700; }
+.bulk-message-detail { margin: 0.35rem 0 0; }
+.bulk-dependents { margin-top: 0.8rem; }
+.bulk-dependents-title { margin: 0 0 0.3rem; font-weight: 600; }
+.bulk-dependents ul { margin: 0; padding-left: 1.2rem; }
+.bulk-dependents-why { color: #5a5f6b; }
+.bulk-dependents-fix { margin: 0.4rem 0 0; color: #5a5f6b; }
+
+/* -- confirmation --------------------------------------------------------- */
+
+.bulk-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(16, 18, 22, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 50;
+}
+.bulk-dialog {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1.3rem;
+  max-width: 32rem;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.bulk-dialog h2 { margin: 0 0 0.6rem; font-size: 1.2rem; }
+.bulk-dialog-list {
+  margin: 0.8rem 0;
+  padding-left: 1.2rem;
+  max-height: 12rem;
+  overflow-y: auto;
+}
+.bulk-dialog-buttons {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 30rem) {
+  .bulk-buttons .bulk-btn,
+  .bulk-dialog-buttons .bulk-btn { flex: 1 1 100%; }
+}

@@ -14,7 +14,11 @@ image_position: null
 image_fit: "contain"
 image_background: "#001f62"
 extra_images: []
-signups_closed: false
+registration:
+  state: none
+  url: null
+  opens_on: null
+  closes_on: null
 
 link:
   type: event

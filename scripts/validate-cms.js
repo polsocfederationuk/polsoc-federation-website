@@ -76,6 +76,19 @@ assert(team.delete === false,
 /* =================================================================== 2 */
 section("2. Academic-year handling");
 
+/*
+  Phase 17C.2 replaced free text with a dropdown.
+
+  The field used to be a `string` with a regex, and this section used to assert
+  the regex accepted future years and rejected malformed ones. A real editor
+  typed a year by hand and got it wrong, which is why the field is now a
+  `select`: a malformed year is no longer possible to enter, so a pattern that
+  rejects one has nothing left to guard.
+
+  What matters now is different, and is asserted instead: the list is generated
+  rather than written down, it is the SAME list everywhere a year is chosen, and
+  it reaches far enough ahead that nobody edits config each summer.
+*/
 {
   const ay = field("academic_year");
   assert(ay !== undefined, "the Team form has an academic_year field",
@@ -85,27 +98,58 @@ section("2. Academic-year handling");
   assert(ay && ay.widget !== "hidden",
     "academic_year is visible to the editor (not hidden)",
     "academic_year is hidden — the editor could not see which year they are editing");
-  assert(ay && Array.isArray(ay.pattern) && /\\d\{4\}/.test(ay.pattern[0]),
-    "academic_year is format-validated in the CMS",
-    "academic_year has no format validation");
-  assert(ay && !/2025/.test(String(ay.pattern && ay.pattern[0])),
-    "the academic-year pattern does not hardcode a single permitted year",
-    "the academic-year pattern is locked to one specific year");
-  assert(ay && ay.widget === "string",
-    "academic_year is a validated string, so future years need no config change",
-    `academic_year uses the ${ay && ay.widget} widget, which would need editing every year`);
+  assert(ay && ay.widget === "select",
+    "academic_year is chosen from a list, so a mistyped year cannot be saved",
+    `academic_year uses the ${ay && ay.widget} widget, which lets an editor type free text`);
+  assert(ay && Array.isArray(ay.options) && ay.options.length > 1,
+    "the academic-year dropdown offers a list of years",
+    "the academic-year dropdown has no options");
   assert(ay && typeof ay.hint === "string" && /new record/i.test(ay.hint),
     "the academic-year field warns against re-yearing an old record",
     "the academic-year field has no rollover guidance");
 
-  // The pattern must accept future years and reject malformed ones.
-  const re = new RegExp(ay.pattern[0]);
-  const accepts = ["2025/26", "2026/27", "2030/31"].filter((v) => re.test(v));
-  const rejects = ["2025", "25/26", "2025/2026", "2025-26", ""].filter((v) => !re.test(v));
-  assert(accepts.length === 3, "the pattern accepts 2025/26, 2026/27 and 2030/31",
-    "the pattern rejects a valid future year", accepts.join(", "));
-  assert(rejects.length === 5, "the pattern rejects malformed years",
-    "the pattern accepts a malformed year");
+  // Every offered value must be a well-formed academic year by the ONE parser
+  // the build uses — not by a second regex written here, which could drift.
+  const bad = (ay.options || []).filter((v) => cms.parseAcademicYear(v) === null);
+  assert(bad.length === 0,
+    "every offered year parses as a real academic year",
+    `these offered years are malformed: ${bad.join(", ")}`,
+    `${(ay.options || []).length} years offered`);
+
+  // The list must cover the current year and reach years ahead of it, or an
+  // editor preparing next season would be stuck.
+  const current = cms.currentAcademicYear();
+  assert((ay.options || []).includes(current),
+    "the dropdown includes the current academic year",
+    `the current year ${current} is not offered`, current);
+  const ahead = (ay.options || []).filter(
+    (v) => cms.parseAcademicYear(v) > cms.parseAcademicYear(current));
+  assert(ahead.length >= 5,
+    "the dropdown reaches at least five years ahead, so no yearly config edit is needed",
+    `only ${ahead.length} future year(s) are offered`, `${ahead.length} ahead`);
+
+  // Divergent lists are the failure this replaces: one collection offering a
+  // year another does not is how half a season ends up unreachable.
+  const expected = JSON.stringify(ay.options);
+  const yearFields = [];
+  const walk = (fields, where) => {
+    for (const f of fields || []) {
+      if (f.name === "academic_year" || f.name === "current" || f.name === "year") {
+        if (f.widget === "select") yearFields.push({ where, options: f.options });
+      }
+      if (f.fields) walk(f.fields, where);
+      if (f.field) walk([f.field], where);
+    }
+  };
+  for (const c of cms.buildConfig().collections) {
+    walk(c.fields, c.name);
+    for (const file of c.files || []) walk(file.fields, `${c.name}/${file.name}`);
+  }
+  const divergent = yearFields.filter((f) => JSON.stringify(f.options) !== expected);
+  assert(divergent.length === 0,
+    "every academic-year control offers exactly the same years",
+    `these offer a different list: ${divergent.map((d) => d.where).join(", ")}`,
+    `${yearFields.length} controls agree`);
 }
 
 /* =================================================================== 3 */
@@ -296,10 +340,18 @@ assert(exists("content/settings/academic-year.yaml"),
   assert(dropped.length === 0,
     `every key in the settings file is a configured field (${onDisk.join(", ")})`,
     "keys that a CMS save would silently drop", dropped.join(", "));
+  // A dropdown since Phase 17C.2 — see the note in section 2. This is the one
+  // setting that changes what the whole site treats as "now", so a mistyped
+  // value here would be the most damaging free-text field in the CMS.
   const cur = (settingsFile.fields || []).find((f) => f.name === "current");
-  assert(cur && cur.required === true && Array.isArray(cur.pattern),
-    "the current-year field is required and format-validated",
-    "the current-year field is unvalidated");
+  assert(cur && cur.required === true && cur.widget === "select",
+    "the current-year field is required and chosen from a list",
+    "the current-year field is optional or accepts free text");
+  assert(cur && Array.isArray(cur.options) &&
+    cur.options.every((v) => cms.parseAcademicYear(v) !== null),
+    "every year the rollover control offers is a real academic year",
+    "the rollover control offers a malformed year",
+    `${(cur && cur.options || []).length} years offered`);
   assert(/does NOT move or delete/i.test(String(settingsFile.description)) &&
     /does NOT move or delete/i.test(String(cur.hint)),
     "the rollover warning is shown on the entry and on the field",
@@ -484,18 +536,34 @@ section("11. The admin panel is development-only (proved by building)");
   const cmsBuild = run("build-cms.js");
   assert(cmsBuild.status === 0, "`npm run build:cms` succeeds", "the CMS build failed",
     (cmsBuild.stderr || "").split("\n").slice(0, 4).join(" | "));
-  assert(fs.existsSync(rel("dist/admin/index.html")),
-    "the CMS build DOES publish dist/admin/index.html",
+  /*
+    The admin lives in .cms/, NOT in dist/.
+
+    Phase 17C.2 moved it. While it was built into dist/, every command that
+    rebuilt or cleaned the site — `npm run build`, `npm run clean`, and the
+    validators, including this one — deleted the admin out from under a CMS an
+    editor had open. Decap lazy-loads around ninety code-split chunks, so the
+    already-loaded page kept working from memory while any chunk not yet fetched
+    returned 404. That is what the "Failed to fetch" reports were, and why they
+    looked random: which chunks were cached differed between people.
+
+    Asserting the LOCATION is therefore a real safety check, not bookkeeping.
+  */
+  assert(fs.existsSync(rel(".cms/admin/index.html")),
+    "the CMS build publishes .cms/admin/index.html, outside the site build",
     "the CMS build produced no admin page");
-  assert(fs.existsSync(rel("dist/admin/config.yml")),
-    "the CMS build publishes dist/admin/config.yml",
+  assert(fs.existsSync(rel(".cms/admin/config.yml")),
+    "the CMS build publishes .cms/admin/config.yml",
     "the CMS build produced no admin configuration");
-  assert(fs.existsSync(rel("dist/admin/decap-cms.js")),
+  assert(fs.existsSync(rel(".cms/admin/decap-cms.js")),
     "the pinned Decap bundle is vendored beside it (no CDN)",
     "the Decap bundle was not copied");
+  assert(!fs.existsSync(rel("dist/admin")),
+    "the CMS build writes nothing into dist/, so a site build cannot break the CMS",
+    "the CMS build still writes into dist/");
 
-  if (fs.existsSync(rel("dist/admin/index.html"))) {
-    const html = read("dist/admin/index.html");
+  if (fs.existsSync(rel(".cms/admin/index.html"))) {
+    const html = read(".cms/admin/index.html");
     assert(/name="robots"[^>]*noindex/i.test(html), "the admin page is noindex",
       "the admin page is not marked noindex");
     assert(/name="viewport"/i.test(html), "the admin page declares a responsive viewport",
@@ -509,7 +577,16 @@ section("11. The admin panel is development-only (proved by building)");
       "the admin page references no CDN", "the admin page references a CDN");
     // Comments removed first: the page explains in prose which authentication
     // it deliberately omits, and that prose is not markup.
-    const markup = html.replace(/<!--[\s\S]*?-->/g, "");
+    //
+    // CSS block comments are stripped for the same reason. The admin stylesheets
+    // are inlined into this page and their comments explain, in words, that
+    // `css/style.css` is a live deployed file which must not be edited for CMS
+    // presentation. Scanning that sentence for the string "style.css" reported a
+    // leak that does not exist — the check is about what the page LOADS, not
+    // about which files its comments discuss.
+    const markup = html
+      .replace(/<!--[\s\S]*?-->/g, "")
+      .replace(/\/\*[\s\S]*?\*\//g, "");
     assert(!/style\.css|js\/main\.js|analytics|gtag|plausible/i.test(markup),
       "the admin page pulls in no site stylesheet, site script or analytics",
       "the admin page loads unrelated site assets");
@@ -584,13 +661,18 @@ assert(ann && /academic_year/.test(String(ann.summary)),
 
 /* -- academic year and ordering -------------------------------------------- */
 {
+  // A dropdown since Phase 17C.2 — see the note in section 2. The old
+  // assertions here tested a regex that no longer exists, because free text no
+  // longer exists.
   const y = annField("academic_year");
-  assert(y && y.required === true && y.widget === "string" && Array.isArray(y.pattern),
-    "academic_year is a required, format-validated, visible string",
-    "academic_year is missing, optional, hidden or unvalidated");
-  assert(y && !/20\d\d/.test(String(y.pattern[0])),
-    "the year pattern hardcodes no specific year (future years need no config change)",
-    "the year pattern is locked to specific years");
+  assert(y && y.required === true && y.widget === "select",
+    "academic_year is a required, visible dropdown",
+    "academic_year is missing, optional, hidden or free text");
+  assert(y && Array.isArray(y.options) &&
+    y.options.every((v) => cms.parseAcademicYear(v) !== null),
+    "every year the announcement form offers is a real academic year",
+    "the announcement year dropdown offers a malformed year",
+    `${(y && y.options || []).length} years offered`);
   assert(y && /never change this on an old announcement/i.test(String(y.hint)),
     "the year field warns against re-yearing an old announcement",
     "the year field has no archive warning");
@@ -708,17 +790,126 @@ assert(ann && /academic_year/.test(String(ann.summary)),
     "image fit shows a human label rather than the raw stored value",
     "image fit exposes the raw value as its label");
 
-  const bg = annField("image_background");
-  assert(bg && Array.isArray(bg.pattern) && /#/.test(bg.pattern[0]),
-    "the backdrop colour is validated as a hex colour",
-    "the backdrop colour accepts arbitrary CSS");
+  /*
+    A dedicated control since Phase 17C.3.
 
-  // image_position is deliberately free text — three real records use CSS
-  // percentages that no finite list could contain.
+    This used to be a `string` with a hex pattern. The pattern kept bad values
+    out but told an editor nothing about what a good one looked like, and left
+    them typing raw hex with no idea which colours the site actually uses. The
+    field is now the Brand colour widget: swatches read from the real
+    stylesheets, a picker, and a hex box for anything else.
+
+    The stored value is unchanged — still a plain `#rrggbb` string — so no
+    content needed rewriting. What is asserted here is that the safety did not
+    move out of the way when the control changed: the widget validates, and the
+    pre-save guard canonicalises whatever spelling was typed.
+  */
+  const bg = annField("image_background");
+  assert(bg && bg.widget === "brandColour",
+    "the backdrop colour uses the Brand colour control, not a bare text box",
+    `the backdrop colour uses the ${bg && bg.widget} widget`);
+
+  const palette = cms.brandPalette();
+  assert(palette.length > 0 && palette.every((c) => /^#[0-9a-f]{6}$/.test(c.hex)),
+    "every offered brand colour is a canonical six-digit hex value",
+    "a brand colour is not canonical hex",
+    `${palette.length} colours offered`);
+  assert(palette.every((c) => typeof c.name === "string" && c.name.trim() && !/^--/.test(c.name)),
+    "every brand colour is named in words rather than by its CSS variable",
+    "a brand colour is labelled with a raw variable name");
+
+  // The palette is generated. A hard-coded copy would drift from the site.
+  {
+    const cfgSrc = read("src/_data/cmsConfig.js");
+    assert(/fs\.readFileSync[\s\S]{0,200}css/.test(cfgSrc) || /BRAND_PALETTE_SOURCE/.test(cfgSrc),
+      "the palette is read from the site's own stylesheets, not copied by hand",
+      "the palette appears to be hard-coded");
+    // and the colours it produces must really appear in those stylesheets
+    const css = read("css/style.css") + read("css/pbf.css");
+    const missing = palette.filter((c) => !css.toLowerCase().includes(c.hex));
+    assert(missing.length === 0,
+      "every offered colour genuinely appears in the site's stylesheets",
+      `these are not in the CSS: ${missing.map((m) => m.hex).join(", ")}`,
+      `${palette.length} checked`);
+  }
+
+  // Canonicalisation, exercised on the real function the admin page embeds.
+  {
+    const cases = [
+      ["#ABC", "#aabbcc"], ["abc", "#aabbcc"], ["AABBCC", "#aabbcc"],
+      ["#001F62", "#001f62"], ["#001f62", null], ["not-a-colour", null],
+      ["#12345", null], ["", null], [null, null],
+    ];
+    const wrong = cases.filter(([input, want]) => cms.canonicalColour(input) !== want);
+    assert(wrong.length === 0,
+      "a colour is stored in one spelling however it was typed",
+      `these were canonicalised wrongly: ${wrong.map(([i]) => JSON.stringify(i)).join(", ")}`,
+      `${cases.length} spellings checked`);
+
+    const admin = read("src/admin/index.njk");
+    assert(/canonicalColour\(data\[ckey\]\)/.test(admin),
+      "the admin page canonicalises colours before saving",
+      "the colour guard is not wired into the save");
+    assert(/cmsConfig\.colourSource/.test(admin),
+      "the admin page embeds the colour guard rather than a second copy",
+      "embedded, not duplicated");
+  }
+
+  /*
+    A VISUAL control since Phase 17C.3.
+
+    This used to assert the field stayed FREE TEXT, on the reasoning that real
+    records hold percentages no dropdown could contain. The premise was right and
+    the conclusion wrong: the answer to "no finite list fits" was never a text box
+    in which a non-technical editor had to type `center 30%` with no way to see
+    what it did. It is a control that shows the actual crops.
+
+    The stored value is unchanged — still the same position string the live site's
+    data file holds — so nothing was migrated and the comparison stays exact.
+  */
   const pos = annField("image_position");
-  assert(pos && pos.widget === "string" && pos.required === false,
-    "the image focal point stays optional free text (real records use percentages)",
-    "the image focal point was restricted to a fixed list");
+  assert(pos && pos.widget === "focalPoint" && pos.required === false,
+    "the image focus is a visual control, and still optional",
+    `the image focus uses the ${pos && pos.widget} widget`);
+  assert(pos && pos.value_format === "css",
+    "the announcement focus keeps its existing stored form, so no record needed rewriting",
+    `value_format: ${pos && pos.value_format}`);
+  assert(pos && Array.isArray(pos.frames) && pos.frames.length === 2,
+    "both real crops are previewed, because one value serves the card and the pop-up",
+    `${pos && pos.frames ? pos.frames.length : 0} frames`);
+
+  {
+    // The frames must match the CSS they claim to represent.
+    const css = read("css/style.css");
+    const ratioOf = (sel) => {
+      const m = new RegExp(`${sel}[^}]*aspect-ratio:\\s*(\\d+)\\s*/\\s*(\\d+)`).exec(css);
+      return m ? `${m[1]}/${m[2]}` : null;
+    };
+    const cardCss = ratioOf("\\.ann-card \\.ph \\{");
+    const modalCss = ratioOf("\\.modal-panel \\.ph \\{");
+    const frames = (pos && pos.frames) || [];
+    const asText = frames.map((f) => `${f.ratio_w}/${f.ratio_h}`);
+    assert(cardCss && asText.includes(cardCss),
+      `the card preview matches the real card crop (${cardCss})`,
+      `css says ${cardCss}, the editor previews ${asText.join(" and ")}`);
+    assert(modalCss && asText.includes(modalCss),
+      `the pop-up preview matches the real pop-up crop (${modalCss})`,
+      `css says ${modalCss}, the editor previews ${asText.join(" and ")}`);
+  }
+
+  {
+    const admin = read("src/admin/index.njk");
+    assert(/cmsConfig\.focalPointScript/.test(admin),
+      "the admin page embeds the focus control", "embedded from its own file");
+    const widget = read("src/admin/focal-point.js");
+    assert(/registerWidget\("focalPoint"/.test(widget),
+      "the focus control is registered through the documented widget API",
+      "CMS.registerWidget");
+    // A UI fault must never rewrite content — see §21 of the brief.
+    assert(/if \(!image\)/.test(widget),
+      "the control renders a message rather than a value when it has no image",
+      "a missing image cannot overwrite a saved focus");
+  }
 }
 
 /* -- destination links -------------------------------------------------------- */
@@ -778,8 +969,8 @@ assert(ann && /academic_year/.test(String(ann.summary)),
     assert(/cmsConfig\.normaliseLinkSource/.test(admin),
       "the admin page embeds the normaliser source rather than a second copy",
       "the admin page carries its own copy of the normalisation logic");
-    if (exists("dist/admin/index.html")) {
-      const built = read("dist/admin/index.html");
+    if (exists(".cms/admin/index.html")) {
+      const built = read(".cms/admin/index.html");
       assert(/function normaliseAnnouncementLink/.test(built),
         "the built admin page contains the normaliser",
         "the normaliser is missing from the built admin page");
@@ -824,21 +1015,169 @@ assert(ann && /academic_year/.test(String(ann.summary)),
   const pub = annField("published");
   assert(pub && pub.widget === "boolean", "publication state is a boolean toggle",
     "publication state is not a boolean");
-  const closed = annField("signups_closed");
-  assert(closed && closed.widget === "boolean", "registration state is a boolean toggle",
-    "registration state is not a boolean");
-  assert(closed && /does not close just because/i.test(String(closed.hint)),
-    "the registration toggle states that it is not inferred from the date",
-    "the registration toggle has no guidance");
+  /*
+    REGISTRATION replaced the `signups_closed` on/off switch in Phase 17C.3.
 
+    The old switch could only say "closed". It could not express "opens next
+    week", had nowhere to put a sign-up address, and — because it sat beside the
+    destination link — invited the two to be confused. Registration is now a
+    block of its own with four states, and the assertions below hold it to the
+    same standards the switch was held to, plus the ones the richer model needs.
+  */
+  assert(annField("signups_closed") === undefined,
+    "the replaced sign-ups switch is gone from the form, so there is one control",
+    "the old signups_closed switch is still in the announcement form");
+
+  const reg = annField("registration");
+  assert(reg && reg.widget === "object", "registration is a group of its own fields",
+    `registration uses the ${reg && reg.widget} widget`);
+
+  const regSub = (n) => ((reg && reg.fields) || []).find((f) => f.name === n);
+
+  const state = regSub("state");
+  assert(state && state.widget === "select",
+    "the registration status is chosen from a list, not typed",
+    `the status uses the ${state && state.widget} widget`);
+  assert(state && Array.isArray(state.options) &&
+    state.options.length === cms.REGISTRATION_STATES.length &&
+    state.options.every((o) => cms.REGISTRATION_STATES.includes(o.value)),
+    `the status offers exactly the four known states (${cms.REGISTRATION_STATES.join(", ")})`,
+    "the status options have drifted from the states the site understands");
+  assert(state && (state.options || []).every((o) => o.label && o.label !== o.value),
+    "each status is described in words rather than by its stored value",
+    "a status exposes its raw value as its label");
+
+  // The single most important thing an editor must understand about this field:
+  // nothing changes by itself, because the site is built as fixed files.
+  assert(state && /does NOT change on its own|not change on its own/i.test(String(state.hint)),
+    "the status hint says plainly that it never changes by itself",
+    "the status hint does not explain that the state is manual");
+
+  const regUrl = regSub("url");
+  assert(regUrl && Array.isArray(regUrl.pattern) && /https/.test(regUrl.pattern[0]),
+    "the registration address must be a secure https:// address",
+    "the registration address accepts any text");
+
+  // Both dates use the same safe calendar control as every other date.
+  for (const n of ["opens_on", "closes_on"]) {
+    const d = regSub(n);
+    assert(d && d.widget === "datetime" && d.picker_utc === true &&
+      d.time_format === false && d.format === "YYYY-MM-DD",
+      `${n} is a timezone-safe calendar day, like every other date in the CMS`,
+      `${n} is not a safe date-only control`);
+  }
+
+  // Registration and the destination link must stay separate controls: an
+  // announcement can carry both, and merging them is the confusion this model
+  // exists to remove.
+  const link = annField("link");
+  assert(link && link.name !== reg.name && link.widget === "object",
+    "the destination link is a separate control from registration",
+    "the link and registration controls have been merged");
+
+  // The guard the browser runs, exercised here on the real function.
+  {
+    const ok = (r) => !cms.normaliseRegistration(r).error;
+    const cases = [
+      [{ state: "none" }, true], [{ state: "coming_soon" }, true],
+      [{ state: "open", url: "https://example.com/" }, true],
+      [{ state: "closed" }, true],
+      [{ state: "open" }, false],
+      [{ state: "open", url: "http://example.com/" }, false],
+      [{ state: "open", url: "javascript:alert(1)" }, false],
+      [{ state: "nonsense" }, false],
+      [{ state: "open", url: "https://e.com/", opens_on: "2026-06-01", closes_on: "2026-05-01" }, false],
+    ];
+    const wrong = cases.filter(([r, want]) => ok(r) !== want);
+    assert(wrong.length === 0,
+      "the registration guard accepts every valid state and refuses every broken one",
+      `these were judged wrongly: ${wrong.map(([r]) => JSON.stringify(r)).join(", ")}`,
+      `${cases.length} states checked`);
+
+    // Tidying: a state that cannot have an address must not keep one.
+    const tidied = cms.normaliseRegistration({ state: "closed", url: "https://x.example/" });
+    assert(tidied.registration && tidied.registration.url === null,
+      "switching away from Open discards the sign-up address",
+      "a closed registration kept a live sign-up address");
+  }
+
+  {
+    const admin = read("src/admin/index.njk");
+    assert(/normaliseRegistration\(data\.registration\)/.test(admin),
+      "the admin page runs the registration guard before saving",
+      "the registration guard is not wired into the save");
+    assert(/cmsConfig\.announcementRegistrationSource/.test(admin),
+      "the admin page embeds the guard rather than a second copy",
+      "embedded, not duplicated");
+  }
+
+  /*
+    Phase 17C.2 replaced the validated string with a real calendar control.
+
+    The previous design used a `string` + pattern specifically BECAUSE Decap's
+    datetime widget is timezone-sensitive: left at its defaults it converts to
+    local time and can store the day before. A real editor then typed 20/05/2026
+    into the free-text box, which the pattern rejected without explaining much.
+
+    The widget is now used, made safe by configuration rather than avoided:
+    `picker_utc` stops the local-time conversion, `time_format: false` removes
+    the clock, and `format` fixes what is written to the file. Each of those is
+    asserted below, because dropping any ONE of them silently reintroduces the
+    timezone bug that produced "Mon Dec 08 2025 01:00:00 GMT+0100" in a YAML
+    file in Phase 17C-a.
+  */
   const date = annField("published_date");
-  assert(date && date.widget === "string" && Array.isArray(date.pattern),
-    "the publication date is a validated string, not a timezone-sensitive datetime widget",
+  assert(date && date.widget === "datetime",
+    "the publication date is a calendar control, so no date can be typed by hand",
     `the publication date uses the ${date && date.widget} widget`);
-  assert(date && new RegExp(date.pattern[0]).test("2026-05-14") &&
-    !new RegExp(date.pattern[0]).test("2026-05-14T00:00:00.000Z"),
-    "the date pattern accepts a calendar day and rejects a timestamp",
-    "the date pattern would accept a timestamp");
+  assert(date && date.picker_utc === true,
+    "the date picker works in UTC, so a date cannot shift to the previous day",
+    "picker_utc is not set — the stored day can differ from the day chosen");
+  assert(date && date.time_format === false,
+    "the date picker shows no clock, so no time can be attached to a calendar day",
+    "the date picker offers a time, which would be written into the file");
+  assert(date && date.format === "YYYY-MM-DD",
+    "the stored value is a plain calendar day",
+    `the stored format is ${JSON.stringify(date && date.format)}, not YYYY-MM-DD`);
+}
+
+/* -- every date control, not just this one --------------------------------- */
+{
+  // Derived from the config so a date field added later is covered here on the
+  // day it appears, rather than the day somebody remembers this check exists.
+  const names = cms.dateFieldNames();
+  const found = [];
+  const walk = (fields, where) => {
+    for (const f of fields || []) {
+      if (names.includes(f.name) && f.widget === "datetime") found.push({ f, where });
+      if (f.fields) walk(f.fields, where);
+      if (f.field) walk([f.field], where);
+    }
+  };
+  for (const c of config.collections) {
+    walk(c.fields, c.name);
+    for (const file of c.files || []) walk(file.fields, `${c.name}/${file.name}`);
+  }
+
+  /*
+    Every registered date field must be a calendar control — but a field NAME
+    may legitimately appear in more than one collection. `opens_on` and
+    `closes_on` exist on both announcements and standard events since Phase
+    17C.5A.2, so counting controls against names was wrong: what matters is
+    that each name is represented, and that every control found is safe.
+  */
+  const covered = names.filter((n) => found.some(({ f }) => f.name === n));
+  assert(covered.length === names.length,
+    `every registered date field is a calendar control (${names.join(", ")})`,
+    `these have no calendar control: ${names.filter((n) => !covered.includes(n)).join(", ")}`,
+    `${found.length} controls for ${names.length} fields`);
+
+  const unsafe = found.filter(({ f }) =>
+    f.picker_utc !== true || f.time_format !== false || f.format !== "YYYY-MM-DD");
+  assert(unsafe.length === 0,
+    "every date control is timezone-safe and stores a plain calendar day",
+    `these are not timezone-safe: ${unsafe.map((u) => `${u.where}.${u.f.name}`).join(", ")}`,
+    `${found.length} controls checked`);
 }
 
 /* =================================================================== 14 */
@@ -924,36 +1263,67 @@ assert(ev && /academic_year/.test(String(ev.summary)),
     "the Record ID hint explains annual editions",
     "the Record ID hint does not mention annual editions");
 
+  // A dropdown since Phase 17C.2 — see the note in section 2.
   const y = evField("academic_year");
-  assert(y && y.required === true && y.widget === "string" && Array.isArray(y.pattern),
-    "academic year is a required, validated, visible string",
-    "academic year is missing, hidden or unvalidated");
-  assert(y && !/20\d\d/.test(String(y.pattern[0])),
-    "the year pattern hardcodes no specific year");
+  assert(y && y.required === true && y.widget === "select",
+    "academic year is a required, visible dropdown",
+    "academic year is missing, hidden or free text");
+  assert(y && Array.isArray(y.options) &&
+    y.options.every((v) => cms.parseAcademicYear(v) !== null),
+    "every year the event form offers is a real academic year",
+    "the event year dropdown offers a malformed year",
+    `${(y && y.options || []).length} years offered`);
   assert(y && /never change this on a past event/i.test(String(y.hint)),
     "the year field warns against re-yearing a past event");
 
+  /*
+    DISPLAY POSITION RETIRED (Phase 17C.5A).
+
+    Events are shown newest first by the date they happen, so there is no number
+    for an editor to keep. These assertions used to require a visible integer
+    field with a year-scoped hint; what matters now is the opposite — that the
+    field is NOT presented, and that nothing reads it.
+  */
   const order = evField("order");
-  assert(order && order.widget === "number" && order.value_type === "int",
-    "display position is a whole-number field", "display position is not an integer field");
-  assert(order && /within this academic year/i.test(String(order.hint)),
-    "the ordering hint states the year-scoped rule");
+  assert(order && order.widget === "hidden",
+    "the retired display position is hidden, so no editor maintains it",
+    `order uses the ${order && order.widget} widget`);
+
+  {
+    const listing = read("src/_data/eventListing.js");
+    assert(/localeCompare\(String\(a\.start_date\)\)/.test(listing),
+      "the events listing sorts by date, newest first",
+      "the listing no longer sorts by start_date");
+    assert(!/a\.order - b\.order/.test(listing),
+      "no event ordering reads the retired position field",
+      "the listing still sorts by order");
+  }
 }
 
 /* -- dates ------------------------------------------------------------------- */
 {
+  /*
+    Calendar controls since Phase 17C.2. The old assertions here required the
+    OPPOSITE — that no datetime widget appeared anywhere — because the widget's
+    defaults shift dates across timezones. That risk is now handled by
+    configuring the widget rather than by banning it; the settings that do the
+    handling are asserted for every date field above, and per field here.
+  */
   for (const name of ["start_date", "end_date"]) {
     const d = evField(name);
-    assert(d && d.widget === "string" && Array.isArray(d.pattern),
-      `${name} is a validated string, not a timezone-sensitive datetime widget`,
+    assert(d && d.widget === "datetime",
+      `${name} is a calendar control, so no date can be typed by hand`,
       `${name} uses the ${d && d.widget} widget`);
-    const re = new RegExp(d.pattern[0]);
-    assert(re.test("2026-02-10") && !re.test("2026-02-10T00:00:00.000Z"),
-      `${name} accepts a calendar day and rejects a timestamp`);
+    assert(d && d.picker_utc === true && d.time_format === false && d.format === "YYYY-MM-DD",
+      `${name} is timezone-safe and stores a plain calendar day`,
+      `${name} is missing picker_utc, time_format: false or the YYYY-MM-DD format`);
   }
-  assert(!JSON.stringify(ev).includes('"datetime"'),
-    "no date field uses Decap's datetime widget",
-    "a datetime widget could introduce a timezone shift");
+  assert(evField("start_date") && evField("start_date").required === true,
+    "a standard event must have a start date",
+    "the start date is optional");
+  assert(evField("end_date") && evField("end_date").required === false,
+    "the end date is optional, because most events last one day",
+    "the end date is required, which would force a value onto single-day events");
 }
 
 /* -- bilingual, one record ---------------------------------------------------- */
@@ -963,8 +1333,10 @@ assert(ev && /academic_year/.test(String(ev.summary)),
     assert(blk && blk.widget === "object", `${label} content is a nested object widget`,
       `the ${loc} block is not an object widget`);
     const names = ((blk && blk.fields) || []).map((f) => f.name);
+    //  left this list in Phase 17C.5A.3 — the page structure is the
+    // template's now, and  is what an editor writes instead.
     for (const f of ["title_lead", "title_fancy", "title_tail", "timeline_title",
-      "card_summary", "hero_summary", "sections", "schema_description"]) {
+      "card_summary", "hero_summary", "body", "schema_description"]) {
       assert(names.includes(f), `${loc}.${f} exists`, `${loc}.${f} is missing`);
     }
   }
@@ -998,76 +1370,120 @@ assert(ev && /academic_year/.test(String(ev.summary)),
     "a combined title field would change how spacing works");
 }
 
-/* -- sections ------------------------------------------------------------------ */
+/* -- main body and gallery ----------------------------------------------------- */
+/*
+  THE THREE PARALLEL SECTION ARRAYS ARE GONE (Phase 17C.5A.3).
+
+  These assertions used to prove the three lists offered the same block types
+  and stayed aligned. There are no lists now: an event has one Main body per
+  language and one shared gallery, and the page template owns the structure —
+  so the alignment class of bug it guarded against cannot occur at all.
+
+  What replaces it is proof that the new shape is what the editor actually gets.
+*/
 {
-  const shared = evField("sections");
-  assert(shared && shared.widget === "list" && Array.isArray(shared.types),
-    "the shared section structure is a typed list",
-    "the shared section list is missing or untyped");
-  const sharedTypes = (shared.types || []).map((t) => t.name).sort();
-  assert(JSON.stringify(sharedTypes) === JSON.stringify([...cms.SECTION_TYPES].sort()),
-    `the shared list offers exactly the canonical section types (${cms.SECTION_TYPES.join(", ")})`,
-    "shared section types have drifted", sharedTypes.join(", "));
+  const body = evLocale("en", "body");
+  assert(body && body.widget === "richtext",
+    "the main body is a rich-text editor, so nobody has to write Markdown",
+    `body uses the ${body && body.widget} widget`);
+  assert(body && Array.isArray(body.modes) && body.modes.length === 1 &&
+    body.modes[0] === "rich_text",
+  "the body editor opens as rich text, not as a raw markup box",
+  JSON.stringify(body && body.modes));
 
-  for (const loc of ["en", "pl"]) {
-    const l = evLocale(loc, "sections");
-    assert(l && l.widget === "list" && Array.isArray(l.types),
-      `${loc}.sections is a typed list`, `${loc}.sections is missing or untyped`);
-    const types = (l.types || []).map((t) => t.name).sort();
-    assert(JSON.stringify(types) === JSON.stringify(sharedTypes),
-      `${loc}.sections offers the same types as the shared list`,
-      `${loc} section types differ from the shared list`, types.join(", "));
-    assert(/all three lists/i.test(String(l.hint)),
-      `${loc}.sections warns that the three lists must match`,
-      `${loc}.sections has no alignment warning`);
+  // No H1 (the event title already is one) and no code blocks.
+  const buttons = (body && body.buttons) || [];
+  assert(buttons.length > 0 && !buttons.includes("heading-one"),
+    "the body toolbar offers no second H1",
+    `buttons: ${buttons.join(", ")}`);
+  assert(!buttons.includes("code") && !buttons.includes("code-block"),
+    "the body toolbar offers no code formatting", "not offered");
+  assert(buttons.includes("quote"),
+    "the body toolbar can mark an important statement as a highlight",
+    "quote available");
+  for (const n of ["bold", "italic", "link", "bulleted-list", "numbered-list"]) {
+    assert(buttons.includes(n), `the body toolbar offers ${n}`, "available");
   }
-  assert(/TWO LEVELS OF EDITING/.test(String(shared.hint)),
-    "the section help distinguishes ordinary from structural editing",
-    "the section help does not explain the two levels");
 
-  // The guard itself.
-  const g = cms.checkEventSectionAlignment;
-  assert(typeof g === "function", "the alignment guard is exported for testing",
-    "checkEventSectionAlignment is not exported");
-  assert(g({ event_family: "standard", sections: [{ type: "prose" }],
-    en: { sections: [{ type: "prose" }] }, pl: { sections: [] } }) !== null,
-    "the guard rejects a count mismatch");
-  assert(g({ event_family: "standard", sections: [{ type: "prose" }],
-    en: { sections: [{ type: "prose" }] }, pl: { sections: [{ type: "prose" }] } }) === null,
-    "the guard accepts an aligned record");
-  const admin = read("src/admin/index.njk");
-  assert(/cmsConfig\.sectionGuardSource/.test(admin),
-    "the admin page embeds the guard source rather than a second copy",
-    "the admin page carries its own copy of the alignment logic");
-  assert(/checkEventSectionAlignment\(data\)/.test(admin) && /throw new Error\(alignment\)/.test(admin),
-    "the guard blocks the save rather than repairing the record",
-    "the guard does not block saves");
-  for (const repair of ["push(", "splice(", "sections.length ="]) {
-    assert(!new RegExp(`alignment[\\s\\S]{0,400}${repair.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`).test(admin),
-      `the guard performs no ${repair} repair`, `the guard appears to mutate sections`);
-  }
+  // The section editor must be gone from the form entirely.
+  assert(!evField("sections") && !evLocale("en", "sections") && !evLocale("pl", "sections"),
+    "no section list is offered to an editor in either language",
+    "a section list is still configured");
+  const yamlText = cms.configYaml();
+  assert(!/name: sections/.test(yamlText),
+    "the generated configuration mentions no section list at all",
+    "sections still appear in config.yml");
+
+  // The gallery: one shared list, each image carrying its own two descriptions.
+  const gallery = evField("gallery");
+  assert(gallery && gallery.widget === "object",
+    "the gallery is one optional group, not a page-structure list",
+    `gallery uses the ${gallery && gallery.widget} widget`);
+  assert(gallery && gallery.collapsed === true,
+    "the gallery is collapsed until an editor wants it", "collapsed");
+  const images = ((gallery && gallery.fields) || []).find((f) => f.name === "images");
+  assert(images && images.widget === "list",
+    "the gallery holds one ordered list of photographs", "list");
+  const imageFields = ((images && images.fields) || []).map((f) => f.name).sort();
+  assert(JSON.stringify(imageFields) === JSON.stringify(["alt", "src", "wide"]),
+    "each photograph carries its own description and layout flag",
+    imageFields.join(", "));
+  const alt = ((images && images.fields) || []).find((f) => f.name === "alt");
+  const altLangs = ((alt && alt.fields) || []).map((f) => f.name).sort();
+  assert(JSON.stringify(altLangs) === JSON.stringify(["en", "pl"]),
+    "a photograph's description is bilingual on the photograph itself",
+    altLangs.join(", "));
 }
 
 /* -- media, links, visibility --------------------------------------------------- */
 {
-  for (const name of ["card_image", "og_image", "hero_image"]) {
+  /*
+    `hero_image` left this list in Phase 17C.4.
+
+    It is null on every event and no standard-event template renders it — the
+    pages open with a typographic heading by design. It was previously shown as
+    an image picker carrying a hint that said "leave this empty", which is still
+    a control an editor must read and decide about. It is now a hidden field, so
+    the key round-trips exactly as before while the form stops asking about
+    something that does nothing. Asserted as hidden below.
+  */
+  {
+    const hero = evField("hero_image");
+    assert(hero && hero.widget === "hidden",
+      "the unused hero image is hidden rather than shown as an inert control",
+      `hero_image uses the ${hero && hero.widget} widget`);
+    assert(hero && hero.default === null,
+      "the hidden hero image keeps its canonical null value",
+      `hero_image default is ${JSON.stringify(hero && hero.default)}`);
+  }
+
+  for (const name of ["card_image", "og_image"]) {
     const f = evField(name);
     assert(f && f.widget === "image", `${name} is an image field`, `${name} is not an image field`);
     assert(f && f.choose_url === false, `${name} cannot be an external URL`,
       `${name} allows arbitrary URLs`);
-    // Event images deliberately have no field-level media folder: the four real
-    // events draw from assets/announcements/, assets/social/, assets/wigilia/
-    // and assets/yc/, so a private folder would have offered an editor nothing
-    // to reuse — the picker showed "No assets found" on a new event. They
-    // inherit the global assets/ root instead, and validation accepts any
-    // /assets/… path that resolves.
+    /*
+      Reversed in Phase 17C.2, after testing the media library in a browser.
+
+      These fields used to be REQUIRED to have no field-level media folder, so
+      that they inherited the global assets/ root and an editor could reuse any
+      existing event image. That reasoning was wrong, and this assertion was
+      keeping it in place: decap-server lists only files sitting directly in the
+      folder it is given and does not descend into subfolders, so the global root
+      offered exactly one file and the picker read "No assets found" — the very
+      symptom the old comment here attributed to the alternative.
+
+      Recursion is the content service's behaviour and not configurable, so the
+      fields now pin a folder that uploads accumulate in. What still matters, and
+      is asserted, is that the stored path stays root-relative under /assets.
+    */
     const effective = f && (f.public_folder || config.public_folder);
     assert(String(effective).startsWith("/assets"),
-      `${name} stores a root-relative /assets path (inherited: ${effective})`,
+      `${name} stores a root-relative /assets path (${effective})`,
       `${name} stores ${effective}`);
-    assert(f && f.media_folder === undefined,
-      `${name} inherits the global media folder rather than a private one`,
-      `${name} pins a private media folder`);
+    assert(f && typeof f.media_folder === "string" && f.media_folder.startsWith("/assets"),
+      `${name} pins a media folder, so an upload lands somewhere predictable`,
+      `${name} has no media folder, so uploads land at the root of assets/`);
   }
   assert(!/\/pl\/assets/.test(JSON.stringify(ev)),
     "no /pl/assets/ path can be produced by the events configuration");
@@ -1102,6 +1518,183 @@ assert(ev && /academic_year/.test(String(ev.summary)),
     "the structured-data name override is optional and explained",
     "the structured-data override is missing or unexplained");
   assert(sn && !/json/i.test(String(sn.hint)), "the override hint exposes no JSON syntax");
+}
+
+/* =================================================================== 15 */
+section("15. The fixed event page and the conditional Registration block (17C.5A.3)");
+
+{
+  const admin = read("src/admin/index.njk");
+
+  /* -- the drawers ------------------------------------------------------- */
+
+  /*
+    The override fields are collapsed, not merely pushed to the bottom. A field
+    an editor still has to scroll past is a field they still have to read.
+  */
+  const drawer = read("src/admin/advanced-drawer.js");
+  assert(/cmsConfig\.advancedDrawerScript/.test(admin),
+    "the admin page embeds the overrides drawer", "the drawer is not embedded");
+  assert(/document\.createElement\("details"\)/.test(drawer),
+    "the drawer is a native <details>, so it is closed before any script runs",
+    "the drawer builds its own toggle");
+  assert(!/\.open\s*=\s*true/.test(drawer),
+    "nothing opens the drawer on the editor's behalf", "the drawer opens itself");
+  for (const name of ["hero_summary", "card_summary", "timeline_title", "seo_title",
+    "seo_description", "schema_description", "schema_name", "co_organisers_label"]) {
+    assert(drawer.includes('"' + name + '"'),
+      `the drawer collects ${name}`, `${name} is not in the drawer`);
+  }
+  assert(!/appendChild\(.*cloneNode/.test(drawer) && !/cloneNode/.test(drawer),
+    "the drawer MOVES Decap's controls rather than cloning them",
+    "a cloned control would be a second box writing to one value");
+  assert(!/setInterval|setTimeout/.test(drawer),
+    "the drawer waits on the work being done, not on a delay",
+    "the drawer polls");
+
+  /*
+    Retired from form-sections.js when it moved to its own module. Two modules
+    moving the same controls would race, and only one of them ever worked.
+  */
+  const sections = read("src/admin/form-sections.js");
+  assert(!/LOCALE_PLAN/.test(sections),
+    "form-sections.js no longer tries to build the drawer as well",
+    "two modules would fight over the same fields");
+
+  /* -- collapsed by default ---------------------------------------------- */
+
+  assert(/{ title: "Gallery", open: false/.test(sections),
+    "the Gallery section is closed by default",
+    "the form opens on a photograph list that is usually empty");
+  const units = read("src/admin/image-units.js");
+  assert(/createElement\("details"\)[\s\S]{0,400}data-" \+ ROOT, "album"|album[\s\S]{0,600}createElement\("details"\)/.test(units),
+    "the Photo album is closed by default", "the album is open by default");
+  assert(!/\.open\s*=\s*true/.test(units),
+    "nothing opens the album on the editor's behalf", "the album opens itself");
+
+  const albumUrl = evField("album_url");
+  assert(albumUrl !== undefined && !Array.isArray(albumUrl),
+    "there is still exactly one album address", "the album address was duplicated");
+
+  /* -- the source chooser ------------------------------------------------ */
+
+  const annReg = ((ann && ann.fields) || []).find((f) => f.name === "registration");
+  const source = ((annReg || {}).fields || []).find((f) => f.name === "source");
+  assert(source && source.widget === "select",
+    "an announcement chooses where its registration comes from", "no source chooser");
+  const values = ((source || {}).options || []).map((o) => o.value);
+  assert(JSON.stringify(values) === JSON.stringify(["none", "event", "own"]),
+    "the chooser offers no registration, a Federation event, or this announcement",
+    `the chooser offers ${JSON.stringify(values)}`);
+  assert(source && source.default === "none",
+    "a new announcement starts with nothing to sign up for",
+    "a new announcement starts by asking for sign-up details");
+
+  /*
+    AN EVENT WITHOUT SIGN-UPS IS STILL A VALID CHOICE.
+
+    An announcement is usually written before registration opens. Refusing that
+    reference forced editors to either wait or copy the details by hand — the
+    duplication this model exists to remove.
+  */
+  const picker = ((annReg || {}).fields || []).find((f) => f.name === "event_slug");
+  assert(picker && picker.widget === "relation" && picker.collection === "standard_events",
+    "the event picker reads the events collection through the backend",
+    "the picker is not a relation on standard_events");
+  assert(picker && picker.filter === undefined,
+    "the picker lists every standard event, unfiltered",
+    "the picker hides some events");
+  assert(picker && !/must already have|other than No/i.test(String(picker.hint)),
+    "the picker no longer claims an event must already have sign-ups",
+    "the hint still describes the retired rule");
+
+  const registration = require(rel("src/_data/registration.js"));
+  const quiet = [{ slug: "quiet", event_family: "standard", registration: { state: "none" } }];
+  assert(registration.referenceProblem(
+    { registration: { source: "event", event_slug: "quiet" } }, quiet) === null,
+  "an event whose sign-ups have not opened can be referenced", "the reference is refused");
+  assert(registration.isRegistrable(quiet[0]) === true,
+    "and it is offered in the picker", "it is filtered out");
+  assert(/does not exist/.test(String(registration.referenceProblem(
+    { registration: { source: "event", event_slug: "ghost" } }, quiet))),
+  "a reference to a missing event is still refused", "a broken reference is accepted");
+  assert(/two different events/.test(String(registration.referenceProblem(
+    { registration: { source: "event", event_slug: "quiet" },
+      link: { type: "event", event_slug: "other" } }, quiet))),
+  "a details link and a registration pointing at different events is still refused",
+  "the consistency guard is gone");
+  assert(/takes its\s*"? \+\s*"?registration from another|registration from another/.test(admin),
+    "the editor refuses that combination at save time too",
+    "the save-time consistency guard is gone");
+
+  /* -- the conditional block --------------------------------------------- */
+
+  /*
+    Comments removed before these assertions run. Several of these modules
+    EXPLAIN in prose why they avoid a technique — "not requestAnimationFrame,
+    because a background tab never paints" — and a plain search would find that
+    sentence and report the very thing it was written to rule out.
+  */
+  const code = (t) => t
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .split("\n").filter((l) => !/^\s*(\/\/|\*)/.test(l)).join("\n");
+
+  const ux = code(read("src/admin/registration-ux.js"));
+  assert(/cmsConfig\.registrationUxScript/.test(admin),
+    "the admin page embeds the conditional Registration block", "it is not embedded");
+  assert(/FED_REGISTRATION_CHOICES/.test(admin) && /FED_EVENT_PICKER_INDEX/.test(admin),
+    "its two lookup tables are handed over as data, built from the config and the content",
+    "a lookup table is written into the script by hand");
+  assert(!/requestAnimationFrame/.test(ux),
+    "it does not depend on the tab being painted to update the form",
+    "a background tab would show every field");
+  assert(!/setInterval/.test(ux) && !/setTimeout/.test(ux),
+    "it uses no timer and no delay constant", "it polls");
+  assert(/display: none/.test(read("src/admin/registration-ux.css")),
+    "fields are hidden, never removed — the draft keeps their values",
+    "a hidden field would lose its value");
+  assert(/<dt>|createElement\("dt"\)/.test(ux) && !/disabled/.test(ux),
+    "the event's registration is previewed as plain text, not as disabled inputs",
+    "a disabled input still looks like somewhere to type");
+
+  const choices = cms.registrationChoices();
+  assert(Object.values(choices.source).sort().join(",") === "event,none,own",
+    "the choice table is derived from the options the config just built",
+    "the table and the options can drift apart");
+  const index = cms.eventRegistrationIndex();
+  assert(Object.keys(index).length > 0 &&
+    Object.values(index).every((e) => e.slug),
+  `the picker labels are paired with their events (${Object.keys(index).length} events)`,
+  "the preview cannot tell which event was chosen");
+
+  /* -- the page itself ---------------------------------------------------- */
+
+  /*
+    The gallery and the social block use the live site's own classes. The reveal class
+    is what js/main.js animates and .insta-embed is what centres an embed;
+    a container of our own would have been a class css/style.css never heard of,
+    and css/style.css is a live deployed file this phase does not touch.
+  */
+  const gallery = read("src/_includes/partials/event/gallery-fixed.njk");
+  assert(/class="gallery-grid reveal"/.test(gallery),
+    "the gallery grid keeps the class the live pages animate",
+    "the grid would no longer reveal on scroll");
+  assert(/class="section-head reveal"/.test(gallery),
+    "so does its heading", "the heading would no longer reveal on scroll");
+  assert(/class="fancy"/.test(gallery),
+    "a gallery heading can still highlight part of itself",
+    "authored typography would be flattened");
+  const social = read("src/_includes/partials/event/social-posts.njk");
+  assert(/class="insta-embed reveal"/.test(social),
+    "each social embed keeps the block the live pages use",
+    "the embed would lose its centring and its width cap");
+  assert(/class="fancy"/.test(social),
+    "so can the social heading", "authored typography would be flattened");
+
+  const body = read("src/_includes/partials/event/body.njk");
+  assert(/class="prose reveal"/.test(body),
+    "the main body is the same prose block it has always been",
+    "the body would lose its styling");
 }
 
 /* =================================================================== 12 */

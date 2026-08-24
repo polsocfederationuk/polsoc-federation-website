@@ -1,0 +1,23 @@
+/* char-count.css — the live length caption. Admin only. */
+
+.fed-count {
+  margin: 0.3rem 0 0;
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  color: #6b707c;
+}
+
+/* Approaching the recommendation: present, not alarming. */
+.fed-count-near { color: #7a6a2f; }
+
+/* Past it: clearly flagged, but the save still works. */
+.fed-count-warn {
+  color: #8a5a12;
+  font-weight: 600;
+}
+
+/* Past a genuine hard maximum: this one does block the save. */
+.fed-count-over {
+  color: #a5341f;
+  font-weight: 700;
+}

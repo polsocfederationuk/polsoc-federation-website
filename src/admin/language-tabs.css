@@ -1,0 +1,95 @@
+/*
+  language-tabs.css — the English / Polski switcher in the entry editor.
+
+  Hiding is done with `display: none` on a panel Decap has already rendered.
+  The React tree stays mounted, so unsaved text in the hidden language survives
+  the switch. Nothing here moves a field or changes what is saved.
+
+  Sized in rem and laid out with flex so the bar works from a narrow phone up,
+  which is the requirement: an editor should not need a desktop to write the
+  Polish half of an announcement.
+*/
+
+.fed-lang-hidden {
+  display: none !important;
+}
+
+.fed-lang-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1.5rem 0 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #dfe1e6;
+}
+
+.fed-lang-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  /* Comfortably past the 44px touch target on a phone. */
+  min-height: 2.75rem;
+  padding: 0.5rem 1.1rem;
+  border: 2px solid #dfe1e6;
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+  /* Pull the tab down over the bar's own padding so it meets the border. */
+  margin-bottom: calc(-0.5rem - 2px);
+  background: #f4f5f7;
+  color: #5a5f6b;
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.fed-lang-tab:hover {
+  background: #e9ebef;
+  color: #2c3038;
+}
+
+/* A visible focus ring, because these are reachable by keyboard. */
+.fed-lang-tab:focus-visible {
+  outline: 2px solid #3a69ff;
+  outline-offset: 2px;
+}
+
+.fed-lang-tab-active {
+  background: #fff;
+  color: #16181d;
+  border-color: #c6c9d0;
+  box-shadow: 0 -2px 0 0 #3a69ff inset;
+}
+
+/* Completeness marks. Quiet by default — a tick should not shout. */
+.fed-lang-mark {
+  font-size: 0.9em;
+  line-height: 1;
+  color: #2f9e5f;
+}
+
+.fed-lang-warn .fed-lang-mark {
+  color: #b8860b;
+}
+
+.fed-lang-warn {
+  border-color: #e3c98a;
+}
+
+/*
+  Narrow screens: the two tabs share the row and stay tappable rather than
+  shrinking into each other. Side-by-side language editing is deliberately not
+  offered here — there is no room for it, and tabs are the required interaction.
+*/
+@media (max-width: 30rem) {
+  .fed-lang-tabs {
+    gap: 0.4rem;
+  }
+
+  .fed-lang-tab {
+    flex: 1 1 0;
+    justify-content: center;
+    padding: 0.5rem 0.6rem;
+  }
+}

@@ -1,0 +1,127 @@
+/*
+  brand-colour.css — the Brand colour control.
+
+  Sized in rem and laid out with wrapping flex, so the swatch grid reflows on a
+  phone instead of overflowing. Every interactive part clears a 44px target.
+*/
+
+.fed-colour {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.25rem 0 0;
+}
+
+/* -- the palette ----------------------------------------------------------- */
+
+.fed-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.fed-swatch {
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 2px solid rgba(22, 24, 29, 0.18);
+  border-radius: 8px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0;
+  transition: transform 0.12s, box-shadow 0.12s;
+}
+
+.fed-swatch:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(22, 24, 29, 0.18);
+}
+
+.fed-swatch:focus-visible {
+  outline: 2px solid #3a69ff;
+  outline-offset: 2px;
+}
+
+.fed-swatch-on {
+  border-color: #16181d;
+  box-shadow: 0 0 0 2px #fff inset;
+}
+
+/* -- picker, hex box, clear ------------------------------------------------ */
+
+.fed-colour-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.fed-colour-picker {
+  width: 3rem;
+  height: 2.75rem;
+  padding: 2px;
+  border: 2px solid #dfe1e6;
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.fed-colour-hex {
+  flex: 1 1 9rem;
+  min-width: 7rem;
+  min-height: 2.75rem;
+  padding: 0.4rem 0.7rem;
+  border: 2px solid #dfe1e6;
+  border-radius: 6px;
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  font-size: 0.95rem;
+}
+
+/* A value that is not yet a colour is marked, not corrected. */
+.fed-colour-bad {
+  border-color: #c9542b;
+  background: #fff7f4;
+}
+
+.fed-colour-clear {
+  min-height: 2.75rem;
+  padding: 0.4rem 0.9rem;
+  border: 2px solid #dfe1e6;
+  border-radius: 6px;
+  background: #f4f5f7;
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.fed-colour-clear:hover {
+  background: #e9ebef;
+}
+
+/* -- preview and caption --------------------------------------------------- */
+
+.fed-colour-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.fed-colour-preview {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 5px;
+  border: 2px solid rgba(22, 24, 29, 0.18);
+  flex: none;
+}
+
+/* No colour set: a hatched box reads as "empty" rather than as white. */
+.fed-colour-preview-empty {
+  background:
+    repeating-linear-gradient(45deg, #f0f1f3 0 5px, #dfe1e6 5px 10px);
+}
+
+.fed-colour-caption {
+  font-size: 0.9rem;
+  color: #5a5f6b;
+}

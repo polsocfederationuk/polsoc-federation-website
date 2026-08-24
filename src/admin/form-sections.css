@@ -1,0 +1,171 @@
+/*
+  form-sections.css — headings, collapsing and the compact visibility row.
+
+  Admin only. The public stylesheets are live deployed files and stay frozen.
+*/
+
+.fed-sec {
+  margin: 0 0 1.1rem;
+  border: 2px solid #e4e6ea;
+  border-radius: 8px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.fed-sec-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.6rem 0.9rem;
+  border: 0;
+  border-bottom: 2px solid #e4e6ea;
+  background: #f4f5f7;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.fed-sec-head:hover { background: #eceef2; }
+
+.fed-sec-head:focus-visible {
+  outline: 2px solid #3a69ff;
+  outline-offset: -2px;
+}
+
+.fed-sec-closed .fed-sec-head { border-bottom-color: transparent; }
+
+.fed-sec-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #16181d;
+}
+
+.fed-sec-caret {
+  font-size: 0.7rem;
+  color: #5a5f6b;
+  transition: transform 0.15s;
+}
+
+.fed-sec-closed .fed-sec-caret { transform: rotate(-90deg); }
+
+.fed-sec-body { padding: 0.9rem; }
+
+.fed-sec-note {
+  margin: 0 0 0.75rem;
+  font-size: 0.86rem;
+  color: #5a5f6b;
+}
+
+/*
+  COMPACT VISIBILITY.
+
+  Five boolean switches at full width was most of a screen for five words. They
+  are laid out as a wrapping row of small cards instead — still Decap's own
+  controls, only narrower.
+*/
+.fed-sec-compact .fed-sec-body {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.fed-sec-compact .fed-sec-body > [aria-label$="field"] {
+  flex: 0 1 auto;
+  min-width: 0;
+  margin: 0;
+  padding: 0.35rem 0.7rem;
+  border: 1px solid #e4e6ea;
+  border-radius: 6px;
+  background: #fafbfc;
+}
+
+/* Decap stacks a boolean's label above its switch; side by side is far tighter
+   and reads as one control. */
+.fed-sec-compact .fed-sec-body > [aria-label$="field"] > div {
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.fed-sec-compact .fed-sec-body label {
+  margin: 0;
+  white-space: nowrap;
+  font-size: 0.88rem;
+}
+
+/* Hints would defeat the point of a compact row. */
+.fed-sec-compact .fed-sec-body p[class*="ControlHint"] { display: none; }
+
+@media (max-width: 34rem) {
+  .fed-sec-compact .fed-sec-body > [aria-label$="field"] { flex: 1 1 100%; }
+  .fed-sec-body { padding: 0.75rem 0.6rem; }
+}
+
+/* -- image units: a picture beside the words that describe it -------------- */
+
+.fed-sec-image {
+  margin: 0 0 1rem;
+  padding: 0.85rem;
+  border: 2px solid #e4e6ea;
+  border-radius: 8px;
+  background: #fafbfc;
+}
+
+.fed-sec-image-title {
+  margin: 0 0 0.6rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #16181d;
+}
+
+.fed-sec-alt {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #e9ebef;
+}
+
+.fed-sec-alt-title {
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #16181d;
+}
+
+.fed-sec-alt-help {
+  margin: 0.15rem 0 0.5rem;
+  font-size: 0.83rem;
+  color: #5a5f6b;
+}
+
+.fed-sec-alt-tabs {
+  display: flex;
+  gap: 0.35rem;
+  margin-bottom: 0.5rem;
+}
+
+.fed-sec-alt-tab {
+  min-height: 2rem;
+  padding: 0.2rem 0.7rem;
+  border: 2px solid #dfe1e6;
+  border-radius: 999px;
+  background: #fff;
+  font: inherit;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.fed-sec-alt-tab-on {
+  background: #16181d;
+  border-color: #16181d;
+  color: #fff;
+}
+
+/* Hidden, never unmounted — the other language keeps its value. */
+.fed-sec-hidden { display: none !important; }

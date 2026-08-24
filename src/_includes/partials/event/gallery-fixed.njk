@@ -1,0 +1,29 @@
+{#
+  The event's photo gallery — one region, one ordered list.
+
+  Replaces the old `gallery` section type. The markup is the SAME markup the
+  grid has always had: a `.section-head reveal` when there is a heading, then a
+  `.gallery-grid reveal` of `.ph` tiles with `.ph-wide.span-2` for a wide one.
+  Two sibling blocks, not a wrapper — `reveal` is what js/main.js animates as
+  it scrolls into view, and putting it on a container instead would animate the
+  heading and the photographs as one lump. css/style.css is a live deployed file
+  and is untouched.
+
+  Each image carries its own bilingual alt text, so there is no second array to
+  keep in step — the failure mode the old architecture made possible.
+#}
+{%- if gallery and gallery.images and gallery.images | length %}
+{%- if gallery.heading and gallery.heading[locale.code] %}
+    <div class="section-head reveal">
+{%- if gallery.eyebrow and gallery.eyebrow[locale.code] %}
+      <span class="eyebrow">{{ gallery.eyebrow[locale.code] }}</span>
+{%- endif %}
+      <h2 class="section-title">{{ gallery.heading[locale.code] }}{% if gallery.heading_fancy and gallery.heading_fancy[locale.code] %} <span class="fancy">{{ gallery.heading_fancy[locale.code] }}</span>{% endif %}</h2>
+    </div>
+{%- endif %}
+    <div class="gallery-grid reveal">
+{%- for image in gallery.images %}
+      <div class="ph{% if image.wide %} ph-wide span-2{% endif %}"><img src="{{ image.src }}" alt="{{ image.alt[locale.code] }}"></div>
+{%- endfor %}
+    </div>
+{%- endif %}

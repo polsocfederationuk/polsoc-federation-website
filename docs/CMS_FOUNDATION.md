@@ -79,45 +79,95 @@ the output, rather than trusting the configuration to be right.
 
 ---
 
-## 3. Starting the proxy
+## 3. Starting the CMS
 
-Terminal 1:
-
-```bash
-npm run cms:proxy
-```
-
-Leave it running. It prints the repository it is bound to and the port. Stop it
-with `Ctrl+C`.
-
-## 4. Starting the CMS-enabled site
-
-Terminal 2:
+One command, one terminal:
 
 ```bash
-npm run cms:serve
+npm run cms:dev
 ```
 
-This builds with `CMS_DEV=1` and serves `dist/` on port 8001 — the same port
-`npm run serve:dist` already uses, so no new server or port is introduced. It
-also cleans first, so switching between a CMS build and a normal build can never
-leave a stale `dist/admin/` behind.
+Leave it running. Stop it with `Ctrl+C`, which stops everything it started.
 
-Both commands are Node wrappers rather than inline `VAR=x cmd` prefixes, because
-that syntax does not work in PowerShell or `cmd.exe`. They work unchanged on
-Windows.
+It builds the admin, starts the local file-system service and the web server,
+then **checks that the CMS actually works before telling you it is ready** — the
+admin page, its configuration, the content service, and each of the four
+collections. If any check fails it says which one, in a sentence, instead of
+printing a URL that leads to a broken page.
 
-## 5. Local admin URL
+When it is ready it prints:
 
 ```
-http://localhost:8001/admin/
+CMS ready: http://localhost:8001/admin/
 ```
 
-Click **Login**. There is no password: with the proxy backend that button just
-connects to `localhost:8081`. If it hangs, the proxy in terminal 1 is not
-running.
+Open that. Click **Login** — there is no password; with the local backend that
+button simply connects to the content service the same command already started.
 
-To rebuild after changing a template, re-run `npm run cms:serve`.
+### Why one command
+
+There were two, in two terminals, and either could be forgotten or closed. The
+symptom was not a clear error but "Failed to fetch" appearing partway through
+editing — which reads as a bug in the CMS rather than as a missing terminal.
+A single command that verifies itself removes the whole category.
+
+`npm run cms:proxy` and `npm run cms:serve` still exist for debugging one half in
+isolation. Do not use them as the normal way in.
+
+### If something is wrong later
+
+```bash
+npm run cms:smoke
+```
+
+Runs the same checks against an already-running CMS and prints a pass/fail line
+for each. Use it when the CMS misbehaves, before assuming the content is at
+fault: it distinguishes "the CMS is not running properly" from "this record has a
+problem", which is otherwise guesswork.
+
+## 4. Editing while other commands run
+
+The admin is built into `.cms/`, not into `dist/`. This matters more than it
+sounds.
+
+While the admin lived in `dist/`, every command that rebuilt or cleaned the site
+— `npm run build`, `npm run clean`, and each validator, including the ones this
+documentation tells you to run — deleted it out from under an open CMS. Because
+Decap loads its interface in around ninety separate pieces as you navigate, the
+page you were on kept working while any piece you had not visited yet returned
+"not found". The result looked random, and differed between people depending on
+what they had already opened.
+
+With the two trees separate, **you can run any build, test or validation command
+while the CMS is open.** `npm run build` refreshes the public preview at
+`http://localhost:8001/` and does not touch `/admin/` at all.
+
+`.cms/` is generated and git-ignored. `npm run clean` deliberately leaves it
+alone, for the reason above.
+
+### After removing a record
+
+`npm run build` adds and updates; it does not delete. A page whose record has
+gone stays in `dist/` until the folder is cleared:
+
+```bash
+npm run clean && npm run build
+```
+
+`npm run validate` catches this — a page or asset in `dist/` with no source is
+reported as a problem, which is the intended behaviour and not a false alarm.
+Neither command touches `.cms/`, so the CMS stays open throughout.
+
+## 5. Rebuilding after a configuration change
+
+Changing `src/_data/cmsConfig.js` or `src/admin/index.njk`:
+
+```bash
+npm run build:cms
+```
+
+Then reload the browser. The server sends the admin with no-cache headers, so a
+reload is enough — no cache clearing, no restart.
 
 ---
 
@@ -576,6 +626,123 @@ Concretely:
 
 ---
 
+## 16b. Writing in two languages
+
+Announcements and events each hold both languages in ONE record. The editor
+shows them as two tabs:
+
+```
+[ English ] [ Polski ]
+```
+
+Only the selected language's writing is on screen. Everything that is not
+language-specific — the Record ID, the academic year, dates, images, the link —
+stays visible above the tabs, because those are set once for the record rather
+than once per language.
+
+**Switching never loses anything.** The hidden language is still there, still
+holding whatever you typed; it is only out of sight. You can type English, switch
+to Polski, type, switch back, and both are saved together. Nothing needs to be
+finished in one language before starting the other.
+
+Each tab carries a small mark:
+
+| Mark | Means |
+|---|---|
+| ✓ | nothing obviously missing in that language |
+| ⚠ | a field that language needs is still empty |
+
+The mark is a reminder, not a gate — it exists so a half-finished Polish version
+cannot hide behind the English tab. The real check still happens when you save:
+if something required is missing, the save is refused and the editor switches to
+the tab where the problem is, so you are never told about a field you cannot see.
+
+Nothing about the stored file changed when the tabs arrived. One record still
+holds `en:` and `pl:` exactly as before.
+
+## 16c. Choosing a colour
+
+Where a field sets a colour, the editor offers the site's own colours as
+swatches — the Federation reds, the inks and creams, the events navy and gold,
+and the Business Forum blues. Hover any swatch to see its name and value.
+
+You are not limited to those. There is a colour picker beside them, and a box for
+typing a value directly if somebody has given you one. A colour that is not one
+of the site's own is kept as you set it and simply described as "Custom colour" —
+it is never quietly changed to the nearest brand colour.
+
+Colours are written as six digits after a `#`, for example `#001f62`. You may
+type `#ABC`, `aabbcc` or `#AaBbCc`; all of them are stored in the same tidy form.
+Something that is not a colour at all is marked as such and the save is refused,
+rather than being turned into black.
+
+The swatches are read from the website's own stylesheets when the CMS is built,
+so they cannot drift: change a colour in the site's CSS and the swatch changes
+with it.
+
+## 16d. Choosing what stays in view when a picture is cropped
+
+The website shows pictures in fixed shapes — a square on the team page, a wide
+strip on an announcement card — and a photograph rarely matches those shapes
+exactly. Something has to be cut off. **Image focus** is how you say what must
+not be.
+
+Where you will find it:
+
+| Where | Shape shown |
+|---|---|
+| Team → **Photograph focus** | one square, the shape of a team card |
+| Announcements → **Image focus** | two frames: the listing card and the pop-up |
+| Events → **Main image focus** | the events listing card |
+
+### Using it
+
+You see the actual photograph inside a frame the real shape of the real crop.
+**Click or tap anywhere on it** to say "this is the important part". The picture
+shifts immediately so you can see what will be kept and what will be lost.
+
+You can also:
+
+- **drag** the point around;
+- use the **arrow keys** once the frame is selected — hold Shift to move faster;
+- type the two percentages directly, if you want a precise value;
+- press **Centre** to put it back to the middle.
+
+The percentages and the picture always agree — moving one updates the other.
+
+### Two frames on an announcement
+
+An announcement image appears in two places that are not the same shape: the
+card on the listing, and the larger pop-up. **One setting serves both**, so both
+are shown side by side. If a choice looks right in one and wrong in the other,
+you are seeing a genuine compromise rather than a mistake — pick the point that
+suits both as well as possible.
+
+### What it does not do
+
+- **It never crops or changes the photograph.** The file is untouched. Nothing
+  is re-saved, re-sized or re-encoded.
+- **It never makes a second copy.** The same picture can be used in several
+  places, and each place can have its own focus. That is the point: one file,
+  different framing.
+- **It has no effect when Image fit is set to Contain**, because then the whole
+  picture is shown and nothing is cropped. The field says so.
+- **It cannot control how Facebook or LinkedIn crop a shared link.** Those sites
+  crop however they like, and no setting here can change that — which is why the
+  sharing image has no focus control at all.
+
+### If you have just chosen a picture
+
+The previews appear for a picture that has been **saved** on the record. On a
+brand-new record, save once and then come back to set the focus. The field says
+this too, rather than showing you an empty box.
+
+### Leaving it alone
+
+Most pictures need nothing. A focus that has never been set means "centre", and
+that is what the website has always done — no existing page changed when this
+control arrived.
+
 ## 17. Deliberately excluded from this phase
 
 Not implemented, by instruction:
@@ -645,15 +812,27 @@ unchanged.
 
 | Command | Does |
 |---|---|
-| `npm run cms:proxy` | Start the local file-system proxy (terminal 1) |
-| `npm run cms:serve` | Build with `/admin/` and serve on :8001 (terminal 2) |
-| `npm run build:cms` | Build with `/admin/` without serving |
+| `npm run cms:dev` | **Start the CMS. This is the way in.** Builds, starts both services, verifies them, prints the URL |
+| `npm run cms:smoke` | Check a running CMS and say what is broken |
+| `npm run build:cms` | Rebuild the admin after a configuration change |
 | `npm run validate:cms` | Static validation of the CMS configuration |
 | `npm run cms:check` | **Content integrity after editing, in editor language** |
 | `npm run test:cms-roundtrip` | Prove a CMS save cannot corrupt a record |
 | `npm run test:team-rules` | Negative controls for the photo and Record ID rules |
 | `npm run test:announcement-rules` | Negative controls for the announcement rules |
+| `npm run test:event-rules` | Negative controls for the event, date and preview rules |
+| `npm run test:event-content` | Proves no words, links or photographs were lost in the event rebuild |
+| `npm run test:bulk` | The Bulk manage backend: security, atomicity, dependencies, staleness |
 | `npm run build` | **Normal build — contains no `/admin/`** |
+| `npm run cms:proxy` / `cms:serve` | The two halves separately. Debugging only — prefer `cms:dev` |
+
+Every command in this table is safe to run while the CMS is open. That is a
+property of where the admin is built, not a coincidence — see section 4.
+
+> **Bulk manage** — hiding, showing and deleting several records at once —
+> lives at `/admin/bulk/` and is described in `docs/CMS_BULK_MANAGE.md`. It is a
+> page this repository owns rather than an extension of Decap’s collection
+> list, because Decap 3.15.1 has no API for adding one.
 
 > **Announcements** were added in Phase 17B — see `docs/CMS_ANNOUNCEMENTS.md`
 > for that collection's schema, its academic-year and ordering rules, Markdown

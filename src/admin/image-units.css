@@ -1,0 +1,70 @@
+/*
+  image-units.css — a picture and the words describing it, in one block.
+
+  Admin only. The public stylesheets are live deployed files and stay frozen.
+*/
+
+.fed-imgunit {
+  margin: 0 0 1rem;
+  padding: 0.85rem;
+  border: 2px solid #e4e6ea;
+  border-radius: 8px;
+  background: #fafbfc;
+}
+
+.fed-imgunit-title {
+  margin: 0 0 0.6rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #16181d;
+}
+
+.fed-imgunit-alt {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #e9ebef;
+}
+
+.fed-imgunit-alt-title {
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #16181d;
+}
+
+.fed-imgunit-alt-help {
+  margin: 0.15rem 0 0.6rem;
+  font-size: 0.83rem;
+  color: #5a5f6b;
+}
+
+/* The two languages sit together; their own labels already say which is which. */
+.fed-imgunit-altfield + .fed-imgunit-altfield {
+  margin-top: 0.6rem;
+}
+
+/*
+  The photo album, closed until asked for (Phase 17C.5A.3).
+
+  Most events never get one, and the ones that do get it weeks later.
+*/
+.fed-imgunit-summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.fed-imgunit-summary::-webkit-details-marker { display: none; }
+
+.fed-imgunit-summary::before {
+  content: "▸ ";
+  color: #5a5f6b;
+}
+
+.fed-imgunit-drawer[open] > .fed-imgunit-summary::before { content: "▾ "; }
+
+.fed-imgunit-summary:focus-visible {
+  outline: 2px solid #3a69ff;
+  outline-offset: 2px;
+}

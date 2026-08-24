@@ -1,0 +1,124 @@
+/*
+  event-title.css — the one-field event title control.
+
+  Admin only. css/style.css is a live deployed file and stays frozen.
+*/
+
+.fed-title-hidden {
+  display: none !important;
+}
+
+.fed-title {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0 0 1rem;
+  padding: 0.9rem 1rem;
+  border: 2px solid #dfe1e6;
+  border-radius: 8px;
+  background: #fafbfc;
+}
+
+.fed-title-label {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #16181d;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.fed-title-input {
+  min-height: 2.75rem;
+  padding: 0.5rem 0.7rem;
+  border: 2px solid #dfe1e6;
+  border-radius: 6px;
+  font: inherit;
+  font-size: 1.05rem;
+}
+
+.fed-title-input:focus-visible {
+  outline: 2px solid #3a69ff;
+  outline-offset: 1px;
+}
+
+.fed-title-sub {
+  margin: 0.25rem 0 0;
+  font-size: 0.85rem;
+  color: #5a5f6b;
+}
+
+/* -- the word chooser ------------------------------------------------------ */
+
+.fed-title-tokens {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.fed-title-token {
+  min-height: 2.25rem;
+  padding: 0.3rem 0.6rem;
+  border: 2px dashed #cfd3da;
+  border-radius: 6px;
+  background: #fff;
+  font: inherit;
+  font-size: 0.95rem;
+  color: #3a3d45;
+  cursor: pointer;
+}
+
+.fed-title-token:hover { border-color: #9aa1ad; }
+
+.fed-title-token:focus-visible {
+  outline: 2px solid #3a69ff;
+  outline-offset: 2px;
+}
+
+.fed-title-token-on {
+  border-style: solid;
+  border-color: #16181d;
+  background: #16181d;
+  color: #fff;
+}
+
+.fed-title-clear {
+  align-self: flex-start;
+  min-height: 2.25rem;
+  padding: 0.3rem 0.75rem;
+  border: 2px solid #dfe1e6;
+  border-radius: 6px;
+  background: #fff;
+  font: inherit;
+  font-size: 0.85rem;
+  color: #5a5f6b;
+  cursor: pointer;
+}
+
+/* -- preview --------------------------------------------------------------- */
+
+.fed-title-preview {
+  margin: 0.35rem 0 0;
+  padding-top: 0.6rem;
+  border-top: 1px solid #e9ebef;
+  font-size: 1.35rem;
+  line-height: 1.25;
+  color: #16181d;
+}
+
+/* Approximates the decorative face used on the real page. It is a hint about
+   which words are styled, not a reproduction of the hero. */
+.fed-title-fancy {
+  font-family: Georgia, "Times New Roman", serif;
+  font-style: italic;
+  color: #d7282f;
+}
+
+.fed-title-warn {
+  margin: 0;
+  padding: 0.45rem 0.65rem;
+  border: 2px solid #e3c98a;
+  border-radius: 6px;
+  background: #fdf8ed;
+  font-size: 0.85rem;
+  color: #6b5518;
+}

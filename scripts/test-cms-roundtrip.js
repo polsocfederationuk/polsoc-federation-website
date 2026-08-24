@@ -137,12 +137,38 @@ const teamFiles = fs
 
 check(teamFiles.length > 0, `found ${teamFiles.length} Team records to test`);
 
+/*
+  The configured order must PRESERVE the order of the keys records already have.
+
+  This used to pin the configured list to one exact array, which meant adding any
+  optional field failed the test even when it changed nothing about existing
+  records — as `photo_focus` did in Phase 17C.3. That is the wrong property: a
+  new optional field is expected, and forbidding it would have meant either never
+  adding one or editing the expected list by hand each time, which proves nothing.
+
+  What actually matters is that a CMS save cannot REORDER a record that already
+  exists. So the check is now a subsequence test: strip the fields no record
+  carries, and what is left must still be in the historic order.
+*/
 const ORDER = cms.TEAM_FIELD_ORDER;
+const HISTORIC = ["slug", "academic_year", "group", "order", "published", "name",
+  "photo", "email", "linkedin", "en", "pl"];
 check(
-  eq(ORDER, ["slug", "academic_year", "group", "order", "published", "name",
-    "photo", "email", "linkedin", "en", "pl"]),
-  "the configured field order matches the existing records' key order",
+  eq(ORDER.filter((k) => HISTORIC.includes(k)), HISTORIC),
+  "the configured field order still preserves the order of the existing keys",
   ORDER.join(", ")
+);
+check(
+  ORDER.filter((k) => !HISTORIC.includes(k)).every((k) => {
+    // Any field added since must be one no existing record carries, or it would
+    // change those records on their next save.
+    return teamFiles.every((f) => {
+      const d = jsyaml.load(fs.readFileSync(path.join(ROOT, TEAM_DIR, f), "utf8")) || {};
+      return d[k] === undefined;
+    });
+  }),
+  "every field added since is absent from all existing records, so none of them change",
+  ORDER.filter((k) => !HISTORIC.includes(k)).join(", ") || "none added"
 );
 
 let nullPhotoTested = false;

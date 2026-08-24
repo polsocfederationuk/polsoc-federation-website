@@ -1,47 +1,35 @@
 #!/usr/bin/env node
 /**
- * build-cms.js — build the site WITH the local admin panel into dist/.
+ * build-cms.js — build the local admin panel into .cms/.
  *
- * A normal `npm run build` ignores src/admin/ entirely, so dist/ never contains
- * an admin page. This sets CMS_DEV=1, which is the only thing that makes
- * eleventy.config.js emit dist/admin/index.html + dist/admin/config.yml and
- * copy the pinned Decap bundle beside them.
+ * The admin is development tooling and lives in its own tree. It used to be
+ * built into dist/ alongside the public site, which meant `npm run clean`,
+ * `npm run build` and `npm run validate:cms` deleted the files backing a CMS an
+ * editor had open — the cause of the "Failed to fetch" reports. dist/ is now the
+ * public website and nothing else.
  *
- * The output is development tooling. dist/ is gitignored, and the admin panel
- * it contains is configured against a local file-system proxy with no
- * authentication — it must never be deployed. See docs/CMS_FOUNDATION.md §2.
+ * Only .cms/ is cleared here, never dist/.
  *
- * A wrapper rather than an inline env assignment because `VAR=x cmd` is not
- * portable to Windows shells, matching scripts/build-fixtures.js.
- *
- * Run:  node scripts/build-cms.js
+ * Run:  node scripts/build-cms.js       (or: npm run build:cms)
  */
 
 "use strict";
 
+const fs = require("fs");
 const path = require("path");
 const { spawnSync } = require("child_process");
 
 const ROOT = path.join(__dirname, "..");
+const CMS_DIR = path.join(ROOT, ".cms");
 
-// Clean first. Eleventy writes into dist/ without emptying it, so going from a
-// CMS build back to a normal one would otherwise leave dist/admin/ behind — a
-// stale admin panel sitting in what looks like a production tree. The dist
-// audits do catch it, but a build that cannot create the situation is better
-// than one that reports it afterwards.
-spawnSync(process.execPath, [path.join(__dirname, "clean.js")], {
-  cwd: ROOT,
-  stdio: "inherit",
-});
+// Eleventy writes into an existing directory without emptying it, so a removed
+// admin file would otherwise linger.
+fs.rmSync(CMS_DIR, { recursive: true, force: true });
 
 const result = spawnSync(
   process.execPath,
   [path.join(ROOT, "node_modules", "@11ty", "eleventy", "cmd.cjs")],
-  {
-    cwd: ROOT,
-    stdio: "inherit",
-    env: { ...process.env, CMS_DEV: "1" },
-  }
+  { cwd: ROOT, stdio: "inherit", env: { ...process.env, CMS_DEV: "1" } }
 );
 
 if (result.error) {
@@ -49,7 +37,11 @@ if (result.error) {
   process.exit(1);
 }
 if (result.status === 0) {
-  console.log("\n  built WITH the local admin panel at dist/admin/");
-  console.log("  start the proxy in another terminal:  npm run cms:proxy");
+  const admin = path.join(CMS_DIR, "admin", "index.html");
+  if (!fs.existsSync(admin)) {
+    console.error("the CMS build produced no .cms/admin/index.html");
+    process.exit(1);
+  }
+  console.log("\n  admin built into .cms/admin/ (dist/ untouched)");
 }
 process.exit(result.status === null ? 1 : result.status);

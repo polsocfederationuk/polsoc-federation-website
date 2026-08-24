@@ -1,127 +1,96 @@
-# Standard event — 2025/26.
-# Generated from the live pages during the Phase 11 migration, with the
-# approved reconciliation corrections applied. See docs/STANDARD_EVENTS_MIGRATION.md.
-
 slug: icebreaker
 event_family: standard
 template: standard
-academic_year: "2025/26"
+academic_year: 2025/26
 published: true
 order: 5
 flagship: false
 show_in_listing: true
 show_on_homepage: true
 show_in_archive: true
-
 start_date: "2025-10-16"
 end_date: null
 date_precision: day
-
 venue:
   name:
-    en: "Mamuśka!"
-    pl: "Mamuśka!"
+    en: Mamuśka!
+    pl: Mamuśka!
   neighbourhood:
-    en: "Waterloo"
-    pl: "Waterloo"
+    en: Waterloo
+    pl: Waterloo
   locality:
-    en: "London"
-    pl: "Londyn"
-  country: "GB"
-
+    en: London
+    pl: Londyn
+  country: GB
 registration:
   state: none
   type: null
   url: null
   email: null
-
-hero_image: null   # standard event heroes are typographic by design
-# The listing card's photograph — a different frame from the OG image.
-card_image: "/assets/announcements/icebreaker.jpg"
-og_image: "/assets/social/og-image.png"
-instagram_permalink: "https://www.instagram.com/p/DQPcgS0DNRE/"
+hero_image: null
+card_image: /assets/announcements/icebreaker.jpg
+og_image: /assets/social/og-image.png
+instagram_permalink: https://www.instagram.com/p/DQPcgS0DNRE/
 album_url: null
-
-organiser: "Federation of Polish Student Societies UK"
+organiser: Federation of Polish Student Societies UK
 co_organisers: []
-
-# Ordered page structure. Type and order are shared; the content of each
-# section is localised below. Only these five types are supported.
-sections:
-  - type: prose
-    style: "margin-bottom: 60px;"
-  - type: heading
-  - type: instagram
-    style: "margin-top: 0;"
-
 en:
-  title_lead: "Icebreaker"
+  title_lead: Icebreaker
   title_fancy: ""
-  eyebrow: "Social"
-  hero_summary: "The opening social of the year — where the community meets."
-  card_summary: "The opening social of the year — around 200 Polish students met for drinks and conversation at Mamuśka! in London Waterloo, where the new committee was introduced."
-  card_image_alt: "Polish students at the Icebreaker social at Mamuśka! in London Waterloo"
-  # The homepage timeline uses a short, venue-flavoured label that is
-  # genuinely different from the event title — not a duplicate of it.
-  timeline_title: "Icebreaker at Mamuśka!"
-  timeline_summary: "~200 students open the year with drinks in Waterloo and meet the new committee."
-  date_label: "Date"
-  venue_label: "Venue"
+  eyebrow: Social
+  hero_summary: The opening social of the year — where the community meets.
+  card_summary: The opening social of the year — around 200 Polish students met for drinks and conversation at Mamuśka! in London Waterloo, where the new committee was introduced.
+  card_image_alt: Polish students at the Icebreaker social at Mamuśka! in London Waterloo
+  timeline_title: Icebreaker at Mamuśka!
+  timeline_summary: ~200 students open the year with drinks in Waterloo and meet the new committee.
+  date_label: Date
+  venue_label: Venue
   facts:
-    - label: "Attendance"
-      value: "~200 students"
-  back_link: "← All events"
-  back_link_bottom: "← Back to all events"
-  sections:
-    - type: prose
-      body: |
-          The Icebreaker is the Federation's opening social event of the academic year, organised at Mamuśka! — the much-loved Polish bar and restaurant in London Waterloo.
+    - label: Attendance
+      value: ~200 students
+  back_link: ← All events
+  back_link_bottom: ← Back to all events
+  seo_title: Icebreaker 2025 | Federation of Polish Student Societies UK
+  seo_description: Icebreaker 2025 at Mamuśka! in London Waterloo opened the year for around 200 Polish students in the UK and introduced the Federation's new committee.
+  schema_name: Icebreaker 2025
+  schema_description: The Federation's opening social of the academic year at Mamuśka! in London Waterloo, where around 200 Polish students met the new committee.
+  og_image_alt: Federation of Polish Student Societies in the UK — By Students. For Students.
+  body: |-
+    The Icebreaker is the Federation's opening social event of the academic year, organised at Mamuśka! — the much-loved Polish bar and restaurant in London Waterloo.
 
-          This year's edition brought together around 200 Polish students from universities across London and beyond to meet, have a drink and chat — many of them meeting the wider community for the very first time. The evening also saw the introduction of the new Federation committee for the 2025/26 academic year, setting the tone for everything that followed: the Polish Youth Congress, the Christmas Dinner, the debate at the Sikorski Institute and the Polish Business Forum.
-    - type: heading
-      eyebrow: "As seen on Instagram"
-      title_lead: "Relive the"
-      title_fancy: "night"
-    - type: instagram
-  seo_title: "Icebreaker 2025 | Federation of Polish Student Societies UK"
-  seo_description: "Icebreaker 2025 at Mamuśka! in London Waterloo opened the year for around 200 Polish students in the UK and introduced the Federation's new committee."
-  # The live JSON-LD names the year; the visible heading does not.
-  schema_name: "Icebreaker 2025"
-  schema_description: "The Federation's opening social of the academic year at Mamuśka! in London Waterloo, where around 200 Polish students met the new committee."
-  og_image_alt: "Federation of Polish Student Societies in the UK — By Students. For Students."
-
+    This year's edition brought together around 200 Polish students from universities across London and beyond to meet, have a drink and chat — many of them meeting the wider community for the very first time. The evening also saw the introduction of the new Federation committee for the 2025/26 academic year, setting the tone for everything that followed: the Polish Youth Congress, the Christmas Dinner, the debate at the Sikorski Institute and the Polish Business Forum.
 pl:
-  title_lead: "Icebreaker"
+  title_lead: Icebreaker
   title_fancy: ""
-  eyebrow: "Spotkanie towarzyskie"
-  hero_summary: "Pierwsze spotkanie towarzyskie w roku — tam, gdzie poznaje się społeczność."
-  card_summary: "Pierwsze spotkanie towarzyskie w roku — około 200 polskich studentów spotkało się na rozmowach w Mamuśka! na londyńskim Waterloo, gdzie przedstawiono nowy zarząd."
-  card_image_alt: "Polscy studenci na spotkaniu Icebreaker w Mamuśka! na londyńskim Waterloo"
-  # The homepage timeline uses a short, venue-flavoured label that is
-  # genuinely different from the event title — not a duplicate of it.
-  timeline_title: "Icebreaker w Mamuśka!"
-  timeline_summary: "Około 200 studentów otwiera rok akademicki na Waterloo i poznaje nowy zarząd."
-  date_label: "Data"
-  venue_label: "Miejsce"
+  eyebrow: Spotkanie towarzyskie
+  hero_summary: Pierwsze spotkanie towarzyskie w roku — tam, gdzie poznaje się społeczność.
+  card_summary: Pierwsze spotkanie towarzyskie w roku — około 200 polskich studentów spotkało się na rozmowach w Mamuśka! na londyńskim Waterloo, gdzie przedstawiono nowy zarząd.
+  card_image_alt: Polscy studenci na spotkaniu Icebreaker w Mamuśka! na londyńskim Waterloo
+  timeline_title: Icebreaker w Mamuśka!
+  timeline_summary: Około 200 studentów otwiera rok akademicki na Waterloo i poznaje nowy zarząd.
+  date_label: Data
+  venue_label: Miejsce
   facts:
-    - label: "Frekwencja"
-      value: "~200 studentów"
-  back_link: "← Wszystkie wydarzenia"
-  back_link_bottom: "← Wróć do wszystkich wydarzeń"
-  sections:
-    - type: prose
-      body: |
-          Icebreaker to pierwsze spotkanie towarzyskie Federacji w roku akademickim, organizowane w Mamuśka! — lubianym polskim barze i restauracji na londyńskim Waterloo.
+    - label: Frekwencja
+      value: ~200 studentów
+  back_link: ← Wszystkie wydarzenia
+  back_link_bottom: ← Wróć do wszystkich wydarzeń
+  seo_title: Icebreaker 2025 | Federacja Polskich Stowarzyszeń Studenckich
+  seo_description: Icebreaker 2025 w Mamuśka! na londyńskim Waterloo otworzył rok akademicki dla około 200 polskich studentów i przedstawił nowy zarząd Federacji.
+  schema_name: Icebreaker 2025
+  schema_description: Pierwsze spotkanie towarzyskie roku akademickiego w Mamuśka! na londyńskim Waterloo, gdzie około 200 polskich studentów poznało nowy zarząd Federacji.
+  og_image_alt: Federacja Polskich Stowarzyszeń Studenckich w Wielkiej Brytanii — Przez studentów. Dla studentów.
+  body: |-
+    Icebreaker to pierwsze spotkanie towarzyskie Federacji w roku akademickim, organizowane w Mamuśka! — lubianym polskim barze i restauracji na londyńskim Waterloo.
 
-          Tegoroczna edycja zgromadziła około 200 polskich studentów z uczelni w Londynie i poza nim — na rozmowy i wspólny wieczór, dla wielu z nich było to pierwsze spotkanie z szerszą społecznością. Tego wieczoru przedstawiliśmy również nowy zarząd Federacji na rok akademicki 2025/26, nadając ton wszystkiemu, co przyszło później: Polish Youth Congress, Kolacji Wigilijnej, debacie w Instytucie Sikorskiego i Polish Business Forum.
-    - type: heading
-      eyebrow: "As seen on Instagram"
-      title_lead: "Wróć do tamtego"
-      title_fancy: "wieczoru"
-    - type: instagram
-  seo_title: "Icebreaker 2025 | Federacja Polskich Stowarzyszeń Studenckich"
-  seo_description: "Icebreaker 2025 w Mamuśka! na londyńskim Waterloo otworzył rok akademicki dla około 200 polskich studentów i przedstawił nowy zarząd Federacji."
-  # The live JSON-LD names the year; the visible heading does not.
-  schema_name: "Icebreaker 2025"
-  schema_description: "Pierwsze spotkanie towarzyskie roku akademickiego w Mamuśka! na londyńskim Waterloo, gdzie około 200 polskich studentów poznało nowy zarząd Federacji."
-  og_image_alt: "Federacja Polskich Stowarzyszeń Studenckich w Wielkiej Brytanii — Przez studentów. Dla studentów."
+    Tegoroczna edycja zgromadziła około 200 polskich studentów z uczelni w Londynie i poza nim — na rozmowy i wspólny wieczór, dla wielu z nich było to pierwsze spotkanie z szerszą społecznością. Tego wieczoru przedstawiliśmy również nowy zarząd Federacji na rok akademicki 2025/26, nadając ton wszystkiemu, co przyszło później: Polish Youth Congress, Kolacji Wigilijnej, debacie w Instytucie Sikorskiego i Polish Business Forum.
+social_heading:
+  eyebrow:
+    en: As seen on Instagram
+    pl: As seen on Instagram
+  heading:
+    en: Relive the
+    pl: Wróć do tamtego
+  heading_fancy:
+    en: night
+    pl: wieczoru

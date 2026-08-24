@@ -16,7 +16,11 @@ image_background: null
 extra_images:
   - "/assets/announcements/pcc-gala.jpg"
   - "/assets/announcements/pcc-duda.jpg"
-signups_closed: false
+registration:
+  state: none
+  url: null
+  opens_on: null
+  closes_on: null
 
 link: null
 

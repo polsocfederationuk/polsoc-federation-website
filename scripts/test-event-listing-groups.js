@@ -46,11 +46,25 @@ function throws(fn, pattern, what) {
   }
 }
 
-/** A minimal synthetic record. */
-const ev = (slug, academicYear, order, extra = {}) => ({
+/**
+ * A minimal synthetic record.
+ *
+ * The third argument still reads as a POSITION, but position is no longer a
+ * stored field: Phase 17C.5A made the listing sort by `start_date`, newest
+ * first, so an editor never maintains a number again. The position is turned
+ * into a descending date here, which means every expectation below — all of them
+ * written as slug sequences against the old hand-kept numbers — now proves that
+ * date ordering reproduces exactly the sequence the numbers produced.
+ *
+ * Position 1 is the newest, so it gets the latest date.
+ */
+const ev = (slug, academicYear, position, extra = {}) => ({
   slug,
   academic_year: academicYear,
-  order,
+  // 1 -> 2026-05-01, 2 -> 2026-04-01, ... — descending, and a real calendar day.
+  start_date: typeof position === "number" && position >= 1 && position <= 11
+    ? `2026-${String(12 - position).padStart(2, "0")}-01`
+    : position,
   published: true,
   show_in_listing: true,
   event_family: "standard",
@@ -117,7 +131,7 @@ test("two previous years sort 2025/26 before 2024/25", () => {
 });
 
 /* 5 */
-test("order: 1 reused across different years is accepted", () => {
+test("the same date in different years stays in its own year", () => {
   const r = group([
     ev("current-first", "2026/27", 1),
     ev("older-first", "2025/26", 1),
@@ -127,9 +141,15 @@ test("order: 1 reused across different years is accepted", () => {
 });
 
 /* 6 */
-test("duplicate order within ONE year is rejected", () => {
-  throws(() => group([ev("a", "2025/26", 1), ev("b", "2025/26", 1)], "2025/26"),
-    /order 1 used by a and b/, "duplicate order");
+test("two events on the SAME DAY are both kept, ordered by slug", () => {
+  // The hand-kept number this replaced could collide, and a collision was a
+  // fatal build error because the sequence was then undefined. Two events on one
+  // day is an ordinary thing to happen, so it must simply work.
+  const r = group([
+    ev("b-later-slug", "2025/26", 3),
+    ev("a-earlier-slug", "2025/26", 3),
+  ], "2025/26");
+  eq(slugs(r.current.events), ["a-earlier-slug", "b-later-slug"], "stable, slug tie-break");
 });
 
 /* 7 */
@@ -191,9 +211,24 @@ test("a year equal to the current year is current, not previous", () => {
   eq(slugs(r.current.events), ["a"], "counted as current");
 });
 
-test("non-integer order is rejected", () => {
-  throws(() => group([ev("a", "2025/26", "1")], "2025/26"), /order must be an integer/, "string order");
-  throws(() => group([ev("a", "2025/26", undefined)], "2025/26"), /order must be an integer/, "missing order");
+test("a record without a usable start date is rejected", () => {
+  // The position number is no longer stored, so the date is what the sort needs.
+  throws(() => group([ev("a", "2025/26", "not-a-date")], "2025/26"),
+    /start_date must be a calendar day/, "unparseable date");
+  throws(() => group([ev("a", "2025/26", undefined)], "2025/26"),
+    /start_date must be a calendar day/, "missing date");
+});
+
+test("events sort by date, newest first, regardless of the order given", () => {
+  const r = group([
+    { slug: "oldest", academic_year: "2025/26", start_date: "2025-10-16",
+      published: true, show_in_listing: true, event_family: "standard" },
+    { slug: "newest", academic_year: "2025/26", start_date: "2026-02-10",
+      published: true, show_in_listing: true, event_family: "standard" },
+    { slug: "middle", academic_year: "2025/26", start_date: "2025-12-08",
+      published: true, show_in_listing: true, event_family: "standard" },
+  ], "2025/26");
+  eq(slugs(r.current.events), ["newest", "middle", "oldest"], "newest first");
 });
 
 test("parseAcademicYear accepts valid and rejects invalid values", () => {

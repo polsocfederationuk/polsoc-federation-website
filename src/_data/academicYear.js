@@ -74,4 +74,48 @@ function futurePublishMessage(problem) {
   );
 }
 
-module.exports = { parseAcademicYear, futurePublishProblem, futurePublishMessage };
+/* ---------------------------------------------------------------------------
+   The option list every academic-year dropdown uses.
+   --------------------------------------------------------------------------- */
+
+/** The first year the repository holds content for. Never drops off the list. */
+const FIRST_ACADEMIC_YEAR = 2025;
+
+/** Keep at least this far ahead, so the list is useful without yearly edits. */
+const MINIMUM_HORIZON = 2035;
+
+/** "2025/26" from a start year. */
+function formatAcademicYear(start) {
+  return `${start}/${String((start + 1) % 100).padStart(2, "0")}`;
+}
+
+/**
+ * Every academic year an editor may choose, oldest first.
+ *
+ * Runs from 2025/26 — the earliest year with canonical content — through ten
+ * years past whatever is currently configured, with a floor of 2035/36. Two
+ * consequences are deliberate:
+ *
+ *   - rolling the site over to 2026/27 EXTENDS the list rather than shifting it,
+ *     so 2025/26 stays selectable and historical records remain editable;
+ *   - nobody has to edit an array each summer to add next year.
+ *
+ * One generator feeds Team, Announcements, Standard Events and the Site Settings
+ * current-year control, so the four cannot offer different years.
+ */
+function academicYearOptions(currentYear) {
+  const currentStart = parseAcademicYear(currentYear);
+  const last = Math.max(MINIMUM_HORIZON, (currentStart || FIRST_ACADEMIC_YEAR) + 10);
+  const years = [];
+  for (let y = FIRST_ACADEMIC_YEAR; y <= last; y++) years.push(formatAcademicYear(y));
+  return years;
+}
+
+module.exports = {
+  parseAcademicYear,
+  futurePublishProblem,
+  futurePublishMessage,
+  academicYearOptions,
+  formatAcademicYear,
+  FIRST_ACADEMIC_YEAR,
+};

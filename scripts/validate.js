@@ -754,14 +754,22 @@ if (exists("eleventy.config.js")) {
   // physically cannot read or rewrite the public HTML at the repository root.
   // Phase 15 made the OUTPUT directory conditional: dist/ for a normal build and
   // .fixtures/ when BUILD_FIXTURES=1, so no test page can reach the deployment
-  // tree. Both branches are asserted, and input stays scoped to src/ — which is
-  // the actual containment guarantee, since it is what stops the build reading or
-  // rewriting the public HTML at the repository root.
+  // tree. Phase 17C.2 added a THIRD branch, .cms/ when CMS_DEV=1, because the
+  // admin used to be built into dist/ — where `npm run clean`, `npm run build`
+  // and every validator deleted it out from under a CMS an editor had open. That
+  // was the cause of the "Failed to fetch" reports. Each branch is asserted
+  // separately so none of the three can quietly collapse into another.
   assert(/input:\s*"src"/.test(cfg), "Eleventy input is scoped to src/ — the build cannot touch the repository root",
     "Eleventy input is not scoped to src/");
-  assert(/output:\s*FIXTURES \? "\.fixtures" : "dist"/.test(cfg),
-    "Eleventy output is dist/ for a normal build and .fixtures/ only when BUILD_FIXTURES=1",
-    "the Eleventy output directory is not the expected dist/ vs .fixtures/ split");
+  assert(/output:\s*FIXTURES \? "\.fixtures" : CMS_DEV \? "\.cms" : "dist"/.test(cfg),
+    "Eleventy output is dist/ normally, .fixtures/ when BUILD_FIXTURES=1 and .cms/ when CMS_DEV=1",
+    "the Eleventy output directory is not the expected dist/ vs .fixtures/ vs .cms/ split");
+  // The separation only holds if the CMS branch is genuinely mutually exclusive
+  // with the fixtures branch; `CMS_DEV=1 BUILD_FIXTURES=1` must not write the
+  // admin into the fixtures tree.
+  assert(/CMS_DEV\s*=\s*process\.env\.CMS_DEV === "1" && !FIXTURES/.test(cfg),
+    "CMS_DEV and BUILD_FIXTURES cannot both be active, so the admin cannot land in .fixtures/",
+    "CMS_DEV is not mutually exclusive with BUILD_FIXTURES");
   assert(/eleventyConfig\.ignores\.add\("src\/build-test\/\*\*"\)/.test(cfg),
     "a normal build ignores src/build-test/, so fixtures cannot enter the deployment tree",
     "src/build-test/ is not ignored by a normal build");
@@ -1178,6 +1186,29 @@ const slugMismatch = team.filter((m) => m._file !== `${TEAM_DIR}/${m.slug}.yaml`
 assert(slugMismatch.length === 0,
   "every record's slug matches its filename",
   "records whose slug does not match the filename", slugMismatch);
+
+/*
+  Photograph focus (Phase 17C.3). Optional everywhere — every current member
+  leaves it empty and renders exactly as before — but a value that IS present
+  must be one the renderer accepts, because it reaches a `style` attribute.
+*/
+{
+  const F = require(path.join(ROOT, "src", "_data", "focalPoint.js"));
+  const badFocus = team
+    .filter((m) => m.photo_focus !== null && m.photo_focus !== undefined &&
+      F.parseFocal(m.photo_focus) === null)
+    .map((m) => `${m.slug}: ${JSON.stringify(m.photo_focus)}`);
+  assert(badFocus.length === 0,
+    "every photograph focus is one the website can actually use",
+    "photograph focus values the renderer would refuse", badFocus);
+
+  const focusWithoutPhoto = team
+    .filter((m) => m.photo_focus && !m.photo)
+    .map((m) => m.slug);
+  assert(focusWithoutPhoto.length === 0,
+    "no member has a photograph focus without a photograph to apply it to",
+    "focus set on a member with no photograph", focusWithoutPhoto);
+}
 
 const badGroup = current.filter((m) => !cfgKeys.includes(m.group)).map((m) => `${m.slug} -> ${m.group}`);
 assert(badGroup.length === 0,
@@ -1860,10 +1891,135 @@ const annBadPublished = annAll.filter((a) => typeof a.published !== "boolean")
 assert(annBadPublished.length === 0, "every announcement `published` is a real boolean",
   "non-boolean publication flags", annBadPublished);
 
-const annBadClosed = annAll.filter((a) => typeof a.signups_closed !== "boolean")
-  .map((a) => `${a.slug}: ${a.signups_closed}`);
-assert(annBadClosed.length === 0, "every announcement `signups_closed` is a real boolean",
-  "non-boolean closed flags", annBadClosed);
+/*
+  REGISTRATION replaced the `signups_closed` boolean in Phase 17C.3.
+
+  The old field could only say "closed" — it had no way to express "opens next
+  week" or "sign up here", and it left an editor no place to put a registration
+  address. The block that replaced it carries a state, an address and the two
+  dates, and is checked here in the same spirit as the flag it replaced: the
+  shape must be exactly right, because the browser renders a button from it.
+
+  The state is never inferred from today's date. This is a static site, so a
+  state that recalculated itself would be wrong the moment a date passed and
+  right again only after the next build.
+*/
+const REG_STATES = ["none", "coming_soon", "open", "closed"];
+
+const annNoReg = annAll.filter((a) => !a.registration || typeof a.registration !== "object")
+  .map((a) => a.slug);
+assert(annNoReg.length === 0, "every announcement carries a registration block",
+  "announcements with no registration block", annNoReg);
+
+const annBadState = annAll
+  .filter((a) => a.registration && REG_STATES.indexOf(a.registration.state) === -1)
+  .map((a) => `${a.slug}: ${a.registration.state}`);
+assert(annBadState.length === 0,
+  `every registration state is one of ${REG_STATES.join(", ")}`,
+  "unknown registration states", annBadState);
+
+// Only an OPEN registration may carry an address. A closed record holding a
+// live sign-up link is the exact confusion this model exists to prevent.
+const annStrayUrl = annAll
+  .filter((a) => a.registration && a.registration.state !== "open" && a.registration.url)
+  .map((a) => `${a.slug}: ${a.registration.state} but has ${a.registration.url}`);
+assert(annStrayUrl.length === 0,
+  "only an open registration carries a sign-up address",
+  "registration addresses on records that are not open", annStrayUrl);
+
+const annOpenNoUrl = annAll
+  .filter((a) => a.registration && a.registration.state === "open" && !a.registration.url)
+  .map((a) => a.slug);
+assert(annOpenNoUrl.length === 0,
+  "every open registration has a sign-up address",
+  "open registrations with nowhere to go", annOpenNoUrl);
+
+const annBadRegUrl = annAll
+  .filter((a) => a.registration && a.registration.url &&
+    !/^https:\/\/[^\s"'<>]+$/.test(a.registration.url))
+  .map((a) => `${a.slug}: ${a.registration.url}`);
+assert(annBadRegUrl.length === 0,
+  "every registration address is a plain https:// address",
+  "unsafe or malformed registration addresses", annBadRegUrl);
+
+const annBadRegDate = annAll.filter((a) => {
+  const r = a.registration || {};
+  const ok = (v) => v === null || v === undefined || /^\d{4}-\d{2}-\d{2}$/.test(v);
+  return !ok(r.opens_on) || !ok(r.closes_on);
+}).map((a) => `${a.slug}: ${a.registration.opens_on} / ${a.registration.closes_on}`);
+assert(annBadRegDate.length === 0,
+  "every registration date is a plain calendar day",
+  "registration dates that are not date-only", annBadRegDate);
+
+const annRegOrder = annAll.filter((a) => {
+  const r = a.registration || {};
+  return r.opens_on && r.closes_on && r.opens_on > r.closes_on;
+}).map((a) => `${a.slug}: opens ${a.registration.opens_on}, closes ${a.registration.closes_on}`);
+assert(annRegOrder.length === 0,
+  "no registration closes before it opens",
+  "registrations that close before they open", annRegOrder);
+
+/*
+  IMAGE FOCUS (Phase 17C.3).
+
+  These values are written into a `style` attribute, so they are validated with
+  the same narrow parser the renderer uses — not a looser one. A value the
+  renderer would refuse must not sit in a record pretending to work.
+*/
+{
+  const F = require(path.join(ROOT, "src", "_data", "focalPoint.js"));
+  const bad = annAll
+    .filter((a) => a.image_position !== null && a.image_position !== undefined &&
+      a.image_position !== "" && F.parseFocal(a.image_position) === null)
+    .map((a) => `${a.slug}: ${JSON.stringify(a.image_position)}`);
+  assert(bad.length === 0,
+    "every announcement image focus is one the website can actually use",
+    "image focus values the renderer would refuse", bad);
+}
+
+// One source of truth: the old flag must be gone, not shadowing the new block.
+/*
+  REGISTRATION THAT COMES FROM AN EVENT (Phase 17C.5A.2).
+
+  An announcement may point its registration at a Federation event instead of
+  repeating it. That reference has to resolve, or a reader would be shown a
+  sign-up button for something that does not exist — so a broken one fails the
+  build rather than rendering as "no registration".
+
+  Every rule lives in src/_data/registration.js, shared with cms:check and the
+  CMS pre-save guard, so all three refuse exactly the same things.
+*/
+{
+  const registrationModel = require(path.join(ROOT, "src", "_data", "registration.js"));
+  const eventRecords = fs.existsSync(path.join(ROOT, "content", "events"))
+    ? fs.readdirSync(path.join(ROOT, "content", "events"))
+      .filter((f) => /\.ya?ml$/i.test(f))
+      .map((f) => loadYaml(`content/events/${f}`))
+    : [];
+
+  const broken = annAll
+    .map((a) => ({ slug: a.slug, why: registrationModel.referenceProblem(a, eventRecords) }))
+    .filter((r) => r.why)
+    .map((r) => `${r.slug}: ${r.why}`);
+  assert(broken.length === 0,
+    "every announcement that borrows an event's registration points at a real one",
+    "announcements with a broken registration reference", broken);
+
+  // A reference stores ONLY the reference. Copied values would drift.
+  const copied = annAll
+    .filter((a) => registrationModel.sourceOf(a.registration) === registrationModel.SOURCE_EVENT)
+    .filter((a) => ["state", "url", "opens_on", "closes_on"]
+      .some((k) => (a.registration || {})[k] !== undefined && (a.registration || {})[k] !== null))
+    .map((a) => a.slug);
+  assert(copied.length === 0,
+    "an event-linked registration stores only the reference, never a copy",
+    "announcements copying registration values from an event", copied);
+}
+
+const annLegacyFlag = annAll.filter((a) => a.signups_closed !== undefined).map((a) => a.slug);
+assert(annLegacyFlag.length === 0,
+  "the replaced `signups_closed` flag is gone, so there is one source of truth",
+  "records still carrying the old signups_closed flag", annLegacyFlag);
 
 /* -- localised fields ------------------------------------------------------- */
 
@@ -2000,7 +2156,10 @@ assert(annStrayLabel.length === 0,
 
 const annCounts = {
   noImage: ann.filter((a) => !a.image).length,
-  closed: ann.filter((a) => a.signups_closed).length,
+  // Reads the registration block since Phase 17C.3, but counts the same thing
+  // the old `signups_closed` flag did — the expected total is unchanged, which
+  // is itself evidence the migration preserved meaning.
+  closed: ann.filter((a) => a.registration && a.registration.state === "closed").length,
   imagePosition: ann.filter((a) => a.image_position).length,
   containFit: ann.filter((a) => a.image_fit === "contain").length,
   extraImages: ann.filter((a) => (a.extra_images || []).length).length,
@@ -2264,15 +2423,30 @@ if (exists("dist/css/style.css")) {
     "the generated stylesheet differs from the source stylesheet");
 }
 
-// The fix is CSS-only: no announcement content, data or markup may have moved.
+/*
+  The fix is CSS-only: no announcement page, data file or markup may have moved.
+
+  `content/announcements` USED to be in this list. It was removed in Phase
+  17C.3, when the registration migration rewrote all 28 records — and, more
+  importantly, because the CMS now exists specifically so that editors can change
+  these files. A rule that content records must never change would fail the
+  moment anybody saved an announcement, and a validator that always fails is a
+  validator people learn to ignore.
+
+  Nothing is lost by it. What this guard was really protecting — that the
+  announcements PAGE still renders exactly as it does live — is checked far more
+  strictly by `npm run compare:announcements`, which compares 160 properties of
+  the generated output against the live pages, and by the registration assertions
+  in section 17 above. The live public artefacts stay in the list below.
+*/
 {
   const { execFileSync } = require("child_process");
   let changed = [];
   try {
     changed = execFileSync("git", ["status", "--porcelain", "--",
       "announcements.html", "pl/announcements.html",
-      "js/announcements-data.js", "js/pl/announcements-data.js",
-      "content/announcements"], { cwd: ROOT, encoding: "utf8" })
+      "js/announcements-data.js", "js/pl/announcements-data.js"],
+    { cwd: ROOT, encoding: "utf8" })
       .split("\n").map((l) => l.trim()).filter(Boolean);
   } catch {
     changed = ["(git unavailable — check skipped)"];
@@ -3243,14 +3417,18 @@ if (exists("dist")) {
       // which permits exactly the two supported states and rejects every partial
       // cutover. A blanket "never changes" rule here would forbid the approved
       // cutover itself. Every other file below stays protected.
-      "sitemap.xml", "content/announcements"],
-      { cwd: ROOT, encoding: "utf8" })
+      // `content/announcements` was removed from this list in Phase 17C.3 —
+      // see the note on the same change in section 19. The CMS edits those
+      // records by design; their rendered output is guarded by
+      // `npm run compare:announcements` instead of by immutability.
+      "sitemap.xml"],
+    { cwd: ROOT, encoding: "utf8" })
       .split("\n").map((l) => l.trim()).filter(Boolean);
   } catch {
     changed = ["(git unavailable — check skipped)"];
   }
   assert(changed.length === 0 || changed[0].startsWith("(git unavailable"),
-    "the audit changed no live event page, homepage, listing, sitemap or announcement record",
+    "the audit changed no live event page, homepage, listing or sitemap",
     "the reconciliation phase modified files it must not touch", changed);
 }
 
@@ -3636,6 +3814,24 @@ if (!exists("dist")) {
       `generated standard-event pages match the live pages (${evMatched || "?"} semantic comparisons — scripts/compare-standard-events.js)`,
       "scripts/compare-standard-events.js reports differences",
       (evCmp.stdout || "").split("\n").filter((l) => /FAIL/.test(l)).slice(0, 12));
+
+    /*
+      CONTENT ACCOUNTING (Phase 17C.5A.3).
+
+      The comparison above identifies blocks by position, so when the fixed
+      structure moves a gallery below the body it stops checking that page's
+      blocks against the live ones at all. This proves separately that every
+      paragraph, link, photograph, description and heading is still there — as
+      sets, because the reordering is the intended change and a test that
+      insisted on the old order would be asserting the bug this phase fixed.
+    */
+    const evContent = spawnSync(process.execPath, [path.join(__dirname, "test-event-content.js")],
+      { cwd: ROOT, encoding: "utf8" });
+    const evChecks = (evContent.stdout.match(/PASS — (\d+) content checks/) || [])[1];
+    assert(evContent.status === 0,
+      `no standard-event content was lost in the rebuild (${evChecks || "?"} checks — scripts/test-event-content.js)`,
+      "scripts/test-event-content.js reports lost content",
+      (evContent.stdout || "").split("\n").filter((l) => /FAIL/.test(l)).slice(0, 12));
   }
 }
 
@@ -4305,8 +4501,10 @@ if (!exists("dist")) {
       // cutover itself. Every other file below stays protected.
       "js/main.js", "assets", "sitemap.xml", "robots.txt",
       "index.html", "pl/index.html", "events.html", "pl/events.html",
-      "event-business-forum.html", "pl/event-business-forum.html",
-      "content/announcements"]);
+      "event-business-forum.html", "pl/event-business-forum.html"]);
+      // `content/announcements` was removed from this list in Phase 17C.3 —
+      // see the note on the same change in section 19. Editable by design;
+      // guarded by output comparison rather than by immutability.
     if (untouched === null) {
       ok("git unavailable — public-file guard skipped");
     } else {
