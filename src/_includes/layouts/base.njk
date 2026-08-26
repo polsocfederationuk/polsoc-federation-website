@@ -26,6 +26,30 @@
 <!DOCTYPE html>
 <html lang="{{ locale.htmlLang }}">
 <head>
+{% if identityCallback %}
+<script>
+(function () {
+  var hash = window.location.hash;
+  if (!hash) return;
+
+  var params = new URLSearchParams(hash.slice(1));
+  var authKeys = [
+    "access_token",
+    "invite_token",
+    "recovery_token",
+    "confirmation_token",
+    "email_change_token"
+  ];
+
+  for (var i = 0; i < authKeys.length; i++) {
+    if (params.has(authKeys[i])) {
+      window.location.replace("/staff-login/" + hash);
+      return;
+    }
+  }
+})();
+</script>
+{% endif %}
 {% include "partials/head.njk" %}
 </head>
 <body{% if bodyClass %} class="{{ bodyClass }}"{% endif %}>

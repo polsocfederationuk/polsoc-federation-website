@@ -70,11 +70,13 @@ eleventyExcludeFromCollections: true
     </style>
   </head>
   <body>
+{% if cmsConfig.proxyUrl != "/api/cms" %}
     <p class="cms-local-banner">
       Local development only — edits are written straight to the files in your
       working copy. Nothing here is published. Review with
       <code>git diff</code> before committing.
     </p>
+{% endif %}
 
     <!--
       Decap CMS {{ cmsConfig.decapVersion }}, served from this directory rather than a CDN.
