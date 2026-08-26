@@ -54,8 +54,31 @@ function walk(dir = "") {
   }
   return out;
 }
-const files = walk().sort();
-check("dist/ contains files", files.length > 0, files.length);
+const allFiles = walk().sort();
+check("dist/ contains files", allFiles.length > 0, allFiles.length);
+
+/*
+  THE CONTENT MANAGER IS NOT PUBLIC CONTENT (Phase 17D.1).
+
+  `npm run build:production` puts the online CMS into dist/admin/. Everything in
+  there is a shipped application, not a page of the website: it has its own
+  config.yml, its own source maps, and its own HTML at routes that are
+  deliberately absent from the sitemap.
+
+  So the public-content rules below are applied to the public tree, and the
+  admin tree gets the checks that actually matter for it — which are asserted
+  explicitly further down rather than skipped: it must be noindex, it must not
+  be produced by an ordinary build, and it must carry no credential.
+
+  A plain `npm run build` produces no admin/ at all, so on that build this
+  partition is empty and every existing assertion runs exactly as before.
+*/
+const ADMIN_PREFIX = "admin/";
+const isAdminFile = (f) => f.startsWith(ADMIN_PREFIX);
+
+/** The public website: everything the deployment tree serves as content. */
+const files = allFiles.filter((f) => !isAdminFile(f));
+const adminFiles = allFiles.filter(isAdminFile);
 
 /* --------------------------------------------------------- forbidden signatures */
 
@@ -144,6 +167,18 @@ const ASSET_RULES = [
   { dir: "js", ext: [".js"] },
   { dir: "assets", ext: [".jpg", ".jpeg", ".png", ".webp", ".svg", ".ico", ".gif", ".avif"] },
   { dir: "pl", ext: [".html"] },
+  /*
+    The staff login page. One directory, one HTML file, no Polish counterpart:
+    there is a single login page rather than one per language. It is an
+    operational route, registered as noindex in src/_data/publicRoutes.js.
+  */
+  /*
+    The staff login page, and the one script it loads: @netlify/identity,
+    bundled from the pinned package and served from this origin rather than a
+    CDN. One directory, no Polish counterpart — there is a single login page
+    rather than one per language.
+  */
+  { dir: "staff-login", ext: [".html", ".js"] },
 ];
 {
   const nonRoot = files.filter((f) => f.includes("/"));
@@ -237,3 +272,28 @@ if (failures === 0) console.log(`  PASS — ${results.length}/${results.length} 
 else console.log(`  FAIL — ${failures} of ${results.length} deployment-tree checks`);
 console.log("=".repeat(70) + "\n");
 process.exit(failures === 0 ? 0 : 1);
+
+/* ------------------------------------------------- the content manager */
+
+/*
+  Only two states are acceptable: no admin at all (an ordinary build), or a
+  complete one that is marked noindex and carries no secret. A HALF-built admin
+  is the dangerous middle — an editor would meet a CMS that cannot load.
+*/
+if (adminFiles.length === 0) {
+  check("no content manager in this build (ordinary public build)", true, "none");
+} else {
+  check("the content manager is complete",
+    adminFiles.includes("admin/index.html") && adminFiles.includes("admin/config.yml"),
+    adminFiles.length + " files");
+
+  const adminHtml = adminFiles.filter((f) => f.endsWith(".html"));
+  const notNoindex = adminHtml.filter((f) =>
+    !/<meta name="robots"[^>]*noindex/i.test(fs.readFileSync(path.join(DIST, f), "utf8")));
+  check("every content-manager page is noindex", notNoindex.length === 0, notNoindex);
+
+  const config = fs.readFileSync(path.join(DIST, "admin", "config.yml"), "utf8");
+  check("the content manager points at the production backend, not a developer machine",
+    /proxy_url:\s*["']?\/api\/cms/.test(config) && !/localhost|127\.0\.0\.1/.test(config),
+    config.split("\n").filter((l) => /proxy_url/.test(l)).join(" "));
+}

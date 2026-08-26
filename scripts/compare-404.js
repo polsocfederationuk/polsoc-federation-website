@@ -122,8 +122,18 @@ function parse(html) {
         .map((m) => `${m[3].trim()}=${m[1]}${/aria-current/.test(m[0]) ? " (current)" : ""}`)
     : [];
   const footLinks = html.match(/<footer class="site-footer">([\s\S]*?)<\/footer>/);
+  /*
+    THE STAFF LOGIN LINK (Phase 17D.1), human-approved.
+
+    The public footer gained exactly one link, in both languages. It is removed
+    here so everything ELSE about the footer is still compared strictly, and its
+    presence is asserted separately below — a relaxed comparison would also hide
+    a second new link, which this does not.
+  */
+  out.chrome.staffLogin = /href="[^"]*\/staff-login\/"/.test(html);
   out.chrome.footerHrefs = footLinks
-    ? [...footLinks[1].matchAll(/href="([^"]+)"/g)].map((m) => m[1]) : [];
+    ? [...footLinks[1].matchAll(/href="([^"]+)"/g)].map((m) => m[1])
+      .filter((href) => !href.endsWith("/staff-login/")) : [];
   out.chrome.footerLogo = footLinks
     ? (footLinks[1].match(/<img src="([^"]+)" alt="([^"]*)">/) || []).slice(1, 3) : null;
 
@@ -206,7 +216,14 @@ function comparePage(name, livePath, genPath, expect) {
   check(p("card destinations are root-relative"), [],
     gen.cards.map((c) => c.href).filter((h) => !h.startsWith("/")));
 
-  for (const k of Object.keys(live.chrome)) check(p(`chrome: ${k}`), live.chrome[k], gen.chrome[k]);
+  for (const k of Object.keys(live.chrome)) {
+    // staffLogin is an APPROVED difference, asserted as a pair just below
+    // rather than compared for equality — it is meant to differ.
+    if (k === "staffLogin") continue;
+    check(p(`chrome: ${k}`), live.chrome[k], gen.chrome[k]);
+  }
+  check(p("APPROVED: the live footer had no Staff login link"), false, live.chrome.staffLogin);
+  check(p("APPROVED: the generated footer offers Staff login"), true, gen.chrome.staffLogin);
 
   check(p("stylesheet references"), live.refs.stylesheets, gen.refs.stylesheets);
   check(p("script references"), live.refs.scripts, gen.refs.scripts);

@@ -19,6 +19,7 @@ const fs = require("fs");
 const path = require("path");
 const yaml = require("js-yaml");
 const MarkdownIt = require("markdown-it");
+const registrationModel = require("./src/_data/registration.js");
 
 /* ===========================================================================
    Markdown for announcement bodies.
@@ -193,7 +194,15 @@ function eventImagePaths() {
     add(rec.og_image);
     add(rec.hero_image);
     add(rec.card_image);
+    // The dedicated gallery, since Phase 17C.5A.3. The Business Forum still
+    // uses its own section list, so both are collected.
+    for (const im of ((rec.gallery || {}).images) || []) add(im.src);
     for (const sec of rec.sections || []) for (const im of sec.images || []) add(im.src);
+    // Photographs placed inside the Main body as Markdown images.
+    for (const locale of ["en", "pl"]) {
+      const body = String(((rec[locale] || {}).body) || "");
+      for (const m of body.matchAll(/![[^]]*](([^)]+))/g)) add(m[1]);
+    }
     for (const co of rec.co_organisers || []) add(co.logo);
 
     const bf = rec.business_forum;
@@ -342,6 +351,24 @@ module.exports = function (eleventyConfig) {
   // resolves against the page URL and silently breaks under /pl/.
   // (docs/CLEANUP_BASELINE.md §5 — this shipped as a live bug once.)
   eleventyConfig.addFilter("asset", (p) => "/" + String(p).replace(/^\/+/, ""));
+
+  /**
+   * The style attribute for a stored image focus, or an empty string.
+   *
+   * Templates never build this themselves — see src/_data/focalPoint.js for why.
+   * An absent or unrecognised focus produces NOTHING, which is what keeps every
+   * record that has never had one rendering exactly as it did before.
+   */
+  /**
+   * The event's public social posts, already validated and with their embed
+   * addresses derived. See src/_data/socialPosts.js — the template renders no
+   * editor-supplied markup, only values this produces.
+   */
+  eleventyConfig.addFilter("socialPosts",
+    (event) => require("./src/_data/socialPosts.js").socialPostsFor(event));
+
+  eleventyConfig.addFilter("focalStyleAttr",
+    (value) => require("./src/_data/focalPoint.js").focalStyleAttr(value));
 
   // Public URL for a page, given a locale. English lives at the root, Polish
   // under /pl/, and every page keeps its .html extension.
@@ -527,6 +554,23 @@ module.exports = function (eleventyConfig) {
    * wrong is the kind of thing a generated date silently introduces, so the two
    * cases are formatted separately.
    */
+  /**
+   * One calendar day, written out in the page's language.
+   *
+   * Uses the same split-the-string formatter as every other date on the site,
+   * never `new Date(...)`, so a build in any timezone renders the same day.
+   */
+  /**
+   * An event's own registration, reduced to what the panel renders.
+   *
+   * The same shape an announcement resolves to, so both use one template
+   * vocabulary — see src/_data/registration.js.
+   */
+  eleventyConfig.addFilter("eventRegistration",
+    (event) => registrationModel.normalise((event || {}).registration));
+
+  eleventyConfig.addFilter("eventDate", (iso, localeCode) => formatDate(iso, localeCode));
+
   eleventyConfig.addFilter("eventDisplayDate", (event, localeCode) => {
     const iso = String(event.start_date || "");
     if (event.date_precision === "month") {
@@ -638,6 +682,30 @@ module.exports = function (eleventyConfig) {
    * Ordering is by the explicit `order` field only — never filesystem order,
    * never YAML key order, never a parsed date.
    */
+  /**
+   * Find a standard event by slug, for announcements that point their
+   * registration at one.
+   *
+   * Read from disk here rather than threaded through the data cascade because
+   * `announcementsFor` is a filter and receives only the announcement records.
+   * Cached for the build: the files do not change while it runs.
+   */
+  let eventCache = null;
+  const lookupEventBySlug = (slug) => {
+    if (!eventCache) {
+      eventCache = new Map();
+      const dir = path.join(__dirname, "content", "events");
+      if (fs.existsSync(dir)) {
+        for (const file of fs.readdirSync(dir)) {
+          if (!/\.ya?ml$/i.test(file)) continue;
+          const data = yaml.load(fs.readFileSync(path.join(dir, file), "utf8")) || {};
+          if (data.slug) eventCache.set(String(data.slug), data);
+        }
+      }
+    }
+    return eventCache.get(String(slug)) || null;
+  };
+
   eleventyConfig.addFilter("announcementsFor", (records, localeCode, academicYear) =>
     (records || [])
       .filter((a) => a.published === true && a.academic_year === academicYear)
@@ -663,7 +731,45 @@ module.exports = function (eleventyConfig) {
         if (a.image_position) out.imagePos = a.image_position;
         if (a.image_fit) out.fit = a.image_fit;
         if (a.image_background) out.bg = a.image_background;
-        if (a.signups_closed) out.closed = true;
+        /*
+          REGISTRATION.
+
+          `out.closed` is kept exactly as it was, and still drives exactly the
+          same markup and wording it always did. That is deliberate: the eight
+          records that were `signups_closed: true` became
+          `registration.state: closed` in Phase 17C.3, and their pages must not
+          change a pixel because of a schema migration. Only genuinely NEW states
+          add anything to the page.
+
+          Registration is emitted separately from `link` and never merges with
+          it: an announcement may carry a link to the details AND a registration
+          button, pointing at different places.
+        */
+        /*
+          RESOLVED, not read directly (Phase 17C.5A.2).
+
+          An announcement may now point its registration at a Federation event
+          instead of repeating it. `effectiveRegistration` returns the event's
+          current values in that case and the announcement's own otherwise, so
+          the twenty-eight migrated records — which carry no `source` key —
+          resolve to exactly what they always did.
+        */
+        const eff = registrationModel.effectiveRegistration(a, lookupEventBySlug);
+        const reg = { url: eff.url, opens_on: eff.opensOn, closes_on: eff.closesOn };
+        const state = eff.state;
+
+        if (state === "closed") out.closed = true;
+
+        if (state === "coming_soon" || state === "open") {
+          out.registration = { state };
+          if (state === "open" && reg.url) out.registration.url = reg.url;
+          if (reg.opens_on) out.registration.opensOn = reg.opens_on;
+          if (reg.closes_on) out.registration.closesOn = reg.closes_on;
+        } else if (state === "closed" && reg && reg.closes_on) {
+          // A deadline is worth showing beside "closed"; the state itself still
+          // renders through `out.closed` above, unchanged.
+          out.registration = { state: state, closesOn: reg.closes_on };
+        }
         if (a.extra_images && a.extra_images.length) out.extraImages = a.extra_images.slice();
         if (a.link && a.link.type) {
           if (a.link.type === "event") {
@@ -847,10 +953,99 @@ module.exports = function (eleventyConfig) {
     eleventyConfig.ignores.add("src/build-test/**");
   }
 
+  // ---------------------------------------------------------------------
+  // THE ADMIN PANEL IS NOT PRODUCTION OUTPUT.
+  //
+  // src/admin/ generates the local Decap CMS entry point. It is development
+  // tooling: it is configured against a local file-system proxy that writes
+  // directly into the working tree, and it carries no authentication whatever.
+  // Publishing it would put an unauthenticated content editor on the public
+  // internet.
+  //
+  // A normal build therefore IGNORES it completely, exactly as it ignores the
+  // fixtures — so `npm run build` cannot emit dist/admin/ even by accident.
+  // `CMS_DEV=1` opts in, and is only ever set by the `cms:*` npm scripts.
+  //
+  // See docs/CMS_FOUNDATION.md §2.
+  // ---------------------------------------------------------------------
+  /*
+    THREE BUILDS, NOT TWO (Phase 17D.1).
+
+      CMS_DEV=1              the local admin, into .cms/ — unchanged
+      CMS_TARGET=production  the public site INCLUDING dist/admin/
+      neither                the public site with no admin at all
+
+    The third is still the default, so an ordinary `npm run build` cannot emit
+    an admin panel by accident. Production is opted into by one explicit
+    variable, set only by `npm run build:production`.
+  */
+  const CMS_PRODUCTION = process.env.CMS_TARGET === "production" && !FIXTURES;
+
+  /*
+    The bundled @netlify/identity library, served beside the login page.
+
+    Copied for every build that emits that page — which is every public build,
+    because the footer links to it. Generated by scripts/build-identity.js from
+    the pinned package; see src/admin/staff-login.js for why it is self-hosted
+    rather than loaded from a CDN.
+  */
+  if (!FIXTURES) {
+    eleventyConfig.addPassthroughCopy({
+      "src/admin/netlify-identity.bundle.js": "staff-login/netlify-identity.js",
+    });
+  }
+  const CMS_DEV = process.env.CMS_DEV === "1" && !FIXTURES;
+  if (CMS_DEV) {
+    // Build ONLY the admin, and into .cms/ rather than dist/.
+    //
+    // THIS SEPARATION IS THE FIX FOR A REAL EDITOR-FACING BUG. The admin used to
+    // be built into dist/, which is also the public build's output directory —
+    // so `npm run clean`, `npm run build` and `npm run validate:cms` deleted the
+    // files backing a CMS an editor had open. Decap lazy-loads ~90 code-split
+    // chunks after first paint, so the page kept working from memory while any
+    // not-yet-fetched chunk started returning 404: "Failed to fetch", seemingly
+    // at random, in whichever feature the editor happened to reach next.
+    //
+    // dist/ is now exclusively the public website; .cms/ is exclusively the
+    // development CMS runtime, and no public build command touches it.
+    for (const t of ["src/*.njk", "src/js/**", "src/build-test/**"]) {
+      eleventyConfig.ignores.add(t);
+    }
+    // The Decap browser bundle, vendored from the pinned package rather than
+    // loaded from a CDN. The whole directory is copied, not just the entry
+    // file: the bundle is code-split into lazily-loaded chunks that resolve
+    // relative to itself, and a missing chunk breaks a widget at the moment an
+    // editor uses it.
+    //
+    // `decap-cms`, not `decap-cms-app`: the latter is a UMD module that leaves
+    // React and ReactDOM as externals and does not initialise itself, so it
+    // cannot be dropped straight into a <script> tag. `decap-cms` is the
+    // self-contained browser build.
+    eleventyConfig.addPassthroughCopy({
+      "node_modules/decap-cms/dist": "admin",
+    });
+  } else if (CMS_PRODUCTION) {
+    /*
+      The production admin, from the same source as the local one — so there is
+      one CMS to maintain, not two. What differs is the generated config.yml:
+      CMS_TARGET=production switches its backend to the same-origin /api/cms
+      Netlify Function. See src/_data/cmsConfig.js and docs/CMS_PRODUCTION.md.
+
+      Bulk manage is emitted here too. It posts to /api/bulk/*, which is the
+      local Node server on a developer's machine and a Netlify Function in
+      production; the screen does not know the difference.
+    */
+    eleventyConfig.addPassthroughCopy({ "node_modules/decap-cms/dist": "admin" });
+  } else {
+    eleventyConfig.ignores.add("src/admin/**");
+  }
+
   return {
     dir: {
       input: "src",
-      output: FIXTURES ? ".fixtures" : "dist",
+      // Three separate trees, deliberately: .fixtures/ for architectural proof
+      // pages, .cms/ for the development admin, dist/ for the public site alone.
+      output: FIXTURES ? ".fixtures" : CMS_DEV ? ".cms" : "dist",
       includes: "_includes",
       data: "_data",
     },

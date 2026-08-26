@@ -50,6 +50,26 @@ const labelText = (h) => (text(h) || "").replace(/\s*→\s*$/, "").trim() || nul
 
 /* --------------------------------------------------------------- extraction */
 
+
+/*
+  THE STAFF LOGIN LINK (Phase 17D.1), human-approved.
+
+  The public footer gained exactly one link, in both languages, pointing at the
+  Staff login page for committee officers. It is the only intentional public
+  change in that phase.
+
+  Handled as an enumerated addition rather than by relaxing the comparison: the
+  generated footer must contain it, the live footer must NOT (the live pages
+  predate it), and everything else about the footer must still match exactly. A
+  second new link, or this one going missing, still fails.
+*/
+const STAFF_LOGIN = "staff-login/";
+
+/** The footer as it should be, ignoring only the one approved addition. */
+function footerWithoutStaffLogin(links) {
+  return links.filter((href) => !String(href).endsWith(STAFF_LOGIN));
+}
+
 function parse(html) {
   const o = {};
   const head = html.split("</head>")[0];
@@ -244,7 +264,11 @@ for (const page of PAGES) {
   check(`${tag} navigation items`, L.navItems, G.navItems);
   check(`${tag} Events is the active nav item`, L.activeNav, G.activeNav);
   check(`${tag} language switcher destinations`, L.langSwitch, G.langSwitch);
-  check(`${tag} footer links`, L.footerLinks, G.footerLinks);
+  check(`${tag} footer links`, L.footerLinks, footerWithoutStaffLogin(G.footerLinks));
+  check(`${tag} APPROVED: the footer offers Staff login`,
+    true, G.footerLinks.some((href) => String(href).endsWith(STAFF_LOGIN)));
+  check(`${tag} APPROVED: the live footer did not`,
+    false, L.footerLinks.some((href) => String(href).endsWith(STAFF_LOGIN)));
 
   /* ---- hero ---- */
   check(`${tag} hero section classes`, L.heroClasses, G.heroClasses);

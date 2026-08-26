@@ -1,0 +1,47 @@
+{#
+  The event's registration panel.
+
+  Rendered ONLY when the state is something other than "none", so every event
+  that has never had a registration — which today is all of them — emits nothing
+  and its page is byte-identical to before.
+
+  The status is always shown. The date sentence appears only when the date it
+  refers to actually exists: an empty placeholder tells a reader nothing, and a
+  "closes on" line with no date is worse than silence.
+
+  Only OPEN produces a link. Coming soon and closed are statements about a
+  sign-up, not somewhere to click, and inventing a URL for them would send people
+  to a page that cannot help them.
+
+  Classes are the ones the site already ships — `.btn.btn-primary` for the action
+  and `.ann-closed` for the status pill. css/style.css at the repository root is
+  the LIVE deployed stylesheet and stays frozen until the approved cutover, so
+  this styles itself out of what is already there rather than quietly editing
+  production.
+#}
+{%- if reg and reg.state and reg.state != "none" %}
+    <div class="event-registration reveal">
+      <h2 class="section-title">{{ t.eventRegistration.heading }}</h2>
+
+{%- if reg.state == "open" and reg.url %}
+      <div class="ann-link">
+        <a class="btn btn-primary" href="{{ reg.url }}" target="_blank" rel="noopener">
+          {{ t.eventRegistration.register }} <span class="arrow">→</span>
+        </a>
+      </div>
+{%- elif reg.state == "coming_soon" %}
+      <div class="ann-closed">{{ t.eventRegistration.comingSoon }}</div>
+{%- elif reg.state == "closed" %}
+      <div class="ann-closed">{{ t.eventRegistration.closed }}</div>
+{%- endif %}
+
+{#- The one date that matters for this state, and only if it is set. -#}
+{%- if reg.state == "coming_soon" and reg.opensOn %}
+      <p>{{ t.eventRegistration.opensOn | replace("{date}", reg.opensOn | eventDate(locale.code)) }}</p>
+{%- elif reg.state == "open" and reg.closesOn %}
+      <p>{{ t.eventRegistration.closesOn | replace("{date}", reg.closesOn | eventDate(locale.code)) }}</p>
+{%- elif reg.state == "closed" and reg.closesOn %}
+      <p>{{ t.eventRegistration.closedOn | replace("{date}", reg.closesOn | eventDate(locale.code)) }}</p>
+{%- endif %}
+    </div>
+{%- endif %}

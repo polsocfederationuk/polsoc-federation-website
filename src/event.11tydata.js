@@ -10,6 +10,22 @@
 
 "use strict";
 
+const eventText = require("./_data/eventText.js");
+const ui = require("./_data/ui.json");
+
+/**
+ * Every piece of wording this page needs, with the Phase 17C.5A fallbacks
+ * already applied — see src/_data/eventText.js. Existing records carry their
+ * authored overrides and are unaffected; a new record that fills in only
+ * Summary gets sensible text in all of these places.
+ */
+function effective(data) {
+  if (!data.page_pair) return null;
+  const { event, locale } = data.page_pair;
+  const org = ((ui[locale.code] || {}).footer || {}).orgName || "";
+  return eventText.effectiveText(event[locale.code] || {}, event, org);
+}
+
 module.exports = {
   eleventyComputed: {
     // The shared chrome reads `locale`; the pagination pair carries it.
@@ -22,8 +38,8 @@ module.exports = {
 
     activeNav: () => "events",
 
-    pageTitle: (data) => localised(data, "seo_title"),
-    pageDescription: (data) => localised(data, "seo_description"),
+    pageTitle: (data) => { const e = effective(data); return e ? e.searchTitle || null : null; },
+    pageDescription: (data) => { const e = effective(data); return e ? e.searchDescription || null : null; },
 
     // The live event pages are og:type "article", not the layout's "website"
     // default.
@@ -77,17 +93,17 @@ function buildJsonLd(event, locale, site) {
   if (event.date_precision !== "day") return null;
   if (!/^\d{4}-\d{2}-\d{2}$/.test(String(event.start_date))) return null;
   const loc = event[locale.code] || {};
+  // Structured data uses the same fallback chain the page and card use.
+  const org = ((ui[locale.code] || {}).footer || {}).orgName || "";
+  const eff = eventText.effectiveText(loc, event, org);
   const ld = {
     "@context": "https://schema.org",
     "@type": "Event",
     // Mirrors eventSchemaName() in eleventy.config.js: parts joined with a
     // SPACE (the `.fancy` span is inline and adds none), and `schema_name`
     // overriding where the live JSON-LD names the year but the heading does not.
-    name: loc.schema_name
-      ? String(loc.schema_name).trim()
-      : [loc.title_lead, loc.title_fancy, loc.title_tail]
-        .map((p) => String(p == null ? "" : p).trim()).filter(Boolean).join(" "),
-    description: loc.schema_description,
+    name: eff.structuredName,
+    description: eff.structuredDescription,
     image: site.domain + event.og_image,
     startDate: event.start_date,
     eventStatus: "https://schema.org/EventScheduled",

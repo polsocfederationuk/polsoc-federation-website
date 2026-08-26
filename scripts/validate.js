@@ -104,7 +104,8 @@ function stripTomlComments(src) {
  * Returns { publish, command, mode, problems[] }. `command` is `null` when no
  * key is declared and `""` when one is declared empty — a meaningful difference,
  * because an empty command is a broken build, not the absence of one.
- * `mode` is "repository-root", "generated-dist", or "unsupported".
+ * `mode` is "repository-root", "generated-dist", "production-cms" or
+ * "unsupported".
  */
 function parseDeploymentState(tomlSource) {
   const problems = [];
@@ -146,10 +147,28 @@ function parseDeploymentState(tomlSource) {
   const publish = publishes.length === 1 ? publishes[0] : null;
   const command = commands.length === 1 ? commands[0] : (commands.length === 0 ? null : undefined);
 
+  /*
+    THREE SUPPORTED STATES, not two (Phase 17D.1).
+
+      repository-root   the old site, served from the checkout as-is
+      generated-dist    Eleventy builds the public site, no admin panel
+      production-cms    Eleventy builds the public site AND the content manager
+
+    The third was added when the CMS went online. It is a different command
+    because it is a different output: `npm run build:production` sets
+    CMS_TARGET=production, which is the only thing that puts dist/admin/ and the
+    same-origin backend into the deployment tree, and it then re-reads what it
+    produced to prove no local endpoint or credential went with it.
+
+    A command that is neither remains unsupported. That is the point of pinning
+    it: publish and command have to agree, and this is where a half-finished
+    cutover gets caught.
+  */
   let mode = "unsupported";
   if (problems.length === 0) {
     if (publish === "." && command === null) mode = "repository-root";
     else if (publish === "dist" && command === "npm run build") mode = "generated-dist";
+    else if (publish === "dist" && command === "npm run build:production") mode = "production-cms";
   }
   return { publish, command, mode, problems };
 }
@@ -187,7 +206,8 @@ function describeUnsupportedDeployment(state) {
   }
   if (state.publish === "dist") {
     return `publish = "dist" but the command is ${JSON.stringify(state.command)}; `
-      + 'the generated-dist state requires exactly "npm run build".';
+      + 'a generated-dist deployment requires exactly "npm run build", and a '
+      + 'production-cms deployment exactly "npm run build:production".';
   }
   if (state.publish === "." && state.command !== null) {
     return `publish = "." with a build command (${JSON.stringify(state.command)}) — the repository-root `
@@ -699,9 +719,18 @@ if (exists("netlify.toml")) {
     assert(deployState().command === "npm run build",
       'generated-dist deployment declares command = "npm run build"',
       "generated-dist deployment has the wrong build command", deployState().command);
+  } else if (deployState().mode === "production-cms") {
+    /*
+      The production-CMS deployment builds the admin panel as well, which is the
+      one build that is ALLOWED to put /admin/ into the deployment tree. The
+      command itself proves the intent: nothing else sets CMS_TARGET=production.
+    */
+    assert(deployState().command === "npm run build:production",
+      'production-cms deployment declares command = "npm run build:production"',
+      "production-cms deployment has the wrong build command", deployState().command);
   } else {
     assert(false,
-      "the Netlify build configuration is one of the two supported states",
+      "the Netlify build configuration is one of the supported states",
       `unsupported Netlify deployment configuration — ${describeUnsupportedDeployment(deployState())}`);
   }
 }
@@ -754,14 +783,22 @@ if (exists("eleventy.config.js")) {
   // physically cannot read or rewrite the public HTML at the repository root.
   // Phase 15 made the OUTPUT directory conditional: dist/ for a normal build and
   // .fixtures/ when BUILD_FIXTURES=1, so no test page can reach the deployment
-  // tree. Both branches are asserted, and input stays scoped to src/ — which is
-  // the actual containment guarantee, since it is what stops the build reading or
-  // rewriting the public HTML at the repository root.
+  // tree. Phase 17C.2 added a THIRD branch, .cms/ when CMS_DEV=1, because the
+  // admin used to be built into dist/ — where `npm run clean`, `npm run build`
+  // and every validator deleted it out from under a CMS an editor had open. That
+  // was the cause of the "Failed to fetch" reports. Each branch is asserted
+  // separately so none of the three can quietly collapse into another.
   assert(/input:\s*"src"/.test(cfg), "Eleventy input is scoped to src/ — the build cannot touch the repository root",
     "Eleventy input is not scoped to src/");
-  assert(/output:\s*FIXTURES \? "\.fixtures" : "dist"/.test(cfg),
-    "Eleventy output is dist/ for a normal build and .fixtures/ only when BUILD_FIXTURES=1",
-    "the Eleventy output directory is not the expected dist/ vs .fixtures/ split");
+  assert(/output:\s*FIXTURES \? "\.fixtures" : CMS_DEV \? "\.cms" : "dist"/.test(cfg),
+    "Eleventy output is dist/ normally, .fixtures/ when BUILD_FIXTURES=1 and .cms/ when CMS_DEV=1",
+    "the Eleventy output directory is not the expected dist/ vs .fixtures/ vs .cms/ split");
+  // The separation only holds if the CMS branch is genuinely mutually exclusive
+  // with the fixtures branch; `CMS_DEV=1 BUILD_FIXTURES=1` must not write the
+  // admin into the fixtures tree.
+  assert(/CMS_DEV\s*=\s*process\.env\.CMS_DEV === "1" && !FIXTURES/.test(cfg),
+    "CMS_DEV and BUILD_FIXTURES cannot both be active, so the admin cannot land in .fixtures/",
+    "CMS_DEV is not mutually exclusive with BUILD_FIXTURES");
   assert(/eleventyConfig\.ignores\.add\("src\/build-test\/\*\*"\)/.test(cfg),
     "a normal build ignores src/build-test/, so fixtures cannot enter the deployment tree",
     "src/build-test/ is not ignored by a normal build");
@@ -884,9 +921,18 @@ if (!exists("dist")) {
       ...["sikorski-debate", "christmas-dinner", "youth-congress", "icebreaker", "business-forum"]
         .flatMap((s) => [`event-${s}.html`, `pl/event-${s}.html`])];
 
+    /*
+      OPERATIONAL PAGES ARE NOT MIGRATIONS (Phase 17D.1).
+
+      A production build also emits the content manager and the staff login
+      page. Neither is a migrated public page — nothing on the live site
+      corresponds to them — so they belong beside the build-test exclusion
+      rather than on a list of pages that replaced something.
+    */
+    const OPERATIONAL = (f) => f === "staff-login/index.html" || f.startsWith("admin/");
     const generatedHtml = distFiles.filter((f) => f.endsWith(".html"));
     const strayHtml = generatedHtml.filter(
-      (f) => !f.startsWith("build-test/") && !MIGRATED.includes(f)
+      (f) => !f.startsWith("build-test/") && !OPERATIONAL(f) && !MIGRATED.includes(f)
     );
     assert(strayHtml.length === 0,
       `all ${generatedHtml.length} generated HTML files are either under build-test/ or on the migrated allowlist (${MIGRATED.join(", ")})`,
@@ -924,6 +970,12 @@ if (!exists("dist")) {
       "js/team-filter.js": "src/js/team-filter.js",
       "js/announcements-page.js": "src/js/announcements-page.js",
       "js/members-page.js": "src/js/members-page.js",
+      /*
+        The @netlify/identity bundle the staff login page loads. Renamed on the
+        way out — it is generated by scripts/build-identity.js from the pinned
+        package, and the copy must still be byte-identical to what that produced.
+      */
+      "staff-login/netlify-identity.js": "src/admin/netlify-identity.bundle.js",
     };
     // Build PRODUCTS, not copies: these are rendered from templates and have no
     // byte-identical source, so they are excluded from the copy check and
@@ -941,7 +993,15 @@ if (!exists("dist")) {
     // built from the route inventory, so it deliberately differs from the
     // hand-maintained root file and must not be hash-compared against it.
     const GENERATED_NON_HTML = new Set([...GENERATED_ASSETS, "sitemap.xml"]);
-    const copied = distFiles.filter((f) => !f.endsWith(".html") && !GENERATED_NON_HTML.has(f));
+    /*
+      The content manager is copied from node_modules, not from this repository
+      (Phase 17D.1), so there is no source file here to hash it against. What
+      matters about it is that it is the PINNED build and that it carries no
+      credential — asserted by scripts/audit-dist.js and by the production
+      build script, both of which read the generated files back.
+    */
+    const copied = distFiles.filter((f) =>
+      !f.endsWith(".html") && !GENERATED_NON_HTML.has(f) && !f.startsWith("admin/"));
     const altered = copied.filter((f) => {
       const source = PASSTHROUGH_SOURCE[f] || f;
       return !exists(source) || hash("dist/" + f) !== hash(source);
@@ -1179,6 +1239,29 @@ assert(slugMismatch.length === 0,
   "every record's slug matches its filename",
   "records whose slug does not match the filename", slugMismatch);
 
+/*
+  Photograph focus (Phase 17C.3). Optional everywhere — every current member
+  leaves it empty and renders exactly as before — but a value that IS present
+  must be one the renderer accepts, because it reaches a `style` attribute.
+*/
+{
+  const F = require(path.join(ROOT, "src", "_data", "focalPoint.js"));
+  const badFocus = team
+    .filter((m) => m.photo_focus !== null && m.photo_focus !== undefined &&
+      F.parseFocal(m.photo_focus) === null)
+    .map((m) => `${m.slug}: ${JSON.stringify(m.photo_focus)}`);
+  assert(badFocus.length === 0,
+    "every photograph focus is one the website can actually use",
+    "photograph focus values the renderer would refuse", badFocus);
+
+  const focusWithoutPhoto = team
+    .filter((m) => m.photo_focus && !m.photo)
+    .map((m) => m.slug);
+  assert(focusWithoutPhoto.length === 0,
+    "no member has a photograph focus without a photograph to apply it to",
+    "focus set on a member with no photograph", focusWithoutPhoto);
+}
+
 const badGroup = current.filter((m) => !cfgKeys.includes(m.group)).map((m) => `${m.slug} -> ${m.group}`);
 assert(badGroup.length === 0,
   "every member references a group defined centrally",
@@ -1209,11 +1292,12 @@ for (const m of current) {
       missingShared.push(`${m.slug}: ${f}`);
     }
   }
-  if (!("photo" in m)) missingShared.push(`${m.slug}: photo (may be null, but must be present)`);
+  // `photo` is deliberately NOT required to be present — see the photograph
+  // block below. Absent and explicitly null both mean "no photograph".
   if (!("published" in m)) missingShared.push(`${m.slug}: published`);
 }
 assert(missingShared.length === 0,
-  `all ${SHARED_REQUIRED.length + 2} shared invariant fields are present on every member`,
+  `all ${SHARED_REQUIRED.length + 1} shared invariant fields are present on every member`,
   "members missing a required shared field", missingShared);
 
 const badOrder = current.filter((m) => !Number.isInteger(m.order)).map((m) => `${m.slug}: ${m.order}`);
@@ -1241,8 +1325,36 @@ assert(copiedRole.length === 0,
   "no Polish role is a copy of its English counterpart",
   "identical English and Polish roles — a translation is probably missing", copiedRole);
 
-const withPhoto = current.filter((m) => m.photo);
-const withoutPhoto = current.filter((m) => !m.photo);
+/* -- photographs ------------------------------------------------------------
+ *
+ * THE RULE: `photo` may be ABSENT or explicitly NULL — both mean "this member
+ * has no photograph". If present and non-null it must be a real Team asset.
+ *
+ * Absence became a legitimate spelling in Phase 17A.1. A hand-written record
+ * says `photo: null`; Decap omits the key entirely when an editor selects no
+ * image, and has no way to write an explicit null. Rejecting the CMS's natural
+ * output would have meant hand-editing YAML after every photograph-less member
+ * — which is exactly the work the CMS exists to remove.
+ *
+ * What did NOT relax: anything that is present must still be a root-relative
+ * path under /assets/team/ that resolves to a real file. An empty string, an
+ * external URL, a /pl/-prefixed path, a Windows path or a non-string scalar are
+ * all still failures, and are reported separately so the message names the
+ * actual problem.
+ *
+ * See docs/CMS_FOUNDATION.md §9.
+ * ------------------------------------------------------------------------- */
+
+/** "none" | "path" | "empty" | "type" — the four states `photo` can be in. */
+function photoState(m) {
+  if (!("photo" in m) || m.photo === null) return "none";
+  if (typeof m.photo !== "string") return "type";
+  if (m.photo.trim() === "") return "empty";
+  return "path";
+}
+
+const withPhoto = current.filter((m) => photoState(m) === "path");
+const withoutPhoto = current.filter((m) => photoState(m) === "none");
 
 const missingAlt = withPhoto.filter((m) => !(m.en && m.en.photo_alt) || !(m.pl && m.pl.photo_alt))
   .map((m) => m.slug);
@@ -1250,10 +1362,28 @@ assert(missingAlt.length === 0,
   `all ${withPhoto.length} members with a photograph have English and Polish alt text`,
   "members with a photograph but no localised alt text", missingAlt);
 
-assert(withoutPhoto.every((m) => m.photo === null),
-  `a null photograph is accepted (${withoutPhoto.length} member: ${withoutPhoto.map((m) => m.name).join(", ") || "none"})`,
-  "a member without a photograph uses something other than an explicit null",
-  withoutPhoto.map((m) => `${m.slug}: ${JSON.stringify(m.photo)}`));
+{
+  const absent = withoutPhoto.filter((m) => !("photo" in m));
+  const explicit = withoutPhoto.filter((m) => m.photo === null);
+  assert(true,
+    `a photograph-less member may omit \`photo\` or set it to null ` +
+    `(${withoutPhoto.length}: ${explicit.length} explicit null, ${absent.length} absent)`);
+}
+
+// A value that is present but unusable. These would previously have been caught
+// by the "must be an explicit null" rule; now that absence is legal, they need
+// naming in their own right or they would slip through as "no photograph".
+const emptyPhoto = current.filter((m) => photoState(m) === "empty")
+  .map((m) => `${m.slug}: ${JSON.stringify(m.photo)}`);
+assert(emptyPhoto.length === 0,
+  "no member uses an empty string for a photograph (omit the key or use null)",
+  "empty-string photograph values", emptyPhoto);
+
+const typedPhoto = current.filter((m) => photoState(m) === "type")
+  .map((m) => `${m.slug}: ${JSON.stringify(m.photo)} (${typeof m.photo})`);
+assert(typedPhoto.length === 0,
+  "every photograph value is a string or null, never a number, boolean or list",
+  "photograph values of the wrong type", typedPhoto);
 
 const strayAlt = withoutPhoto.filter((m) => (m.en && m.en.photo_alt) || (m.pl && m.pl.photo_alt))
   .map((m) => m.slug);
@@ -1261,7 +1391,29 @@ assert(strayAlt.length === 0,
   "no photograph-less member carries alt text for an image that does not exist",
   "alt text on a member with no photograph", strayAlt);
 
-const badPhotoPath = withPhoto.filter((m) => !String(m.photo).startsWith("/assets/team/"))
+// Reported separately from the general prefix rule so the failure message says
+// what is actually wrong rather than "not root-relative".
+const externalPhoto = withPhoto.filter((m) => /^[a-z][a-z0-9+.-]*:\/\//i.test(m.photo) || m.photo.startsWith("//"))
+  .map((m) => `${m.slug}: ${m.photo}`);
+assert(externalPhoto.length === 0,
+  "no photograph is hotlinked from an external site",
+  "external photograph URLs — headshots must be files in this repository", externalPhoto);
+
+const windowsPhoto = withPhoto.filter((m) => /^[A-Za-z]:[\\/]/.test(m.photo) || m.photo.includes("\\"))
+  .map((m) => `${m.slug}: ${m.photo}`);
+assert(windowsPhoto.length === 0,
+  "no photograph path is an absolute local filesystem path",
+  "local filesystem paths — these exist only on one machine", windowsPhoto);
+
+// The /pl/ bug class: a page-relative path resolves to /pl/assets/… from the
+// Polish page and 404s.
+const localisedPhoto = withPhoto.filter((m) => m.photo.startsWith("/pl/") || m.photo.includes("/pl/assets/"))
+  .map((m) => `${m.slug}: ${m.photo}`);
+assert(localisedPhoto.length === 0,
+  "no photograph path is language-prefixed (/pl/assets/… would 404)",
+  "language-prefixed photograph paths", localisedPhoto);
+
+const badPhotoPath = withPhoto.filter((m) => !m.photo.startsWith("/assets/team/"))
   .map((m) => `${m.slug}: ${m.photo}`);
 assert(badPhotoPath.length === 0,
   "every photograph path is root-relative under /assets/team/",
@@ -1728,16 +1880,56 @@ const annBadYear = annAll.filter((a) => !/^\d{4}\/\d{2}$/.test(String(a.academic
 assert(annBadYear.length === 0, "every announcement `academic_year` matches YYYY/YY",
   "malformed announcement academic years", annBadYear);
 
-// The date must be a STRING. Unquoted in YAML it parses to a JS Date, whose
-// stringification is timezone-dependent and would make the build non-deterministic.
-const annDateType = annAll.filter((a) => typeof a.published_date !== "string")
-  .map((a) => `${a.slug}: ${Object.prototype.toString.call(a.published_date)}`);
+/* -- the publication date --------------------------------------------------
+ *
+ * `published_date` must be a DATE-ONLY value, and it has two legal spellings.
+ *
+ * The canonical files quote it, so YAML yields a string. Decap re-serialises
+ * with `yaml`@1, whose YAML 1.2 core schema treats a bare 2025-10-26 as an
+ * ordinary string and writes it unquoted; js-yaml's default schema still carries
+ * YAML 1.1 timestamps and reads that same line back as a Date. Both spellings
+ * denote the same calendar day, and src/_data/records.js converts the second to
+ * the first through UTC components before anything renders it.
+ *
+ * What is still rejected, and why it matters: a Date carrying a real TIME
+ * component. `2025-10-26T13:45:00Z` is not a date-only value — rendering it
+ * depends on the reader's timezone, and in Warsaw it can display the previous
+ * day. That is the actual hazard; the quoting is only its symptom.
+ *
+ * See docs/CMS_ANNOUNCEMENTS.md §6.
+ * ------------------------------------------------------------------------- */
+
+/** The canonical "YYYY-MM-DD" for either spelling, or null if it is neither. */
+function canonicalAnnouncementDate(value) {
+  if (typeof value === "string") return value;
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    const midnightUTC = value.getUTCHours() === 0 && value.getUTCMinutes() === 0 &&
+      value.getUTCSeconds() === 0 && value.getUTCMilliseconds() === 0;
+    return midnightUTC ? value.toISOString().slice(0, 10) : null;
+  }
+  return null;
+}
+
+const annDateType = annAll.filter((a) => canonicalAnnouncementDate(a.published_date) === null)
+  .map((a) => `${a.slug}: ${a.published_date instanceof Date
+    ? a.published_date.toISOString() + " (carries a time component)"
+    : Object.prototype.toString.call(a.published_date)}`);
 assert(annDateType.length === 0,
-  "every `published_date` is a quoted string, not a parsed YAML date",
-  "unquoted dates — YAML turned these into timezone-sensitive Date objects", annDateType);
+  "every `published_date` is a date-only value (quoted string or bare YYYY-MM-DD)",
+  "publication dates that are not date-only — a time component makes rendering timezone-dependent",
+  annDateType);
+
+{
+  // Stated separately so the split between the two spellings is visible rather
+  // than merely tolerated.
+  const quoted = annAll.filter((a) => typeof a.published_date === "string").length;
+  const bare = annAll.length - quoted;
+  assert(true, `publication dates: ${quoted} quoted string(s), ${bare} bare YAML date(s) — both normalise to one value`);
+}
 
 const annBadDate = annAll.filter((a) => {
-  const s = String(a.published_date);
+  const s = canonicalAnnouncementDate(a.published_date);
+  if (s === null) return false;                       // already reported above
   if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return true;
   const [y, m, d] = s.split("-").map(Number);
   const dt = new Date(Date.UTC(y, m - 1, d));
@@ -1751,10 +1943,135 @@ const annBadPublished = annAll.filter((a) => typeof a.published !== "boolean")
 assert(annBadPublished.length === 0, "every announcement `published` is a real boolean",
   "non-boolean publication flags", annBadPublished);
 
-const annBadClosed = annAll.filter((a) => typeof a.signups_closed !== "boolean")
-  .map((a) => `${a.slug}: ${a.signups_closed}`);
-assert(annBadClosed.length === 0, "every announcement `signups_closed` is a real boolean",
-  "non-boolean closed flags", annBadClosed);
+/*
+  REGISTRATION replaced the `signups_closed` boolean in Phase 17C.3.
+
+  The old field could only say "closed" — it had no way to express "opens next
+  week" or "sign up here", and it left an editor no place to put a registration
+  address. The block that replaced it carries a state, an address and the two
+  dates, and is checked here in the same spirit as the flag it replaced: the
+  shape must be exactly right, because the browser renders a button from it.
+
+  The state is never inferred from today's date. This is a static site, so a
+  state that recalculated itself would be wrong the moment a date passed and
+  right again only after the next build.
+*/
+const REG_STATES = ["none", "coming_soon", "open", "closed"];
+
+const annNoReg = annAll.filter((a) => !a.registration || typeof a.registration !== "object")
+  .map((a) => a.slug);
+assert(annNoReg.length === 0, "every announcement carries a registration block",
+  "announcements with no registration block", annNoReg);
+
+const annBadState = annAll
+  .filter((a) => a.registration && REG_STATES.indexOf(a.registration.state) === -1)
+  .map((a) => `${a.slug}: ${a.registration.state}`);
+assert(annBadState.length === 0,
+  `every registration state is one of ${REG_STATES.join(", ")}`,
+  "unknown registration states", annBadState);
+
+// Only an OPEN registration may carry an address. A closed record holding a
+// live sign-up link is the exact confusion this model exists to prevent.
+const annStrayUrl = annAll
+  .filter((a) => a.registration && a.registration.state !== "open" && a.registration.url)
+  .map((a) => `${a.slug}: ${a.registration.state} but has ${a.registration.url}`);
+assert(annStrayUrl.length === 0,
+  "only an open registration carries a sign-up address",
+  "registration addresses on records that are not open", annStrayUrl);
+
+const annOpenNoUrl = annAll
+  .filter((a) => a.registration && a.registration.state === "open" && !a.registration.url)
+  .map((a) => a.slug);
+assert(annOpenNoUrl.length === 0,
+  "every open registration has a sign-up address",
+  "open registrations with nowhere to go", annOpenNoUrl);
+
+const annBadRegUrl = annAll
+  .filter((a) => a.registration && a.registration.url &&
+    !/^https:\/\/[^\s"'<>]+$/.test(a.registration.url))
+  .map((a) => `${a.slug}: ${a.registration.url}`);
+assert(annBadRegUrl.length === 0,
+  "every registration address is a plain https:// address",
+  "unsafe or malformed registration addresses", annBadRegUrl);
+
+const annBadRegDate = annAll.filter((a) => {
+  const r = a.registration || {};
+  const ok = (v) => v === null || v === undefined || /^\d{4}-\d{2}-\d{2}$/.test(v);
+  return !ok(r.opens_on) || !ok(r.closes_on);
+}).map((a) => `${a.slug}: ${a.registration.opens_on} / ${a.registration.closes_on}`);
+assert(annBadRegDate.length === 0,
+  "every registration date is a plain calendar day",
+  "registration dates that are not date-only", annBadRegDate);
+
+const annRegOrder = annAll.filter((a) => {
+  const r = a.registration || {};
+  return r.opens_on && r.closes_on && r.opens_on > r.closes_on;
+}).map((a) => `${a.slug}: opens ${a.registration.opens_on}, closes ${a.registration.closes_on}`);
+assert(annRegOrder.length === 0,
+  "no registration closes before it opens",
+  "registrations that close before they open", annRegOrder);
+
+/*
+  IMAGE FOCUS (Phase 17C.3).
+
+  These values are written into a `style` attribute, so they are validated with
+  the same narrow parser the renderer uses — not a looser one. A value the
+  renderer would refuse must not sit in a record pretending to work.
+*/
+{
+  const F = require(path.join(ROOT, "src", "_data", "focalPoint.js"));
+  const bad = annAll
+    .filter((a) => a.image_position !== null && a.image_position !== undefined &&
+      a.image_position !== "" && F.parseFocal(a.image_position) === null)
+    .map((a) => `${a.slug}: ${JSON.stringify(a.image_position)}`);
+  assert(bad.length === 0,
+    "every announcement image focus is one the website can actually use",
+    "image focus values the renderer would refuse", bad);
+}
+
+// One source of truth: the old flag must be gone, not shadowing the new block.
+/*
+  REGISTRATION THAT COMES FROM AN EVENT (Phase 17C.5A.2).
+
+  An announcement may point its registration at a Federation event instead of
+  repeating it. That reference has to resolve, or a reader would be shown a
+  sign-up button for something that does not exist — so a broken one fails the
+  build rather than rendering as "no registration".
+
+  Every rule lives in src/_data/registration.js, shared with cms:check and the
+  CMS pre-save guard, so all three refuse exactly the same things.
+*/
+{
+  const registrationModel = require(path.join(ROOT, "src", "_data", "registration.js"));
+  const eventRecords = fs.existsSync(path.join(ROOT, "content", "events"))
+    ? fs.readdirSync(path.join(ROOT, "content", "events"))
+      .filter((f) => /\.ya?ml$/i.test(f))
+      .map((f) => loadYaml(`content/events/${f}`))
+    : [];
+
+  const broken = annAll
+    .map((a) => ({ slug: a.slug, why: registrationModel.referenceProblem(a, eventRecords) }))
+    .filter((r) => r.why)
+    .map((r) => `${r.slug}: ${r.why}`);
+  assert(broken.length === 0,
+    "every announcement that borrows an event's registration points at a real one",
+    "announcements with a broken registration reference", broken);
+
+  // A reference stores ONLY the reference. Copied values would drift.
+  const copied = annAll
+    .filter((a) => registrationModel.sourceOf(a.registration) === registrationModel.SOURCE_EVENT)
+    .filter((a) => ["state", "url", "opens_on", "closes_on"]
+      .some((k) => (a.registration || {})[k] !== undefined && (a.registration || {})[k] !== null))
+    .map((a) => a.slug);
+  assert(copied.length === 0,
+    "an event-linked registration stores only the reference, never a copy",
+    "announcements copying registration values from an event", copied);
+}
+
+const annLegacyFlag = annAll.filter((a) => a.signups_closed !== undefined).map((a) => a.slug);
+assert(annLegacyFlag.length === 0,
+  "the replaced `signups_closed` flag is gone, so there is one source of truth",
+  "records still carrying the old signups_closed flag", annLegacyFlag);
 
 /* -- localised fields ------------------------------------------------------- */
 
@@ -1891,7 +2208,10 @@ assert(annStrayLabel.length === 0,
 
 const annCounts = {
   noImage: ann.filter((a) => !a.image).length,
-  closed: ann.filter((a) => a.signups_closed).length,
+  // Reads the registration block since Phase 17C.3, but counts the same thing
+  // the old `signups_closed` flag did — the expected total is unchanged, which
+  // is itself evidence the migration preserved meaning.
+  closed: ann.filter((a) => a.registration && a.registration.state === "closed").length,
   imagePosition: ann.filter((a) => a.image_position).length,
   containFit: ann.filter((a) => a.image_fit === "contain").length,
   extraImages: ann.filter((a) => (a.extra_images || []).length).length,
@@ -2155,15 +2475,30 @@ if (exists("dist/css/style.css")) {
     "the generated stylesheet differs from the source stylesheet");
 }
 
-// The fix is CSS-only: no announcement content, data or markup may have moved.
+/*
+  The fix is CSS-only: no announcement page, data file or markup may have moved.
+
+  `content/announcements` USED to be in this list. It was removed in Phase
+  17C.3, when the registration migration rewrote all 28 records — and, more
+  importantly, because the CMS now exists specifically so that editors can change
+  these files. A rule that content records must never change would fail the
+  moment anybody saved an announcement, and a validator that always fails is a
+  validator people learn to ignore.
+
+  Nothing is lost by it. What this guard was really protecting — that the
+  announcements PAGE still renders exactly as it does live — is checked far more
+  strictly by `npm run compare:announcements`, which compares 160 properties of
+  the generated output against the live pages, and by the registration assertions
+  in section 17 above. The live public artefacts stay in the list below.
+*/
 {
   const { execFileSync } = require("child_process");
   let changed = [];
   try {
     changed = execFileSync("git", ["status", "--porcelain", "--",
       "announcements.html", "pl/announcements.html",
-      "js/announcements-data.js", "js/pl/announcements-data.js",
-      "content/announcements"], { cwd: ROOT, encoding: "utf8" })
+      "js/announcements-data.js", "js/pl/announcements-data.js"],
+    { cwd: ROOT, encoding: "utf8" })
       .split("\n").map((l) => l.trim()).filter(Boolean);
   } catch {
     changed = ["(git unavailable — check skipped)"];
@@ -3134,14 +3469,18 @@ if (exists("dist")) {
       // which permits exactly the two supported states and rejects every partial
       // cutover. A blanket "never changes" rule here would forbid the approved
       // cutover itself. Every other file below stays protected.
-      "sitemap.xml", "content/announcements"],
-      { cwd: ROOT, encoding: "utf8" })
+      // `content/announcements` was removed from this list in Phase 17C.3 —
+      // see the note on the same change in section 19. The CMS edits those
+      // records by design; their rendered output is guarded by
+      // `npm run compare:announcements` instead of by immutability.
+      "sitemap.xml"],
+    { cwd: ROOT, encoding: "utf8" })
       .split("\n").map((l) => l.trim()).filter(Boolean);
   } catch {
     changed = ["(git unavailable — check skipped)"];
   }
   assert(changed.length === 0 || changed[0].startsWith("(git unavailable"),
-    "the audit changed no live event page, homepage, listing, sitemap or announcement record",
+    "the audit changed no live event page, homepage, listing or sitemap",
     "the reconciliation phase modified files it must not touch", changed);
 }
 
@@ -3162,7 +3501,16 @@ const BF_ONLY_KEYS = ["business_forum", "edition_number", "partner_categories",
 const evFiles = fs.existsSync(path.join(ROOT, EV_DIR))
   ? fs.readdirSync(path.join(ROOT, EV_DIR)).filter((f) => /\.ya?ml$/i.test(f)).sort()
   : [];
-const evAll = evFiles.map((f) => ({ _file: `${EV_DIR}/${f}`, ...loadYaml(`${EV_DIR}/${f}`) }));
+/* Event dates have two legal spellings on disk — the quoted string the canonical
+ * files use, and the bare YYYY-MM-DD Decap writes, which js-yaml resolves to a
+ * midnight-UTC Date. Normalising here, once, means every rule below can simply
+ * treat start_date as a string, instead of each one growing its own Date branch.
+ * The type itself is still policed separately, so a Date carrying a real time
+ * component is reported rather than quietly accepted.
+ * See src/_data/dateOnly.js and docs/CMS_EVENTS.md §12. */
+const { normaliseRecordDates: evNormaliseDates } = require("../src/_data/dateOnly.js");
+const evAll = evFiles.map((f) =>
+  evNormaliseDates({ _file: `${EV_DIR}/${f}`, ...loadYaml(`${EV_DIR}/${f}`) }));
 const evStd = evAll.filter((e) => e.published === true && e.event_family === "standard");
 
 assert(evStd.length === 4,
@@ -3203,11 +3551,40 @@ assert(evBadYear.length === 0, 'every standard event is academic_year "2025/26"'
 
 /* -- dates ------------------------------------------------------------------ */
 
-const evDateType = evStd.filter((e) => typeof e.start_date !== "string")
-  .map((e) => `${e.slug}: ${Object.prototype.toString.call(e.start_date)}`);
-assert(evDateType.length === 0,
-  "every start_date is a quoted string, not a YAML-parsed Date",
-  "unquoted event dates — YAML turned these into timezone-sensitive Date objects", evDateType);
+/* An event date must be DATE-ONLY, and it has two legal spellings — the same
+ * situation as announcement dates, for the same reason.
+ *
+ * The canonical files quote it, so YAML yields a string. Decap re-serialises
+ * with `yaml`@1, whose YAML 1.2 core schema treats a bare 2025-12-08 as an
+ * ordinary string and writes it unquoted; js-yaml's default schema still carries
+ * YAML 1.1 timestamps and reads that line back as a Date. Both denote the same
+ * calendar day, and src/_data/records.js converts the second to the first
+ * through UTC components before anything renders it.
+ *
+ * Still rejected: a Date carrying a real TIME component. That is not a date-only
+ * value, and rendering it depends on the reader's timezone — in Warsaw it can
+ * show the previous day. The time is the hazard; the quoting is its symptom.
+ *
+ * See docs/CMS_EVENTS.md §12. */
+const evBadDateType = evStd.filter((e) => {
+  const v = e.start_date;
+  if (typeof v === "string") return false;
+  if (v instanceof Date && !Number.isNaN(v.getTime())) {
+    return !(v.getUTCHours() === 0 && v.getUTCMinutes() === 0 &&
+      v.getUTCSeconds() === 0 && v.getUTCMilliseconds() === 0);
+  }
+  return true;
+}).map((e) => `${e.slug}: ${e.start_date instanceof Date
+  ? e.start_date.toISOString() + " (carries a time component)"
+  : Object.prototype.toString.call(e.start_date)}`);
+assert(evBadDateType.length === 0,
+  "every start_date is a date-only value (quoted string or bare YYYY-MM-DD)",
+  "event dates that are not date-only — a time component makes rendering timezone-dependent",
+  evBadDateType);
+{
+  const quoted = evStd.filter((e) => typeof e.start_date === "string").length;
+  assert(true, `event dates: ${quoted} quoted string(s), ${evStd.length - quoted} bare YAML date(s) — both normalise to one value`);
+}
 const evBadPrec = evStd.filter((e) => !EV_PRECISION.has(e.date_precision))
   .map((e) => `${e.slug}: ${e.date_precision}`);
 assert(evBadPrec.length === 0, `every date_precision is one of ${[...EV_PRECISION].join(", ")}`,
@@ -3489,6 +3866,24 @@ if (!exists("dist")) {
       `generated standard-event pages match the live pages (${evMatched || "?"} semantic comparisons — scripts/compare-standard-events.js)`,
       "scripts/compare-standard-events.js reports differences",
       (evCmp.stdout || "").split("\n").filter((l) => /FAIL/.test(l)).slice(0, 12));
+
+    /*
+      CONTENT ACCOUNTING (Phase 17C.5A.3).
+
+      The comparison above identifies blocks by position, so when the fixed
+      structure moves a gallery below the body it stops checking that page's
+      blocks against the live ones at all. This proves separately that every
+      paragraph, link, photograph, description and heading is still there — as
+      sets, because the reordering is the intended change and a test that
+      insisted on the old order would be asserting the bug this phase fixed.
+    */
+    const evContent = spawnSync(process.execPath, [path.join(__dirname, "test-event-content.js")],
+      { cwd: ROOT, encoding: "utf8" });
+    const evChecks = (evContent.stdout.match(/PASS — (\d+) content checks/) || [])[1];
+    assert(evContent.status === 0,
+      `no standard-event content was lost in the rebuild (${evChecks || "?"} checks — scripts/test-event-content.js)`,
+      "scripts/test-event-content.js reports lost content",
+      (evContent.stdout || "").split("\n").filter((l) => /FAIL/.test(l)).slice(0, 12));
   }
 }
 
@@ -4158,8 +4553,10 @@ if (!exists("dist")) {
       // cutover itself. Every other file below stays protected.
       "js/main.js", "assets", "sitemap.xml", "robots.txt",
       "index.html", "pl/index.html", "events.html", "pl/events.html",
-      "event-business-forum.html", "pl/event-business-forum.html",
-      "content/announcements"]);
+      "event-business-forum.html", "pl/event-business-forum.html"]);
+      // `content/announcements` was removed from this list in Phase 17C.3 —
+      // see the note on the same change in section 19. Editable by design;
+      // guarded by output comparison rather than by immutability.
     if (untouched === null) {
       ok("git unavailable — public-file guard skipped");
     } else {
@@ -5176,14 +5573,16 @@ section("33. Deployment tree and cutover readiness (Phase 15)");
   {
     const toml = read("netlify.toml");
 
-    // Exactly two supported states; both halves of a partial cutover are invalid.
+    // Both halves of a partial cutover are invalid, in every state.
     assert(deployState().mode !== "unsupported",
       `Netlify deployment mode is valid: ${deployState().mode}`,
       `unsupported Netlify deployment configuration — ${describeUnsupportedDeployment(deployState())}`);
 
     // Mode-specific preconditions. These are what make each state SAFE, so they
     // are asserted whenever that state is active — not just at cutover time.
-    if (deployState().mode === "generated-dist") {
+    // The dist/-publishing states share these preconditions: the production-CMS
+    // deployment is the generated-dist one plus an admin panel.
+    if (deployState().mode === "generated-dist" || deployState().mode === "production-cms") {
       const gitignore = exists(".gitignore") ? read(".gitignore") : "";
       assert(/^dist\/?\s*$/m.test(gitignore),
         "dist/ is git-ignored, so generated output never enters the repository",

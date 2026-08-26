@@ -1,0 +1,75 @@
+/*
+  registration-ux.css — the conditional Registration block.
+
+  Admin only. The public stylesheets are live deployed files and stay frozen.
+*/
+
+/*
+  Hidden, not removed: the control keeps its value in the draft and comes back
+  unchanged when the choice that needs it is picked again.
+*/
+.fed-reg-hidden { display: none !important; }
+
+.fed-reg-preview {
+  margin: 0 0 1rem;
+  padding: 0.85rem 1rem;
+  border: 2px solid #d8dbe2;
+  border-left-width: 5px;
+  border-radius: 6px;
+  background: #f7f8fa;
+}
+
+.fed-reg-preview-head {
+  margin: 0 0 0.5rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #5a5f6b;
+}
+
+/*
+  A description list, not inputs. Nothing here belongs to this record, so
+  nothing here should look like somewhere to type — a disabled box still invites
+  a click and then refuses it.
+*/
+.fed-reg-preview-list {
+  display: grid;
+  grid-template-columns: minmax(8rem, max-content) 1fr;
+  gap: 0.3rem 1rem;
+  margin: 0;
+}
+
+.fed-reg-preview-list dt {
+  font-size: 0.85rem;
+  color: #5a5f6b;
+}
+
+.fed-reg-preview-list dd {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #16181d;
+  overflow-wrap: anywhere;
+}
+
+.fed-reg-preview-note {
+  margin: 0.6rem 0 0;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: #5a5f6b;
+}
+
+/*
+  Shown only on the records migrated before the chooser existed, where the
+  branch was worked out from the status rather than answered.
+*/
+.fed-reg-legacy {
+  margin: -0.4rem 0 1rem;
+  padding: 0.6rem 0.8rem;
+  border-left: 4px solid #c9a227;
+  background: #fdf8e6;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: #4a3f13;
+}

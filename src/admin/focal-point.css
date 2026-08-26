@@ -1,0 +1,224 @@
+/*
+  focal-point.css — the image crop control.
+
+  The layout puts the ORIGINAL photograph beside the finished result, because the
+  editor's question is "what am I losing?" and that can only be answered by
+  seeing both. On a narrow screen the two stack.
+
+  Nothing here touches the public site: this file is inlined into the admin page
+  only. css/style.css is a live, deployed file and stays frozen.
+*/
+
+.fed-crop {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.25rem 0 0;
+}
+
+.fed-crop-lead {
+  margin: 0;
+  font-size: 0.92rem;
+  color: #3a3d45;
+}
+
+/* -- where this image appears (only when there is more than one shape) ------ */
+
+.fed-crop-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.fed-crop-tab {
+  min-height: 2.25rem;
+  padding: 0.3rem 0.85rem;
+  border: 2px solid #dfe1e6;
+  border-radius: 999px;
+  background: #f4f5f7;
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: #5a5f6b;
+  cursor: pointer;
+}
+
+.fed-crop-tab-on {
+  background: #16181d;
+  border-color: #16181d;
+  color: #fff;
+}
+
+.fed-crop-tab:focus-visible {
+  outline: 2px solid #3a69ff;
+  outline-offset: 2px;
+}
+
+/* -- original beside result ------------------------------------------------ */
+
+.fed-crop-pair {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  align-items: flex-start;
+}
+
+.fed-crop-stage-wrap { flex: 1 1 18rem; min-width: 0; max-width: 26rem; }
+.fed-crop-result-wrap { flex: 0 1 14rem; min-width: 0; max-width: 20rem; }
+
+/* The original is shown WHOLE — never cropped — so its own height decides the
+   box. That is the entire point of this control. */
+.fed-crop-stage {
+  position: relative;
+  display: block;
+  width: 100%;
+  border: 2px solid #dfe1e6;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #2b2d33;
+  cursor: crosshair;
+  line-height: 0;
+  /* A drag inside the picture must not pan the page on a touch screen; the
+     rest of the form scrolls normally. */
+  touch-action: none;
+}
+
+.fed-crop-stage:focus-visible {
+  outline: 2px solid #3a69ff;
+  outline-offset: 2px;
+}
+
+.fed-crop-original {
+  display: block;
+  width: 100%;
+  height: auto;
+  user-select: none;
+}
+
+/* Everything the website will discard. */
+.fed-crop-shade {
+  position: absolute;
+  background: rgba(18, 20, 24, 0.66);
+  pointer-events: none;
+}
+
+/* The part that survives. A bright, unmistakable boundary. */
+.fed-crop-window {
+  position: absolute;
+  box-sizing: border-box;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.55), 0 0 12px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+}
+
+.fed-crop-dot {
+  position: absolute;
+  width: 0.85rem;
+  height: 0.85rem;
+  margin: -0.425rem 0 0 -0.425rem;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: rgba(58, 105, 255, 0.85);
+  pointer-events: none;
+}
+
+/* -- the finished result --------------------------------------------------- */
+
+.fed-crop-result {
+  width: 100%;
+  overflow: hidden;
+  border: 2px solid #16181d;
+  border-radius: 6px;
+  background: #f4f5f7;
+  line-height: 0;
+}
+
+.fed-crop-result-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;    /* exactly what the website does */
+  display: block;
+}
+
+/* -- captions and messages ------------------------------------------------- */
+
+.fed-crop-caption {
+  margin: 0.4rem 0 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #3a3d45;
+}
+
+.fed-crop-dims,
+.fed-crop-empty {
+  margin: 0.15rem 0 0;
+  font-size: 0.82rem;
+  color: #5a5f6b;
+}
+
+.fed-crop-warn {
+  margin: 0;
+  padding: 0.5rem 0.7rem;
+  border: 2px solid #e3c98a;
+  border-radius: 6px;
+  background: #fdf8ed;
+  font-size: 0.88rem;
+  color: #6b5518;
+}
+
+/* -- actions and fine tune ------------------------------------------------- */
+
+.fed-crop-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.fed-crop-btn {
+  min-height: 2.75rem;
+  padding: 0.4rem 1rem;
+  border: 2px solid #dfe1e6;
+  border-radius: 6px;
+  background: #f4f5f7;
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.fed-crop-btn:hover { background: #e9ebef; }
+.fed-crop-btn-quiet { background: transparent; color: #5a5f6b; }
+
+.fed-crop-fine {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #e9ebef;
+  border-radius: 6px;
+  background: #fafbfc;
+}
+
+.fed-crop-number {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.88rem;
+  color: #3a3d45;
+}
+
+.fed-crop-number input {
+  width: 4.5rem;
+  min-height: 2.5rem;
+  padding: 0.3rem 0.5rem;
+  border: 2px solid #dfe1e6;
+  border-radius: 6px;
+  font: inherit;
+}
+
+.fed-crop-pc { color: #5a5f6b; }
+
+@media (max-width: 34rem) {
+  .fed-crop-pair { gap: 1rem; }
+  .fed-crop-stage-wrap,
+  .fed-crop-result-wrap { flex: 1 1 100%; max-width: none; }
+}

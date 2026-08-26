@@ -80,10 +80,16 @@ because there is only one copy of it.
 | `image` (path or `null`) | |
 | `extra_images` (list) | |
 | `image_position`, `image_fit`, `image_background` | |
-| `signups_closed` | |
+| `signups_closed` — **superseded**, see below | |
 | `link` (type + destination) | |
 
 This nesting is Decap CMS's `i18n.structure: single_file` layout (§19).
+
+> **`signups_closed` no longer exists.** Phase 17C.3 replaced it with a
+> `registration` block holding a state, an optional sign-up address and optional
+> opening/closing dates. This document records the schema as it was at the time
+> of the announcements migration and is left as written; for the current schema
+> see [CMS_ANNOUNCEMENTS.md](CMS_ANNOUNCEMENTS.md) §12.
 
 **Image alt text is not stored.** The live renderer derives it: the main image
 uses the announcement's own title, and extra images use a per-locale pattern

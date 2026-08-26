@@ -1,0 +1,150 @@
+/*
+  staff-login.css — the Staff login page.
+
+  Its own small stylesheet. css/style.css is a live deployed file and this page
+  must not depend on it: a login page that breaks when the public design changes
+  is a login page that locks the committee out.
+
+  Federation colours, taken from the public palette by hand rather than by
+  importing it, for the same reason.
+*/
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  font: 16px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: #16181d;
+  background: #f4f5f7;
+}
+
+.login {
+  width: 100%;
+  max-width: 26rem;
+  padding: 2rem 1.75rem;
+  background: #fff;
+  border: 1px solid #dfe2e8;
+  border-radius: 14px;
+  text-align: center;
+}
+
+.login-logo { width: 64px; height: auto; margin-bottom: 1rem; }
+
+.login h1 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.login-lead {
+  margin: 0.35rem 0 1.25rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #5a5f6b;
+}
+
+.login-note { margin: 0 0 1.25rem; font-size: 0.92rem; color: #5a5f6b; }
+
+.login-button {
+  width: 100%;
+  min-height: 48px;
+  padding: 0.7rem 1rem;
+  font: inherit;
+  font-weight: 700;
+  color: #fff;
+  background: #b01c2e;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.login-button:hover { background: #921625; }
+.login-button:focus-visible { outline: 3px solid #16181d; outline-offset: 2px; }
+.login-button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/*
+  Not colour alone: the message is a sentence, and it is announced through
+  role="alert" as well.
+*/
+.login-problem { background: #fdf1f1; border-color: #a32020; color: #5a1414; }
+
+.login-help { margin: 1.5rem 0 0; font-size: 0.85rem; color: #5a5f6b; }
+.login-help a { color: #b01c2e; }
+
+/*
+  The sign-in form.
+
+  @netlify/identity is headless — it has no UI of its own — so this is our
+  form. The library never sees the markup and this file never sees a token.
+*/
+
+.login-form { margin: 0 0 0.75rem; text-align: left; }
+
+.login-field { display: flex; flex-direction: column; gap: 0.3rem; margin-bottom: 0.9rem; }
+
+.login-field label { font-size: 0.85rem; font-weight: 700; color: #5a5f6b; }
+
+.login-field input {
+  font: inherit;
+  min-height: 48px;
+  padding: 0.6rem 0.7rem;
+  border: 2px solid #cfd4dd;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.login-field input:focus-visible { outline: 3px solid #b01c2e; outline-offset: 1px; }
+
+/* A second, quieter route in. Same size, so neither looks like the "real" one. */
+.login-button-alt {
+  margin-top: 0.6rem;
+  color: #16181d;
+  background: #fff;
+  border-color: #cfd4dd;
+}
+
+.login-button-alt:hover { background: #f1f2f5; }
+
+/*
+  A button that reads as a link. It is a button because it performs an action —
+  sending a recovery e-mail — rather than going somewhere.
+*/
+.login-link {
+  font: inherit;
+  font-size: 0.85rem;
+  color: #b01c2e;
+  background: none;
+  border: 0;
+  padding: 0;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.login-link:focus-visible { outline: 2px solid #16181d; outline-offset: 2px; }
+
+.login-message {
+  margin: 1rem 0;
+  padding: 0.75rem 0.9rem;
+  text-align: left;
+  font-size: 0.9rem;
+  border: 1px solid;
+  border-left-width: 5px;
+  border-radius: 8px;
+}
+
+/* Not colour alone: each carries a sentence, and role="alert"/"status" too. */
+.login-notice { background: #edf7f0; border-color: #1d6b3f; color: #14401f; }
+
+/*
+  External providers, rendered only for the ones Identity actually has enabled.
+  Empty and hidden when there are none, which is the usual case.
+*/
+.login-providers { display: flex; flex-direction: column; gap: 0.5rem; }

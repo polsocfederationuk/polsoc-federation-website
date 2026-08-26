@@ -26,17 +26,10 @@
 const fs = require("fs");
 const path = require("path");
 const yaml = require("js-yaml");
+// The single interpretation of an academic year — see src/_data/academicYear.js.
+const { parseAcademicYear } = require("./academicYear");
+const { normaliseRecordDates } = require("./dateOnly");
 
-/** "2025/26" → 2025, and only if the second half really is the next year. */
-function parseAcademicYear(value) {
-  const m = /^(\d{4})\/(\d{2})$/.exec(String(value || ""));
-  if (!m) return null;
-  const start = Number(m[1]);
-  // The trailing pair must be the last two digits of start + 1, so "2025/27"
-  // and "2025/25" are rejected rather than silently sorted somewhere.
-  const expected = String((start + 1) % 100).padStart(2, "0");
-  return m[2] === expected ? start : null;
-}
 
 /**
  * Group published, listing-visible events by academic year.
@@ -74,23 +67,27 @@ function group(records, currentYear) {
       );
       continue;
     }
-    if (!Number.isInteger(event.order)) {
-      problems.push(`${event.slug}: order must be an integer, got ${JSON.stringify(event.order)}`);
+    /*
+      A usable start date is what decides position now (Phase 17C.5A). The
+      manual `order` integer it replaced is no longer read, so it is no longer
+      validated — an editor cannot get wrong a number they are never shown.
+    */
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(event.start_date || ""))) {
+      problems.push(`${event.slug}: start_date must be a calendar day, got ${JSON.stringify(event.start_date)}`);
       continue;
     }
     if (!buckets.has(start)) buckets.set(start, { academicYear: event.academic_year, events: [] });
     buckets.get(start).events.push(event);
   }
 
-  // `order` is unique WITHIN a year, not globally.
-  for (const [, bucket] of buckets) {
-    const orders = bucket.events.map((e) => e.order);
-    const dupes = [...new Set(orders.filter((o, i) => orders.indexOf(o) !== i))];
-    for (const d of dupes) {
-      const clashing = bucket.events.filter((e) => e.order === d).map((e) => e.slug).sort();
-      problems.push(`${bucket.academicYear}: order ${d} used by ${clashing.join(" and ")}`);
-    }
-  }
+  /*
+    The order-collision rule is gone with the field that caused it.
+
+    Two events sharing `order: 3` inside one year used to be a fatal build error
+    because the sequence was then undefined. Dates cannot collide in that way:
+    two events on the same day are simply two events on the same day, and the
+    slug tie-break below keeps the output stable.
+  */
 
   if (problems.length) {
     throw new Error("event listing grouping failed:\n  - " + problems.join("\n  - "));
@@ -98,8 +95,23 @@ function group(records, currentYear) {
 
   // Sort a COPY of each bucket; ties broken by slug so output never depends on
   // the order records happened to be read in.
+  /*
+    NEWEST FIRST, by the date the event actually happens.
+
+    Editors used to assign a position by hand, which meant maintaining a numeric
+    sequence that duplicated information the record already carried, and getting
+    it wrong was a fatal build error. Sorting by `start_date` descending produces
+    exactly the sequence the hand-kept numbers produced for every current event —
+    verified before the change — so this is a simplification of the EDITOR's job,
+    not a change to the site.
+
+    Ties break by slug so the output never depends on the order files were read.
+  */
   const sortEvents = (events) =>
-    [...events].sort((a, b) => (a.order - b.order) || (String(a.slug) < String(b.slug) ? -1 : 1));
+    [...events].sort((a, b) => {
+      const d = String(b.start_date).localeCompare(String(a.start_date));
+      return d || (String(a.slug) < String(b.slug) ? -1 : 1);
+    });
 
   const current = buckets.has(currentStart)
     ? { academicYear: buckets.get(currentStart).academicYear, events: sortEvents(buckets.get(currentStart).events) }
@@ -124,7 +136,7 @@ function loadRecords() {
     .readdirSync(EVENTS_DIR)
     .sort()                                       // deterministic, then re-sorted by `order`
     .filter((f) => /\.ya?ml$/i.test(f))
-    .map((f) => ({
+    .map((f) => normaliseRecordDates({
       ...(yaml.load(fs.readFileSync(path.join(EVENTS_DIR, f), "utf8")) || {}),
       _source: `content/events/${f}`,
     }));

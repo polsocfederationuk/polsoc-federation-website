@@ -75,7 +75,19 @@ function compareRegion(label, livePath, genPath, startTag, endTag) {
     return;
   }
   const live = normalise(region(read(livePath), startTag, endTag));
-  const gen = normalise(region(read(genPath), startTag, endTag));
+  /*
+    THE STAFF LOGIN SPAN (Phase 17D.1), human-approved.
+
+    The one intentional public change of that phase is a link in the footer.
+    This region comparison is character-exact, so the span is removed from the
+    generated side and nothing else is relaxed: every other character of the
+    footer must still match the live page byte for byte. The link itself is
+    asserted separately in compareFeatures(), so removing it here cannot hide
+    its disappearance.
+  */
+  const withoutStaffLogin = (html) => html.replace(
+    new RegExp('<span><a class="footer-staff-login"[^>]*>[^<]*</a></span>'), "");
+  const gen = normalise(withoutStaffLogin(region(read(genPath), startTag, endTag)));
 
   if (!live) return record(false, `${label}: region not found in ${livePath}`);
   if (!gen) return record(false, `${label}: region not found in ${genPath}`);
@@ -155,10 +167,23 @@ function compareFeatures(label, livePath, genPath) {
       .map((m) => m[1].replace(/^\/(?:pl\/)?/, "").replace(/^pl\//, ""))
       .sort();
   };
-  const c = footLinks(live), d = footLinks(gen);
+  /*
+    THE STAFF LOGIN LINK (Phase 17D.1), human-approved. Removed from the
+    generated list so the rest of the footer is still compared exactly, and
+    asserted on its own so it cannot quietly disappear either.
+  */
+  const STAFF_LOGIN = "staff-login/";
+  const c = footLinks(live);
+  const all = footLinks(gen);
+  const d = all.filter((href) => !href.endsWith(STAFF_LOGIN));
   record(JSON.stringify(c) === JSON.stringify(d),
     `${label}: footer links match`,
     [`live: ${c.join(" ")}`, `gen : ${d.join(" ")}`]);
+  record(all.some((href) => href.endsWith(STAFF_LOGIN)),
+    `${label}: APPROVED: the footer offers Staff login`,
+    [`gen : ${all.join(" ")}`]);
+  record(!c.some((href) => href.endsWith(STAFF_LOGIN)),
+    `${label}: APPROVED: the live footer did not`, []);
 }
 
 /* --------------------------------------------------------------- run pairs */

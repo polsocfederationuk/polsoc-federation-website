@@ -1,0 +1,14 @@
+{#
+  The event's main description.
+
+  Markdown, rendered to trusted HTML at BUILD time by markdown-it with raw HTML
+  disabled — so an editor can never inject markup, and the same renderer that
+  handled the old `prose` blocks handles this. It emits real <p>, a bare
+  <blockquote> for a highlighted statement (which is what `.prose blockquote`
+  styles), and <img> for a photograph placed between paragraphs.
+#}
+{%- if body %}
+    <div class="prose reveal">
+      {{ body | eventBody | safe }}
+    </div>
+{%- endif %}

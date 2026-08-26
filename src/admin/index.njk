@@ -1,0 +1,557 @@
+---
+# The local admin entry point.
+#
+# Emitted ONLY when CMS_DEV=1 — a normal build ignores src/admin/ entirely, so
+# no /admin/ page reaches dist/ and therefore none can ever be deployed. See
+# docs/CMS_FOUNDATION.md §2.
+#
+# Deliberately NOT using the shared site layout: the admin panel must not pull
+# in the public navigation, the site stylesheet or js/main.js. It is a tool, not
+# a page of the website.
+permalink: /admin/index.html
+eleventyExcludeFromCollections: true
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Belt and braces. This file is never deployed, but if it ever escaped it
+         must not be indexed. -->
+    <meta name="robots" content="noindex, nofollow, noarchive, noimageindex" />
+    <title>Federation Content Manager</title>
+    <style>
+      /* The banner is the only styling here. Everything else is Decap's own. */
+      .cms-local-banner {
+        font: 600 13px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+        background: #7a2020;
+        color: #fff;
+        padding: 8px 14px;
+        margin: 0;
+        text-align: center;
+      }
+      .cms-local-banner code {
+        font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+        background: rgba(255, 255, 255, 0.16);
+        padding: 1px 5px;
+        border-radius: 3px;
+      }
+
+      /* The English / Polski switcher, embedded from src/admin/language-tabs.css
+         so the admin page still loads no external stylesheet. */
+{{ cmsConfig.languageTabsStyles | safe }}
+
+      /* The Brand colour control, from src/admin/brand-colour.css. */
+{{ cmsConfig.brandColourStyles | safe }}
+
+      /* The image focus control, from src/admin/focal-point.css. */
+{{ cmsConfig.focalPointStyles | safe }}
+
+      /* The one-field event title control, from src/admin/event-title.css. */
+{{ cmsConfig.eventTitleStyles | safe }}
+
+      /* Section grouping and compact visibility, from src/admin/form-sections.css. */
+{{ cmsConfig.formSectionsStyles | safe }}
+
+      /* Live length captions, from src/admin/char-count.css. */
+{{ cmsConfig.charCountStyles | safe }}
+
+      /* Image units, from src/admin/image-units.css. */
+{{ cmsConfig.imageUnitsStyles | safe }}
+
+      /* The collapsed overrides drawer, from src/admin/advanced-drawer.css. */
+{{ cmsConfig.advancedDrawerStyles | safe }}
+
+      /* The conditional Registration block, from src/admin/registration-ux.css. */
+{{ cmsConfig.registrationUxStyles | safe }}
+
+      /* The link to Bulk manage, from src/admin/bulk-link.css. */
+{{ cmsConfig.bulkLinkStyles | safe }}
+    </style>
+  </head>
+  <body>
+    <p class="cms-local-banner">
+      Local development only — edits are written straight to the files in your
+      working copy. Nothing here is published. Review with
+      <code>git diff</code> before committing.
+    </p>
+
+    <!--
+      Decap CMS {{ cmsConfig.decapVersion }}, served from this directory rather than a CDN.
+
+      The bundle is copied out of node_modules/decap-cms/dist/ by
+      eleventy.config.js, so the exact version is the one pinned in
+      package.json and frozen in package-lock.json. There is no `latest` URL to
+      drift, and the panel works with no network connection.
+
+      It reads ./config.yml on load and initialises itself; there is no init
+      script here, and therefore no place for a credential to be typed.
+    -->
+    <script src="./decap-cms.js"></script>
+
+    <!--
+      DUPLICATE RECORD ID GUARD.
+
+      Without this, typing an ID that already exists does not overwrite the other
+      record — Decap writes `jane-example-1.yaml` instead — but it leaves
+      `slug: jane-example` inside that file, so the filename and the slug
+      disagree and `npm run validate` rejects the result. The editor gets no
+      warning until then.
+
+      This blocks the save instead, using two public interfaces and no private
+      ones: `CMS.registerEventListener` with the documented `preSave` event, and
+      the local proxy's own `entriesByFolder` action — the same request Decap
+      itself makes to list a collection. `persistEntry` awaits the preSave
+      handler as its first statement with no try/catch, so a handler that throws
+      aborts the save and surfaces the message.
+
+      Nothing here is patched, wrapped or replaced, so a Decap upgrade cannot
+      silently change its behaviour: if `preSave` ever stopped firing the guard
+      would simply stop running, and scripts/cms-check.js still catches the same
+      collision from the command line.
+
+      Local development only, exactly like the rest of this page.
+    -->
+    <script>
+      /* -------------------------------------------------------------------
+         Custom widgets, registered FIRST.
+
+         A widget must exist before the entry editor tries to render a field
+         that uses it, so this runs ahead of everything else on the page.
+
+         The palette is generated from the site's own stylesheets by
+         src/_data/cmsConfig.js — see brandPalette() there. It is handed to the
+         widget as data rather than written into the widget, so nobody has to
+         remember to update two places when a brand colour changes.
+         ------------------------------------------------------------------- */
+      window.FED_BRAND_PALETTE = {{ cmsConfig.brandPalette | dump | safe }};
+{{ cmsConfig.brandColourScript | safe }}
+{{ cmsConfig.focalPointScript | safe }}
+
+      (function () {
+        "use strict";
+
+        var PROXY = {{ cmsConfig.proxyUrl | dump | safe }};
+        var BRANCH = {{ cmsConfig.guard.branch | dump | safe }};
+        // Every folder collection whose filename is its own Record ID.
+        var COLLECTIONS = {{ cmsConfig.guard.collections | dump | safe }};
+
+        if (typeof window.CMS === "undefined") return;
+
+        // The announcement link normaliser, embedded verbatim from
+        // src/_data/cmsConfig.js so the browser runs the same function
+        // scripts/test-announcement-rules.js exercises.
+        {{ cmsConfig.normaliseLinkSource | safe }}
+
+        // The standard-event section alignment guard, likewise embedded from
+        // src/_data/cmsConfig.js so scripts/test-event-rules.js exercises the
+        // same function the editor runs.
+        {{ cmsConfig.sectionGuardSource | safe }}
+
+        // Completes the canonical no-registration block on a standard event.
+        // Also embedded from src/_data/cmsConfig.js.
+        {{ cmsConfig.registrationSource | safe }}
+
+        // Turns a date the editor CLEARED into null rather than "".
+        // Also embedded from src/_data/cmsConfig.js.
+        {{ cmsConfig.blankDateSource | safe }}
+
+        // The date fields, derived from the config rather than listed here, so
+        // a date field added later is normalised without touching this page.
+        var DATE_FIELDS = {{ cmsConfig.dateFieldNames | dump | safe }};
+
+        // Colours are stored in one spelling, whatever the editor typed.
+        {{ cmsConfig.colourSource | safe }}
+        var COLOUR_FIELDS = {{ cmsConfig.colourFieldNames | dump | safe }};
+
+        // Announcement registration: tidies the block, and refuses a state that
+        // could not be rendered honestly (Open with nowhere to go, or sign-ups
+        // that close before they open).
+        {{ cmsConfig.announcementRegistrationSource | safe }}
+
+        // Which event an announcement borrows its registration from, if any.
+        {{ cmsConfig.registrationReferenceSource | safe }}
+
+        // The academic-year rule, embedded from src/_data/academicYear.js.
+        {{ cmsConfig.academicYearSource | safe }}
+
+        var SETTINGS_FILE = {{ cmsConfig.settingsFile | dump | safe }};
+        // The value at build time, used only if the live read fails.
+        var FALLBACK_CURRENT_YEAR = {{ cmsConfig.currentAcademicYear | dump | safe }};
+
+        /**
+         * The CURRENT academic year, read from the settings file through the
+         * proxy rather than from the build-time snapshot — an editor who has just
+         * rolled the year over in Site settings has not necessarily rebuilt, and
+         * a stale value here would block a save that is now perfectly legal.
+         */
+        function readCurrentAcademicYear() {
+          return fetch(PROXY, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              action: "getEntry",
+              params: { branch: BRANCH, path: SETTINGS_FILE },
+            }),
+          })
+            .then(function (r) {
+              if (!r.ok) throw new Error("HTTP " + r.status);
+              return r.json();
+            })
+            .then(function (entry) {
+              var raw = entry && entry.data;
+              if (typeof raw !== "string") return FALLBACK_CURRENT_YEAR;
+              // One key, one line. A full YAML parser in the admin bundle would
+              // be a lot of machinery for `current: "2025/26"`, and the format is
+              // pinned by scripts/validate.js.
+              var m = raw.match(/^\s*current\s*:\s*["']?(\d{4}\/\d{2})["']?\s*$/m);
+              return m ? m[1] : FALLBACK_CURRENT_YEAR;
+            });
+        }
+
+        /*
+          ESSENTIAL LOOKUPS MUST NOT STAND ASIDE.
+
+          The duplicate-ID and future-year checks exist to stop a save that would
+          overwrite a record or break the build. If the check itself cannot run,
+          the honest answer is "not saved" — standing aside would let exactly the
+          content these guards exist to prevent reach the repository at the one
+          moment we know the safety net is down.
+
+          The message names the cause and the fix, because "Failed to fetch" told
+          editors nothing. Nothing is lost: the editor's work is still on screen.
+        */
+        function offlineError(what) {
+          return new Error(
+            "The CMS cannot reach the local content service, so this item was not saved.\n\n" +
+            "Check that `npm run cms:dev` is still running in your terminal, then try again.\n\n" +
+            "(The check that could not run was: " + what + ".)"
+          );
+        }
+
+        /** The entry's own file path, or "" for a record being created. */
+        function pathOf(entry) {
+          if (!entry) return "";
+          if (typeof entry.get === "function") return entry.get("path") || "";
+          return entry.path || "";
+        }
+
+        /** Field values, whether Decap hands over an Immutable map or a plain object. */
+        function dataOf(entry) {
+          if (!entry) return {};
+          if (typeof entry.getIn === "function") {
+            var d = entry.get("data");
+            return d && typeof d.toJS === "function" ? d.toJS() : d || {};
+          }
+          return entry.data || {};
+        }
+
+        /** Ask the proxy which files a collection's folder currently holds. */
+        function existingPaths(collection) {
+          return fetch(PROXY, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              action: "entriesByFolder",
+              params: {
+                branch: BRANCH,
+                folder: collection.folder,
+                extension: collection.extension,
+                depth: 1,
+              },
+            }),
+          })
+            .then(function (r) {
+              if (!r.ok) throw new Error("HTTP " + r.status);
+              return r.json();
+            })
+            .then(function (entries) {
+              return (entries || []).map(function (e) {
+                return e && e.file && e.file.path;
+              }).filter(Boolean);
+            });
+        }
+
+        window.CMS.registerEventListener({
+          name: "preSave",
+          handler: function (props) {
+            var entry = props && props.entry;
+            var data = dataOf(entry);
+            var slug = data && data.slug;
+            var ownPath = pathOf(entry);
+
+            /*
+              LINK NORMALISATION.
+
+              Decap's object widget remembers every sub-field it has ever held,
+              so an editor who picks a Federation event and then switches to an
+              external address leaves the slug behind — and there is no reliable
+              clear control to remove it by hand. Reducing the link to exactly
+              one destination here is what makes the destination reversible.
+
+              The handler's return value becomes the entry's data (see
+              persistEntry -> invokePreSaveEvent), so returning the corrected
+              data is the documented way to do this. The value is returned
+              synchronously below only when nothing else needs checking;
+              otherwise it is carried through the duplicate-ID promise.
+            */
+            /*
+              SECTION ALIGNMENT.
+
+              Checked before anything else, and never repaired. A standard event
+              keeps its sections in three index-aligned arrays that Decap cannot
+              keep in step; if they have drifted, refusing the save is the only
+              option that does not either invent content or throw some away.
+            */
+            var alignment = checkEventSectionAlignment(data);
+            if (alignment) throw new Error(alignment);
+
+            /*
+              FUTURE-YEAR PUBLISH.
+
+              The events listing refuses to build a published event whose academic
+              year is later than the configured current year. That refusal is
+              fatal, and it takes `npm run cms:serve` down with it — so an editor
+              who saved such a record could not reopen the CMS to undo it, and
+              would need somebody to edit YAML by hand.
+
+              Checked here BEFORE the file is written. The build rule stays where
+              it is as the backstop for hand-edited files.
+            */
+            var futureCheck = data.event_family === "standard"
+              ? readCurrentAcademicYear()
+                  .catch(function () { throw offlineError("the current academic year"); })
+                  .then(function (current) {
+                    var problem = futurePublishProblem(data, current);
+                    if (problem) throw new Error(futurePublishMessage(problem));
+                  })
+              : Promise.resolve();
+
+            /*
+              Corrections applied on the way out. Each one only replaces a value
+              the editor cannot reasonably be asked to get right by hand, and
+              each leaves everything else exactly as typed.
+            */
+            var normalisedData = null;
+            var working = entry && typeof entry.get === "function" ? entry.get("data") : null;
+
+            // Registration. Refusing here rather than letting a half-described
+            // sign-up reach a file: a Register button with no address, or one
+            // that closes before it opens, is not something a reader can act on.
+            if (working && ("registration" in data)) {
+              var regResult = normaliseRegistration(data.registration);
+              if (regResult.error) {
+                // Standard events gained a real registration section in Phase
+                // 17C.5A.2 and share this validator, so the sentence has to name
+                // whichever record the editor is actually looking at.
+                var what = data.event_family ? "event" : "announcement";
+                throw new Error(regResult.error + "\n\nThe " + what + " has not been saved.");
+              }
+              /*
+                Legacy keys survive.
+
+                Standard event registration blocks carry `type` and `email` from
+                the original migration. Nothing reads them, but the canonical
+                validator does not know about them, so without this they would be
+                deleted from the file on the first save through the CMS.
+              */
+              var tidied = regResult.registration;
+              var originalReg = data.registration;
+              if (originalReg && typeof originalReg === "object") {
+                for (var rk in originalReg) {
+                  if (!Object.prototype.hasOwnProperty.call(originalReg, rk)) continue;
+                  if (Object.prototype.hasOwnProperty.call(tidied, rk)) continue;
+                  tidied[rk] = originalReg[rk];
+                }
+              }
+              if (JSON.stringify(tidied) !== JSON.stringify(data.registration)) {
+                working = working.set("registration", tidied);
+                normalisedData = working;
+              }
+
+              /*
+                THE TWO EVENT REFERENCES MUST AGREE (Phase 17C.5A.2).
+
+                An announcement may link to one Federation event and take its
+                registration from another. That is almost always a slip, and a
+                reader would meet a sign-up button for one event beside a
+                "read more" link to a different one. Refused rather than
+                quietly rewritten: guessing which of the two the editor meant
+                is not something a save should do behind their back.
+              */
+              if (sourceOf(tidied) === REG_SOURCE_EVENT) {
+                var regEvent = referencedEventSlug(tidied);
+                var linkBlock = data.link || null;
+                var linkedEvent = linkBlock && linkBlock.type === "event"
+                  ? String(linkBlock.event_slug || "").trim() : "";
+                if (linkedEvent && regEvent && linkedEvent !== regEvent) {
+                  throw new Error(
+                    "This announcement links to one Federation event but takes its " +
+                    "registration from another.\n\n" +
+                    "Details link: " + linkedEvent + "\n" +
+                    "Registration: " + regEvent + "\n\n" +
+                    "Point both at the same event, or change registration to " +
+                    "handle the sign-up on this announcement.\n\n" +
+                    "The announcement has not been saved.");
+                }
+              }
+            }
+
+            if (working && ("link" in data)) {
+              var cleaned = normaliseAnnouncementLink(data.link);
+              if (JSON.stringify(cleaned) !== JSON.stringify(data.link)) {
+                working = working.set("link", cleaned);
+                normalisedData = working;
+              }
+            }
+
+            // A colour may be typed as #ABC or without its hash. Store one
+            // spelling, so the file never holds two forms of the same colour.
+            if (working) {
+              for (var ci = 0; ci < COLOUR_FIELDS.length; ci++) {
+                var ckey = COLOUR_FIELDS[ci];
+                if (!Object.prototype.hasOwnProperty.call(data, ckey)) continue;
+                var tidy = canonicalColour(data[ckey]);
+                if (tidy) {
+                  working = working.set(ckey, tidy);
+                  normalisedData = working;
+                }
+              }
+            }
+
+            // A date the editor cleared arrives as "". The repository's absent
+            // date is null, and one file must not hold both spellings.
+            if (working) {
+              var blanked = blankDatesToNull(data, DATE_FIELDS);
+              if (blanked) {
+                for (var b = 0; b < blanked.length; b++) {
+                  working = working.set(blanked[b], null);
+                }
+                normalisedData = working;
+              }
+            }
+
+            // A standard event keeps the canonical registration block even
+            // though the editor never sees it — Decap drops null-valued keys, so
+            // the hidden field's default can arrive incomplete.
+            if (working) {
+              var registration = ensureEventRegistration(data);
+              if (registration) {
+                working = working.set("registration", registration);
+                normalisedData = working;
+              }
+            }
+
+            // Which collection is this? Site settings is a file collection with
+            // a fixed path and no Record ID, so it is simply not matched.
+            if (!slug || typeof slug !== "string") {
+              return futureCheck.then(function () { return normalisedData || undefined; });
+            }
+
+            var collection = null;
+            for (var i = 0; i < COLLECTIONS.length; i++) {
+              if (ownPath && ownPath.indexOf(COLLECTIONS[i].folder + "/") === 0) {
+                collection = COLLECTIONS[i];
+                break;
+              }
+            }
+            // A record being created has no path yet. Checking every folder is
+            // correct rather than lazy: an ID must be unique within its own
+            // collection, and testing them all costs one request each.
+            var candidates = collection ? [collection] : COLLECTIONS;
+
+            for (var j = 0; j < candidates.length; j++) {
+              if (!new RegExp(candidates[j].pattern).test(slug)) {
+                throw new Error(
+                  'Record ID "' + slug + '" is not valid. Use lowercase letters, ' +
+                  "numbers and single hyphens only — for example spring-careers-evening."
+                );
+              }
+            }
+
+            return futureCheck.then(function () {
+            return Promise.all(candidates.map(function (c) {
+              return existingPaths(c)
+                .catch(function () { throw offlineError("whether that Record ID is already taken"); })
+                .then(function (paths) {
+                var target = c.folder + "/" + slug + "." + c.extension;
+                if (paths.indexOf(target) === -1) return null; // no such record
+                if (ownPath === target) return null;           // editing that record
+                return { collection: c, target: target };
+              });
+            })).then(function (hits) {
+              var clash = hits.filter(Boolean)[0];
+              if (clash) {
+                // "An event" / "A team member" — the label is data, so the
+                // article has to follow it rather than being hard-coded.
+                var article = /^[aeiou]/i.test(clash.collection.label) ? "An " : "A ";
+                throw new Error(
+                  article + clash.collection.label + " with this ID already exists (" +
+                  clash.target + "). Use a different Record ID — for example " +
+                  slug + "-2026-27 for another academic year. " +
+                  "The existing record has not been changed."
+                );
+              }
+              // Undefined leaves the data untouched; anything else replaces it.
+              return normalisedData || undefined;
+            });
+            });
+          },
+        });
+      })();
+
+      /* -------------------------------------------------------------------
+         Editor presentation enhancements.
+
+         Embedded from src/admin/language-tabs.js. Kept in its own file so it
+         can be read and tested on its own, and inlined here so the admin page
+         still loads exactly the Decap bundle and this one script.
+
+         Everything below is presentation. It shows and hides panels Decap has
+         already rendered; it never changes what is stored.
+         ------------------------------------------------------------------- */
+{{ cmsConfig.languageTabsScript | safe }}
+
+      /* The one-field event title control, embedded from
+         src/admin/event-title.js. Presentation only: it drives the three real
+         fields Decap already rendered and never changes what is stored. */
+{{ cmsConfig.eventTitleScript | safe }}
+
+      /* Section grouping, compact visibility and collapsing, from
+         src/admin/form-sections.js. Presentation only.
+
+         The label map lets the grouper identify controls that carry no field
+         name in the DOM — booleans, objects, lists and image pickers. */
+      window.FED_FIELD_LABELS = {{ cmsConfig.fieldLabels | dump | safe }};
+{{ cmsConfig.formSectionsScript | safe }}
+
+      /* Live length captions. Presentation only — never truncates. */
+      window.FED_FIELD_LIMITS = {{ cmsConfig.fieldLimits | dump | safe }};
+{{ cmsConfig.charCountScript | safe }}
+
+      /* An image beside the words describing it. Moves the real controls;
+         never clones them. Presentation only. */
+{{ cmsConfig.imageUnitsScript | safe }}
+
+      /* Overrides, collapsed until asked for. Moves the real controls. */
+{{ cmsConfig.advancedDrawerScript | safe }}
+
+      /* -------------------------------------------------------------------
+         The conditional Registration block.
+
+         Its two lookup tables are handed over as DATA rather than written into
+         the script: the option labels come from the very options the config
+         just built, and the event pairing is read out of content/events/ with a
+         real YAML parser. Neither can drift from what Decap renders.
+         ------------------------------------------------------------------- */
+      window.FED_REGISTRATION_CHOICES = {{ cmsConfig.registrationChoices | dump | safe }};
+      window.FED_EVENT_PICKER_INDEX = {{ cmsConfig.eventPickerIndex | dump | safe }};
+      window.FED_CMS_PROXY = {{ cmsConfig.proxyUrl | dump | safe }};
+      window.FED_CMS_BRANCH = {{ cmsConfig.guard.branch | dump | safe }};
+{{ cmsConfig.registrationUxScript | safe }}
+
+      /* One anchor pointing at the Bulk manage page. Additive; see the file. */
+{{ cmsConfig.bulkLinkScript | safe }}
+    </script>
+  </body>
+</html>

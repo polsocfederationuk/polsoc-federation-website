@@ -1,0 +1,31 @@
+/*
+  bulk-link.css — the one anchor that points at /admin/bulk/.
+
+  Styled to sit with Decap's collection links without borrowing its generated
+  class names, which change between releases.
+*/
+
+.fed-bulk-link {
+  display: block;
+  margin: 14px 0 0;
+  padding: 10px 12px;
+  border: 2px solid #dfe2e8;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  color: #16181d;
+  text-decoration: none;
+}
+
+.fed-bulk-link::before {
+  content: "☰ ";
+  color: #5a5f6b;
+}
+
+.fed-bulk-link:hover { background: #f1f2f5; border-color: #cfd4dd; }
+
+.fed-bulk-link:focus-visible {
+  outline: 2px solid #3a69ff;
+  outline-offset: 2px;
+}

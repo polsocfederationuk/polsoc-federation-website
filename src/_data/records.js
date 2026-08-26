@@ -17,6 +17,7 @@
 const fs = require("fs");
 const path = require("path");
 const yaml = require("js-yaml");
+const { normaliseRecordDates } = require("./dateOnly");
 
 const CONTENT_DIR = path.join(__dirname, "..", "..", "content");
 
@@ -47,7 +48,7 @@ const loadCollection = (dirName) => {
     .map((file) => {
       const raw = fs.readFileSync(path.join(dir, file), "utf8");
       const parsed = yaml.load(raw) || {};
-      return {
+      const record = {
         ...parsed,
         // Provenance, useful for error messages and for a future CMS.
         _source: `content/${dirName}/${file}`,
@@ -55,6 +56,46 @@ const loadCollection = (dirName) => {
         // field is filled in.
         slug: parsed.slug || file.replace(/\.ya?ml$/i, ""),
       };
+
+      // A bare YAML date becomes the calendar day it means, rather than a
+      // timezone-sensitive Date. See src/_data/dateOnly.js for why, and note
+      // that the other loaders which read this content apply the same helper —
+      // normalising in only one of them is how this defect survived its first
+      // fix.
+      normaliseRecordDates(record);
+
+      // "No photograph" has two spellings on disk and one meaning.
+      //
+      // A hand-written record says `photo: null`. Decap omits the key entirely
+      // when an editor selects no image — it has no way to write an explicit
+      // null, which Phase 17A verified directly. Both mean the same thing, so
+      // the distinction is normalised away here, at the one boundary where
+      // records enter the build, rather than in every template that touches a
+      // photograph.
+      //
+      // This does not touch the YAML: the file keeps whichever form it has, and
+      // no record is rewritten to match the other. See docs/CMS_FOUNDATION.md §9.
+      if (dirName === "team" && record.photo === undefined) record.photo = null;
+
+      // The same absent-or-null equivalence for announcements. Every canonical
+      // record spells "nothing here" as an explicit null (or an empty list);
+      // Decap omits an optional field that an editor left empty. Both mean the
+      // same thing, and normalising here keeps that difference out of every
+      // template and filter downstream. No file is rewritten either way.
+      if (dirName === "announcements") {
+        for (const key of ["image", "image_position", "image_fit", "image_background", "link"]) {
+          if (record[key] === undefined) record[key] = null;
+        }
+        if (record.extra_images === undefined) record.extra_images = [];
+        // A record saved without touching Registration has no block at all;
+        // "no registration" is what that means, and saying so here keeps the
+        // absent-or-null question out of every template downstream.
+        if (record.registration === undefined || record.registration === null) {
+          record.registration = { state: "none", url: null, opens_on: null, closes_on: null };
+        }
+      }
+
+      return record;
     });
 };
 

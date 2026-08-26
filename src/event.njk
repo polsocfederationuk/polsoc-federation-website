@@ -18,9 +18,13 @@ permalink: "{{ page_pair.locale.urlPrefix }}event-{{ page_pair.event.slug }}.htm
 {%- set event = page_pair.event -%}
 {%- set locale = page_pair.locale -%}
 {%- set c = event[locale.code] -%}
+{#- The shared UI strings. base.njk sets `t` too, but a layout wraps content that has ALREADY been rendered, so a child template never sees it — every `t.` reference in here and in the partials it includes would silently produce an empty string. -#}
+{%- set t = ui[locale.code] -%}
 {%- set jsonld = event | eventJsonLd(locale, site) -%}
 {%- set hasInstagram = false -%}
 {%- for s in event.sections %}{% if s.type == "instagram" or s.instagram_in_grid %}{% set hasInstagram = true %}{% endif %}{% endfor -%}
+{%- set socialPosts = event | socialPosts -%}
+{%- for p in socialPosts %}{% if p.platform == "instagram" %}{% set hasInstagram = true %}{% endif %}{% endfor -%}
 <section class="event-hero">
   <div class="container">
     {#- Relative on purpose: from /pl/ this resolves to the Polish listing. -#}
@@ -30,27 +34,30 @@ permalink: "{{ page_pair.locale.urlPrefix }}event-{{ page_pair.event.slug }}.htm
         is inline and contributes none of its own, so concatenating the parts
         renders "Polish Youth Congress2025". -#}
     <h1>{{ c.title_lead }}{% if c.title_fancy %} <span class="fancy">{{ c.title_fancy }}</span>{% endif %}{% if c.title_tail %} {{ c.title_tail }}{% endif %}</h1>
-    <p class="lead">{{ c.hero_summary }}</p>
+    <p class="lead">{{ c.hero_summary or c.summary }}</p>
 {% include "partials/event/facts.njk" %}
   </div>
 </section>
 
 <section class="section">
   <div class="container">
-{% for section in event.sections %}
-{%- set localSection = c.sections[loop.index0] -%}
-{%- if section.type == "prose" %}
-{% include "partials/event/prose.njk" %}
-{%- elif section.type == "gallery" %}
-{% include "partials/event/gallery.njk" %}
-{%- elif section.type == "heading" %}
-{% include "partials/event/heading.njk" %}
-{%- elif section.type == "album" %}
+{#-
+  THE FIXED PAGE STRUCTURE (Phase 17C.5A.3).
+
+  The page used to be assembled from three parallel arrays an editor had to keep
+  aligned by hand. The template owns the structure now, identically for English
+  and Polish, and the editor supplies content:
+
+    header  ->  body  ->  gallery  ->  registration  ->  album  ->  social  ->  nav
+
+  Every region below renders only when it has something to show.
+-#}
+{% set body = c.body %}{% include "partials/event/body.njk" %}
+{% set gallery = event.gallery %}{% include "partials/event/gallery-fixed.njk" %}
+{%- set reg = event | eventRegistration -%}
+{% include "partials/event/registration.njk" %}
 {% include "partials/event/album.njk" %}
-{%- elif section.type == "instagram" %}
-{% include "partials/event/instagram.njk" %}
-{%- endif %}
-{%- endfor %}
+{% set posts = socialPosts %}{% include "partials/event/social-posts.njk" %}
     <div style="margin-top: 44px;" class="reveal">
       <a class="btn btn-ghost" href="events.html">{{ c.back_link_bottom }}</a>
     </div>

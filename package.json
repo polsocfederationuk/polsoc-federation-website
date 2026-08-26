@@ -5,6 +5,8 @@
   "description": "Static bilingual website for the Federation of Polish Student Societies in the UK. The live site is still the hand-written HTML at the repository root; the Eleventy build under src/ + content/ currently generates only architectural proof pages into dist/. See docs/BUILD_ARCHITECTURE.md.",
   "scripts": {
     "build": "eleventy",
+    "build:identity": "node scripts/build-identity.js",
+    "build:production": "node scripts/build-production.js",
     "clean": "node scripts/clean.js",
     "validate": "node scripts/validate.js",
     "compare:chrome": "node scripts/compare-chrome.js",
@@ -26,7 +28,21 @@
     "audit:dist": "node scripts/audit-dist.js",
     "crawl:dist": "node scripts/crawl-dist.js",
     "audit:public-parity": "node scripts/audit-public-parity.js",
-    "compare:sitemap": "node scripts/compare-sitemap.js"
+    "compare:sitemap": "node scripts/compare-sitemap.js",
+    "build:cms": "node scripts/build-cms.js",
+    "cms:proxy": "node scripts/cms-proxy.js",
+    "cms:serve": "node scripts/cms-server.js",
+    "validate:cms": "node scripts/validate-cms.js",
+    "cms:check": "node scripts/cms-check.js",
+    "test:cms-roundtrip": "node scripts/test-cms-roundtrip.js",
+    "test:team-rules": "node scripts/test-team-rules.js",
+    "test:announcement-rules": "node scripts/test-announcement-rules.js",
+    "test:event-rules": "node scripts/test-event-rules.js",
+    "test:event-content": "node scripts/test-event-content.js",
+    "test:bulk": "node scripts/test-bulk.js",
+    "test:cms-production": "node scripts/test-cms-production.js",
+    "cms:dev": "node scripts/cms-dev.js",
+    "cms:smoke": "node scripts/cms-smoke.js"
   },
   "engines": {
     "node": ">=18"
@@ -34,7 +50,13 @@
   "license": "UNLICENSED",
   "devDependencies": {
     "@11ty/eleventy": "^3.1.6",
+    "decap-cms": "3.15.1",
+    "decap-server": "3.10.0",
+    "esbuild": "^0.28.2",
     "js-yaml": "^4.3.0",
     "markdown-it": "^14.3.0"
+  },
+  "dependencies": {
+    "@netlify/identity": "^2.0.0"
   }
 }

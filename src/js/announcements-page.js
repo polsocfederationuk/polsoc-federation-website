@@ -66,6 +66,55 @@
         '" alt="' + attr(item.title) + '"' + pos + "></div>";
     }
 
+    /**
+     * The registration call to action, or nothing.
+     *
+     * States are an explicit editorial choice and are NOT recalculated here from
+     * today's date. The site is built as fixed files: a button that decided for
+     * itself that sign-ups had opened would be wrong from the moment the date
+     * passed until somebody rebuilt the site, and nobody would know.
+     *
+     * Dates are shown when the editor supplied them, as plain supporting text.
+     */
+    function registrationHTML(item) {
+      var r = item.registration;
+      if (!r || !r.state || r.state === "none") return "";
+
+      /*
+        EXISTING CLASSES ONLY, deliberately.
+
+        css/style.css at the repository root is the LIVE deployed stylesheet —
+        the build passthrough-copies it — and this repository's safety model
+        freezes the live site until the approved cutover. Inventing
+        `.ann-register` styling here would have quietly edited production, which
+        scripts/validate.js rightly refuses.
+
+        So the states reuse the classes the announcement dialog already has:
+        `.ann-closed` is the status pill, `.ann-link` + `.btn.btn-primary` is the
+        action button. The result is styled, consistent, and changes nothing that
+        is already deployed. Bespoke styling for these states is a separate,
+        reviewable change to the live stylesheet.
+      */
+      var notes = [];
+      if (r.opensOn) notes.push(fill(UI.registrationOpensOn, { date: r.opensOn }));
+      if (r.closesOn) notes.push(fill(UI.registrationClosesOn, { date: r.closesOn }));
+      var note = notes.length ? "<p>" + attr(notes.join(" · ")) + "</p>" : "";
+
+      if (r.state === "open" && r.url) {
+        return '<div class="ann-link"><a class="btn btn-primary" href="' + attr(r.url) +
+          '" target="_blank" rel="noopener">' + attr(UI.registerLabel) +
+          ' <span class="arrow">→</span></a></div>' + note;
+      }
+
+      if (r.state === "coming_soon") {
+        return '<div class="ann-closed">' + attr(UI.registrationComingSoon) + "</div>" + note;
+      }
+
+      // `closed` reaches here only when a closing date was supplied; the status
+      // pill itself is already rendered at the top of the dialog.
+      return note;
+    }
+
     var lastFocused = null;
 
     function openModal(item, trigger) {
@@ -92,6 +141,19 @@
           (item.link.external ? ' target="_blank" rel="noopener"' : "") + ">" +
           attr(item.link.text) + ' <span class="arrow">→</span></a></div>';
       }
+      /*
+        REGISTRATION — a SEPARATE action from the link above.
+
+        Two different questions: the link says where to read more, this says how
+        to sign up. An announcement may carry both, pointing at different places,
+        so this is appended rather than folded into `.ann-link` — which also
+        leaves the markup of every existing record untouched.
+
+        The `closed` state is NOT handled here. It renders through the pill at
+        the top of the dialog exactly as it always has, so the eight records
+        migrated from the old on/off switch produce identical pages.
+      */
+      extra += registrationHTML(item);
       modalExtra.innerHTML = extra;
 
       modal.classList.add("open");

@@ -16,6 +16,7 @@
 const fs = require("fs");
 const path = require("path");
 const yaml = require("js-yaml");
+const { normaliseRecordDates } = require("./dateOnly");
 
 const EVENTS_DIR = path.join(__dirname, "..", "..", "content", "events");
 const LOCALES = require("./locales.json");
@@ -29,7 +30,7 @@ module.exports = () => {
     // dependent and would otherwise vary between machines.
     .sort()
     .filter((f) => /\.ya?ml$/i.test(f))
-    .map((f) => ({
+    .map((f) => normaliseRecordDates({
       ...(yaml.load(fs.readFileSync(path.join(EVENTS_DIR, f), "utf8")) || {}),
       _source: `content/events/${f}`,
     }))
