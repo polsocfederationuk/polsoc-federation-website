@@ -403,6 +403,38 @@ console.log("=".repeat(78));
       dataFiles: [{ path: "content/events/e.yaml", raw: revived }] } }, "admin-token");
     check(old.status >= 400, "the retired section architecture cannot come back", old.body.error);
 
+    /*
+      THE RULES MUST ACCEPT THE CONTENT THAT ACTUALLY EXISTS.
+
+      Every check above uses a synthetic fixture, and a fixture is written to
+      match whatever the rule says. That is how an invented requirement got in:
+      the rule demanded `en.summary`, the fixtures had one, and all four real
+      events — which use hero_summary/card_summary overrides instead — would
+      have been refused on the first save through the production CMS.
+
+      So the last word goes to the repository. If an editor cannot re-save a
+      record that is already published, the rule is wrong, not the record.
+    */
+    const fsMod = require("fs");
+    for (const [dir, folder] of [["content/team", "content/team"],
+      ["content/announcements", "content/announcements"],
+      ["content/events", "content/events"]]) {
+      const files = fsMod.readdirSync(path.join(__dirname, "..", dir))
+        .filter((f) => /.ya?ml$/i.test(f));
+      const refused = [];
+      let considered = 0;
+      for (const file of files) {
+        const raw = fsMod.readFileSync(path.join(__dirname, "..", dir, file), "utf8");
+        if (folder === "content/events" && !/event_family:\s*standard/.test(raw)) continue;
+        considered++;
+        const problem = rules.check(`${folder}/${file}`, raw, folder);
+        if (problem) refused.push(`${file}: ${problem}`);
+      }
+      check(refused.length === 0,
+        `every real record in ${folder} can still be saved`,
+        refused.length ? refused.slice(0, 2).join(" | ") : `${considered} records`);
+    }
+
     check(rules.currentAcademicYear() === "2025/26",
       "the rules read the real current academic year", rules.currentAcademicYear());
   }

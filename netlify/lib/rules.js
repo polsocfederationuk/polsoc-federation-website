@@ -113,10 +113,38 @@ function checkEvent(record) {
   if (record.sections || (record.en || {}).sections || (record.pl || {}).sections) {
     return "That event uses an old layout the site no longer supports.";
   }
+  /*
+    A SUMMARY, NOT THE `summary` FIELD.
+
+    This used to demand `en.summary` outright, which was wrong and would have
+    refused every event the Federation actually has: all four existing records
+    predate that field and carry authored `hero_summary` / `card_summary`
+    overrides instead. The CMS marks `summary` optional precisely because of
+    that fallback chain — src/_data/eventText.js reads hero and card summaries
+    from the shared one only when the override is empty.
+
+    So the requirement is that SOMETHING fills the hero and the card, which is
+    what a reader would otherwise find missing. Which of the three provides it
+    is the editor's business.
+  */
   for (const locale of ["en", "pl"]) {
     const loc = record[locale] || {};
-    if (!String(loc.summary || "").trim()) {
-      return `The ${locale === "en" ? "English" : "Polish"} summary is required.`;
+    const hasSummary = [loc.summary, loc.hero_summary, loc.card_summary]
+      .some((v) => String(v || "").trim());
+    if (!hasSummary) {
+      return `The ${locale === "en" ? "English" : "Polish"} event needs a summary.`;
+    }
+    /*
+      These three the CMS itself marks required, and the page cannot be built
+      honestly without them: two are alternative text for images a reader may
+      not be able to see, and the third is what the homepage timeline shows.
+    */
+    for (const [field, what] of [["timeline_title", "homepage title"],
+      ["card_image_alt", "main image description"],
+      ["og_image_alt", "sharing image description"]]) {
+      if (!String(loc[field] || "").trim()) {
+        return `The ${locale === "en" ? "English" : "Polish"} ${what} is required.`;
+      }
     }
   }
   return null;
