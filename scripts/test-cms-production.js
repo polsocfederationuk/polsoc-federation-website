@@ -488,6 +488,281 @@ console.log("=".repeat(78));
       "session.js logs nothing at all", "a token cannot leak through a log line");
   }
 
+  /* -- what an upstream refusal may and may not become ---------------------- */
+
+  /*
+    A 502 CARRYING OUR OWN 405 MESSAGE.
+
+    Production showed `502 {"error":"This endpoint only accepts POST requests."}`
+    on /api/cms, and the leading theory was that the session fallback was
+    calling Identity with the wrong method and that its refusal was being
+    surfaced as our 502.
+
+    That string exists in exactly one place in this repository — the method
+    check in cms.mjs — and it is a 405 there. These tests pin down what the
+    fallback does with a refusal shaped exactly like the one that was seen, and
+    what status the endpoint can return as a result. If a future change ever
+    lets an upstream body escape into our response, or turns an unauthenticated
+    request into a 5xx, this is what stops it.
+  */
+  section("1e. An upstream refusal never becomes a 502");
+  {
+    const sessionLib = require(path.join(__dirname, "..", "netlify", "lib", "session.js"));
+
+    /* Identity answering exactly as production's /api/cms answers a GET. */
+    const postOnly = async () => new Response(
+      JSON.stringify({ error: "This endpoint only accepts POST requests." }),
+      { status: 405, headers: { "content-type": "application/json" } });
+
+    const user = await sessionLib.resolve(
+      new Request(SITE + "/api/cms", {
+        method: "POST",
+        headers: { "content-type": "application/json", cookie: "nf_jwt=whatever" },
+        body: "{}",
+      }),
+      { getUser: async () => null, fetch: postOnly, env: { URL: SITE } },
+    );
+    check(user === null,
+      "a refusal from Identity resolves to nobody, not to an error",
+      "null, so the caller answers 401");
+
+    /* …and end to end, that is a 401 with our own words. */
+    const refused = await cms.default(
+      request({ action: "getEntry", params: { path: "content/team/jane-example.yaml" } },
+        { headers: { cookie: "nf_jwt=whatever" } }),
+      {},
+      { repo: seedRepo(), getUser: async () => null, fetch: postOnly },
+    );
+    const refusedBody = JSON.parse(await refused.text());
+    check(refused.status === 401,
+      "the endpoint answers 401, never 502, when Identity refuses",
+      `${refused.status}`);
+    check(!/only accepts POST/.test(refusedBody.error || ""),
+      "and never repeats an upstream body back to the browser",
+      refusedBody.error);
+
+    /* The same for every shape an upstream can fail in. */
+    for (const [label, reply] of [
+      ["a 500 from Identity", async () => new Response("boom", { status: 500 })],
+      ["an unreachable Identity", async () => { throw new TypeError("fetch failed"); }],
+      ["a non-JSON body", async () => new Response("<html>", { status: 200 })],
+      ["a 200 with no user", async () => new Response("{}", { status: 200 })],
+    ]) {
+      // eslint-disable-next-line no-await-in-loop
+      const out = await cms.default(
+        request({ action: "getEntry", params: { path: "content/team/jane-example.yaml" } },
+          { headers: { cookie: "nf_jwt=whatever" } }),
+        {},
+        { repo: seedRepo(), getUser: async () => null, fetch: reply },
+      );
+      check(out.status === 401, `${label} is still a 401`, `${out.status}`);
+    }
+
+    /*
+      THE METHOD WE SEND. Identity's /user is a GET — the installed
+      @netlify/identity asks for it that way, and the live endpoint answers
+      "requires a Bearer token" rather than a method complaint. Sending POST
+      would be a guess; this pins the contract to what the library does.
+    */
+    let seen = null;
+    await sessionLib.resolve(
+      new Request(SITE + "/api/cms", {
+        method: "POST",
+        headers: { "content-type": "application/json", cookie: "nf_jwt=t" },
+        body: "{}",
+      }),
+      {
+        getUser: async () => null,
+        env: { URL: SITE },
+        fetch: async (url, init) => {
+          seen = { url: String(url), method: (init && init.method) || "GET",
+            hasBody: Boolean(init && init.body) };
+          return new Response("{}", { status: 401 });
+        },
+      },
+    );
+    check(seen && seen.method === "GET",
+      "the Identity lookup is a GET, as the library's own is",
+      seen && seen.method);
+    check(seen && seen.url === SITE + "/.netlify/identity/user",
+      "…to /.netlify/identity/user on this site", seen && seen.url);
+    check(seen && seen.hasBody === false,
+      "…with no body", "GET carries none");
+
+    /*
+      A SITE URL WITH A PATH ON IT. `new URL(...).origin` discards the path, so
+      an env.URL of "https://site/some/where" still produces the right endpoint
+      rather than "https://site/some/where/.netlify/identity/user".
+    */
+    check(sessionLib.identityOrigin(
+      new Request(SITE + "/api/cms", { method: "POST", body: "{}" }),
+      { URL: SITE + "/some/path" }) === SITE,
+    "a site URL carrying a path still yields the bare origin", "no double join");
+    check(sessionLib.identityOrigin(
+      new Request(SITE + "/api/cms", { method: "POST", body: "{}" }),
+      { URL: SITE + "/" }) === SITE,
+    "…and a trailing slash does not double up", "no //");
+  }
+
+  /* -- diagnosing a refused installation token ------------------------------ */
+
+  /*
+    WHY THERE IS A LOG LINE HERE AT ALL.
+
+    Every refusal from GitHub's token endpoint becomes the same 502 for the
+    editor, which is right — they can do nothing about any of it. It also made
+    a wrong App ID and a wrong private key look identical from outside, and
+    production spent a long time indistinguishable from a working system.
+
+    So the failure path now records what is needed to tell those apart, and
+    these tests exist to keep it to exactly that: non-secrets only, an
+    allow-listed classification, and nothing at all on success.
+  */
+  section("1f. A refused installation token is diagnosable, not revealing");
+  {
+    const gh = require(path.join(__dirname, "..", "netlify", "lib", "github.js"));
+    const crypto = require("crypto");
+
+    /* A throwaway pair: never a real credential in the test suite. */
+    const pair = crypto.generateKeyPairSync("rsa", { modulusLength: 2048,
+      privateKeyEncoding: { type: "pkcs1", format: "pem" },
+      publicKeyEncoding: { type: "pkcs1", format: "pem" } });
+    const OTHER = crypto.generateKeyPairSync("rsa", { modulusLength: 2048,
+      privateKeyEncoding: { type: "pkcs8", format: "pem" },
+      publicKeyEncoding: { type: "spki", format: "pem" } }).privateKey;
+
+    /* -- the fingerprint ---------------------------------------------------- */
+
+    const fp = gh.keyFingerprint(pair.privateKey);
+    check(/^[0-9a-f]{64}$/.test(fp), "the fingerprint is a SHA-256 hex digest", fp.slice(0, 16) + "…");
+    check(gh.keyFingerprint(pair.privateKey) === fp,
+      "…and is deterministic for the same key", "same twice");
+    check(gh.keyFingerprint(OTHER) !== fp,
+      "…and differs for a different key", "distinguishes keys");
+
+    /*
+      THE POINT OF THE WHOLE THING: the same key in any representation gives
+      the same answer, so a laptop and a function log can be compared.
+    */
+    const oneLine = pair.privateKey.replace(/\r?\n/g, "\\n");
+    check(gh.keyFingerprint(gh.normaliseKey(oneLine)) === fp,
+      "the one-line \\n representation fingerprints identically",
+      "laptop and production comparable");
+    check(gh.keyFingerprint(gh.normaliseKey("\n\n" + pair.privateKey + "\n\n")) === fp,
+      "…and so does a whitespace-padded one", "pasted values still compare");
+
+    /* It is derived from the PUBLIC half, and carries none of the private one. */
+    const secretBody = pair.privateKey
+      .replace(/-----[A-Z ]+-----/g, "").replace(/\s+/g, "");
+    check(!secretBody.includes(fp) && !fp.includes(secretBody.slice(0, 24)),
+      "the fingerprint contains no private-key material", "public half only");
+    const publicDer = crypto.createPublicKey(pair.privateKey)
+      .export({ type: "spki", format: "der" });
+    check(fp === crypto.createHash("sha256").update(publicDer).digest("hex"),
+      "…it is exactly SHA-256 of the public key in SPKI DER", "canonical");
+    check(gh.keyFingerprint("not a key at all") === "(unreadable)",
+      "an unparseable key says so rather than throwing", "(unreadable)");
+
+    /* -- the classification allow-list -------------------------------------- */
+
+    for (const known of ["Integration not found", "Not Found",
+      "Bad credentials", "A JSON web token could not be decoded"]) {
+      check(gh.classifyRefusal(known) === known,
+        `"${known}" is reported as itself`, "allow-listed");
+    }
+    for (const [label, arbitrary] of [
+      ["free upstream prose", "Something new GitHub started saying"],
+      ["something echoing a request", "Bad credentials for token ghs_SECRETVALUE"],
+      ["an empty message", ""],
+      ["a non-string", undefined],
+    ]) {
+      check(gh.classifyRefusal(arbitrary) === "(unrecognised)",
+        `${label} is not repeated into the log`, "(unrecognised)");
+    }
+
+    /* -- what actually reaches the log -------------------------------------- */
+
+    /** Capture console.error while a refusal happens. */
+    const refusalLog = async (status, body) => {
+      const lines = [];
+      const realError = console.error;
+      console.error = (...args) => lines.push(args.join(" "));
+      const repo = new gh.GitHubRepo({
+        owner: "polsocfederationuk", repo: "polsoc-federation-website", branch: "main",
+        appId: "4703355", installationId: "156228587", privateKey: pair.privateKey,
+      }, async () => new Response(JSON.stringify(body), { status }));
+      let thrown = null;
+      try { await repo.accessToken(); } catch (err) { thrown = err; }
+      console.error = realError;
+      return { lines, thrown };
+    };
+
+    const refused = await refusalLog(401,
+      { message: "A JSON web token could not be decoded" });
+    check(refused.thrown && refused.thrown.name === "GitHubError"
+      && refused.thrown.status === 502,
+    "a refusal still throws the same 502 GitHubError", "unchanged for the editor");
+    check(refused.thrown.message === "could not authenticate with the repository",
+      "…with exactly the same message", refused.thrown.message);
+    check(refused.lines.length === 1, "and logs exactly one line",
+      `${refused.lines.length} line(s)`);
+
+    const logged = refused.lines[0] || "";
+    check(/"status":401/.test(logged), "the log carries the upstream status", "401");
+    check(/A JSON web token could not be decoded/.test(logged),
+      "…the allow-listed classification", "classified");
+    check(/"appId":"4703355"/.test(logged) && /"installationId":"156228587"/.test(logged),
+      "…the identifiers we asked with", "appId + installationId");
+    check(/polsocfederationuk\/polsoc-federation-website/.test(logged),
+      "…and the repository", "owner/repo");
+    check(logged.includes(fp), "…and the key fingerprint", fp.slice(0, 16) + "…");
+
+    /*
+      NOTHING ELSE. This is the assertion that matters: a diagnostic that leaks
+      is worse than no diagnostic, because it ships to a log nobody is guarding.
+    */
+    check(!secretBody.split("").slice(0, 40).join("").length
+      || !logged.includes(secretBody.slice(0, 40)),
+    "the log contains no private-key material", "no key");
+    check(!/BEGIN [A-Z ]*PRIVATE KEY|Bearer |Authorization|eyJ[A-Za-z0-9_-]{10,}/.test(logged),
+      "no JWT, bearer token or Authorization header reaches the log", "none");
+    check(!/nf_jwt|nf_refresh/.test(logged),
+      "and no session cookie either", "none");
+
+    /* An unrecognised upstream body must not be echoed. */
+    const odd = await refusalLog(403,
+      { message: "Bad credentials for token ghs_LOOKS_LIKE_A_SECRET" });
+    check(!/ghs_LOOKS_LIKE_A_SECRET/.test(odd.lines[0] || ""),
+      "an unrecognised upstream message is never repeated", "(unrecognised)");
+    check(/"status":403/.test(odd.lines[0] || ""),
+      "…though its status still narrows the problem", "403");
+
+    /* A body that is not JSON at all must not break the path. */
+    const html = await refusalLog(502, "<html>upstream trouble</html>");
+    check(html.thrown && html.thrown.status === 502 && html.lines.length === 1,
+      "a non-JSON upstream body still logs one line and throws", "no crash");
+    check(!/upstream trouble/.test(html.lines[0] || ""),
+      "…without repeating it", "(unrecognised)");
+
+    /* -- and silence on success --------------------------------------------- */
+
+    const quiet = [];
+    const realError = console.error;
+    console.error = (...args) => quiet.push(args.join(" "));
+    const ok = new gh.GitHubRepo({
+      owner: "polsocfederationuk", repo: "polsoc-federation-website", branch: "main",
+      appId: "4703355", installationId: "156228587", privateKey: pair.privateKey,
+    }, async () => new Response(JSON.stringify({
+      token: "ghs_NOT_A_REAL_TOKEN", expires_at: new Date(Date.now() + 3600e3).toISOString(),
+    }), { status: 201 }));
+    const token = await ok.accessToken();
+    console.error = realError;
+    check(quiet.length === 0,
+      "a successful token mints nothing into the log", "silent on 201");
+    check(token === "ghs_NOT_A_REAL_TOKEN",
+      "…and the token is returned to the caller only", "not logged");
+  }
+
   /* -- the browser sign-in gate -------------------------------------------- */
 
   /*

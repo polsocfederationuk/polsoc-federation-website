@@ -74,6 +74,62 @@ function appJwt(appId, privateKey, now) {
  * CI variable usually arrives with `\n` written out. Both are normal; guessing
  * wrong produces an unreadable OpenSSL error at the worst moment.
  */
+/**
+ * WHICH KEY IS THIS, WITHOUT SAYING WHAT IT IS.
+ *
+ * The public half of a key pair is not a secret — it is published — so a digest
+ * of it can be compared between a laptop and a function log to settle the one
+ * question a refusal cannot otherwise answer: is production even holding the
+ * key we think it is?
+ *
+ * SPKI DER is the canonical encoding, so the same key fingerprints identically
+ * whether it arrived as PKCS#1 or PKCS#8, one line or many, padded with blank
+ * lines or not. Nothing derived from the PRIVATE half is read, printed or
+ * returned.
+ *
+ * @param {string} privateKey  already through normaliseKey
+ * @returns {string} lowercase hex SHA-256, or "(unreadable)"
+ */
+function keyFingerprint(privateKey) {
+  try {
+    const pub = crypto.createPublicKey(privateKey);
+    return crypto.createHash("sha256")
+      .update(pub.export({ type: "spki", format: "der" }))
+      .digest("hex");
+  } catch (err) {
+    // A key that will not parse cannot be fingerprinted, and saying so is
+    // itself the diagnosis.
+    return "(unreadable)";
+  }
+}
+
+/*
+  WHAT GITHUB IS ALLOWED TO SAY IN OUR LOG.
+
+  Each of these was observed from the real API, and each maps to a different
+  thing being wrong:
+
+    Integration not found                  the App ID / JWT issuer
+    Not Found                              the installation, or the App is not
+                                           installed where we think
+    A JSON web token could not be decoded  the private key
+    Bad credentials                        the signature or the clock
+
+  An allow-list rather than the message itself, because a response body is
+  upstream text: it can change, and it can carry request detail. Anything not
+  on this list is logged as "(unrecognised)" and the status still narrows it.
+*/
+const GITHUB_REFUSALS = new Set([
+  "Integration not found",
+  "Not Found",
+  "A JSON web token could not be decoded",
+  "Bad credentials",
+]);
+
+function classifyRefusal(message) {
+  return GITHUB_REFUSALS.has(message) ? message : "(unrecognised)";
+}
+
 function normaliseKey(raw) {
   const key = String(raw || "").trim();
   return key.includes("\\n") ? key.replace(/\\n/g, "\n") : key;
@@ -120,8 +176,42 @@ class GitHubRepo {
         "X-GitHub-Api-Version": "2022-11-28",
       } });
     if (!response.ok) {
-      // Deliberately terse. The response body from this endpoint can echo
-      // request detail, and none of it should reach an editor's browser.
+      /*
+        THE ONE LINE THAT MAKES THIS DIAGNOSABLE.
+
+        Every refusal here used to collapse into the same 502, which is correct
+        for the editor — they can do nothing about any of it — and useless for
+        whoever has to fix it: a wrong App ID and a wrong private key looked
+        identical from outside. This records what the log needs and nothing
+        more.
+
+        Only non-secrets. The status and an allow-listed classification say what
+        GitHub objected to; the three identifiers say what we asked with; the
+        fingerprint identifies the key WITHOUT any private material — it is a
+        digest of the public half. The JWT, the token, the Authorization header
+        and the response body are never touched.
+
+        Their values are logged as given, untrimmed, so that stray whitespace
+        from a copied-and-pasted environment variable is visible as \n rather
+        than silently invisible.
+      */
+      let classification = "(unrecognised)";
+      try {
+        const body = await response.json();
+        classification = classifyRefusal(
+          typeof body.message === "string" ? body.message : "");
+      } catch (err) {
+        /* not JSON, and the body is not ours to repeat */
+      }
+      console.error("github: installation token refused " + JSON.stringify({
+        status: response.status,
+        github: classification,
+        appId: this.config.appId,
+        installationId: this.config.installationId,
+        repo: `${this.owner}/${this.repo}`,
+        keyFingerprint: keyFingerprint(normaliseKey(this.config.privateKey)),
+      }));
+      // Unchanged: the editor can do nothing with any of the above.
       throw new GitHubError("could not authenticate with the repository", 502);
     }
     const body = await response.json();
@@ -307,4 +397,5 @@ function fromEnvironment(env, transport) {
   }, transport) };
 }
 
-module.exports = { GitHubRepo, GitHubError, fromEnvironment, appJwt, normaliseKey, encodePath };
+module.exports = { GitHubRepo, GitHubError, fromEnvironment, appJwt, normaliseKey,
+  encodePath, keyFingerprint, classifyRefusal };
