@@ -1,15 +1,3 @@
-# Central academic-year setting.
-#
-# `current` selects which committee the generated team page shows. Team records
-# are filtered to this value; records for other years stay on disk untouched, so
-# adding the 2026/27 committee later is additive — nothing is deleted or
-# overwritten. See docs/TEAM_MIGRATION.md sections 4 and 13.
-#
-# Format: "YYYY/YY" (validated).
-
-current: "2025/26"
-
-# Years that exist in content/ and could be exposed once archive UI is built.
-# Purely informational today: nothing reads this yet.
+current: 2026/27
 known:
-  - "2025/26"
+  - 2025/26
