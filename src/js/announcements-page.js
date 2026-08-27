@@ -173,7 +173,7 @@
       lastFocused = null;
     }
 
-    ANNOUNCEMENTS.forEach(function (item) {
+    function cardFor(item) {
       var card = document.createElement("button");
       card.className = "ann-card reveal" + (item.image ? "" : " no-photo");
       card.type = "button";
@@ -186,8 +186,48 @@
         '<span class="ann-more">' + attr(UI.readMore) + "</span>" +
         "</div>";
       card.addEventListener("click", function () { openModal(item, card); });
-      grid.appendChild(card);
-    });
+      return card;
+    }
+
+    /*
+      ONE SECTION PER ACADEMIC YEAR, NEWEST FIRST.
+
+      Same native <details> the events and team pages use, built here rather
+      than in the template because this page has always injected its cards from
+      the generated data file. The configured current year is the one that
+      opens; a year that arrives early sorts above it and stays collapsed.
+
+      Falls back to the flat list when a build predates ANNOUNCEMENT_YEARS, so a
+      stale cached data file renders the old way instead of an empty page.
+    */
+    if (typeof ANNOUNCEMENT_YEARS !== "undefined" && ANNOUNCEMENT_YEARS.length) {
+      ANNOUNCEMENT_YEARS.forEach(function (year) {
+        if (!year.items.length && !year.isCurrent) return;
+
+        var section = document.createElement("details");
+        section.className = "year-section";
+        if (year.isCurrent) section.open = true;
+
+        var heading = document.createElement("summary");
+        heading.textContent = String(year.label || year.academicYear)
+          .replace(/^(\d{4})\/(\d{2})$/, function (_, a, b) {
+            return a + " / " + String(a).slice(0, 2) + b;
+          });
+        section.appendChild(heading);
+
+        var body = document.createElement("div");
+        body.className = "year-section-body";
+        var yearGrid = document.createElement("div");
+        yearGrid.className = "ann-grid";
+        year.items.forEach(function (item) { yearGrid.appendChild(cardFor(item)); });
+        body.appendChild(yearGrid);
+        section.appendChild(body);
+
+        grid.appendChild(section);
+      });
+    } else {
+      ANNOUNCEMENTS.forEach(function (item) { grid.appendChild(cardFor(item)); });
+    }
 
     closeBtn.addEventListener("click", closeModal);
     modal.addEventListener("click", function (e) { if (e.target === modal) closeModal(); });

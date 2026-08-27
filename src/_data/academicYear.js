@@ -37,40 +37,46 @@ function parseAcademicYear(value) {
  * saves such a record cannot reopen the CMS to undo it.
  *
  * This is deliberately a shade stricter than the build rule: it does not also
- * require `show_in_listing`. A published future event that is merely hidden from
- * the listing builds today, but turning that switch on later breaks the site with
- * no warning attached to the switch. Refusing the state outright is kinder than
- * leaving the trap armed.
+ * A YEAR THAT HAS NOT STARTED YET IS NOT AN ERROR.
  *
- * Past and current years are always fine — the rule is "later than current",
- * not "equal to current".
+ * This used to refuse the save. A future event had nowhere to go: the listing
+ * showed one season, so publishing next year's event early made it disappear,
+ * and refusing was kinder than leaving that trap armed.
  *
- * @returns {null|{eventYear: string, currentYear: string}} null when acceptable
+ * Every academic year is now its own section on the public pages, so such an
+ * event lands in a collapsed 2026/27 group — present, in the right place, and
+ * never promoted over the current year. There is nothing left to protect
+ * against, so this reports rather than refuses.
+ *
+ * Past and current years return null; only a later year is reported.
+ *
+ * @returns {null|{eventYear: string, currentYear: string}} null when not future
  */
-function futurePublishProblem(event, currentYear) {
-  if (!event || event.published !== true) return null;
+function futureYear(event, currentYear) {
+  if (!event) return null;
 
   const eventStart = parseAcademicYear(event.academic_year);
   const currentStart = parseAcademicYear(currentYear);
-  // An unparseable year on either side is somebody else's error to report:
-  // the academic-year format rules already cover it, and guessing here would
-  // block a save for a reason the editor was never told about.
+  // An unparseable year on either side is somebody else's business: the
+  // academic-year format rules already cover it, and this only reports which
+  // side of "current" a valid year falls on.
   if (eventStart === null || currentStart === null) return null;
 
   if (eventStart <= currentStart) return null;
   return { eventYear: String(event.academic_year), currentYear: String(currentYear) };
 }
 
-/** The editor-facing wording. Kept beside the rule so the two cannot drift. */
-function futurePublishMessage(problem) {
+/**
+ * How a future year reads to a person. Nothing refuses a save because of it.
+ *
+ * Kept beside the rule because the two used to drift, and because "this belongs
+ * to a year that has not started yet" is still worth being able to say.
+ */
+function futureYearMessage(notice) {
   return (
-    "Cannot publish this event yet.\n\n" +
-    "This event belongs to " + problem.eventYear + ", but the website's current " +
-    "academic year is still " + problem.currentYear + ".\n\n" +
-    'You can save the event now with "Published" switched off.\n\n' +
-    "When the Federation changes the current academic year to " + problem.eventYear +
-    ", you can return to this event and publish it.\n\n" +
-    "The event has not been saved."
+    "This record belongs to " + notice.eventYear + ", and the website's current " +
+    "academic year is " + notice.currentYear + ". It will appear in its own " +
+    notice.eventYear + " section, collapsed, until the current year moves on."
   );
 }
 
@@ -113,8 +119,8 @@ function academicYearOptions(currentYear) {
 
 module.exports = {
   parseAcademicYear,
-  futurePublishProblem,
-  futurePublishMessage,
+  futureYear,
+  futureYearMessage,
   academicYearOptions,
   formatAcademicYear,
   FIRST_ACADEMIC_YEAR,

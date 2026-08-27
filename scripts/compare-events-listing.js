@@ -150,6 +150,14 @@ function parse(html) {
   o.detailsSummaries = [...body.matchAll(/<summary[^>]*>([\s\S]*?)<\/summary>/g)].map((m) => text(m[1]));
   // ARIA that duplicates native <details> semantics would be a defect.
   o.detailsAria = [...body.matchAll(/<details([^>]*)>/g)].map((m) => m[1].trim()).filter(Boolean);
+  /*
+    The academic-year disclosures, and the watermark each one owns. Matched on
+    the class this repository sets rather than on any generated name.
+  */
+  o.yearSections = [...body.matchAll(/<details([^>]*class="[^"]*event-year[^"]*"[^>]*)>/g)]
+    .map((m) => m[1].trim());
+  o.yearWatermarks = [...body.matchAll(/<span class="watermark"[^>]*>([\s\S]*?)<\/span>/g)]
+    .map((m) => text(m[1]));
 
   /* ---- closing CTA ---- */
   const ctaBand = body.match(/<div class="cta-band reveal">([\s\S]*?)<\/div>/);
@@ -275,14 +283,40 @@ for (const page of PAGES) {
   check(`${tag} hero photograph`, L.heroImage, G.heroImage);
   check(`${tag} hero photograph framing`, L.heroPosition, G.heroPosition);
   check(`${tag} hero backdrop is decorative`, L.heroDecorative, G.heroDecorative);
-  // The season label is DERIVED from the central setting; it must still match.
-  check(`${tag} season eyebrow`, L.eyebrow, G.eyebrow);
+  /*
+    APPROVED: THE HERO NO LONGER NAMES A SEASON.
+
+    The page shows every academic year it has, each in its own section with its
+    own heading and watermark, so a hero announcing one season would contradict
+    what is underneath it. Verified in both directions: the live page must still
+    carry the old wording, or this correction is hiding a regression.
+  */
+  check(`${tag} APPROVED: the hero eyebrow is evergreen`,
+    true, /^(Our programme|Nasz program)$/.test(G.eyebrow));
+  check(`${tag} APPROVED: the live hero named the season`,
+    true, /(Season|Sezon)/.test(L.eyebrow));
   check(`${tag} h1`, L.h1, G.h1);
   check(`${tag} h1 .fancy span`, L.h1Fancy, G.h1Fancy);
   check(`${tag} h1 as rendered (word spacing)`, L.h1Rendered, G.h1Rendered);
   check(`${tag} hero lead`, L.lead, G.lead);
   check(`${tag} season watermark`, L.watermark, G.watermark);
-  check(`${tag} section classes and order`, L.sectionClasses, G.sectionClasses);
+  /*
+    APPROVED: THE WATERMARK MOVED INSIDE EACH YEAR.
+
+    It used to belong to the page — one `has-watermark` section carrying the
+    configured season. With several years on the page a single number would sit
+    over another year's cards, so each year section now owns its own and the
+    outer section is a plain one.
+  */
+  check(`${tag} APPROVED: the listing section no longer carries the watermark`,
+    false, G.sectionClasses.some((c) => c.split(" ").includes("has-watermark")));
+  check(`${tag} APPROVED: the live listing section did`,
+    true, L.sectionClasses.some((c) => c.split(" ").includes("has-watermark")));
+  check(`${tag} APPROVED: every year section carries one instead`,
+    G.yearSections.length, G.yearWatermarks.length);
+  check(`${tag} section count and order is otherwise unchanged`,
+    L.sectionClasses.map((c) => c.replace(/\bhas-watermark\b/, "").trim().replace(/\s+/g, " ")),
+    G.sectionClasses.map((c) => c.replace(/\bhas-watermark\b/, "").trim().replace(/\s+/g, " ")));
   check(`${tag} .event-list wrappers`, L.eventListWrappers, G.eventListWrappers);
 
   /* ---- cards ---- */
@@ -337,9 +371,30 @@ for (const page of PAGES) {
   /* ---- archive ---- */
   // Only one academic year exists, so there must be NO disclosure at all.
   check(`${tag} live page has no archive disclosure`, 0, L.details);
-  check(`${tag} no empty archive control is generated`, 0, G.details);
-  check(`${tag} no archive summaries`, [], G.detailsSummaries);
-  check(`${tag} no ARIA duplicating native <details> semantics`, [], G.detailsAria);
+  /*
+    APPROVED: EVERY ACADEMIC YEAR IS A DISCLOSURE, NOT ONLY THE OLD ONES.
+
+    The live page put the current season in the open and folded previous ones
+    into an archive underneath. Each year is now the same kind of object — a
+    <details> with its own heading and watermark — and the configured current
+    year is simply the one that opens. A year that has not started yet sorts
+    above it and arrives closed.
+
+    Still native <details>/<summary>, so the ARIA rule below still holds: it is
+    the semantics that must not be duplicated, and `open` is not ARIA.
+  */
+  check(`${tag} APPROVED: one disclosure per academic year`,
+    G.yearSections.length, G.detailsSummaries.length);
+  check(`${tag} APPROVED: at least one year is present`,
+    true, G.yearSections.length >= 1);
+  check(`${tag} APPROVED: exactly one year is open`,
+    1, G.yearSections.filter((a) => /\bopen\b/.test(a)).length);
+  check(`${tag} APPROVED: each summary is an academic year`,
+    [], G.detailsSummaries.filter((t) => !/^\d{4} \/ \d{4}$/.test(t)));
+  check(`${tag} APPROVED: the live page had no year disclosures`,
+    0, L.detailsSummaries.length);
+  check(`${tag} no ARIA duplicating native <details> semantics`,
+    [], G.detailsAria.filter((a) => /\b(role|aria-[a-z]+)=/.test(a)));
 
   /* ---- closing CTA ---- */
   check(`${tag} closing call-to-action band`, L.cta, G.cta);

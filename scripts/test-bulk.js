@@ -327,8 +327,21 @@ section("5. A mixed selection is ordinary, not an error");
 
 /* -- 6. the future-year guard ----------------------------------------------- */
 
-section("6. Showing a future event is refused, and refused for the whole selection");
+section("6. A future academic year publishes like any other");
 {
+  /*
+    THIS USED TO BE A REFUSAL, AND IT TOOK THE WHOLE SELECTION WITH IT.
+
+    The events listing showed a single season, so publishing an event belonging
+    to a later year made it disappear from the site and broke the build. Bulk
+    manage refused the operation outright rather than leave that trap armed.
+
+    Every academic year is now its own section on the public pages. A 2026/27
+    event lands in a collapsed 2026/27 group — visible, correctly placed, and
+    not promoted over the season that is running. Which year is CURRENT still
+    comes from Site settings alone, so a record arriving early changes nothing
+    about which section opens.
+  */
   const current = store.readCurrentAcademicYear();
   check(current === "2025/26", "the current academic year is unchanged", current);
 
@@ -337,43 +350,31 @@ section("6. Showing a future event is refused, and refused for the whole selecti
   eventFixture(now, { published: false, year: "2025/26" });
   eventFixture(later, { published: false, year: "2026/27" });
 
-  const nowBefore = hashOf(fixturePath("standard-events", now));
-  const laterBefore = hashOf(fixturePath("standard-events", later));
-
   const both = store.updateRecords("standard-events", "show",
     [itemFor("standard-events", now), itemFor("standard-events", later)]);
-  check(both.error && both.error.code === "future_year",
-    "a selection containing a future event is refused", "future_year");
-  check(both.error.records.length === 1 && both.error.records[0].id === later,
-    "the message names the future event", both.error.records[0].title);
-  check(both.error.records[0].recordYear === "2026/27" &&
-    both.error.records[0].currentYear === "2025/26",
-  "and names both years", "2026/27 vs 2025/26");
+  check(!both.error, "a selection containing a future event is accepted", "no error");
+  check(yaml.load(fs.readFileSync(fixturePath("standard-events", now), "utf8")).published === true,
+    "the current-year event is published", "published");
+  check(yaml.load(fs.readFileSync(fixturePath("standard-events", later), "utf8")).published === true,
+    "…and so is the future one", "published");
 
-  /* THE POINT: the valid event was not published on the way to failing. */
-  check(hashOf(fixturePath("standard-events", now)) === nowBefore,
-    "the valid event in the same selection is untouched", "byte-identical");
-  check(hashOf(fixturePath("standard-events", later)) === laterBefore,
-    "the future event is untouched", "byte-identical");
-
-  const alone = store.updateRecords("standard-events", "show",
+  const alone = store.updateRecords("standard-events", "hide",
     [itemFor("standard-events", later)]);
-  check(alone.error && alone.error.code === "future_year",
-    "the future event alone is refused too", "future_year");
-  check(hashOf(fixturePath("standard-events", later)) === laterBefore,
-    "and is still untouched", "byte-identical");
+  check(!alone.error, "hiding a future event is allowed too", "no error");
+  check(yaml.load(fs.readFileSync(fixturePath("standard-events", later), "utf8")).published === false,
+    "…and it is hidden", "hidden");
 
-  // Hiding a future event is fine — it is publishing one that breaks the build.
-  const hideFuture = store.updateRecords("standard-events", "hide",
-    [itemFor("standard-events", later)]);
-  check(!hideFuture.error, "hiding a future event is allowed", "no error");
-
-  // The rule comes from the shared helper, not from a second copy of it.
+  /*
+    The helper still REPORTS a future year — it is a useful thing to be able to
+    say — it simply no longer refuses anything on the strength of it.
+  */
   const helper = require("../src/_data/academicYear.js");
-  const viaHelper = helper.futurePublishProblem(
+  const notice = helper.futureYear(
     { academic_year: "2026/27", published: true }, "2025/26");
-  check(viaHelper !== null && viaHelper.eventYear === "2026/27",
-    "the same rule the entry editor uses reports the same problem", "shared helper");
+  check(notice !== null && notice.eventYear === "2026/27",
+    "the shared helper still identifies a future year", "reported, not refused");
+  check(helper.futureYear({ academic_year: "2025/26" }, "2025/26") === null,
+    "…and says nothing about the current one", "null");
 
   cleanup();
 }

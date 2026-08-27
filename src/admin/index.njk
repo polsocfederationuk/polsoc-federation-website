@@ -337,25 +337,19 @@ eleventyExcludeFromCollections: true
             if (alignment) throw new Error(alignment);
 
             /*
-              FUTURE-YEAR PUBLISH.
+              A FUTURE ACADEMIC YEAR SAVES NORMALLY.
 
-              The events listing refuses to build a published event whose academic
-              year is later than the configured current year. That refusal is
-              fatal, and it takes `npm run cms:serve` down with it — so an editor
-              who saved such a record could not reopen the CMS to undo it, and
-              would need somebody to edit YAML by hand.
+              This used to refuse. The events listing showed a single season, so
+              a published event belonging to a later year vanished from the site
+              AND took the build down with it — an editor who saved one could not
+              reopen the CMS to undo it.
 
-              Checked here BEFORE the file is written. The build rule stays where
-              it is as the backstop for hand-edited files.
+              Every academic year is now its own section on the public pages, so
+              such an event appears in a collapsed group of its own. It is
+              visible, correctly placed, and does not become the current season
+              until Site settings says so. There is nothing left to refuse.
             */
-            var futureCheck = data.event_family === "standard"
-              ? readCurrentAcademicYear()
-                  .catch(function () { throw offlineError("the current academic year"); })
-                  .then(function (current) {
-                    var problem = futurePublishProblem(data, current);
-                    if (problem) throw new Error(futurePublishMessage(problem));
-                  })
-              : Promise.resolve();
+            var futureCheck = Promise.resolve();
 
             /*
               Corrections applied on the way out. Each one only replaces a value

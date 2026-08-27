@@ -83,19 +83,22 @@ for (const rel of FIXTURE_PAGES) {
 // If the fixture drifts from what src/events.njk emits, it stops testing anything.
 const listing = read("src/events.njk");
 const listingArchive = {
-  wrapper: /<div class="event-archive">/.test(listing),
-  details: /<details class="event-archive-year">/.test(listing),
-  summary: /<summary>/.test(listing),
+  details: /<details class="event-year has-watermark"/.test(listing),
+  summary: /<summary class="event-year-summary">/.test(listing),
+  watermark: /<span class="watermark"/.test(listing),
   list: /<div class="event-list">/.test(listing),
 };
-check("src/events.njk still emits .event-archive / details.event-archive-year / summary / .event-list",
+check("src/events.njk still emits details.event-year / summary / watermark / .event-list",
   Object.values(listingArchive).every(Boolean), listingArchive);
 
 for (const rel of FIXTURE_PAGES) {
   if (!exists(rel)) continue;
   const src = read(rel);
-  check(`${rel}: uses <div class="event-archive">`, /<div class="event-archive">/.test(src));
-  check(`${rel}: uses native <details class="event-archive-year">`, /<details class="event-archive-year">/.test(src));
+  check(`${rel}: groups years in a wrapper`, /<div class="event-years">/.test(src));
+  check(`${rel}: uses native <details class="event-year">`, /<details class="event-year has-watermark"/.test(src));
+  check(`${rel}: each year carries its own watermark`,
+    (src.match(/<span class="watermark"/g) || []).length
+      === (src.match(/<details class="event-year has-watermark"/g) || []).length);
   check(`${rel}: every disclosure has a <summary>`,
     (src.match(/<details class="event-archive-year">/g) || []).length
     === (src.match(/<summary>/g) || []).length);

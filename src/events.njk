@@ -25,11 +25,13 @@ permalink: "{{ locale.urlPrefix }}events.html"
 {%- set c = records.pages.events[locale.code] -%}
 {%- set seasonShort = eventListing.current.academicYear -%}
 {%- set seasonLong = seasonShort | academicYearLong -%}
+{#- seasonShort/seasonLong remain for the SEO copy below; the visible listing
+    reads eventListing.years and names each year for itself. -#}
 
 <section class="page-hero hero-photo">
   <div class="hero-photo-bg" style="background-image: url('{{ records.pages.events.hero_image }}'); background-position: {{ records.pages.events.hero_image_position }};" aria-hidden="true"></div>
   <div class="container">
-    <span class="eyebrow">{{ c.eyebrow | replace("{season}", seasonLong) }}</span>
+    <span class="eyebrow">{{ c.eyebrow }}</span>
     <h1>{{ c.title_lead }} <span class="fancy">{{ c.title_fancy }}</span></h1>
     <p class="lead">
       {{ c.lead }}
@@ -37,41 +39,48 @@ permalink: "{{ locale.urlPrefix }}events.html"
   </div>
 </section>
 
-<section class="section has-watermark">
-  {#- The watermark is the season, from the central setting — never literal text. -#}
-  <span class="watermark" aria-hidden="true">{{ seasonShort }}</span>
-  <div class="container">
-{%- if eventListing.current.events.length %}
-    <div class="event-list">
-{% for event in eventListing.current.events %}
-{%- set t_page = c %}
-{% include "partials/event-card.njk" %}
-{% endfor %}
-    </div>
-{%- else %}
-    {#- The configured season exists but has no published events yet. Previous
-        years still show below; the archive is never silently promoted. -#}
-    <p class="lead">{{ c.empty_season | replace("{season}", seasonLong) }}</p>
-{%- endif %}
+{#-
+  ONE SECTION PER ACADEMIC YEAR, NEWEST FIRST.
 
-{%- if eventListing.previous.length %}
-    {#- Only rendered when a previous academic year actually exists, so the page
-        never carries an empty archive control. -#}
-    <div class="event-archive">
-      <h2>{{ c.archive_heading }}</h2>
-{%- for season in eventListing.previous %}
-      <details class="event-archive-year">
-        <summary>{{ c.archive_summary | replace("{season}", season.academicYear | academicYearLong) }}</summary>
+  The page used to show the configured season and fold everything older into an
+  archive underneath. It now treats every year the same way: each is a
+  <details> carrying its own heading, its own watermark and its own cards, and
+  the configured current year is the one that opens.
+
+  That also gives a future year somewhere to be. An event published under
+  2026/27 while the site is still on 2025/26 sorts to the top and arrives
+  collapsed — visible, correctly placed, and not promoted over the season that
+  is actually running. Which year is current is decided by Site settings alone
+  and never by the content, so a record appearing early changes nothing else.
+
+  Still native <details>/<summary>: keyboard accessible, usable with JavaScript
+  off, and the content stays in the DOM when collapsed so in-page search finds
+  it. No ARIA — it would fight the native semantics.
+-#}
+<section class="section">
+  <div class="container">
+{%- for year in eventListing.years %}
+    <details class="event-year has-watermark"{% if year.isCurrent %} open{% endif %}>
+      <summary class="event-year-summary">{{ c.season_heading | replace("{season}", year.academicYear | academicYearLong) }}</summary>
+      {#- The watermark belongs to THIS year, not to the page, so two sections
+          can never show one year's number over another's events. -#}
+      <span class="watermark" aria-hidden="true">{{ year.academicYear }}</span>
+      <div class="event-year-body">
+{%- if year.records.length %}
         <div class="event-list">
-{% for event in season.events %}
+{% for event in year.records %}
 {%- set t_page = c %}
 {% include "partials/event-card.njk" %}
 {% endfor %}
         </div>
-      </details>
-{%- endfor %}
-    </div>
+{%- else %}
+        {#- The current year exists in the settings but has nothing published
+            yet. Older years still show below; nothing is promoted. -#}
+        <p class="lead">{{ c.empty_season | replace("{season}", year.academicYear | academicYearLong) }}</p>
 {%- endif %}
+      </div>
+    </details>
+{%- endfor %}
   </div>
 </section>
 

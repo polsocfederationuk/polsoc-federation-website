@@ -29,6 +29,7 @@ const yaml = require("js-yaml");
 // The single interpretation of an academic year — see src/_data/academicYear.js.
 const { parseAcademicYear } = require("./academicYear");
 const { normaliseRecordDates } = require("./dateOnly");
+const { groupByAcademicYear } = require("./academicYearGroups");
 
 
 /**
@@ -58,13 +59,6 @@ function group(records, currentYear) {
     const start = parseAcademicYear(event.academic_year);
     if (start === null) {
       problems.push(`${event.slug}: invalid academic_year ${JSON.stringify(event.academic_year)} (expected "YYYY/YY")`);
-      continue;
-    }
-    if (start > currentStart) {
-      problems.push(
-        `${event.slug}: academic_year ${event.academic_year} is later than the configured current year ${currentYear} — `
-        + "publish it once the current year moves on, or correct the record"
-      );
       continue;
     }
     /*
@@ -125,6 +119,36 @@ function group(records, currentYear) {
   return { current, previous };
 }
 
+/**
+ * Every academic year that has listing-visible events, newest first.
+ *
+ * WHY THIS EXISTS BESIDE group()
+ *
+ * group() answers "what is this season, and what came before it", which is what
+ * the homepage still needs: one season's events, and nothing else. The listing
+ * page now asks a different question — show me every year, each in its own
+ * section, with the current one open — and answering it by reshaping
+ * {current, previous} at the template would put the ordering rule in a
+ * template.
+ *
+ * A future year is included. It sorts above the current one and arrives
+ * collapsed, which is the whole reason the old "later than current is fatal"
+ * rule could go: an event published early is now visible in the right place
+ * rather than missing.
+ *
+ * The sort inside a year is the same one group() uses, so the two cannot
+ * disagree about which event comes first.
+ */
+function years(records, currentYear) {
+  return groupByAcademicYear(records, currentYear, {
+    visible: (e) => e && e.published === true && e.show_in_listing === true,
+    sort: (a, b) => {
+      const d = String(b.start_date).localeCompare(String(a.start_date));
+      return d || (String(a.slug) < String(b.slug) ? -1 : 1);
+    },
+  });
+}
+
 /* ------------------------------------------------------------------ 11ty data */
 
 const EVENTS_DIR = path.join(__dirname, "..", "..", "content", "events");
@@ -146,9 +170,13 @@ module.exports = () => {
   // ONE central current-year setting, shared with the team page. There is no
   // second listing-specific copy to drift from it.
   const settings = yaml.load(fs.readFileSync(SETTINGS, "utf8")) || {};
-  return group(loadRecords(), settings.current);
+  const records = loadRecords();
+  return { ...group(records, settings.current),
+    years: years(records, settings.current),
+    currentYear: settings.current };
 };
 
 // Exposed for scripts/test-event-listing-groups.js.
 module.exports.group = group;
+module.exports.years = years;
 module.exports.parseAcademicYear = parseAcademicYear;

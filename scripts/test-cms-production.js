@@ -614,9 +614,15 @@ console.log("=".repeat(78));
     a wrong App ID and a wrong private key look identical from outside, and
     production spent a long time indistinguishable from a working system.
 
-    So the failure path now records what is needed to tell those apart, and
-    these tests exist to keep it to exactly that: non-secrets only, an
-    allow-listed classification, and nothing at all on success.
+    So the failure path records the upstream status and an allow-listed
+    classification, which is what turns one opaque sentence into something
+    diagnosable. These tests keep it to exactly that: non-secrets only, and
+    nothing at all on success.
+
+    A key fingerprint was logged here too, temporarily, to settle whether
+    production held the key we thought. It did — the fault was an installation
+    ID containing a settings URL — so the fingerprint is gone and the assertion
+    below checks it stays gone.
   */
   section("1f. A refused installation token is diagnosable, not revealing");
   {
@@ -627,42 +633,6 @@ console.log("=".repeat(78));
     const pair = crypto.generateKeyPairSync("rsa", { modulusLength: 2048,
       privateKeyEncoding: { type: "pkcs1", format: "pem" },
       publicKeyEncoding: { type: "pkcs1", format: "pem" } });
-    const OTHER = crypto.generateKeyPairSync("rsa", { modulusLength: 2048,
-      privateKeyEncoding: { type: "pkcs8", format: "pem" },
-      publicKeyEncoding: { type: "spki", format: "pem" } }).privateKey;
-
-    /* -- the fingerprint ---------------------------------------------------- */
-
-    const fp = gh.keyFingerprint(pair.privateKey);
-    check(/^[0-9a-f]{64}$/.test(fp), "the fingerprint is a SHA-256 hex digest", fp.slice(0, 16) + "…");
-    check(gh.keyFingerprint(pair.privateKey) === fp,
-      "…and is deterministic for the same key", "same twice");
-    check(gh.keyFingerprint(OTHER) !== fp,
-      "…and differs for a different key", "distinguishes keys");
-
-    /*
-      THE POINT OF THE WHOLE THING: the same key in any representation gives
-      the same answer, so a laptop and a function log can be compared.
-    */
-    const oneLine = pair.privateKey.replace(/\r?\n/g, "\\n");
-    check(gh.keyFingerprint(gh.normaliseKey(oneLine)) === fp,
-      "the one-line \\n representation fingerprints identically",
-      "laptop and production comparable");
-    check(gh.keyFingerprint(gh.normaliseKey("\n\n" + pair.privateKey + "\n\n")) === fp,
-      "…and so does a whitespace-padded one", "pasted values still compare");
-
-    /* It is derived from the PUBLIC half, and carries none of the private one. */
-    const secretBody = pair.privateKey
-      .replace(/-----[A-Z ]+-----/g, "").replace(/\s+/g, "");
-    check(!secretBody.includes(fp) && !fp.includes(secretBody.slice(0, 24)),
-      "the fingerprint contains no private-key material", "public half only");
-    const publicDer = crypto.createPublicKey(pair.privateKey)
-      .export({ type: "spki", format: "der" });
-    check(fp === crypto.createHash("sha256").update(publicDer).digest("hex"),
-      "…it is exactly SHA-256 of the public key in SPKI DER", "canonical");
-    check(gh.keyFingerprint("not a key at all") === "(unreadable)",
-      "an unparseable key says so rather than throwing", "(unreadable)");
-
     /* -- the classification allow-list -------------------------------------- */
 
     for (const known of ["Integration not found", "Not Found",
@@ -715,15 +685,15 @@ console.log("=".repeat(78));
       "…the identifiers we asked with", "appId + installationId");
     check(/polsocfederationuk\/polsoc-federation-website/.test(logged),
       "…and the repository", "owner/repo");
-    check(logged.includes(fp), "…and the key fingerprint", fp.slice(0, 16) + "…");
 
     /*
       NOTHING ELSE. This is the assertion that matters: a diagnostic that leaks
       is worse than no diagnostic, because it ships to a log nobody is guarding.
     */
-    check(!secretBody.split("").slice(0, 40).join("").length
-      || !logged.includes(secretBody.slice(0, 40)),
-    "the log contains no private-key material", "no key");
+    const secretBody = pair.privateKey
+      .replace(/-----[A-Z ]+-----/g, "").replace(/s+/g, "");
+    check(!logged.includes(secretBody.slice(0, 40)),
+      "the log contains no private-key material", "no key");
     check(!/BEGIN [A-Z ]*PRIVATE KEY|Bearer |Authorization|eyJ[A-Za-z0-9_-]{10,}/.test(logged),
       "no JWT, bearer token or Authorization header reaches the log", "none");
     check(!/nf_jwt|nf_refresh/.test(logged),
@@ -743,6 +713,20 @@ console.log("=".repeat(78));
       "a non-JSON upstream body still logs one line and throws", "no crash");
     check(!/upstream trouble/.test(html.lines[0] || ""),
       "…without repeating it", "(unrecognised)");
+
+    /*
+      THE TEMPORARY DIAGNOSTIC IS GONE AND STAYS GONE. A key fingerprint is not
+      a secret, but a log line nobody needs is one more thing shipping to a
+      place nobody is guarding.
+    */
+    check(gh.keyFingerprint === undefined,
+      "the temporary key-fingerprint helper has been removed", "not exported");
+    const ghSource = require("fs").readFileSync(
+      path.join(__dirname, "..", "netlify", "lib", "github.js"), "utf8");
+    check(!/keyFingerprint|createPublicKey|spki/i.test(ghSource),
+      "…and nothing derives a key fingerprint any more", "no public-key digest");
+    check(!/fingerprint/i.test(logged),
+      "…so no fingerprint reaches the log", "status and identifiers only");
 
     /* -- and silence on success --------------------------------------------- */
 
@@ -1068,14 +1052,39 @@ console.log("=".repeat(78));
 
   section("5. Rules the browser cannot skip");
   {
-    const futureEvent = 'slug: gala\nevent_family: standard\nacademic_year: "2026/27"\n' +
-      "published: true\nen:\n  summary: s\n  title_lead: Winter Gala\npl:\n  summary: s\n";
+    /*
+      A FUTURE ACADEMIC YEAR SAVES AND PUBLISHES.
+
+      The server used to refuse this outright, because the events listing showed
+      one season and an event belonging to a later year would have disappeared
+      from the site while breaking the build.
+
+      Every year is now its own section on the public pages, so the event lands
+      in a collapsed 2026/27 group. Which year is CURRENT is still decided by
+      Site settings alone — a record arriving early does not promote itself.
+    */
+    const completeEvent = (year) => 'slug: gala\nevent_family: standard\n' +
+      `academic_year: "${year}"\n` +
+      "published: true\nshow_in_listing: true\nstart_date: \"2026-11-20\"\n" +
+      "en:\n  summary: s\n  title_lead: Winter Gala\n  timeline_title: Gala\n" +
+      "  card_image_alt: a\n  og_image_alt: b\n" +
+      "pl:\n  summary: s\n  title_lead: Gala\n  timeline_title: Gala\n" +
+      "  card_image_alt: a\n  og_image_alt: b\n";
+
     const future = await call(cms.default, { action: "persistEntry", params: {
-      dataFiles: [{ path: "content/events/gala.yaml", raw: futureEvent }] } }, "admin-token");
-    check(future.status >= 400 && future.repo.commits.length === 0,
-      "a future-year event cannot be published, even by an admin", `${future.status}`);
-    check(/2026\/27/.test(future.body.error) && /2025\/26/.test(future.body.error),
-      "and both years are named", future.body.error);
+      dataFiles: [{ path: "content/events/gala.yaml", raw: completeEvent("2026/27") } ] } },
+    "admin-token");
+    check(future.status === 200,
+      "a future-year event can be published", `${future.status}`);
+    check(future.repo.commits.length === 1,
+      "…and is committed like any other", `${future.repo.commits.length} commit(s)`);
+
+    /* The year's FORMAT is still a refusal — that rule did not move. */
+    const malformed = await call(cms.default, { action: "persistEntry", params: {
+      dataFiles: [{ path: "content/events/gala.yaml", raw: completeEvent("twenty-six") } ] } },
+    "admin-token");
+    check(malformed.status >= 400 && malformed.repo.commits.length === 0,
+      "an unparseable academic year is still refused", `${malformed.status}`);
 
     const mismatch = await call(cms.default, { action: "persistEntry", params: {
       dataFiles: [{ path: "content/team/someone-else.yaml", raw: TEAM_YAML }] } }, "editor-token");
@@ -1326,12 +1335,26 @@ console.log("=".repeat(78));
       items: [{ id: "now-event", rev: byId["now-event"] },
         { id: "future-event", rev: byId["future-event"] }] },
     "admin-token", { path: "/api/bulk/update" }, repoFor());
-    check(show.status === 422 && show.repo.commits.length === 0,
-      "showing a future event blocks the whole selection", `${show.status}`);
-    check(/2026\/27/.test(show.body.message.detail),
-      "naming the year", show.body.message.detail);
-    check(/published: false/.test(show.repo.files.get("content/events/now-event.yaml")),
-      "the valid event in the selection stays hidden", "unchanged");
+    /*
+      A FUTURE YEAR PUBLISHES LIKE ANY OTHER.
+
+      This used to be refused, and refusing took the whole selection with it. The
+      events listing showed one season, so an event belonging to a later year
+      would have vanished from the site and broken the build.
+
+      Every academic year is now its own section on the public pages, so it
+      lands in a collapsed 2026/27 group instead — visible, correctly placed,
+      and not promoted over the season that is running. Which year is current is
+      still decided only by Site settings.
+    */
+    check(show.status === 200,
+      "showing a future event is allowed", `${show.status}`);
+    check(/published: true/.test(show.repo.files.get("content/events/future-event.yaml")),
+      "…and the future event is published", "2026/27 published");
+    check(/published: true/.test(show.repo.files.get("content/events/now-event.yaml")),
+      "…alongside the current-year event in the same selection", "both shown");
+    check(show.repo.commits.length === 1,
+      "…in one commit", `${show.repo.commits.length} commit(s)`);
 
     const del = await call(bulk.default, { collection: "standard-events",
       items: [{ id: "now-event", rev: byId["now-event"] }] },

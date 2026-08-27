@@ -39,15 +39,15 @@ copy:
     title: "Committee and Team | Federation of Polish Student Societies UK"
     description: "Meet the trustees and officers of the Federation of Polish Student Societies UK — the student committee representing Polish students across British universities."
     ogImageAlt: "The Federation committee photographed together on the steps at dusk"
-    eyebrow: "2025 / 2026 Committee"
+    eyebrow: "Our committee"
     h1Lead: "Meet the "
     h1Fancy: "team"
     lead: "The students who run the Federation — trustees and officers from universities across the UK, working together to represent Polish students nationally."
   pl:
     title: "Zarząd i zespół | Federacja Polskich Stowarzyszeń Studenckich"
-    description: "Poznaj powierników i członków zarządu Federacji w roku 2025/26 — studencki zespół reprezentujący polskich studentów na uczelniach w Wielkiej Brytanii."
+    description: "Poznaj powierników i członków zarządu Federacji — studencki zespół reprezentujący polskich studentów na uczelniach w Wielkiej Brytanii."
     ogImageAlt: "Zarząd Federacji na wspólnym zdjęciu na schodach o zmierzchu"
-    eyebrow: "Zarząd 2025 / 2026"
+    eyebrow: "Nasz zarząd"
     h1Lead: "Poznaj "
     h1Fancy: "zespół"
     lead: "Studenci, którzy prowadzą Federację — powiernicy i członkowie zarządu z uczelni w całej Wielkiej Brytanii, wspólnie reprezentujący polskich studentów na poziomie ogólnokrajowym."
@@ -78,18 +78,39 @@ eleventyComputed:
   </div>
 </section>
 
+{#-
+  ONE SECTION PER ACADEMIC YEAR, NEWEST FIRST.
+
+  The page used to render the current committee alone; every other year sat on
+  disk, unreachable. Each year is now its own <details> — a self-contained
+  committee archive with its own filter chips and its own group sections — and
+  the configured current year is the one that opens.
+
+  The chips are INSIDE each year on purpose. One page-wide set would let a
+  choice made in this year's roster hide sections inside a collapsed year the
+  reader cannot see; see src/js/team-filter.js, which scopes each bar to the
+  year containing it.
+
+  Which year is current comes from Site settings and nothing else, so a 2026/27
+  committee entered early appears in its own collapsed section above the open
+  one rather than replacing it.
+-#}
 <section class="section">
   <div class="container">
+{%- for year in records.team | academicYears(currentYear) %}
+    <details class="year-section"{% if year.isCurrent %} open{% endif %}>
+      <summary>{{ year.academicYear | academicYearLong }}</summary>
+      <div class="year-section-body">
 
-    {#- Filter chips — show one group at a time. -#}
+    {#- Filter chips — show one group at a time, within this year. -#}
 {% include "partials/team-filters.njk" %}
 
-    {#- One section per group, in the order defined centrally. Members are
-        filtered to the CURRENT academic year, so adding a 2026/27 committee
-        later is a new set of records plus a one-line settings change — the
-        2025/26 records stay on disk untouched. -#}
-{% for group in teamGroups.groups %}{% set groupMembers = records.team | teamInGroup(group.key, currentYear) %}
+    {#- One section per group, in the order defined centrally. -#}
+{% for group in teamGroups.groups %}{% set groupMembers = records.team | teamInGroup(group.key, year.academicYear) %}
 {% include "partials/team-section.njk" %}
 {% endfor %}
+      </div>
+    </details>
+{%- endfor %}
   </div>
 </section>

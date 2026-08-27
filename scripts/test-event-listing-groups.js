@@ -15,7 +15,7 @@
 
 "use strict";
 
-const { group, parseAcademicYear } = require("../src/_data/eventListing.js");
+const { group, years, parseAcademicYear } = require("../src/_data/eventListing.js");
 
 let passed = 0;
 const failures = [];
@@ -162,10 +162,37 @@ test("invalid academic-year formats are rejected", () => {
 });
 
 /* 8 */
-test("a published event in a FUTURE year fails rather than being archived", () => {
-  throws(() => group([...FIVE_2025, ev("next-year-ball", "2026/27", 1)], "2025/26"),
-    /next-year-ball: academic_year 2026\/27 is later than the configured current year 2025\/26/,
-    "future year");
+/*
+  A FUTURE YEAR IS A YEAR, NOT AN ERROR.
+
+  This used to throw. The listing showed one season, so an event belonging to a
+  later year had nowhere to go, and failing the build was preferable to letting
+  it disappear.
+
+  The page now renders one section per academic year, so it gets a section of
+  its own: above the current one because it is newer, and collapsed because
+  `isCurrent` is decided by the setting alone. Publishing next year's ball early
+  is a normal thing to do and no longer changes what the site considers current.
+*/
+test("a published event in a FUTURE year gets its own year, ahead of the current one", () => {
+  const grouped = years([...FIVE_2025, ev("next-year-ball", "2026/27", 1)], "2025/26");
+
+  eq(grouped.map((y) => y.academicYear).join(","), "2026/27,2025/26", "newest year first");
+  eq(grouped[0].isCurrent, false, "the future year is NOT current");
+  eq(grouped[1].isCurrent, true, "the configured year is");
+  eq(slugs(grouped[0].records).join(","), "next-year-ball", "the future event is in its own year");
+  eq(grouped[1].records.length, 5, "and the current year still has its five");
+});
+
+/* 8b */
+test("moving the setting forward opens the future year and closes the old one", () => {
+  const records = [...FIVE_2025, ev("next-year-ball", "2026/27", 1)];
+  const after = years(records, "2026/27");
+
+  eq(after.map((y) => y.academicYear).join(","), "2026/27,2025/26", "order is unchanged");
+  eq(after[0].isCurrent, true, "the new year is now current");
+  eq(after[1].isCurrent, false, "and last year is not");
+  eq(slugs(after[1].records).length, 5, "no record moved between years");
 });
 
 /* 9 */

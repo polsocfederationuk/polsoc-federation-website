@@ -31,8 +31,8 @@ eleventyComputed:
 {%- set page = records.pages.events[locale.code] -%}
 {#
   Two invented archived seasons, each with a couple of invented events. The markup
-  mirrors src/events.njk's archive branch exactly — .event-archive wrapper, one
-  <details class="event-archive-year"> per season, cards inside .event-list — so
+  mirrors src/events.njk exactly — one <details class="event-year has-watermark">
+  per academic year, its own watermark inside it, cards inside .event-list — so
   testing this fixture tests the real thing.
 #}
 {%- set fixture = [
@@ -54,19 +54,20 @@ eleventyComputed:
     <h1>Archive disclosure <span class="fancy">fixture</span></h1>
     <p class="lead">
       Not a public page. The seasons and events below are fictional and exist only
-      to exercise the <code>.event-archive</code> styles.
+      to exercise the <code>.event-year</code> styles.
     </p>
   </div>
 </section>
 
-<section class="section has-watermark">
-  <span class="watermark" aria-hidden="true">2025/26</span>
+<section class="section">
   <div class="container">
-    <div class="event-archive">
+    <div class="event-years">
       <h2>{{ page.archive_heading }}</h2>
 {%- for season in fixture %}
-      <details class="event-archive-year">
-        <summary>{{ page.archive_summary | replace("{season}", season.long) }}</summary>
+      <details class="event-year has-watermark">
+        <summary class="event-year-summary">{{ season.long }}</summary>
+        <span class="watermark" aria-hidden="true">{{ season.short | default("2025/26") }}</span>
+        <div class="event-year-body">
         <div class="event-list">
 {%- for event in season.events %}
           <article class="event-card reveal">
@@ -79,6 +80,7 @@ eleventyComputed:
             </div>
           </article>
 {%- endfor %}
+        </div>
         </div>
       </details>
 {%- endfor %}

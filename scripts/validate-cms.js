@@ -1814,6 +1814,129 @@ section("12. Netlify configuration");
     "publish and command disagree — see scripts/validate.js parseDeploymentState()");
 }
 
+/* ============================================ web addresses editors paste */
+
+/*
+  A PATTERN IS A REGEX INSIDE A STRING, WHICH IS TWO LAYERS OF ESCAPING.
+
+  `pattern: ["^https://[^\\s\"'<>]+$"]` needs a DOUBLE backslash, because the
+  JS string swallows the first one. Written with a single backslash the class
+  stops meaning "no whitespace" and starts meaning "not the letter s" — still a
+  valid regex, still silent, and it rejected every registration address
+  containing an s. An editor pasting https://forms.gle/… was told it was not a
+  full https:// address, which theirs plainly was.
+
+  Compiling the pattern proves nothing, because the broken one compiled. So the
+  addresses editors really paste are tried against it, and against the server
+  rule that has the final say.
+*/
+section("Web addresses");
+{
+  const rules = require(rel("netlify/lib/rules.js"));
+
+  const patterns = [];
+  const walk = (fields, where) => (fields || []).forEach((f) => {
+    const here = where + "." + f.name;
+    if (Array.isArray(f.pattern)) patterns.push({ where: here, source: f.pattern[0] });
+    if (f.fields) walk(f.fields, here);
+    if (f.field) walk([f.field], here);
+  });
+  config.collections.forEach((c) => {
+    walk(c.fields, c.name);
+    (c.files || []).forEach((f) => walk(f.fields, c.name + "/" + f.name));
+  });
+
+  const broken = patterns.filter(({ source }) => {
+    try { new RegExp(source); return false; } catch (e) { return true; }
+  });
+  assert(broken.length === 0, "every field pattern compiles",
+    "a pattern is not a valid regular expression", broken.map((b) => b.where).join(", "));
+
+  /*
+    THE CHECK THAT WOULD HAVE CAUGHT IT. \s, \w, \d and \b all turn into an
+    innocent-looking letter when one backslash is lost, and the result is a
+    working regex that means something else entirely.
+  */
+  const swallowed = patterns.filter(({ source }) =>
+    /\[\^[^\]]*(?<!\\)[sSwWdDbB][^\]]*\]/.test(source));
+  assert(swallowed.length === 0,
+    "no pattern names a bare letter where a backslash escape was meant",
+    "a pattern looks like it lost a backslash — \\s became the letter s",
+    swallowed.map((b) => b.where + " " + b.source).join(", "));
+
+  /*
+    THE FOUR "ANY https ADDRESS" FIELDS SHARE ONE SOURCE. They drifted once —
+    three were right and one was not — which is what caused this. Comparing
+    them keeps a future edit from fixing three of four again.
+  */
+  const anyHttps = patterns.filter((x) =>
+    /registration\.url$|album_url$|link\.url$/.test(x.where));
+  assert(anyHttps.length === 4,
+    "the four open-ended address fields are all present",
+    "a field was renamed or removed", anyHttps.map((x) => x.where).join(", "));
+  const shapes = new Set(anyHttps.map((x) => x.source.replace("|^$", "")));
+  assert(shapes.size === 1,
+    "…and they all use the same pattern, so none can drift alone",
+    "these fields disagree about what an address is",
+    [...shapes].join("  vs  "));
+
+  /* -- what editors actually paste ---------------------------------------- */
+
+  const ACCEPTED = [
+    ["a forms.gle short link", "https://forms.gle/abc123"],
+    ["the one from the bug report", "https://forms.gle/EMbydwqPBcVT5SWm8"],
+    ["a Google Forms address", "https://docs.google.com/forms/d/e/1FAIpQLSf/viewform"],
+    ["an Eventbrite address", "https://www.eventbrite.co.uk/e/students-evening-tickets-12345"],
+    ["a plain https address", "https://example.com/register"],
+    ["one with a query and fragment", "https://example.com/e?utm=x&a=b#top"],
+  ];
+  const REFUSED = [
+    ["plain http", "http://example.com"],
+    ["a malformed address", "not a url"],
+    ["a scheme with no host", "https://"],
+    ["one containing a space", "https://example.com/a b"],
+    ["a javascript: scheme", "javascript:alert(1)"],
+    ["a quote that would break the markup", "https://example.com/\"onclick=x"],
+  ];
+
+  for (const { where, source } of anyHttps) {
+    const re = new RegExp(source);
+    const wrong = ACCEPTED.filter(([, url]) => !re.test(url));
+    assert(wrong.length === 0, `${where} accepts the addresses editors paste`,
+      `${where} rejects a legitimate address`, wrong.map(([l]) => l).join(", "));
+    const leaked = REFUSED.filter(([, url]) => re.test(url));
+    assert(leaked.length === 0, `${where} still refuses anything that is not plain https`,
+      `${where} accepts something it must not`, leaked.map(([l]) => l).join(", "));
+  }
+
+  /* -- and the rule that actually decides ---------------------------------- */
+
+  for (const [label, url] of ACCEPTED) {
+    assert(rules.isSafeUrl(url), `the server accepts ${label}`, "saved", url);
+  }
+  for (const [label, url] of REFUSED) {
+    assert(!rules.isSafeUrl(url), `the server refuses ${label}`, "refused", url);
+  }
+  assert(!rules.isSafeUrl("") && !rules.isSafeUrl(null) && !rules.isSafeUrl(undefined),
+    "an empty address is not a safe address", "nothing to link to");
+
+  /*
+    EMPTY IS STILL FINE WHERE THE FIELD IS OPTIONAL. The rule above is only
+    consulted when there is something to link to — a registration that is Open,
+    or an announcement pointing at an external site — so leaving the box blank
+    on a closed sign-up saves exactly as before.
+  */
+  for (const { where, source } of anyHttps.filter((x) => x.source.includes("|^$"))) {
+    assert(new RegExp(source).test(""), `${where} may be left empty`, "optional");
+  }
+
+  /* No host is named anywhere: the Federation links to whatever it uses. */
+  for (const { where, source } of anyHttps) {
+    assert(!/forms\.gle|eventbrite|google|typeform/i.test(source),
+      `${where} names no particular service`, "no allow-list of hosts");
+  }
+}
+
 /* =================================================================== out */
 
 console.log("\n" + "=".repeat(78));

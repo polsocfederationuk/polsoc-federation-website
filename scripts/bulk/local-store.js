@@ -311,30 +311,16 @@ function updateRecords(collectionKey, operation, items) {
   const { collection, resolved } = selection;
 
   /*
-    THE FUTURE-YEAR RULE, from the same helper the entry editor uses.
+    A FUTURE ACADEMIC YEAR IS NO LONGER REFUSED.
 
-    src/_data/academicYear.js decides this for a normal save; calling it here
-    rather than restating "if the year is later than the current one" keeps one
-    interpretation of the rule. It is asked about the state the record WOULD be
-    in, because it only reports a problem for a record that is being published.
+    Publishing next year's event used to be blocked, because the listing showed
+    a single season and the event would simply have disappeared. Every academic
+    year is now its own section on the public pages, so it appears in a
+    collapsed group of its own instead — present, correctly placed, and never
+    promoted over the current year.
+
+    The year's FORMAT is still validated, by the same rules as ever.
   */
-  const blocked = [];
-  if (collection.key === "standard-events" && published === true) {
-    const currentYear = readCurrentAcademicYear();
-    for (const entry of resolved) {
-      const problem = academicYear.futurePublishProblem(
-        { ...entry.record, published: true }, currentYear);
-      if (problem) {
-        blocked.push({
-          id: entry.id,
-          title: collection.describe(entry.record).title,
-          recordYear: problem.eventYear,
-          currentYear: problem.currentYear,
-        });
-      }
-    }
-  }
-  if (blocked.length) return { error: { code: "future_year", records: blocked } };
 
   // Every replacement is built and checked before anything is written.
   const planned = [];

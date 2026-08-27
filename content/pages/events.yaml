@@ -20,10 +20,10 @@ hero_image_position: "center 52%"
 
 en:
   # --- hero -----------------------------------------------------------------
-  # `{season}` is replaced with the configured academic year, formatted for
-  # display. It is NOT hard-coded, so changing the central setting changes the
-  # heading, the watermark and this eyebrow together.
-  eyebrow: "{season} Season"
+  # EVERGREEN. The page now shows every academic year it has, each in its own
+  # section with its own heading and watermark, so a hero naming one season
+  # would contradict the sections underneath it.
+  eyebrow: "Our programme"
   title_lead: "Our"
   title_fancy: "events"
   lead: "A year in the life of the Federation — from a 300-person business forum at London Business School to carol singing at Ognisko. Here's what we've built this year."
@@ -37,6 +37,9 @@ en:
   # --- archive (new wording — no previous year exists yet) -------------------
   archive_heading: "Previous seasons"
   archive_summary: "{season} events"
+  # The heading on each academic-year section. `{season}` is the year in long
+  # form — "2025 / 2026".
+  season_heading: "{season}"
   # Shown in place of the card list when the current season has no events yet.
   empty_season: "The {season} season is just getting started — the first events will appear here soon."
 
@@ -51,7 +54,7 @@ en:
   og_image_alt: "The Polish Business Forum team on the main stage at London Business School"
 
 pl:
-  eyebrow: "Sezon {season}"
+  eyebrow: "Nasz program"
   title_lead: "Nasze"
   title_fancy: "wydarzenia"
   lead: "Rok z życia Federacji — od trzystuosobowego forum biznesowego w London Business School po wspólne kolędowanie w Ognisku Polskim. Oto, co udało nam się zbudować w tym roku."
@@ -61,6 +64,7 @@ pl:
 
   archive_heading: "Poprzednie sezony"
   archive_summary: "Wydarzenia {season}"
+  season_heading: "{season}"
   empty_season: "Sezon {season} dopiero się zaczyna — pierwsze wydarzenia pojawią się tutaj wkrótce."
 
   cta_heading: "Chcesz wystąpić, zostać partnerem lub gospodarzem?"

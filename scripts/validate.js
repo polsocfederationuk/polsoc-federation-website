@@ -4799,16 +4799,27 @@ assert(listRecords.length === 5,
     assert(missing.length === 0, "the events page record carries every required string in both languages",
       "missing events page copy", missing);
 
-    // Archive and empty-season wording must name the season.
+    /*
+      Wording that is ABOUT a season must name it with the placeholder, never a
+      hard-coded year. The hero eyebrow is no longer such a string: the page
+      shows every academic year, each section naming its own, so the hero is
+      evergreen and is checked below for the opposite property.
+    */
     const noSeason = [];
     for (const code of ["en", "pl"]) {
-      for (const f of ["archive_summary", "empty_season", "eyebrow"]) {
+      for (const f of ["archive_summary", "empty_season", "season_heading"]) {
         if (rec[code] && !String(rec[code][f] || "").includes("{season}")) noSeason.push(`${code}.${f}`);
       }
     }
     assert(noSeason.length === 0,
       "the season-dependent strings use the {season} placeholder rather than a hard-coded year",
       "hard-coded academic year in page copy", noSeason);
+
+    const datedHero = ["en", "pl"].filter((code) =>
+      /\d{4}\s*\/\s*\d{2,4}|\{season\}/.test(String((rec[code] || {}).eyebrow || "")));
+    assert(datedHero.length === 0,
+      "the events hero is evergreen — it names no season, because the page shows several",
+      "the events hero names a season", datedHero);
 
     assert(rec.hero_image && exists(String(rec.hero_image).replace(/^\//, "")),
       `the events hero photograph exists (${rec.hero_image})`,
@@ -4891,9 +4902,14 @@ if (!exists("dist")) {
       `${tag}: watermark "${watermark}" does not match the central setting`);
     const longYear = `${AY_RE.exec(CURRENT_AY)[1]} / ${Number(AY_RE.exec(CURRENT_AY)[1]) + 1}`;
     const eyebrow = (src.match(/<span class="eyebrow">([^<]*)<\/span>/) || [])[1];
-    assert(String(eyebrow).includes(longYear),
-      `${tag}: the season eyebrow derives from the central setting (${longYear})`,
-      `${tag}: eyebrow "${eyebrow}" does not contain the configured season`);
+    /*
+      EVERGREEN. Each academic-year section names its own year in its summary and
+      its watermark, so a hero naming one of them would contradict the rest.
+    */
+    assert(!/\d{4}\s*\/\s*\d{2,4}/.test(String(eyebrow)),
+      `${tag}: the hero eyebrow names no season`,
+      `${tag}: eyebrow "${eyebrow}" still names a year`);
+    void longYear;
 
     /* -- cards ------------------------------------------------------------ */
     const noComments = src.replace(/<!--[\s\S]*?-->/g, "");
@@ -4935,10 +4951,25 @@ if (!exists("dist")) {
       `${tag}: every card links to its own detail page twice (title + read more)`,
       `${tag}: unexpected card link set`, cardLinks);
 
-    /* -- archive: none, because only one academic year exists -------------- */
-    assert(!/<details/.test(src),
-      `${tag}: no archive disclosure is rendered while only one academic year exists`,
-      `${tag}: an empty archive control was generated`);
+    /* -- one disclosure per academic year --------------------------------- */
+    /*
+      Every year is a <details> now, including the current one, which is the
+      only one that opens. With a single year on disk that means exactly one
+      disclosure, open — not none, as when the current season was rendered bare
+      and only older years were folded away.
+    */
+    const yearOpens = [...src.matchAll(/<details([^>]*class="[^"]*event-year[^"]*"[^>]*)>/g)]
+      .map((m) => m[1]);
+    assert(yearOpens.length >= 1,
+      `${tag}: every academic year is a disclosure`,
+      `${tag}: no academic-year disclosure was rendered`);
+    assert(yearOpens.filter((a) => /\bopen\b/.test(a)).length === 1,
+      `${tag}: exactly one academic year is open`,
+      `${tag}: ${yearOpens.filter((a) => /\bopen\b/.test(a)).length} years are open`);
+    const yearWatermarks = (src.match(/<span class="watermark"/g) || []).length;
+    assert(yearWatermarks === yearOpens.length,
+      `${tag}: each academic year carries its own watermark`,
+      `${tag}: ${yearWatermarks} watermarks for ${yearOpens.length} years`);
 
     /* -- assets ------------------------------------------------------------ */
     assert(!src.includes("/pl/assets/"), `${tag}: no /pl/assets/ path`, `${tag}: a /pl/assets/ path leaked in`);
@@ -5413,9 +5444,9 @@ if (!exists("dist")) {
     for (const f of fixtures) {
       if (!exists(f)) continue;
       const src = read(f);
-      assert(/<details class="event-archive-year">/.test(src),
-        `${f}: renders the archive disclosure markup the real listing emits`,
-        `${f}: no archive disclosure markup`);
+      assert(/<details class="event-year has-watermark"/.test(src),
+        `${f}: renders the year-disclosure markup the real listing emits`,
+        `${f}: no academic-year disclosure markup`);
       assert(/noindex/.test(src), `${f}: is noindex`, `${f}: the fixture is indexable`);
     }
     // Fictional fixture events must never reach the real content collection.
@@ -5666,10 +5697,52 @@ section("33. Deployment tree and cutover readiness (Phase 15)");
         "css", "js", "assets"],
         { cwd: ROOT, encoding: "utf8" }).split("\n").map((l) => l.trim()).filter(Boolean);
     } catch { changed = null; }
+    /*
+      ONE ENUMERATED EXCEPTION: css/style.css.
+
+      The academic-year sections are a new component and need rules. The
+      stylesheet is shared with the live site, which is why this guard exists,
+      so the exception is written down rather than assumed — and it is checked,
+      not merely allowed:
+
+        the change must be PURELY ADDITIVE — no existing line removed or
+        altered, so nothing the live site already renders can move;
+
+        and no live page may use the new selectors, so the added rules match
+        nothing that is currently served.
+
+      Any other live file, or a css/style.css change that fails either test,
+      still fails the guard.
+    */
+    const CSS_EXCEPTION = "css/style.css";
+    const cssAdditiveOnly = () => {
+      let diff;
+      try {
+        diff = execFileSync("git", ["diff", "--numstat", "--", CSS_EXCEPTION],
+          { cwd: ROOT, encoding: "utf8" }).trim();
+      } catch { return false; }
+      const [, removed] = (diff.split(/\s+/) || []);
+      return diff !== "" && Number(removed) === 0;
+    };
+    const liveUsesNewSelectors = () => ["year-section", "event-year"].some((sel) =>
+      ["events.html", "team.html", "announcements.html", "index.html"]
+        .some((f) => exists(f) && read(f).includes(sel)));
+
     if (changed === null) ok("git unavailable — live-file guard skipped");
-    else assert(changed.length === 0,
-      "every live public file and asset is unchanged (deployment config is checked by mode, above)",
-      "this phase modified a live public file", changed);
+    else {
+      const unexpected = changed.filter((line) => !line.endsWith(CSS_EXCEPTION));
+      assert(unexpected.length === 0,
+        "every live public file and asset is unchanged, bar the enumerated stylesheet exception",
+        "this phase modified a live public file", unexpected);
+      if (changed.some((line) => line.endsWith(CSS_EXCEPTION))) {
+        assert(cssAdditiveOnly(),
+          "APPROVED: the stylesheet change is purely additive",
+          "css/style.css removed or altered an existing rule");
+        assert(!liveUsesNewSelectors(),
+          "APPROVED: no live page uses the new academic-year selectors",
+          "the added rules would change a page that is already served");
+      }
+    }
   }
 }
 

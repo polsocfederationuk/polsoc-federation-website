@@ -29,9 +29,28 @@
 
   var ALL = "all";
 
+  /*
+    ONE BAR PER ACADEMIC YEAR, EACH GOVERNING ITS OWN.
+
+    The team page shows every year it has, each in its own collapsible section
+    with its own set of chips. A single page-wide query would make a chip in one
+    year hide sections in another — including years the reader has collapsed and
+    cannot see reappear.
+
+    So each bar is wired to the year that contains it. Where there is no year
+    section — any other page using these chips — the scope falls back to the
+    document and the behaviour is exactly what it was.
+  */
   function init() {
-    var chips = document.querySelectorAll(".filter-bar .chip");
-    var groups = document.querySelectorAll(".team-section");
+    var bars = document.querySelectorAll(".filter-bar");
+    if (!bars.length) return;
+    Array.prototype.forEach.call(bars, function (bar) { wire(bar); });
+  }
+
+  function wire(bar) {
+    var scope = (bar.closest && bar.closest(".year-section")) || document;
+    var chips = bar.querySelectorAll(".chip");
+    var groups = scope.querySelectorAll(".team-section");
 
     // Nothing to filter — not the team page, or the markup changed shape.
     if (!chips.length || !groups.length) return;

@@ -775,26 +775,14 @@ for (const r of evOk) {
 }
 
 /* -- E3b. published future-year events --------------------------------------- */
-/* The CMS refuses to save this state, so reaching it means a file was edited by
- * hand. It is worth naming clearly because the consequence is a FATAL build —
- * which also takes `npm run cms:serve` down, leaving no way back in through the
- * CMS. */
+/*
+  A future academic year is no longer reported here.
 
-{
-  const current = cms.currentAcademicYear();
-  for (const r of evStandard) {
-    const problem = cms.futurePublishProblem(r.data, current);
-    if (!problem) continue;
-    problem_future(r, problem);
-  }
-  function problem_future(r, p) {
-    problem(r.rel, "a future year's event is already published",
-      `this event is ${p.eventYear} but the website's current academic year is ${p.currentYear}`,
-      `Open it in the CMS and switch Published off, or change the current academic ` +
-      `year to ${p.eventYear} in Site settings once the Federation is ready. ` +
-      `Until then the events listing cannot build.`);
-  }
-}
+  It used to be, because the events listing refused to build a published event
+  belonging to a later year — which took `npm run cms:serve` down and left no
+  way back in through the CMS. The listing now renders one section per academic
+  year, so such an event lands in a collapsed group of its own instead.
+*/
 
 /* -- E4. dates -------------------------------------------------------------- */
 

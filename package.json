@@ -21,6 +21,7 @@
     "compare:events-standard": "node scripts/compare-standard-events.js",
     "compare:business-forum": "node scripts/compare-business-forum.js",
     "test:event-groups": "node scripts/test-event-listing-groups.js",
+    "test:year-sections": "node scripts/test-year-sections.js",
     "compare:events-listing": "node scripts/compare-events-listing.js",
     "compare:homepage": "node scripts/compare-homepage.js",
     "build:fixtures": "node scripts/build-fixtures.js",

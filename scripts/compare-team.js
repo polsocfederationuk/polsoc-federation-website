@@ -239,7 +239,18 @@ function comparePage(name, livePath, distPath, expectations) {
   // --- hero copy ---
   check(p("hero background image"), live.hero.bgImage, gen.hero.bgImage);
   check(p("hero background position"), live.hero.bgPosition, gen.hero.bgPosition);
-  check(p("hero eyebrow"), live.hero.eyebrow, gen.hero.eyebrow);
+  /*
+    APPROVED: THE HERO NO LONGER NAMES A YEAR.
+
+    The page shows every committee it has, one collapsible section per academic
+    year, so a hero announcing "2025 / 2026 Committee" would contradict the
+    sections underneath it. Checked in both directions, so a correction that
+    silently failed to apply fails as loudly as a regression.
+  */
+  check(p("APPROVED: the hero eyebrow is evergreen"),
+    true, /^(Our committee|Nasz zarząd)$/.test(gen.hero.eyebrow));
+  check(p("APPROVED: the live hero named the year"),
+    true, /20\d\d/.test(live.hero.eyebrow));
   check(p("hero h1 text"), live.hero.h1, gen.hero.h1);
   check(p("hero h1 .fancy span"), live.hero.h1Fancy, gen.hero.h1Fancy);
   check(p("hero lead copy"), live.hero.lead, gen.hero.lead);
@@ -358,8 +369,24 @@ function comparePage(name, livePath, distPath, expectations) {
   check(p("stylesheet references"), live.refs.stylesheets, gen.refs.stylesheets);
   check(p("active nav points at team.html"), live.refs.activeNav, gen.refs.activeNav);
 
-  // --- SEO head ---
+  /*
+    --- SEO head ---
+
+    APPROVED: the Polish description dropped "w roku 2025/26" for the same
+    reason as the hero — the page is no longer about one year. Compared with
+    that clause removed from the live value, so every other word still has to
+    match exactly and only the year wording is exempt.
+  */
+  const YEAR_CLAUSE = /\s*w roku 20\d\d\/\d\d\s*/;
   for (const key of Object.keys(live.meta)) {
+    if (YEAR_CLAUSE.test(live.meta[key] || "")) {
+      check(p(`APPROVED: head ${key} without the year clause`),
+        String(live.meta[key]).replace(YEAR_CLAUSE, " ").replace(/\s+/g, " ").trim(),
+        String(gen.meta[key]).replace(/\s+/g, " ").trim());
+      check(p(`APPROVED: the live head ${key} carried the year`),
+        true, /20\d\d\/\d\d/.test(live.meta[key]));
+      continue;
+    }
     check(p(`head: ${key}`), live.meta[key], gen.meta[key]);
   }
 

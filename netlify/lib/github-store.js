@@ -16,7 +16,6 @@
  *                    local adapter used a SHA-256 of the bytes. Same idea, and
  *                    the local adapter used a content hash precisely so this
  *                    substitution would be a rename rather than a redesign.
- *   future year      academicYear.futurePublishProblem, as everywhere else
  *   dependencies     read from the repository at the moment of the delete
  *   atomicity        one commit for the whole selection, or none at all
  *   media            never deleted
@@ -134,22 +133,17 @@ async function updateRecords(repo, collectionKey, operation, items, user) {
   if (selection.error) return selection;
   const { collection, resolved } = selection;
 
-  if (collection.key === "standard-events" && published === true) {
-    const currentYear = rules.currentAcademicYear();
-    const blocked = resolved
-      .map((entry) => {
-        const problem = academicYear.futurePublishProblem(
-          { ...entry.record, published: true }, currentYear);
-        return problem ? {
-          id: entry.id,
-          title: collection.describe(entry.record).title,
-          recordYear: problem.eventYear,
-          currentYear: problem.currentYear,
-        } : null;
-      })
-      .filter(Boolean);
-    if (blocked.length) return { error: { code: "future_year", records: blocked } };
-  }
+  /*
+    A FUTURE ACADEMIC YEAR IS NO LONGER REFUSED.
+
+    Publishing next year's event used to be blocked, because the listing showed
+    a single season and the event would simply have disappeared. Every academic
+    year is now its own section on the public pages, so it appears in a
+    collapsed group of its own instead — present, correctly placed, and never
+    promoted over the current year.
+
+    The year's FORMAT is still validated, by the same rules as ever.
+  */
 
   const changes = [];
   for (const entry of resolved) {

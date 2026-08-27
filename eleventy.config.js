@@ -20,6 +20,7 @@ const path = require("path");
 const yaml = require("js-yaml");
 const MarkdownIt = require("markdown-it");
 const registrationModel = require("./src/_data/registration.js");
+const { groupByAcademicYear } = require("./src/_data/academicYearGroups.js");
 
 /* ===========================================================================
    Markdown for announcement bodies.
@@ -426,6 +427,17 @@ module.exports = function (eleventyConfig) {
   // non-deterministic across machines. Duplicate `order` values inside a group
   // are rejected by scripts/validate.js, so the tie-break is a safety net that
   // should never fire.
+  /*
+    Every academic year a set of records covers, newest first, with the
+    configured current year marked. One helper behind it — see
+    src/_data/academicYearGroups.js — so the events, team and announcements
+    pages cannot disagree about which year is current or what order years go in.
+  */
+  eleventyConfig.addFilter("academicYears", (records, currentYear) =>
+    groupByAcademicYear(records, currentYear, {
+      visible: (r) => r && r.published === true,
+    }));
+
   eleventyConfig.addFilter("teamInGroup", (team, groupKey, academicYear) =>
     (team || [])
       .filter(
@@ -499,8 +511,26 @@ module.exports = function (eleventyConfig) {
    * `order`, scoped to its year), because the live homepage timeline and the live
    * listing are in the SAME order; no separate homepage order exists.
    */
+  /*
+    AT MOST FIVE, NEWEST FIRST.
+
+    The homepage is a taste of the year, not the archive. Without a limit it
+    grew by one card every time an event was added, and the section that is
+    meant to be scannable became the longest thing on the page.
+
+    Five is the cap; the sixth falls off the homepage and stays on the events
+    page, which is uncapped and is where "See all events" underneath points.
+
+    ORDER IS INHERITED, NOT INVENTED. The list arrives sorted by start_date
+    descending with a slug tie-break, from the same grouping helper the events
+    listing uses, so a new event takes the top position by virtue of its date
+    and no second ordering field exists for an editor to maintain — or to get
+    wrong. Nothing here reads the filesystem.
+  */
+  const HOMEPAGE_EVENT_LIMIT = 5;
+
   eleventyConfig.addFilter("homepageEvents", (events) =>
-    (events || []).filter((e) => e.show_on_homepage === true)
+    (events || []).filter((e) => e.show_on_homepage === true).slice(0, HOMEPAGE_EVENT_LIMIT)
   );
 
   /**
@@ -705,6 +735,30 @@ module.exports = function (eleventyConfig) {
     }
     return eventCache.get(String(slug)) || null;
   };
+
+  /*
+    THE SAME ANNOUNCEMENTS, SPLIT BY ACADEMIC YEAR.
+
+    Deliberately built ON TOP of announcementsFor rather than beside it: that
+    filter already decides what a published announcement looks like in one
+    locale — the rendered body, the display date, the registration shape — and a
+    second projection would be a second thing to keep in step.
+
+    So this asks it once per year and keeps its answer. `announcementsFor`
+    itself is untouched, which also leaves scripts/validate.js and
+    scripts/compare-announcements.js reading exactly what they always did.
+  */
+  eleventyConfig.addFilter("announcementYears", (records, localeCode, currentYear) => {
+    const published = (records || []).filter((a) => a && a.published === true);
+    const groups = groupByAcademicYear(published, currentYear, {});
+    return groups.map((year) => ({
+      academicYear: year.academicYear,
+      label: year.label,
+      isCurrent: year.isCurrent,
+      items: eleventyConfig.getFilter("announcementsFor")(
+        records, localeCode, year.academicYear),
+    }));
+  });
 
   eleventyConfig.addFilter("announcementsFor", (records, localeCode, academicYear) =>
     (records || [])

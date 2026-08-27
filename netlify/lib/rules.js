@@ -31,6 +31,38 @@ const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
 const SAFE_URL = /^https:\/\/[^\s"'<>]+$/;
 
 /**
+ * Is this a web address the site can safely turn into a button?
+ *
+ * PARSED, NOT MATCHED. A pattern can only describe what an address looks like,
+ * and the interesting failures do not look wrong: `https://` with nothing
+ * after it, a host that is only a bracket, an address whose scheme is https but
+ * which is not an address at all. `new URL` answers the question the browser
+ * will actually ask when it follows the link.
+ *
+ * The character check stays in front of it. These values are written into
+ * markup as an href, so a quote or an angle bracket is refused before anything
+ * tries to interpret it — and `new URL` would happily accept several of them.
+ *
+ * No host is named here, and none should be. The Federation links to whichever
+ * service an event actually uses — forms.gle one year, Eventbrite the next —
+ * and an allow-list would mean a code change every time that changed.
+ *
+ * @param {*} value
+ * @returns {boolean}
+ */
+function isSafeUrl(value) {
+  const text = String(value == null ? "" : value);
+  if (!text || /[\s"'<>`\\]/.test(text)) return false;
+  let parsed;
+  try {
+    parsed = new URL(text);
+  } catch (err) {
+    return false;
+  }
+  return parsed.protocol === "https:" && parsed.hostname !== "";
+}
+
+/**
  * Why can this record not be saved? Null when it is fine.
  *
  * @param {string} repoPath   where it is going
@@ -82,30 +114,29 @@ function check(repoPath, raw, folder) {
 
 function checkEvent(record) {
   /*
-    THE FUTURE-YEAR PUBLICATION GUARD.
+    A FUTURE ACADEMIC YEAR IS NO LONGER REFUSED.
 
-    Publishing an event from a later academic year is a fatal build error — the
-    listing refuses to group it — so it would take the public site down on the
-    next deploy. Same helper as the entry editor and Bulk manage.
+    Publishing next year's event used to be blocked, because the listing showed
+    a single season and the event would simply have disappeared. Every academic
+    year is now its own section on the public pages, so it appears in a
+    collapsed group of its own instead — present, correctly placed, and never
+    promoted over the current year.
+
+    The year's FORMAT is still validated, by the same rules as ever.
   */
-  const problem = academicYear.futurePublishProblem(record, currentAcademicYear());
-  if (problem) {
-    return `"${eventTitle(record)}" cannot be published yet: it belongs to ` +
-      `${problem.eventYear} and the current academic year is ${problem.currentYear}.`;
-  }
 
   const reg = record.registration || {};
-  if (reg.state === "open" && !SAFE_URL.test(String(reg.url || ""))) {
+  if (reg.state === "open" && !isSafeUrl(String(reg.url || ""))) {
     return "Registration is set to Open, so it needs a full https:// web address.";
   }
   if (reg.opens_on && reg.closes_on && String(reg.opens_on) > String(reg.closes_on)) {
     return "Sign-ups cannot close before they open.";
   }
-  if (record.album_url && !SAFE_URL.test(String(record.album_url))) {
+  if (record.album_url && !isSafeUrl(String(record.album_url))) {
     return "The photo album link must be a full https:// address.";
   }
   for (const field of ["instagram_permalink", "facebook_permalink", "linkedin_permalink"]) {
-    if (record[field] && !SAFE_URL.test(String(record[field]))) {
+    if (record[field] && !isSafeUrl(String(record[field]))) {
       return `The ${field.split("_")[0]} link must be a full https:// address.`;
     }
   }
@@ -168,7 +199,7 @@ function checkAnnouncement(record) {
         "registration from another.";
     }
   } else {
-    if (reg.state === "open" && !SAFE_URL.test(String(reg.url || ""))) {
+    if (reg.state === "open" && !isSafeUrl(String(reg.url || ""))) {
       return "Registration is set to Open, so it needs a full https:// web address.";
     }
     if (reg.opens_on && reg.closes_on && String(reg.opens_on) > String(reg.closes_on)) {
@@ -176,7 +207,7 @@ function checkAnnouncement(record) {
     }
   }
   const link = record.link || {};
-  if (link.type === "external" && !SAFE_URL.test(String(link.url || ""))) {
+  if (link.type === "external" && !isSafeUrl(String(link.url || ""))) {
     return "The destination link must be a full https:// address.";
   }
   for (const locale of ["en", "pl"]) {
@@ -213,4 +244,5 @@ function currentAcademicYear() {
   }
 }
 
-module.exports = { check, checkEvent, checkAnnouncement, currentAcademicYear, SAFE_URL };
+module.exports = { check, checkEvent, checkAnnouncement, currentAcademicYear,
+  SAFE_URL, isSafeUrl };

@@ -2822,6 +2822,65 @@ a.card:hover h3 { color: var(--red); }
   margin-bottom: 18px;
 }
 
+/* ---------------------------------------------------------------------------
+   ACADEMIC-YEAR SECTIONS
+
+   Events, Team and Announcements each show every academic year they have, one
+   collapsible section per year, newest first, with the configured current year
+   open. These rules are shared by all three so the three pages cannot drift
+   into three slightly different accordions.
+
+   Built on the archive disclosure that was already here — same border, same
+   summary weight — so a year section reads as the same object the previous
+   seasons list always was, rather than a new component.
+   --------------------------------------------------------------------------- */
+
+.year-section,
+.event-year {
+  border-top: 1px solid var(--line);
+  max-width: 100%;
+}
+.year-section:last-of-type,
+.event-year:last-of-type { border-bottom: 1px solid var(--line); }
+
+.year-section > summary,
+.event-year-summary {
+  /* `list-item` keeps the native marker while allowing padding. */
+  display: list-item;
+  list-style-position: inside;
+  cursor: pointer;
+  padding: 18px 4px;
+  font-family: var(--font-display);
+  font-size: clamp(1.05rem, 2.2vw, 1.35rem);
+  font-weight: 700;
+  color: var(--ink);
+}
+.year-section > summary:hover,
+.event-year-summary:hover { color: var(--red); }
+
+/* The year's own content sits above its own watermark. */
+.year-section-body,
+.event-year-body {
+  position: relative;
+  z-index: 1;
+  padding-bottom: 40px;
+}
+
+/*
+  A COLLAPSED YEAR SHOWS NO WATERMARK.
+
+  `.has-watermark` clips to its own box, and a collapsed <details> is only as
+  tall as its summary — so the number would survive as a clipped sliver behind
+  the heading. Hidden until the section is open, which is also when it has
+  records to belong to.
+*/
+.event-year:not([open]) > .watermark,
+.year-section:not([open]) > .watermark { display: none; }
+
+/* The number belongs to this year's records, so it starts where they do. */
+.event-year > .watermark,
+.year-section > .watermark { top: 44px; }
+
 .event-archive-year {
   border-top: 1px solid var(--line);
   /* Keeps a long Polish summary from pushing the page sideways. */

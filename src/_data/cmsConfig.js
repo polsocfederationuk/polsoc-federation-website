@@ -713,7 +713,7 @@ function registrationFields(kind) {
       required: false,
       // https only. This becomes a button rendered into the page, so other
       // schemes must not be reachable.
-      pattern: ["^https://[^\s\"'<>]+$|^$",
+      pattern: [HTTPS_URL_OR_EMPTY,
         "Must be a full https:// address, or leave it empty."],
       hint: "Needed only when the status is Open — that is what the Register " +
         "button points at. Ignored for the other statuses.",
@@ -1145,7 +1145,7 @@ function announcementFields() {
           required: false,
           // https only. javascript:, data: and file: cannot match, which is the
           // point: an announcement button is rendered into the page.
-          pattern: ["^https://[^\\s\"'<>]+$",
+          pattern: [HTTPS_URL,
             "Must be a full https:// address. Other schemes are not accepted."],
           hint: "Used ONLY when the destination is External website. Must start with " +
             "https:// — ignored and discarded for any other destination.",
@@ -1218,6 +1218,30 @@ const EVENT_SLUG_HINT =
   "so it must not match one that already exists. A recurring event gets a NEW " +
   "record each year: christmas-dinner for 2025/26, then christmas-dinner-2026-27 " +
   "for the next. The earlier edition stays exactly as it is.";
+
+/*
+  ANY FULL https:// ADDRESS, WRITTEN ONCE.
+
+  Four fields ask this question — two registration addresses, the photo album,
+  and an announcement's external link — and they used to each carry their own
+  copy of the answer. Three were right and one was not: it had `[^\s...` with a
+  single backslash, and in a double-quoted JS string that backslash is dropped,
+  so the class stopped meaning "no whitespace" and started meaning "not the
+  letter s".
+
+  It still compiled, and it still looked correct. What it did was reject every
+  address containing an s — forms.gle, docs.google.com, anything ending
+  /register — while telling the editor their address was not a full https one.
+  A copy that drifts is the whole reason this is a constant now.
+
+  DELIBERATELY PERMISSIVE. This is Decap's inline check, and its job is to catch
+  an obvious slip while somebody types. What an address really has to be is
+  decided by netlify/lib/rules.js, which parses it rather than matching it, and
+  refuses the save. No list of allowed hosts appears in either: the Federation
+  links to whatever service an event actually uses.
+*/
+const HTTPS_URL = "^https://[^\\s\"'<>]+$";
+const HTTPS_URL_OR_EMPTY = HTTPS_URL + "|^$";
 
 const EVENT_YEAR_HINT =
   "The academic year this edition belongs to, e.g. 2025/26. Never change this on " +
@@ -1748,7 +1772,7 @@ function standardEventFields() {
         "A public LinkedIn post address on linkedin.com — or leave empty."],
       hint: "Public post only — one shared with Anyone. Otherwise the page shows a link." },
     { label: "Photo album link", name: "album_url", widget: "string", required: false,
-      pattern: ["^https://[^\\s\"'<>]+$|^$", "A full https:// address, or leave empty."],
+      pattern: [HTTPS_URL_OR_EMPTY, "A full https:// address, or leave empty."],
       hint: "Where the Album button points. Leave empty if there is no album." },
 
     /* -- co-organisers ------------------------------------------------------ */
@@ -2446,8 +2470,8 @@ module.exports = () => ({
   // browser, cms:check and the build all read a year the same way.
   academicYearSource: [
     academicYear.parseAcademicYear.toString(),
-    academicYear.futurePublishProblem.toString(),
-    academicYear.futurePublishMessage.toString(),
+    academicYear.futureYear.toString(),
+    academicYear.futureYearMessage.toString(),
   ].join("\n\n"),
   // Where the central setting lives, so the guard can read the CURRENT value
   // rather than one frozen at build time.
@@ -2570,8 +2594,8 @@ module.exports.decapVersion = decapVersion;
 module.exports.normaliseAnnouncementLink = normaliseAnnouncementLink;
 module.exports.checkEventSectionAlignment = checkEventSectionAlignment;
 module.exports.parseAcademicYear = academicYear.parseAcademicYear;
-module.exports.futurePublishProblem = academicYear.futurePublishProblem;
-module.exports.futurePublishMessage = academicYear.futurePublishMessage;
+module.exports.futureYear = academicYear.futureYear;
+module.exports.futureYearMessage = academicYear.futureYearMessage;
 module.exports.currentAcademicYear = currentAcademicYear;
 module.exports.ensureEventRegistration = ensureEventRegistration;
 module.exports.blankDatesToNull = blankDatesToNull;
