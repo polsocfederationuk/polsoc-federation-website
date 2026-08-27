@@ -21,6 +21,7 @@
 import { getUser } from "@netlify/identity";
 
 import github from "../lib/github.js";
+import session from "../lib/session.js";
 import store from "../lib/github-store.js";
 import rules from "../lib/rules.js";
 import authz from "../lib/authz.js";
@@ -91,9 +92,15 @@ export default async function handler(request, context, injected) {
   }
 
   /*
-    Netlify's own answer to "who is asking". Nothing in the body is consulted.
+    Who is asking: Netlify's ambient answer where the runtime provides one, and
+    otherwise the request's own nf_jwt cookie, resolved by Identity. Nothing in
+    the body is consulted. See netlify/lib/session.js.
   */
-  const account = await (deps.getUser || getUser)();
+  const account = await session.resolve(request, {
+    getUser: deps.getUser || getUser,
+    fetch: deps.fetch,
+    env: process.env,
+  });
   const user = account ? authz.permissions(account) : null;
 
   if (!user) {

@@ -38,6 +38,7 @@ import { getUser, verifyRequestOrigin } from "@netlify/identity";
 
 import yaml from "js-yaml";
 import paths from "../lib/paths.js";
+import session from "../lib/session.js";
 import media from "../lib/media.js";
 import github from "../lib/github.js";
 import rules from "../lib/rules.js";
@@ -362,12 +363,22 @@ export default async function handler(request, context, injected) {
   }
 
   /*
-    WHO IS ASKING — Netlify's own answer, from the request context the v2
-    runtime provides. Never throws; returns null when there is no valid session.
-    Nothing in the body is consulted: a `roles`, `email` or `user` field posted
-    by a browser is a claim, not a fact.
+    WHO IS ASKING.
+
+    `getUser()` first, because where Netlify populates the ambient context it is
+    the right answer. It takes no arguments, though, so where the runtime does
+    NOT populate that context it returns null however good the session is — and
+    the request's own `nf_jwt` cookie goes unread. lib/session.js falls back to
+    that cookie and asks Identity about it.
+
+    Nothing in the body is consulted either way: a `roles`, `email` or `user`
+    field posted by a browser is a claim, not a fact.
   */
-  const account = await (deps.getUser || getUser)();
+  const account = await session.resolve(request, {
+    getUser: deps.getUser || getUser,
+    fetch: deps.fetch,
+    env: process.env,
+  });
   const user = account ? authz.permissions(account) : null;
 
   const action = String(body.action || "");

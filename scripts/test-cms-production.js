@@ -218,9 +218,41 @@ console.log("=".repeat(78));
       .map((f) => fsMod.readFileSync(path.join(libDir, f), "utf8"))
       .join("\n")
       .replace(/\/\*[\s\S]*?\*\//g, "");
-    check(!/\.netlify\/identity\/user/.test(netlifySources),
-      "no production function asks Identity's /user endpoint itself",
-      "getUser() only");
+    /*
+      ONE PLACE DECIDES WHO IS SIGNED IN — and that is still the rule. What
+      changed is where.
+
+      This used to forbid the Identity /user endpoint outright, on the reasoning
+      that getUser() should be the only answer. That reasoning had a hole:
+      getUser() takes NO ARGUMENTS. It reads ambient context, and where the
+      runtime does not populate that context it returns null however valid the
+      session is — so every request from a genuinely signed-in editor was
+      refused 401, and this assertion is what guaranteed nobody could fix it.
+
+      The rule is now the thing it was always trying to protect: the FUNCTIONS
+      do not decide, netlify/lib/session.js does, and nothing anywhere verifies
+      a token for itself.
+    */
+    const functionSources = files
+      .map((f) => fsMod.readFileSync(path.join(libDir, "..", "functions", f), "utf8"))
+      .join("\n")
+      .replace(/\/\*[\s\S]*?\*\//g, "");
+    check(!/\.netlify\/identity\/user/.test(functionSources),
+      "no function resolves a session for itself", "lib/session.js only");
+    check(/\.netlify\/identity\/user/.test(
+      fsMod.readFileSync(path.join(libDir, "session.js"), "utf8")),
+    "session resolution delegates to Identity's own /user endpoint",
+    "the token is never trusted locally");
+
+    /*
+      NO LOCAL VERIFICATION, ANYWHERE. A JWT decoded here would carry a `roles`
+      claim, and acting on it would be acting on what the holder of an
+      unverified token says about themselves. Identity is the only party that
+      can answer that, which is why it is asked over the network every time.
+    */
+    check(!/jsonwebtoken|jose|createVerify|verify\(|atob\(|jwt\.decode/.test(netlifySources),
+      "no production code verifies or decodes a session token itself",
+      "Identity decides");
   }
 
   /* -- authentication ------------------------------------------------------ */
@@ -259,6 +291,201 @@ console.log("=".repeat(78));
       roles: ["admin"], user: { email: "admin@polsocfederation.pl" } }, "editor-token");
     check(forged.status === 403,
       "roles sent in the request body are ignored", `${forged.status}`);
+  }
+
+  /* -- the session the request itself carries ------------------------------ */
+
+  /*
+    THE PRODUCTION BUG THIS SECTION EXISTS FOR.
+
+    Every one of these calls passes `getUser: async () => null` — an ambient
+    lookup that finds nothing, which is exactly what the deployed Node runtime
+    does. `getUser()` takes no arguments, so it cannot see the request, and the
+    nf_jwt cookie the browser faithfully sends went unread. A signed-in editor
+    with a valid session got 401 on every single request, silently, and the CMS
+    showed "No Entries" with a red toast.
+
+    Section 1 above cannot catch it: it supplies a working ambient lookup, so it
+    passes whether or not the cookie path exists at all. These tests fail
+    against the code as it was deployed and pass against the fix.
+  */
+  section("1b. The nf_jwt cookie on the request");
+  {
+    /*
+      Identity, mocked at the network boundary — the only place a token is ever
+      turned into a user. The assertions below check WHERE it is asked and WHAT
+      is sent, because sending a session token anywhere but this site's own
+      Identity service would be a leak, not a lookup.
+    */
+    const KNOWN = {
+      "cookie-editor": { id: "u4", email: "ewa@polsocfederation.pl",
+        app_metadata: { roles: ["editor"] }, user_metadata: { full_name: "Ewa Cookie" } },
+      "cookie-stranger": { id: "u5", email: "stranger@example.com",
+        app_metadata: { roles: [] }, user_metadata: {} },
+    };
+    let asked = [];
+    const identity = async (url, init) => {
+      asked.push({ url: String(url),
+        bearer: ((init || {}).headers || {}).Authorization || "" });
+      const token = String(((init || {}).headers || {}).Authorization || "")
+        .replace(/^Bearer /, "");
+      const found = KNOWN[token];
+      return found
+        ? new Response(JSON.stringify(found), { status: 200 })
+        : new Response("{}", { status: 401 });
+    };
+
+    /** A call whose ONLY credential is the cookie on the request. */
+    const withCookie = async (cookie, body) => {
+      asked = [];
+      const store = seedRepo();
+      const response = await cms.default(
+        request(body || { action: "getEntry",
+          params: { path: "content/team/jane-example.yaml" } },
+        cookie === null ? {} : { headers: { cookie } }),
+        {},
+        { repo: store, getUser: async () => null, fetch: identity },
+      );
+      const text = await response.text();
+      let parsed = {};
+      try { parsed = text ? JSON.parse(text) : {}; } catch (err) { parsed = { raw: text }; }
+      return { status: response.status, body: parsed };
+    };
+
+    const editor = await withCookie("nf_jwt=cookie-editor");
+    check(editor.status === 200,
+      "a valid nf_jwt cookie is honoured when the ambient lookup finds nothing",
+      `${editor.status} (was 401 in production)`);
+    check(/Jane Example/.test(editor.body.data || ""),
+      "…and the record actually comes back", "content read");
+
+    check(asked.length === 1 && /\/\.netlify\/identity\/user$/.test(asked[0].url),
+      "the token is sent only to this site's own Identity endpoint", asked[0] && asked[0].url);
+    check(asked[0] && asked[0].bearer === "Bearer cookie-editor",
+      "…as a bearer credential, unmodified", "Authorization: Bearer …");
+
+    /* Other cookies on the request are not session tokens. */
+    const alongside = await withCookie("other=1; nf_jwt=cookie-editor; another=2");
+    check(alongside.status === 200,
+      "nf_jwt is found among other cookies", `${alongside.status}`);
+
+    const none = await withCookie(null);
+    check(none.status === 401, "no cookie at all is still refused", `${none.status}`);
+
+    const empty = await withCookie("nf_jwt=");
+    check(empty.status === 401, "an empty nf_jwt is refused", `${empty.status}`);
+
+    const rejected = await withCookie("nf_jwt=expired-or-forged");
+    check(rejected.status === 401,
+      "a token Identity refuses is refused here too", `${rejected.status}`);
+
+    /*
+      THE ONE THAT MATTERS MOST. Authorisation comes from what Identity says,
+      never from the token. A cookie holder with no role gets 403, not 200.
+    */
+    const stranger = await withCookie("nf_jwt=cookie-stranger");
+    check(stranger.status === 403,
+      "a cookie-authenticated account with no role is still refused",
+      `${stranger.status}`);
+    check(/not authorised/i.test(stranger.body.error || ""),
+      "…and told so plainly", stranger.body.error);
+
+    /*
+      THE AMBIENT ANSWER STILL WINS where Netlify provides one, so nothing
+      regresses on runtimes that populate it — and the cookie is not consulted
+      at all in that case.
+    */
+    asked = [];
+    const ambient = await cms.default(
+      request({ action: "getEntry", params: { path: "content/team/jane-example.yaml" } },
+        { headers: { cookie: "nf_jwt=cookie-stranger" } }),
+      {},
+      { repo: seedRepo(), getUser: identityFor("editor-token"), fetch: identity },
+    );
+    check(ambient.status === 200,
+      "Netlify's own answer is preferred when the runtime provides one",
+      `${ambient.status}`);
+    check(asked.length === 0,
+      "…and no token is sent anywhere when it does", "Identity not contacted");
+
+    /* Bulk manage shares the helper, so it shares the fix. */
+    for (const [name, fn] of [["bulk", bulk.default]]) {
+      const viaCookie = await fn(
+        request({ action: "list", collection: "team" },
+          { path: "/api/bulk/list", headers: { cookie: "nf_jwt=cookie-editor" } }),
+        {},
+        { repo: seedRepo(), getUser: async () => null, fetch: identity },
+      );
+      check(viaCookie.status !== 401,
+        `${name} honours the same cookie session`, `${viaCookie.status}`);
+    }
+
+    /* The token must not appear in anything we hand back. */
+    const leaked = JSON.stringify(editor.body) + JSON.stringify(rejected.body);
+    check(!/cookie-editor|expired-or-forged/.test(leaked),
+      "no response echoes the session token", "nothing echoed");
+  }
+
+  /* -- where the token is allowed to go ------------------------------------ */
+
+  /*
+    A SESSION TOKEN IS A CREDENTIAL, AND ITS DESTINATION MUST NOT BE STEERABLE.
+
+    session.js sends nf_jwt to one place: this site's own Identity service. The
+    address for that comes from `env.URL`, which Netlify sets and a request
+    cannot influence. The request's own origin is the fallback, for local
+    development where there is no env.URL.
+
+    The order matters and is the whole point of these checks. `request.url` is
+    built from the incoming Host header, so preferring it would let a forged
+    Host — or a proxy that rewrote one — name the server that receives a valid
+    editor session. Reading env.URL first makes that unspellable.
+  */
+  section("1c. Where the session token may be sent");
+  {
+    const sessionLib = require(path.join(__dirname, "..", "netlify", "lib", "session.js"));
+    const asRequest = (url, host) => new Request(url, {
+      method: "POST",
+      headers: { "content-type": "application/json", ...(host ? { host } : {}) },
+      body: "{}",
+    });
+
+    check(sessionLib.identityOrigin(asRequest(SITE + "/api/cms"),
+      { URL: "https://polsocfederation.pl" }) === "https://polsocfederation.pl",
+    "env.URL decides the Identity origin", "env.URL");
+
+    /* Set, and disagreeing with the request: env.URL still wins. */
+    check(sessionLib.identityOrigin(asRequest("https://attacker.example/api/cms"),
+      { URL: "https://polsocfederation.pl" }) === "https://polsocfederation.pl",
+    "env.URL wins over the address the request arrived on",
+    "a forged host cannot redirect a token");
+
+    /* Absent: the request's own origin, which is what local development needs. */
+    check(sessionLib.identityOrigin(asRequest("http://localhost:8888/api/cms"), {})
+      === "http://localhost:8888",
+    "without env.URL the request origin is used", "local development");
+    check(sessionLib.identityOrigin(asRequest("http://localhost:8888/api/cms"), undefined)
+      === "http://localhost:8888",
+    "…and an absent environment is not an error", "no env at all");
+
+    /* Nonsense in env.URL falls back rather than throwing. */
+    check(sessionLib.identityOrigin(asRequest(SITE + "/api/cms"), { URL: "not a url" })
+      === SITE, "an unusable env.URL falls back to the request", "no crash");
+
+    /*
+      X-Forwarded-Host and friends are never consulted. They are attacker-
+      controlled on any host that does not strip them, and nothing in session.js
+      reads a header other than Cookie.
+    */
+    const source = require("fs").readFileSync(
+      path.join(__dirname, "..", "netlify", "lib", "session.js"), "utf8")
+      .replace(/\/\*[\s\S]*?\*\//g, "");
+    check(!/x-forwarded|forwarded-host|headers\.get\((?!"cookie")/i.test(source),
+      "session.js reads no header but Cookie", "no forwarded input");
+
+    /* And the token itself is never written anywhere. */
+    check(!/console\.(log|error|warn|info|debug)/.test(source),
+      "session.js logs nothing at all", "a token cannot leak through a log line");
   }
 
   /* -- authorisation ------------------------------------------------------- */
