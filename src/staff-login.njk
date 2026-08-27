@@ -79,6 +79,16 @@ eleventyExcludeFromCollections: true
       -#}
       <div class="login-providers" id="login-providers" hidden></div>
 
+      {#-
+        Shown when somebody arrives here from the CMS rather than to sign in:
+        after logging out, after a session expired, or because the account has
+        no role. They asked to leave, or were sent away — offering the way back
+        to the public site is more use than a form they may not want.
+      -#}
+      <p class="login-help login-exit" id="login-exit" hidden>
+        <a href="/">Back to polsocfederation.pl</a>
+      </p>
+
       <p class="login-help">
         <button type="button" class="login-link" id="login-forgot">Forgot password</button>
       </p>

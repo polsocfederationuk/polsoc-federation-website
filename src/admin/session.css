@@ -1,0 +1,82 @@
+/*
+  session.css — the signed-in account, and the wait before it.
+
+  Decap's header puts the avatar at the top right with nothing beside it, so an
+  editor could not tell which account they were signed in as — which matters on
+  a shared machine, and matters more when the answer decides what they are
+  allowed to change.
+
+  Everything here styles elements this repository adds. Decap's own classes are
+  generated per build and are never selected on.
+*/
+
+/* The address, beside the avatar. */
+.fed-account-email {
+  margin-right: 0.6rem;
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.92);
+  cursor: pointer;
+  max-width: 22rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+/* Who this is, at the top of the open menu. */
+.fed-account-head {
+  padding: 0.6rem 0.9rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  cursor: default;
+}
+
+.fed-account-who {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #1e2532;
+  word-break: break-all;
+}
+
+/*
+  The role, immediately under the address. A LABEL, NOT A PERMISSION: the
+  server checks the real one on every request, from the session rather than
+  from anything this page says.
+*/
+.fed-account-role {
+  margin-top: 0.15rem;
+  font-size: 0.74rem;
+  color: #5a6473;
+}
+
+.fed-account-item {
+  display: block;
+  padding: 0.5rem 0.9rem;
+  font-size: 0.82rem;
+  color: #1e2532;
+  text-decoration: none;
+}
+
+.fed-account-item:hover,
+.fed-account-item:focus {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/*
+  THE WAIT.
+
+  Between the page loading and Identity answering, there is nothing to show:
+  Decap has deliberately not initialised yet. A blank screen would look like a
+  failure, and a partly-drawn CMS that is about to redirect would be worse, so
+  this says what is happening and is removed the moment the answer arrives.
+*/
+#fed-gate {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f7f8fa;
+  color: #5a6473;
+  font-size: 0.9rem;
+  z-index: 10000;
+}

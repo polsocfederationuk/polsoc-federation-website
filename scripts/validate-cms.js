@@ -395,6 +395,35 @@ section("8. No credentials, no production authentication");
     "generated config.yml": stripMarkup(configText),
   };
 
+  /*
+    WHAT THE ADMIN PAGE MAY LOAD.
+
+    One bundle, from this origin, built from the pinned package by
+    scripts/build-identity.js. Not a CDN — a foreign script on the page that
+    holds the session would be able to read it, and the version could change
+    without anybody deciding to change it. Not the legacy widget either, which
+    is a different library with its own login UI: the whole point of this work
+    is that /staff-login/ is the only sign-in screen anybody sees.
+  */
+  {
+    const admin = sources["src/admin/index.njk"];
+    const identityScripts = admin.match(/src="[^"]*identity[^"]*"/gi) || [];
+    assert(identityScripts.length <= 1,
+      "the admin page loads at most one identity script",
+      "more than one identity script is loaded", identityScripts.join(", "));
+    if (identityScripts.length === 1) {
+      assert(/src="\/staff-login\/netlify-identity\.js"/.test(admin),
+        "the admin page loads the identity client from this origin",
+        "the identity client is not the same-origin bundle", identityScripts[0]);
+    }
+    assert(!/netlify-identity-widget/i.test(admin),
+      "the admin page does not use the legacy identity widget",
+      "netlify-identity-widget brings its own login UI");
+    assert(!/identity\.netlify\.com|unpkg\.com|cdn\.jsdelivr|cdnjs\./i.test(admin),
+      "no identity script is fetched from another origin",
+      "a foreign script would be able to read the session");
+  }
+
   // The stripper must not have removed the thing under test.
   assert(/proxy_url/.test(sources["src/_data/cmsConfig.js"]),
     "comment stripping preserved the real configuration",
@@ -409,8 +438,26 @@ section("8. No credentials, no production authentication");
     [/\bnfp_[A-Za-z0-9]{16,}/, "a Netlify token"],
     [/[A-Za-z0-9_-]*(api[_-]?key|secret|password|token)\s*[:=]\s*["'][^"'\s]{8,}["']/i, "a hardcoded secret"],
   ];
+  /*
+    THE ADMIN PAGE LOADS THE IDENTITY CLIENT, AND THAT IS THE POINT.
+
+    This list used to forbid the STRING "netlify-identity" everywhere, from a
+    time when the admin page deliberately had none: sign-in happened only on
+    /staff-login/, and /admin/ relied on the session cookie alone. That left it
+    unable to say who was signed in, unable to keep the session alive, and
+    unable to stop Decap's own login screen appearing — so it now loads the same
+    first-party client the sign-in page uses.
+
+    Forbidding the name was always a proxy for the thing that matters, which is
+    CREDENTIALS. That is still forbidden here, in every file, and the checks
+    below say what the admin page may load rather than pretending it loads
+    nothing.
+  */
+  const IDENTITY_ALLOWED_IN = new Set(["src/admin/index.njk"]);
+
   for (const [file, text] of Object.entries(sources)) {
     for (const [re, what] of FORBIDDEN) {
+      if (what === "Netlify Identity" && IDENTITY_ALLOWED_IN.has(file)) continue;
       assert(!re.test(text), `${file}: no ${what}`,
         `${file} appears to contain ${what}`);
     }

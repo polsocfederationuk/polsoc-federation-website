@@ -488,6 +488,197 @@ console.log("=".repeat(78));
       "session.js logs nothing at all", "a token cannot leak through a log line");
   }
 
+  /* -- the browser sign-in gate -------------------------------------------- */
+
+  /*
+    THE SCREEN NOBODY SHOULD SEE.
+
+    Decap ships a login page, and with the proxy backend it grants nothing —
+    `authenticate()` resolves immediately. It still looked like an
+    authentication screen, and "Log Out" returned people to it, so somebody who
+    had signed out could press Login and appear to be back inside.
+
+    src/admin/session.js is what removes it: Decap is held at CMS_MANUAL_INIT
+    until Netlify Identity has said who this is. These tests RUN that file
+    against stubs rather than searching it for strings, because what matters is
+    what it does with each answer.
+  */
+  section("1d. The browser sign-in gate");
+  {
+    const gateSource = require("fs").readFileSync(
+      path.join(__dirname, "..", "src", "admin", "session.js"), "utf8");
+
+    /** Run session.js in a bare window and report what it did. */
+    const runGate = (identityUser, options) => {
+      const opts = options || {};
+      const record = { replaced: null, initCalled: 0, loggedOut: 0, backend: null };
+
+      const node = () => ({
+        id: "", className: "", textContent: "", href: "", hidden: false,
+        parentElement: null, firstChild: null,
+        appendChild() {}, insertBefore() {}, removeChild() {},
+        addEventListener() {}, setAttribute() {}, click() {},
+        querySelector: () => null, querySelectorAll: () => [],
+      });
+
+      const win = {
+        location: {
+          origin: SITE,
+          replace(to) { if (record.replaced === null) record.replaced = to; },
+        },
+        netlifyIdentityApi: opts.noApi ? undefined : {
+          getUser: () => (opts.identityThrows
+            ? Promise.reject(new Error("offline"))
+            : Promise.resolve(identityUser)),
+          logout: () => { record.loggedOut += 1; return Promise.resolve(); },
+        },
+        CMS: {
+          getBackend: (name) => (name === "proxy"
+            ? { init: () => ({ entriesByFolder() {}, logout() { return "decap"; } }) }
+            : null),
+          registerBackend: (name, Ctor) => { record.backend = new Ctor({}, {}); },
+        },
+        initCMS() { record.initCalled += 1; },
+        fetch: opts.fetch || (() => Promise.resolve({ status: 200 })),
+        addEventListener() {},
+        MutationObserver: function () {
+          return { observe() {}, disconnect() {} };
+        },
+      };
+      win.window = win;
+
+      const doc = {
+        body: node(),
+        getElementById: () => null,
+        querySelector: () => null,
+        querySelectorAll: () => [],
+        createElement: node,
+        addEventListener() {},
+        readyState: "complete",
+      };
+
+      /*
+        Every global session.js reaches for is passed in explicitly. A missing
+        one would surface as a ReferenceError inside its own catch and look
+        exactly like "no session", which is the failure mode most worth not
+        mistaking for a pass.
+      */
+      // eslint-disable-next-line no-new-func
+      new Function("window", "document", "Promise", "URL", "MutationObserver", gateSource)(
+        win, doc, Promise, URL, win.MutationObserver);
+      return { record, win };
+    };
+
+    const settle = () => new Promise((r) => setTimeout(r, 0));
+
+    /*
+      A VALID SESSION AND NO DECAP STATE. This is a first visit — local storage
+      is empty, which is exactly when Decap used to show its login screen.
+    */
+    const editor = runGate({ email: "ewa@polsocfederation.pl", roles: ["editor"] });
+    await settle();
+    check(editor.record.replaced === null,
+      "an editor with a valid session is not sent away", "stays in the CMS");
+    check(editor.record.initCalled === 1,
+      "the CMS is initialised exactly once", `initCMS called ${editor.record.initCalled}×`);
+    check(editor.record.backend !== null,
+      "a backend is registered before the CMS starts", "proxy backend replaced");
+
+    /*
+      …and the replacement answers restoreUser, which is the single thing that
+      keeps Decap's login screen from rendering on that first visit.
+    */
+    const restored = editor.record.backend
+      ? await editor.record.backend.restoreUser() : null;
+    check(Boolean(restored),
+      "the backend restores a user, so Decap never shows its login screen",
+      JSON.stringify(restored));
+    check(typeof editor.record.backend.entriesByFolder === "function",
+      "…while still delegating Decap's own file operations", "composed, not reimplemented");
+
+    /* NO SESSION, whatever Decap may have left in local storage. */
+    const anon = runGate(null);
+    await settle();
+    check(anon.record.replaced === "/staff-login/",
+      "no Identity session is sent to the sign-in page", anon.record.replaced);
+    check(anon.record.initCalled === 0,
+      "…before Decap is initialised at all", "no CMS is drawn");
+
+    /* SIGNED IN, NOT INVITED. Ending the session is deliberate. */
+    const stranger = runGate({ email: "stranger@example.com", roles: [] });
+    await settle();
+    check(stranger.record.replaced === "/staff-login/?unauthorised=1",
+      "an account with no role is refused and told why", stranger.record.replaced);
+    check(stranger.record.loggedOut === 1,
+      "…and its Identity session is ended, not left lying around",
+      "logout called once");
+    check(stranger.record.initCalled === 0,
+      "…and it never reaches a usable CMS", "no CMS is drawn");
+
+    /* An admin is admitted on the same terms as an editor. */
+    const admin = runGate({ email: "ada@polsocfederation.pl", roles: ["admin"] });
+    await settle();
+    check(admin.record.replaced === null && admin.record.initCalled === 1,
+      "an admin is admitted too", "same gate, both roles");
+
+    /* LOGGING OUT ends the real session before leaving. */
+    const out = runGate({ email: "ewa@polsocfederation.pl", roles: ["editor"] });
+    await settle();
+    out.record.backend.logout();
+    await settle();
+    check(out.record.loggedOut === 1,
+      "logging out calls Netlify Identity's logout", "the session is really ended");
+    check(out.record.replaced === "/staff-login/?logged_out=1",
+      "…then lands on the signed-out page", out.record.replaced);
+
+    /*
+      A SESSION THAT ENDS WHILE THE CMS IS OPEN. Without this the editor is left
+      looking at "No Entries" and an API error, which reads as a broken CMS.
+    */
+    const expiring = runGate({ email: "ewa@polsocfederation.pl", roles: ["editor"] },
+      { fetch: () => Promise.resolve({ status: 401 }) });
+    await settle();
+    await expiring.win.fetch(SITE + "/api/cms", { method: "POST" });
+    await settle();
+    check(expiring.record.replaced === "/staff-login/?expired=1",
+      "a 401 from /api/cms sends the editor to the expiry page",
+      expiring.record.replaced);
+
+    const bulkExpiring = runGate({ email: "e@x", roles: ["editor"] },
+      { fetch: () => Promise.resolve({ status: 401 }) });
+    await settle();
+    await bulkExpiring.win.fetch("/api/bulk/list", { method: "POST" });
+    await settle();
+    check(bulkExpiring.record.replaced === "/staff-login/?expired=1",
+      "…and so does one from /api/bulk", bulkExpiring.record.replaced);
+
+    /* NARROW ON PURPOSE: anything else answering 401 is not our business. */
+    const elsewhere = runGate({ email: "e@x", roles: ["editor"] },
+      { fetch: () => Promise.resolve({ status: 401 }) });
+    await settle();
+    await elsewhere.win.fetch("/some/other/thing");
+    await settle();
+    check(elsewhere.record.replaced === null,
+      "a 401 from anywhere else is left alone", "only /api/cms and /api/bulk are watched");
+
+    /* If Identity cannot answer, a CMS that cannot work is not shown. */
+    const broken = runGate(null, { identityThrows: true });
+    await settle();
+    check(broken.record.replaced === "/staff-login/" && broken.record.initCalled === 0,
+      "an identity failure shows the sign-in page, not a broken CMS",
+      broken.record.replaced);
+
+    const missing = runGate(null, { noApi: true });
+    await settle();
+    check(missing.record.replaced === "/staff-login/" && missing.record.initCalled === 0,
+      "a missing identity client does the same", missing.record.replaced);
+
+    /* The token is not this file's business, and it never touches one. */
+    check(!/nf_jwt|token|jwt/i.test(gateSource.replace(/\/\*[\s\S]*?\*\//g, "")
+      .replace(/^\s*\/\/.*$/gm, "")),
+    "the gate never handles a token itself", "Identity holds it");
+  }
+
   /* -- authorisation ------------------------------------------------------- */
 
   section("2. What each role may do");
@@ -1005,6 +1196,48 @@ console.log("=".repeat(78));
         "the deprecated git-gateway backend is not used", "proxy backend");
       const page = fs.readFileSync(path.join(dist, "admin", "index.html"), "utf8");
       check(/noindex/.test(page), "the admin page is noindex", "noindex");
+
+      /*
+        THE SIGN-IN GATE, IN THE PAGE THAT ACTUALLY SHIPS.
+
+        The order here is the whole mechanism and it is easy to get wrong:
+        `CMS_MANUAL_INIT` is read when the Decap bundle EVALUATES, so a flag set
+        after the script tag does nothing at all — Decap initialises itself,
+        draws its login screen, and none of this applies. Positions are compared
+        rather than presence for exactly that reason.
+      */
+      const flagAt = page.indexOf("CMS_MANUAL_INIT = true");
+      const bundleAt = page.indexOf('src="./decap-cms.js"');
+      const identityAt = page.indexOf('src="/staff-login/netlify-identity.js"');
+      check(flagAt !== -1 && bundleAt !== -1 && flagAt < bundleAt,
+        "CMS_MANUAL_INIT is set before the Decap bundle loads",
+        flagAt === -1 ? "flag absent" : `flag at ${flagAt}, bundle at ${bundleAt}`);
+      check(identityAt !== -1 && identityAt < bundleAt,
+        "the Identity client loads on the admin page, before Decap",
+        identityAt === -1 ? "identity absent" : `identity at ${identityAt}`);
+
+      /*
+        Called once. Twice would mount the CMS twice; never would leave the page
+        blank behind the "Checking your sign-in…" cover.
+      */
+      const pageCode = page
+        .replace(/<!--[\s\S]*?-->/g, "")
+        .replace(/\/\*[\s\S]*?\*\//g, "")
+        .replace(/^\s*\/\/.*$/gm, "");
+      const initCalls = (pageCode.match(/window\.initCMS\(\)/g) || []).length;
+      check(initCalls === 1, "the supported initialiser is called exactly once",
+        `window.initCMS() × ${initCalls}`);
+      check((pageCode.match(/CMS_MANUAL_INIT\s*=\s*true/g) || []).length === 1,
+        "…and the manual-init flag is set exactly once", "one assignment");
+
+      /*
+        NO SESSION MATERIAL IN THE PAGE. The gate asks Identity at runtime; a
+        token baked into a served file would be a credential anybody could read.
+      */
+      check(!/nf_jwt\s*=|eyJ[A-Za-z0-9_-]{20,}/.test(page),
+        "the admin page embeds no session token", "nothing baked in");
+      check(!/<script[^>]*src="https?:/.test(page),
+        "the admin page loads no third-party script", "self-hosted");
       const login = fs.readFileSync(path.join(dist, "staff-login", "index.html"), "utf8");
       check(/noindex/.test(login) && /nofollow/.test(login),
         "so is the login page", "noindex, nofollow");

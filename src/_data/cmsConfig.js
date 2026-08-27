@@ -2397,6 +2397,10 @@ module.exports = () => ({
   bulkScript: adminAsset("bulk.js"),
   bulkStyles: adminAsset("bulk.css"),
   bulkLinkScript: adminAsset("bulk-link.js"),
+  // The production sign-in gate and account panel. Only the production admin
+  // page includes these; local development has no Identity to ask.
+  sessionScript: adminAsset("session.js"),
+  sessionStyles: adminAsset("session.css"),
   bulkLinkStyles: adminAsset("bulk-link.css"),
   registrationUxScript: adminAsset("registration-ux.js"),
   registrationUxStyles: adminAsset("registration-ux.css"),

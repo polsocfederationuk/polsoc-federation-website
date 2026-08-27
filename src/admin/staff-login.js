@@ -49,6 +49,7 @@
   var problem = document.getElementById("login-problem");
   var notice = document.getElementById("login-notice");
   var heading = document.getElementById("login-lead");
+  var exit = document.getElementById("login-exit");
 
   /*
     The providers Netlify Identity supports, with the wording a person reads.
@@ -303,8 +304,48 @@
 
   /* -- start --------------------------------------------------------------- */
 
+  /*
+    WHY THIS VISIT IS HAPPENING.
+
+    The CMS sends people here for three reasons, and each needs a different
+    sentence. It also changes what this page must NOT do: normally an existing
+    session is restored and the visitor goes straight on to /admin/, but
+    somebody who has just signed out would be thrown back into the CMS by that,
+    which is the opposite of what they asked for.
+  */
+  var ARRIVALS = {
+    logged_out: "You've been signed out.",
+    expired: "Your session has expired. Please sign in again.",
+    unauthorised: "You are signed in, but this account has not been given " +
+      "access to the content manager yet. Ask the Federation President to add it.",
+  };
+
+  function arrivedFrom() {
+    var search = window.location.search || "";
+    for (var key in ARRIVALS) {
+      if (!Object.prototype.hasOwnProperty.call(ARRIVALS, key)) continue;
+      if (new RegExp("[?&]" + key + "=1(&|$)").test(search)) return key;
+    }
+    return null;
+  }
+
+  var arrival = arrivedFrom();
+  if (arrival) {
+    say(ARRIVALS[arrival], arrival === "unauthorised" ? "problem" : "notice");
+    if (exit) exit.hidden = false;
+  }
+
   handleArrival().then(function (handled) {
     if (handled) return;
+    /*
+      Somebody who just signed out is not signed back in on their behalf. The
+      form and the providers are offered instead, so signing in again stays
+      something they choose to do.
+    */
+    if (arrival) {
+      form.hidden = false;
+      return offerProviders();
+    }
     /*
       No token in the URL. Restore an existing session if there is one, so
       somebody who is already signed in is not asked again — and so the

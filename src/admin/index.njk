@@ -67,6 +67,9 @@ eleventyExcludeFromCollections: true
 
       /* The link to Bulk manage, from src/admin/bulk-link.css. */
 {{ cmsConfig.bulkLinkStyles | safe }}
+{% if cmsConfig.proxyUrl == "/api/cms" %}
+{{ cmsConfig.sessionStyles | safe }}
+{% endif %}
     </style>
   </head>
   <body>
@@ -89,6 +92,31 @@ eleventyExcludeFromCollections: true
       It reads ./config.yml on load and initialises itself; there is no init
       script here, and therefore no place for a credential to be typed.
     -->
+{% if cmsConfig.proxyUrl == "/api/cms" %}
+    <!--
+      WHO IS SIGNED IN, DECIDED BEFORE THE CMS EXISTS.
+
+      /staff-login/ is the only sign-in screen anybody should meet. Decap ships
+      one of its own, and with the proxy backend it is ceremony: it grants
+      nothing, because the server decides that from the Identity session — but
+      it looks like an authentication screen, and logging out returned people
+      to it.
+
+      `CMS_MANUAL_INIT` is read when the bundle EVALUATES, so it has to be set
+      before the script tag below rather than after it. With it set, Decap draws
+      nothing until src/admin/session.js has asked Netlify Identity who this is
+      and called `initCMS()` — and somebody without a session is sent to
+      /staff-login/ before Decap has drawn anything at all.
+
+      The Identity client is the same bundle the sign-in page uses, served from
+      this origin. Keeping it loaded here is also what keeps the session alive:
+      its refresh timer rewrites nf_jwt before it expires, so a CMS tab left
+      open does not quietly stop working after an hour.
+    -->
+    <div id="fed-gate">Checking your sign-in…</div>
+    <script src="/staff-login/netlify-identity.js"></script>
+    <script>window.CMS_MANUAL_INIT = true;</script>
+{% endif %}
     <script src="./decap-cms.js"></script>
 
     <!--
@@ -554,6 +582,17 @@ eleventyExcludeFromCollections: true
 
       /* One anchor pointing at the Bulk manage page. Additive; see the file. */
 {{ cmsConfig.bulkLinkScript | safe }}
+{% if cmsConfig.proxyUrl == "/api/cms" %}
+
+      /* -------------------------------------------------------------------
+         THE SIGN-IN GATE, LAST.
+
+         Everything above only registers things. This is what decides whether
+         there is a CMS at all, and it calls initCMS() exactly once — after the
+         widgets exist, so no field can render before its widget does.
+         ------------------------------------------------------------------- */
+{{ cmsConfig.sessionScript | safe }}
+{% endif %}
     </script>
   </body>
 </html>
