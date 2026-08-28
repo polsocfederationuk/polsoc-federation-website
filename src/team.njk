@@ -102,13 +102,33 @@ eleventyComputed:
       <summary>{{ year.academicYear | academicYearLong }}</summary>
       <div class="year-section-body">
 
-    {#- Filter chips — show one group at a time, within this year. -#}
+    {#- Filter chips — show one group at a time, within this year. Omitted for
+        a year with no members: there is nothing to filter, and the chips would
+        be the only thing in the section. -#}
+{%- if records.team | teamInYear(year.academicYear) | length %}
 {% include "partials/team-filters.njk" %}
+{%- endif %}
 
-    {#- One section per group, in the order defined centrally. -#}
+    {#- One section per group, in the order defined centrally.
+
+        A GROUP WITH NOBODY IN IT IS NOT RENDERED. Every group has members in a
+        year that has been entered, so this changes nothing for a real
+        committee — but the moment Site settings moves to a year nobody has
+        been added to yet, the old markup produced six headings each reading
+        "0 people". That looked exactly like the team had been deleted, which
+        is what it was reported as. -#}
+{% set yearMembers = records.team | teamInYear(year.academicYear) %}
+{%- if yearMembers.length %}
 {% for group in teamGroups.groups %}{% set groupMembers = records.team | teamInGroup(group.key, year.academicYear) %}
+{%- if groupMembers.length %}
 {% include "partials/team-section.njk" %}
+{%- endif %}
 {% endfor %}
+{%- else %}
+      {#- The year exists — it is the configured current one — but nobody has
+          been added to it yet. Saying so is better than six empty headings. -#}
+      <p class="lead">{{ t.team.emptyYear }}</p>
+{%- endif %}
       </div>
     </details>
 {%- endfor %}

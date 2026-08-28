@@ -38,7 +38,8 @@
       "emailLinkTitle": "Email",
       "linkedinLinkTitle": "LinkedIn",
       "emailAriaPattern": "Email {name}",
-      "linkedinAriaPattern": "{name} on LinkedIn"
+      "linkedinAriaPattern": "{name} on LinkedIn",
+      "emptyYear": "The committee for this academic year has not been announced yet."
     },
     "announcements": {
       "readMore": "Read more →",
@@ -132,7 +133,8 @@
       "emailLinkTitle": "E-mail",
       "linkedinLinkTitle": "LinkedIn",
       "emailAriaPattern": "Wyślij e-mail do: {name}",
-      "linkedinAriaPattern": "Profil LinkedIn: {name}"
+      "linkedinAriaPattern": "Profil LinkedIn: {name}",
+      "emptyYear": "Zarząd na ten rok akademicki nie został jeszcze ogłoszony."
     },
     "_announcementsComment": "Transcribed verbatim from the live pl/announcements.html — the card call-to-action, the closed-registration chip, the modal's aria-label and its close button. extraImageAltPattern reproduces the existing derived alt text; {n} starts at 2 because the main image is photo 1.",
     "announcements": {

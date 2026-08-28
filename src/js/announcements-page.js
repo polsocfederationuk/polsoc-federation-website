@@ -201,6 +201,23 @@
       stale cached data file renders the old way instead of an empty page.
     */
     if (typeof ANNOUNCEMENT_YEARS !== "undefined" && ANNOUNCEMENT_YEARS.length) {
+      /*
+        THE CONTAINER STOPS BEING THE GRID.
+
+        #annGrid ships as `.ann-grid` — three equal columns — because without
+        year sections the cards are its direct children. Year sections changed
+        what it holds: each <details> became a grid ITEM one column wide, and
+        the grid inside it split that column three ways again, so the cards
+        rendered about a ninth of the page wide.
+
+        Each year now owns the grid, and the container goes back to being an
+        ordinary block. The class is swapped rather than removed so the
+        structure is nameable from a test, and so nothing later mistakes a
+        year-sectioned container for a flat one.
+      */
+      grid.classList.remove("ann-grid");
+      grid.classList.add("ann-years");
+
       ANNOUNCEMENT_YEARS.forEach(function (year) {
         if (!year.items.length && !year.isCurrent) return;
 

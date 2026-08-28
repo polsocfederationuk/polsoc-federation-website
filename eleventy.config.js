@@ -438,6 +438,15 @@ module.exports = function (eleventyConfig) {
       visible: (r) => r && r.published === true,
     }));
 
+  /**
+   * Everyone published in one academic year, whatever their group.
+   *
+   * Used to decide whether a year has anybody in it at all, which decides
+   * whether it renders group headings or a single line saying it is empty.
+   */
+  eleventyConfig.addFilter("teamInYear", (team, academicYear) =>
+    (team || []).filter((m) => m.published === true && m.academic_year === academicYear));
+
   eleventyConfig.addFilter("teamInGroup", (team, groupKey, academicYear) =>
     (team || [])
       .filter(
