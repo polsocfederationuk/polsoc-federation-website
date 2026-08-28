@@ -186,4 +186,11 @@ module.exports = {
   SOURCE_OWN, SOURCE_EVENT, STATES,
   noRegistration, sourceOf, referencedEventSlug, normalise,
   effectiveRegistration, isRegistrable, referenceProblem,
+  /*
+    The admin page inlines sourceOf and referencedEventSlug by stringifying
+    them, and a stringified function carries no scope — so it needs these two
+    as well. Exported rather than retyped in cmsConfig.js so the browser and
+    the build cannot disagree about what counts as blank.
+  */
+  blank, text,
 };

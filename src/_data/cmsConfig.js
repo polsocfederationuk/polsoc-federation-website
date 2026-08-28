@@ -2320,6 +2320,161 @@ function guardSettings() {
  * single script and stylesheet, which is what the "no CDN, no remote asset"
  * assertions in scripts/validate-cms.js check for.
  */
+/**
+ * The registration-reference helpers, as browser source.
+ *
+ * Everything the two shared functions need is listed explicitly, because
+ * `Function.prototype.toString` returns a body and nothing it closes over.
+ */
+function registrationReferenceSource() {
+  const registration = require("./registration.js");
+  return [
+    "var SOURCE_OWN = " + JSON.stringify(registration.SOURCE_OWN) + ";",
+    "var SOURCE_EVENT = " + JSON.stringify(registration.SOURCE_EVENT) + ";",
+    "var REG_SOURCE_EVENT = SOURCE_EVENT;",
+    "var blank = " + registration.blank.toString() + ";",
+    "var text = " + registration.text.toString() + ";",
+    registration.sourceOf.toString(),
+    registration.referencedEventSlug.toString(),
+  ].join("\n\n");
+}
+
+/**
+ * Run every stringified bundle the way the browser will, at build time.
+ *
+ * WHY THIS EXISTS
+ *
+ * Several guards reach the admin page as SOURCE TEXT, so that the browser runs
+ * the same function the build and the tests do. The catch is that a stringified
+ * function carries no scope: anything it closes over silently becomes an
+ * undefined identifier in the browser, and nothing notices. The text is not
+ * linted as code, no test imports it, and it only runs inside a preSave handler
+ * that an editor reaches by pressing Publish.
+ *
+ * That is exactly how `sourceOf` shipped without `text`, `blank`, `SOURCE_OWN`
+ * and `SOURCE_EVENT`, breaking every publish of a record with a registration
+ * block. Checking that the text CONTAINS something would not have caught it —
+ * the text was all present and correct. So each bundle is evaluated here in a
+ * bare scope and CALLED, because a free identifier only fails when the line
+ * using it runs.
+ *
+ * @returns {string[]} one message per broken bundle; empty when all are sound
+ */
+function inlinedSourceProblems() {
+  const registration = require("./registration.js");
+
+  const bundles = [
+    {
+      name: "registrationReferenceSource",
+      source: registrationReferenceSource(),
+      exercise: (scope) => {
+        if (scope.sourceOf({ state: "open" }) !== registration.SOURCE_OWN) {
+          return "sourceOf misread an own registration";
+        }
+        const borrowed = { source: registration.SOURCE_EVENT, event_slug: "spring-ball" };
+        if (scope.sourceOf(borrowed) !== registration.SOURCE_EVENT) {
+          return "sourceOf misread a borrowed registration";
+        }
+        if (scope.referencedEventSlug(borrowed) !== "spring-ball") {
+          return "referencedEventSlug did not return the slug";
+        }
+        if (scope.referencedEventSlug({ state: "open" }) !== null) {
+          return "referencedEventSlug invented a slug";
+        }
+        return null;
+      },
+    },
+    {
+      name: "normaliseLinkSource",
+      source: normaliseAnnouncementLink.toString(),
+      exercise: (scope) => {
+        scope.normaliseAnnouncementLink({ type: "external", url: "https://example.com/" });
+        scope.normaliseAnnouncementLink(null);
+        return null;
+      },
+    },
+    {
+      name: "sectionGuardSource",
+      source: checkEventSectionAlignment.toString(),
+      exercise: (scope) => {
+        scope.checkEventSectionAlignment({ event_family: "standard", en: {}, pl: {} });
+        scope.checkEventSectionAlignment(null);
+        return null;
+      },
+    },
+    {
+      name: "academicYearSource",
+      source: [
+        academicYear.parseAcademicYear.toString(),
+        academicYear.futureYear.toString(),
+        academicYear.futureYearMessage.toString(),
+      ].join("\n\n"),
+      exercise: (scope) => {
+        if (!scope.parseAcademicYear("2025/26")) return "parseAcademicYear refused a real year";
+        scope.futureYear({ academic_year: "2026/27" }, "2025/26");
+        return null;
+      },
+    },
+    {
+      name: "registrationSource",
+      source: ensureEventRegistration.toString(),
+      exercise: (scope) => {
+        scope.ensureEventRegistration({ registration: { state: "none" } });
+        scope.ensureEventRegistration({});
+        return null;
+      },
+    },
+    {
+      name: "blankDateSource",
+      source: blankDatesToNull.toString(),
+      exercise: (scope) => {
+        scope.blankDatesToNull({ start_date: "", end_date: "2026-05-04" },
+          ["start_date", "end_date"]);
+        return null;
+      },
+    },
+    {
+      name: "colourSource",
+      source: canonicalColour.toString(),
+      exercise: (scope) => {
+        scope.canonicalColour("#FFFFFF");
+        scope.canonicalColour("");
+        return null;
+      },
+    },
+    {
+      name: "announcementRegistrationSource",
+      source: [
+        "var REGISTRATION_NONE = " + JSON.stringify(REGISTRATION_NONE) + ";",
+        "var REGISTRATION_STATES = " + JSON.stringify(REGISTRATION_STATES) + ";",
+        normaliseRegistration.toString(),
+      ].join("\n\n"),
+      exercise: (scope) => {
+        scope.normaliseRegistration({ source: "none" });
+        scope.normaliseRegistration({ state: "open", url: "https://forms.gle/abc" });
+        return null;
+      },
+    },
+  ];
+
+  const problems = [];
+  for (const bundle of bundles) {
+    // Every function the bundle declares, handed back so it can be called.
+    const declared = (bundle.source.match(/function\s+([A-Za-z0-9_$]+)/g) || [])
+      .map((m) => m.replace(/function\s+/, ""));
+    const handback = declared.map((n) => JSON.stringify(n) + ": " + n).join(", ");
+    try {
+      /* eslint-disable-next-line no-new-func */
+      const scope = new Function(bundle.source + "\nreturn { " + handback + " };")();
+      const failed = bundle.exercise(scope);
+      if (failed) problems.push(bundle.name + ": " + failed);
+    } catch (error) {
+      problems.push(bundle.name + " does not run in the browser: " + error.message);
+    }
+  }
+  return problems;
+}
+
 function adminAsset(name) {
   const file = path.join(ROOT, "src", "admin", name);
   return fs.existsSync(file) ? fs.readFileSync(file, "utf8") : "";
@@ -2492,11 +2647,27 @@ module.exports = () => ({
   // with scripts/validate.js and cms:check so all three refuse the same things.
   // The rules for an announcement that borrows an event's registration, shared
   // with scripts/validate.js and cms:check so all three refuse the same things.
-  registrationReferenceSource: [
-    "var REG_SOURCE_EVENT = \"event\";",
-    require("./registration.js").sourceOf.toString(),
-    require("./registration.js").referencedEventSlug.toString(),
-  ].join("\n\n"),
+  /*
+    THE ANNOUNCEMENT/EVENT REGISTRATION REFERENCE, SENT TO THE BROWSER.
+
+    sourceOf and referencedEventSlug are shared with scripts/validate.js and
+    cms:check so all three refuse the same things. They reach the admin page by
+    being stringified — and A STRINGIFIED FUNCTION CARRIES NO SCOPE.
+
+    Sending the two public functions alone put four undefined identifiers into
+    the bundle: `text`, its own helper `blank`, and the two source constants.
+    `normaliseRegistration` happens to declare a `text` of its own, but that one
+    is local to it, so sourceOf could not see it either.
+
+    The result was that PUBLISHING ANY RECORD WITH A REGISTRATION BLOCK — every
+    announcement, every standard event — threw "ReferenceError: text is not
+    defined" inside the preSave guard, in the browser, before /api/cms was
+    called. Nothing was sent and nothing was saved.
+
+    registrationSourceProblem() below evaluates this bundle at build time and
+    CALLS it, so a missing dependency fails the build instead of an editor.
+  */
+  registrationReferenceSource: registrationReferenceSource(),
   announcementRegistrationSource: [
     "var REGISTRATION_NONE = " + JSON.stringify(REGISTRATION_NONE) + ";",
     "var REGISTRATION_STATES = " + JSON.stringify(REGISTRATION_STATES) + ";",
@@ -2593,6 +2764,7 @@ module.exports.configYaml = configYaml;
 module.exports.decapVersion = decapVersion;
 module.exports.normaliseAnnouncementLink = normaliseAnnouncementLink;
 module.exports.checkEventSectionAlignment = checkEventSectionAlignment;
+module.exports.inlinedSourceProblems = inlinedSourceProblems;
 module.exports.parseAcademicYear = academicYear.parseAcademicYear;
 module.exports.futureYear = academicYear.futureYear;
 module.exports.futureYearMessage = academicYear.futureYearMessage;

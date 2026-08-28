@@ -1493,6 +1493,159 @@ console.log("=".repeat(78));
       check(!/git-gateway/.test(text),
         "the deprecated git-gateway backend is not used", "proxy backend");
       const page = fs.readFileSync(path.join(dist, "admin", "index.html"), "utf8");
+
+      /*
+        PUBLISHING AN ANNOUNCEMENT, THROUGH THE CODE THE BROWSER ACTUALLY RUNS.
+
+        Publishing any record with a registration block failed in production
+        with "ReferenceError: text is not defined", thrown inside the preSave
+        guard before /api/cms was ever called. Nothing was sent and nothing was
+        saved.
+
+        The cause was that `sourceOf` reaches the admin page by being
+        stringified, and a stringified function carries no scope: `text`,
+        `blank`, `SOURCE_OWN` and `SOURCE_EVENT` were all undefined there.
+        `normaliseRegistration` declares a `text` of its own, but it is local to
+        that function, so `sourceOf` could not see it either.
+
+        EVERY EXISTING TEST PASSED THROUGHOUT. The bundle is not linted as code,
+        no test imported it, and checking that the page CONTAINS the guard says
+        nothing about whether it runs. So this pulls the inline script out of
+        the built page and calls the handler Decap would call, with the record
+        from the form that failed.
+      */
+      {
+        const inline = [...page.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g)]
+          .map((m) => m[1]);
+        check(inline.length > 0, "the admin page carries an inline guard script",
+          `${inline.length} script(s)`);
+
+        const listeners = [];
+        const noop = () => {};
+        const el = () => ({
+          className: "", style: {}, dataset: {}, textContent: "", value: "", hidden: false,
+          classList: { add: noop, remove: noop, contains: () => false, toggle: noop },
+          appendChild: (c) => c, insertBefore: noop, removeChild: noop, remove: noop,
+          setAttribute: noop, getAttribute: () => null, removeAttribute: noop,
+          addEventListener: noop, querySelector: () => null, querySelectorAll: () => [],
+          closest: () => null, focus: noop, click: noop, contains: () => false,
+        });
+
+        /* The proxy answers the duplicate-ID lookup with an empty collection. */
+        const proxy = async (url, init) => {
+          let body = {};
+          try { body = init && init.body ? JSON.parse(init.body) : {}; } catch (e) { body = {}; }
+          if (body.action === "entriesByFolder") {
+            return { ok: true, status: 200, json: async () => [] };
+          }
+          return { ok: true, status: 200, json: async () => ({}) };
+        };
+
+        const win = {
+          CMS: {
+            registerEventListener: (l) => listeners.push(l),
+            removeEventListener: noop, registerWidget: noop, registerBackend: noop,
+            getBackend: () => null, registerPreviewStyle: noop, registerPreviewTemplate: noop,
+            registerEditorComponent: noop, registerMediaLibrary: noop, registerLocale: noop,
+            registerCustomFormat: noop, init: noop,
+            getWidget: () => ({ control: function () {}, preview: function () {} }),
+            getWidgets: () => [], resolveWidget: () => ({}),
+          },
+          initCMS: noop,
+          netlifyIdentityApi: {
+            getUser: async () => ({ email: "e@x", roles: ["admin"] }), logout: async () => {},
+          },
+          location: { hash: "", search: "", origin: SITE, replace: noop, href: "" },
+          addEventListener: noop, fetch: proxy,
+          MutationObserver: function () { return { observe: noop, disconnect: noop }; },
+          matchMedia: () => ({ matches: false, addEventListener: noop }),
+          localStorage: { getItem: () => null, setItem: noop, removeItem: noop },
+          h: noop, createClass: (o) => o,
+        };
+        win.window = win;
+        const doc = {
+          getElementById: () => null, createElement: el, querySelector: () => null,
+          querySelectorAll: () => [], addEventListener: noop, body: el(),
+          documentElement: el(), head: el(), readyState: "complete",
+        };
+
+        /*
+          The page schedules work of its own — observers, retries, the enhancer
+          polling for controls. None of it is under test, and left alone it
+          keeps the process alive after the assertions finish, so every timer
+          the bundle starts is detached from the event loop.
+        */
+        const started = [];
+        const timers = {
+          setTimeout: (fn, ms) => { const t = setTimeout(fn, ms); if (t.unref) t.unref(); started.push(t); return t; },
+          setInterval: (fn, ms) => { const t = setInterval(fn, ms); if (t.unref) t.unref(); started.push(t); return t; },
+          clearTimeout, clearInterval,
+        };
+        win.setTimeout = timers.setTimeout;
+        win.setInterval = timers.setInterval;
+
+        for (const code of inline) {
+          try {
+            /* eslint-disable-next-line no-new-func */
+            new Function("window", "document", "CMS", "fetch", "MutationObserver",
+              "localStorage", "location", "setTimeout", "setInterval",
+              "clearTimeout", "clearInterval", code)(
+              win, doc, win.CMS, proxy, win.MutationObserver, win.localStorage, win.location,
+              timers.setTimeout, timers.setInterval, timers.clearTimeout, timers.clearInterval);
+          } catch (err) { /* a shim gap, not the guard; the assertions below decide */ }
+        }
+
+        const preSave = listeners.filter((l) => l.name === "preSave");
+        check(preSave.length === 1, "it registers exactly one preSave guard",
+          `${preSave.length}`);
+
+        /* The record from the production form that failed. */
+        const RECORD = {
+          slug: "spring-networking-2026", academic_year: "2026/27",
+          published_date: "2026-03-01", order: 1, published: true,
+          image: "/assets/announcements/spring.jpg", image_position: null,
+          image_fit: null, image_background: null, extra_images: [],
+          registration: { source: "own", state: "open",
+            url: "https://forms.gle/EMbydwqPBcVT5SWm8",
+            opens_on: "2026-02-01", closes_on: null },
+          link: { type: "none" },
+          en: { title: "Spring networking evening",
+            subtitle: "Meet Polish students from across the UK.",
+            body: "Join us for an evening of **networking** in London.",
+            link_label: "Sign up" },
+          pl: { title: "Wiosenny wieczór networkingowy",
+            subtitle: "Poznaj polskich studentów z całej Wielkiej Brytanii.",
+            body: "Dołącz do nas na wieczór **networkingu** w Londynie.",
+            link_label: "Zapisz się" },
+        };
+        const asEntry = (obj) => ({
+          get: (k) => (k === "data" ? asEntry(obj) : obj[k]),
+          getIn: (q) => q.reduce((a, k) => (a == null ? a : a[k]), obj),
+          toJS: () => JSON.parse(JSON.stringify(obj)),
+          toObject: () => obj, set: () => asEntry(obj), ...obj,
+        });
+
+        let raised = null;
+        if (preSave.length === 1) {
+          try {
+            /* A guard that never settles is a failure too, not a hung suite. */
+            await Promise.race([
+              preSave[0].handler({ entry: asEntry(RECORD), author: { name: "Ewa", email: "e@x" } }),
+              new Promise((_, reject) => {
+                const t = setTimeout(() => reject(new Error("preSave never settled")), 5000);
+                if (t.unref) t.unref();
+              }),
+            ]);
+          } catch (err) { raised = err; }
+        }
+
+        check(raised === null,
+          "publishing an announcement with a registration raises nothing",
+          raised ? `${raised.name}: ${raised.message.split("\n")[0]}` : "saved");
+        check(!raised || !/is not defined/.test(raised.message),
+          "…and in particular no identifier is missing from the inlined guards",
+          raised ? raised.message.split("\n")[0] : "none missing");
+      }
       check(/noindex/.test(page), "the admin page is noindex", "noindex");
 
       /*

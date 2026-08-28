@@ -1937,6 +1937,35 @@ section("Web addresses");
   }
 }
 
+/* ============================================ the inlined browser guards */
+
+/*
+  THE GUARDS THAT TRAVEL AS TEXT.
+
+  Several guards are shared with the build and the tests and reach the admin
+  page by being stringified, so the browser runs the same function. A
+  stringified function carries no scope, though: a helper or a constant it
+  closes over silently becomes an undefined identifier in the browser.
+
+  That is not hypothetical. `sourceOf` went out without `text`, `blank`,
+  `SOURCE_OWN` and `SOURCE_EVENT`, so publishing any record with a
+  registration block — every announcement, every standard event — threw
+  ReferenceError inside preSave, in the browser, before /api/cms was called.
+  Nothing caught it: the text is not linted as code, no test imported it, and
+  checking that the page CONTAINS the guard says nothing about whether it runs.
+
+  inlinedSourceProblems() evaluates each bundle in a bare scope and CALLS it,
+  because a free identifier only fails on the line that uses it.
+*/
+section("Inlined browser guards");
+{
+  const problems = cms.inlinedSourceProblems();
+  assert(problems.length === 0,
+    "every stringified guard runs standalone, as it must in the browser",
+    "a stringified guard references something that will not exist in the browser",
+    problems.join("; "));
+}
+
 /* =================================================================== out */
 
 console.log("\n" + "=".repeat(78));
