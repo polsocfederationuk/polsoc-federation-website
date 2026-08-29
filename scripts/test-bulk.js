@@ -342,8 +342,18 @@ section("6. A future academic year publishes like any other");
     comes from Site settings alone, so a record arriving early changes nothing
     about which section opens.
   */
+  /*
+    UNCHANGED BY THIS, not equal to a particular year. Comparing against a
+    literal made an ordinary rollover fail; what this section is actually about
+    is that a record arriving early does not move the setting.
+  */
+  const onDisk = String((require("js-yaml").load(require("fs").readFileSync(
+    path.join(__dirname, "..", "content", "settings", "academic-year.yaml"),
+    "utf8")) || {}).current || "");
   const current = store.readCurrentAcademicYear();
-  check(current === "2025/26", "the current academic year is unchanged", current);
+  check(current === onDisk,
+    "the current academic year is whatever Site settings says, unchanged",
+    `store ${current}, file ${onDisk}`);
 
   const now = FIXTURE_PREFIX + "this-year";
   const later = FIXTURE_PREFIX + "next-year";

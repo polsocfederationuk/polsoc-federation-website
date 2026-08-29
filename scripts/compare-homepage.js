@@ -218,10 +218,32 @@ function parse(html) {
     }));
 
   /* ---- event timeline ---- */
-  const tlIdx = body.indexOf('<section class="section has-watermark tex-light">');
-  const timeline = sect('<section class="section has-watermark tex-light">');
+  /*
+    THE TIMELINE NO LONGER CARRIES A YEAR.
+
+    It used to sit in a `has-watermark` band showing the configured season. The
+    band now shows the most recent five events whatever year they belong to, so
+    a single year printed across them said something untrue, and the watermark
+    was removed — approved, Phase 17D.
+
+    The live reference page still has the old markup, so both shapes are
+    recognised here: the generated page is matched first, and the reference
+    falls through to the original selector. Voices, which shares the old
+    selector, is then found by its own marker rather than by position.
+  */
+  const TL_NEW = '<section class="section tex-light">';
+  const TL_OLD = '<section class="section has-watermark tex-light">';
+  const tlMarker = body.indexOf(TL_NEW) !== -1 ? TL_NEW : TL_OLD;
+  const tlIdx = body.indexOf(tlMarker);
+  const timeline = sect(tlMarker);
   o.timeline = {
-    watermark: text(g(/<span class="watermark" aria-hidden="true">([^<]*)<\/span>/, timeline)),
+    /*
+      Recorded as present/absent rather than as a value. The reference still
+      prints a season here and the generated page deliberately prints nothing,
+      so comparing the text would report an approved removal as a regression on
+      every run; comparing "is there one" states the change once.
+    */
+    hasWatermark: /<span class="watermark" aria-hidden="true">/.test(timeline),
     eyebrow: text(g(/<span class="eyebrow">([\s\S]*?)<\/span>/, timeline)),
     title: text(g(/<h2 class="section-title">([\s\S]*?)<\/h2>/, timeline)),
     titleRendered: rendered(g(/<h2 class="section-title">([\s\S]*?)<\/h2>/, timeline)),
@@ -258,7 +280,16 @@ function parse(html) {
   };
 
   /* ---- testimonials ---- */
-  const voices = sect('<section class="section has-watermark tex-light">', tlIdx + 10);
+  /*
+    Anchored on the quote mark, which only this section has. It used to be
+    "the next band that looks like the timeline", which stopped being true the
+    moment the timeline's own band changed.
+  */
+  const voicesIdx = body.indexOf('<span class="quote-mark"', tlIdx + 10);
+  const voices = voicesIdx === -1 ? "" : (() => {
+    const start = body.lastIndexOf("<section", voicesIdx);
+    return start === -1 ? "" : body.slice(start, body.indexOf("</section>", start));
+  })();
   o.testimonials = {
     watermark: text(g(/<span class="watermark" aria-hidden="true">([^<]*)<\/span>/, voices)),
     eyebrow: text(g(/<span class="eyebrow">([\s\S]*?)<\/span>/, voices)),
@@ -423,7 +454,38 @@ for (const page of PAGES) {
     false, L.footerLinks.some((href) => String(href).endsWith(STAFF_LOGIN)));
 
   /* ---- section order ---- */
-  check(`${tag} section order and inline styles`, L.sectionOrder, G.sectionOrder);
+
+  /*
+    ONE APPROVED DIFFERENCE, ENUMERATED.
+
+    The timeline band lost `has-watermark` when its year watermark was removed:
+    the band now spans academic years, so a single year printed behind it said
+    something untrue. Nothing else about the order changed, and nothing moved.
+
+    Checked in BOTH directions rather than filtered out, so a correction that
+    silently stopped applying fails as loudly as an unexpected difference would.
+  */
+  /*
+    ONLY THE FIRST ONE. Two bands share that class — the timeline and Voices —
+    and only the timeline lost its watermark. Rewriting every occurrence would
+    quietly approve a change to Voices as well.
+  */
+  const TIMELINE_BAND = ["section has-watermark tex-light", "section tex-light"];
+  const firstBand = L.sectionOrder.indexOf(TIMELINE_BAND[0]);
+  const expectedOrder = L.sectionOrder.map(
+    (name, i) => (i === firstBand ? TIMELINE_BAND[1] : name));
+
+  check(`${tag} APPROVED: the live timeline band carried a watermark`,
+    TIMELINE_BAND[0], L.sectionOrder[firstBand]);
+  check(`${tag} APPROVED: the generated one does not`,
+    TIMELINE_BAND[1], G.sectionOrder[firstBand]);
+  check(`${tag} APPROVED: Voices keeps its own watermark band`,
+    TIMELINE_BAND[0], G.sectionOrder.filter((n) => n === TIMELINE_BAND[0])[0]);
+  check(`${tag} section order and inline styles`, expectedOrder, G.sectionOrder);
+
+  /* And the watermark itself is gone from the band, not merely reclassed. */
+  check(`${tag} APPROVED: the live timeline printed a year`, true, L.timeline.hasWatermark);
+  check(`${tag} APPROVED: the generated timeline prints none`, false, G.timeline.hasWatermark);
 
   /* ---- hero ---- */
   check(`${tag} hero`, L.hero, G.hero);

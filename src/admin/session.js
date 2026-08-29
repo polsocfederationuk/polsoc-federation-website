@@ -139,11 +139,51 @@
    */
   var WATCHED = ["/api/cms", "/api/bulk"];
 
+  /*
+    THE MOST A REQUEST MAY CARRY.
+
+    A synchronous function receives at most 6 MB. Decap puts every new upload
+    into the persistEntry request base64-encoded, so one photograph near the
+    per-file limit is fine and three are not — and the failure arrives as
+    "TypeError: Failed to fetch", which tells an editor nothing and names no
+    file.
+
+    5 MB leaves headroom under the platform limit. Checked here because this is
+    where the request already passes through, and because a per-file limit
+    cannot see a total.
+  */
+  var MAX_REQUEST_BYTES = 5 * 1024 * 1024;
+
+  function tooLarge(bytes) {
+    var mb = function (n) { return (n / 1024 / 1024).toFixed(1); };
+    return new Error(
+      "This is too large to save in one go (" + mb(bytes) + " MB).\n\n" +
+      "Images are sent with the record, so a few large photographs add up. " +
+      "Remove or replace the largest one and save again — anything up to about " +
+      mb(MAX_REQUEST_BYTES) + " MB in total will go through.\n\n" +
+      "Nothing has been saved.");
+  }
+
   function watchForExpiry() {
     var real = window.fetch;
     if (typeof real !== "function") return;
 
     window.fetch = function (input, init) {
+      /*
+        REFUSED BEFORE IT IS SENT. Letting an oversized request go produces a
+        network failure with no message worth reading; this produces a sentence
+        naming the problem, and Decap shows it where the editor is looking.
+      */
+      var body = init && init.body;
+      if (typeof body === "string" && body.length > MAX_REQUEST_BYTES) {
+        var target = typeof input === "string" ? input : (input && input.url) || "";
+        var to;
+        try { to = new URL(target, window.location.origin).pathname; } catch (err) { to = ""; }
+        if (WATCHED.some(function (prefix) { return to.indexOf(prefix) === 0; })) {
+          return Promise.reject(tooLarge(body.length));
+        }
+      }
+
       var result = real.apply(this, arguments);
       var raw = typeof input === "string" ? input : (input && input.url) || "";
       var path;

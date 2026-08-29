@@ -24,9 +24,32 @@ const yaml = require("js-yaml");
 
 const academicYear = require("../../src/_data/academicYear.js");
 const registration = require("../../src/_data/registration.js");
+const { normaliseDatesDeep } = require("../../src/_data/dateOnly.js");
 
 const ID_PATTERN = /^[a-z0-9][a-z0-9-]{0,120}$/;
 const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * A calendar day that actually exists.
+ *
+ * The shape alone is not enough: "2026-02-31" and "2026-13-01" both match
+ * `YYYY-MM-DD` and neither is a day. Building the date in UTC and checking the
+ * components survived is what separates a real day from one that silently rolls
+ * forward — `Date.UTC(2026, 1, 31)` is the 3rd of March, and a record carrying
+ * it would render a date the editor never chose.
+ *
+ * UTC throughout, for the same reason as everywhere else here: local
+ * construction moves the day in half the world.
+ */
+function isCalendarDay(value) {
+  const text = String(value);
+  if (!DATE_ONLY.test(text)) return false;
+  const [year, month, day] = text.split("-").map(Number);
+  const probe = new Date(Date.UTC(year, month - 1, day));
+  return probe.getUTCFullYear() === year
+    && probe.getUTCMonth() === month - 1
+    && probe.getUTCDate() === day;
+}
 /* These become links and buttons in a public page. */
 const SAFE_URL = /^https:\/\/[^\s"'<>]+$/;
 
@@ -72,7 +95,23 @@ function isSafeUrl(value) {
 function check(repoPath, raw, folder) {
   let record;
   try {
-    record = yaml.load(String(raw || ""));
+    /*
+      A BARE YAML DATE IS A Date, NOT A STRING.
+
+      Decap serialises `published_date: 2026-08-29` without quotes — correct
+      YAML, and exactly what its date widget should produce. js-yaml's default
+      schema still carries YAML 1.1 timestamps, so it reads that line back as a
+      JS Date. Every check below then saw
+      "Sat Aug 29 2026 02:00:00 GMT+0200" and refused the record with "The
+      published date must be a calendar day", which is precisely what the
+      editor had entered.
+
+      Canonicalised here, at the one boundary where YAML becomes a record, so
+      the rules below compare calendar days to calendar days whether the file
+      quotes its dates or not. UTC components, never local: this same Date is
+      the 28th in any zone behind UTC.
+    */
+    record = normaliseDatesDeep(yaml.load(String(raw || "")));
   } catch (err) {
     return "That record could not be saved because its content is malformed.";
   }
@@ -102,7 +141,7 @@ function check(repoPath, raw, folder) {
 
   for (const [field, value] of Object.entries(record)) {
     if (/_date$|^start_date$|^end_date$|_on$/.test(field) && value !== null &&
-        value !== undefined && value !== "" && !DATE_ONLY.test(String(value))) {
+        value !== undefined && value !== "" && !isCalendarDay(value)) {
       return `The ${field.replace(/_/g, " ")} must be a calendar day.`;
     }
   }

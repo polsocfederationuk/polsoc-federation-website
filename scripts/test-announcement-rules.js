@@ -29,9 +29,11 @@
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
+const yaml = require("js-yaml");
 const { spawnSync } = require("child_process");
 
 const ROOT = path.join(__dirname, "..");
+const rules = require(path.join(ROOT, "netlify", "lib", "rules.js"));
 const ANN_DIR = path.join(ROOT, "content", "announcements");
 const PREFIX = "zz-cms-ann-test";
 
@@ -814,6 +816,120 @@ section("Language tabs are presentation only (Phase 17C.3)");
 }
 
 /* -- output ----------------------------------------------------------------- */
+
+/* ================================================ a bare YAML date ======== */
+
+/*
+  THE DATE THE CMS ACTUALLY WRITES.
+
+  Publishing a real announcement failed with 400 "The published date must be a
+  calendar day" — for a record whose date was exactly right. Decap's date widget
+  had done its job: it displayed 29/08/2026 and serialised the canonical
+  `published_date: 2026-08-29`.
+
+  Unquoted, that is a YAML 1.1 timestamp, and js-yaml's default schema hands
+  back a JS Date. Every check here then saw
+  "Sat Aug 29 2026 02:00:00 GMT+0200" and refused it.
+
+  These run the RAW YAML through rules.check() — the same parse and the same
+  validation persistEntry uses — rather than testing a helper in isolation,
+  because the defect lived in the gap between the parser and the rule.
+*/
+section("A bare YAML date, as the CMS writes it");
+{
+  const announcement = (dateLine, extra) => `slug: rekrutacja2627
+academic_year: 2026/27
+${dateLine}
+order: 1
+published: true
+image: null
+image_position: null
+image_fit: null
+image_background: null
+extra_images: []
+registration:
+  state: open
+  url: "https://forms.gle/EMbydwqPBcVT5SWm8"
+${extra || "  opens_on: 2026-02-01"}
+  closes_on: null
+link:
+  type: none
+en:
+  title: "Rekrutacja 2026/27"
+  subtitle: "Applications are open."
+  link_label: "Apply"
+  body: |
+    Applications are **open** now.
+pl:
+  title: "Rekrutacja 2026/27"
+  subtitle: "Nabór jest otwarty."
+  link_label: "Aplikuj"
+  body: |
+    Nabór jest **otwarty**.
+`;
+
+  const verdict = (raw) =>
+    rules.check("content/announcements/rekrutacja2627.yaml", raw, "content/announcements");
+
+  /* The exact record from production. */
+  const real = verdict(announcement("published_date: 2026-08-29"));
+  check(real === null,
+    "the record the CMS actually sends is accepted",
+    real === null ? "published_date: 2026-08-29" : `refused: ${real}`);
+
+  /* Quoted must keep working — every existing record is written that way. */
+  check(verdict(announcement('published_date: "2026-08-29"')) === null,
+    "a quoted date is accepted too", "existing records are unaffected");
+
+  /*
+    THE NESTED ONE. rules.js checks any *_on field, and registration.opens_on
+    comes back as a Date exactly like published_date. It would have been the
+    next failure.
+  */
+  check(verdict(announcement("published_date: 2026-08-29", "  opens_on: 2026-02-01")) === null,
+    "an unquoted date inside the registration block is accepted too",
+    "registration.opens_on");
+
+  /* -- and the meaning must survive the conversion ------------------------- */
+
+  const { normaliseDatesDeep } = require(path.join(ROOT, "src/_data/dateOnly.js"));
+  const parsed = normaliseDatesDeep(yaml.load(announcement("published_date: 2026-08-29")));
+  check(parsed.published_date === "2026-08-29",
+    "the stored meaning is still that calendar day", JSON.stringify(parsed.published_date));
+  check(typeof parsed.published_date === "string",
+    "…as a string, not a Date", typeof parsed.published_date);
+  check(parsed.registration.opens_on === "2026-02-01",
+    "…and so is the nested one", JSON.stringify(parsed.registration.opens_on));
+
+  /*
+    NO TIMEZONE SHIFT. The Date js-yaml produces is midnight UTC, which is the
+    previous day everywhere west of Greenwich. Reading its UTC components is
+    what keeps the 29th the 29th; local ones would make it the 28th for half
+    the world.
+  */
+  const shifted = normaliseDatesDeep({ d: new Date(Date.UTC(2026, 7, 29)) }).d;
+  check(shifted === "2026-08-29",
+    "a midnight-UTC date keeps its day, whatever the machine's zone", shifted);
+
+  /* -- what must still be refused ------------------------------------------ */
+
+  for (const [label, line] of [
+    ["a real time of day", "published_date: 2026-08-29T14:30:00Z"],
+    ["a quoted timestamp", 'published_date: "2026-08-29T14:30:00Z"'],
+    ["the 31st of February", 'published_date: "2026-02-31"'],
+    ["the 29th of a non-leap February", 'published_date: "2027-02-29"'],
+    ["month thirteen", 'published_date: "2026-13-01"'],
+    ["a day-first date", 'published_date: "29/08/2026"'],
+    ["prose", 'published_date: "tomorrow"'],
+  ]) {
+    const refused = verdict(announcement(line));
+    check(refused !== null, `${label} is still refused`, refused || "ACCEPTED — too loose");
+  }
+
+  /* A genuine leap day is a day. */
+  check(verdict(announcement("published_date: 2028-02-29")) === null,
+    "a real leap day is accepted", "2028-02-29");
+}
 
 console.log("\n" + "=".repeat(78));
 console.log("  ANNOUNCEMENT RULES — negative controls");

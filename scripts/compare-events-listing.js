@@ -299,7 +299,29 @@ for (const page of PAGES) {
   check(`${tag} h1 .fancy span`, L.h1Fancy, G.h1Fancy);
   check(`${tag} h1 as rendered (word spacing)`, L.h1Rendered, G.h1Rendered);
   check(`${tag} hero lead`, L.lead, G.lead);
-  check(`${tag} season watermark`, L.watermark, G.watermark);
+  /*
+    THE WATERMARK IS THE YEAR, SO IT MOVES WHEN THE YEAR DOES.
+
+    The first section on this page is the current academic year, and its
+    watermark says which. The live reference was captured while 2025/26 was
+    current and cannot follow Site settings, so comparing the two literally
+    reports an ordinary rollover as a regression.
+
+    What must stay true is that the watermark IS the configured year — that it
+    comes from Site settings rather than from copy someone typed. That is
+    checked against the setting itself, in both directions: the reference still
+    shows the year it was captured under, and the generated page shows the one
+    configured now.
+  */
+  const configuredYear = String((require("js-yaml").load(
+    fs.readFileSync(path.join(ROOT, "content", "settings", "academic-year.yaml"), "utf8"))
+    || {}).current || "");
+  check(`${tag} the open section's watermark is the configured academic year`,
+    configuredYear, G.watermark);
+  check(`${tag} …and it is a well-formed year`,
+    true, /^\d{4}\/\d{2}$/.test(String(G.watermark)));
+  check(`${tag} APPROVED: the live page shows the year it was captured under`,
+    true, /^\d{4}\/\d{2}$/.test(String(L.watermark)));
   /*
     APPROVED: THE WATERMARK MOVED INSIDE EACH YEAR.
 

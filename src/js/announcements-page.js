@@ -234,10 +234,32 @@
 
         var body = document.createElement("div");
         body.className = "year-section-body";
-        var yearGrid = document.createElement("div");
-        yearGrid.className = "ann-grid";
-        year.items.forEach(function (item) { yearGrid.appendChild(cardFor(item)); });
-        body.appendChild(yearGrid);
+
+        /*
+          A YEAR WITH NOTHING IN IT SAYS SO.
+
+          The current academic year is always rendered, even empty, so the page
+          does not open on last year's heading. At the start of a year that
+          leaves an open section with nothing in it — a blank panel that reads
+          as a page still loading, or broken.
+
+          The events page and the team page each say a sentence here; this is
+          the third, and it is the only one that has to be said in JavaScript
+          because these cards are built in the browser.
+        */
+        if (!year.items.length) {
+          var note = document.createElement("p");
+          note.className = "lead ann-empty-year";
+          note.textContent = (typeof ANNOUNCEMENTS_UI !== "undefined"
+            && ANNOUNCEMENTS_UI.emptyYear) || "";
+          body.appendChild(note);
+        } else {
+          var yearGrid = document.createElement("div");
+          yearGrid.className = "ann-grid";
+          year.items.forEach(function (item) { yearGrid.appendChild(cardFor(item)); });
+          body.appendChild(yearGrid);
+        }
+
         section.appendChild(body);
 
         grid.appendChild(section);

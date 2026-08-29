@@ -172,6 +172,152 @@ section("5. The events listing groups the same way");
   element is the grid, what each card's parent is, and that no grid ever nests
   inside another.
 */
+/* ------------------------------------------------------------------------- */
+/*
+  THE HOMEPAGE TIMELINE DOES NOT BELONG TO A SEASON.
+
+  It used to read the current academic year's bucket. When Site settings moved
+  to 2026/27 before any 2026/27 event existed, that bucket was empty, so the
+  live homepage showed "This season's events are being planned" while the events
+  page was still full of 2025/26 events. Nothing had been deleted; the homepage
+  was simply asking the wrong question.
+
+  It now reads every year, newest first, capped at five. The current-year
+  setting decides which section opens on the EVENTS page and nothing here.
+*/
+section("9. The homepage timeline spans academic years");
+{
+  const { allEvents } = require(path.join(ROOT, "src/_data/eventListing.js"));
+
+  /** What the homepage renders: eligible, newest first, at most five. */
+  const homepage = (records) =>
+    allEvents(records).filter((e) => e.show_on_homepage === true).slice(0, 5);
+
+  const ev = (slug, year, date, extra) => ({
+    slug, academic_year: year, start_date: date,
+    published: true, show_in_listing: true, show_on_homepage: true, ...(extra || {}),
+  });
+
+  const FIVE = [
+    ev("a", "2025/26", "2026-04-24"), ev("b", "2025/26", "2026-02-10"),
+    ev("c", "2025/26", "2025-12-08"), ev("d", "2025/26", "2025-11-09"),
+    ev("e", "2025/26", "2025-10-16"),
+  ];
+
+  /* 1 + 2. The setting changes; the timeline does not. */
+  const atFive = homepage(FIVE).map((e) => e.slug).join(",");
+  check(atFive === "a,b,c,d,e", "five eligible events render", atFive);
+  check(homepage(FIVE).length === 5,
+    "…and the same five whatever year is current",
+    "the list never consults the setting");
+
+  /*
+    THE REGRESSION, STATED DIRECTLY. allEvents takes no current year, so there
+    is no setting for it to be wrong about. Before, this list came from the
+    current bucket and went empty here.
+  */
+  check(allEvents.length === 1,
+    "the homepage list is not a function of the current year",
+    "allEvents(records) — one argument, no year");
+
+  /* 3. A new year's event goes to the top and pushes the oldest off. */
+  const withF = homepage([...FIVE, ev("f", "2026/27", "2026-10-01")]);
+  check(withF[0].slug === "f", "a newer event from a later year leads", withF[0].slug);
+  check(withF.length === 5, "…and the list is still five", `${withF.length}`);
+  check(!withF.some((e) => e.slug === "e"), "…with the oldest dropped", "e fell off");
+  check(withF.map((e) => e.slug).join(",") === "f,a,b,c,d",
+    "…and the rest shift down in order", withF.map((e) => e.slug).join(","));
+
+  /* 4. More than five across mixed years. */
+  const many = homepage([...FIVE,
+    ev("f", "2026/27", "2026-10-01"), ev("g", "2026/27", "2026-11-01"),
+    ev("h", "2024/25", "2025-01-01")]);
+  check(many.length === 5, "six or more still render exactly five", `${many.length}`);
+  check(many.map((e) => e.slug).join(",") === "g,f,a,b,c",
+    "…newest first across every year", many.map((e) => e.slug).join(","));
+
+  /* 5 + 6. What must never appear. */
+  const hidden = homepage([
+    ev("shown", "2025/26", "2026-01-01"),
+    ev("nothome", "2025/26", "2026-02-01", { show_on_homepage: false }),
+    ev("draft", "2025/26", "2026-03-01", { published: false }),
+    ev("unlisted", "2025/26", "2026-04-01", { show_in_listing: false }),
+  ]);
+  check(hidden.map((e) => e.slug).join(",") === "shown",
+    "show_on_homepage=false, unpublished and unlisted are all excluded",
+    hidden.map((e) => e.slug).join(",") || "(none)");
+
+  /* 7. The empty state means empty everywhere. */
+  check(homepage([]).length === 0, "no events at all yields the empty state", "0");
+  check(homepage([ev("x", "2025/26", "2026-01-01", { show_on_homepage: false })]).length === 0,
+    "…and so does a collection with nothing homepage-eligible", "0");
+
+  /* 9. Deterministic ordering, including the slug tie-break. */
+  const sameDay = homepage([
+    ev("zebra", "2025/26", "2026-01-01"), ev("alpha", "2025/26", "2026-01-01"),
+  ]).map((e) => e.slug).join(",");
+  check(sameDay === "alpha,zebra", "same-day events break the tie by slug", sameDay);
+  const shuffled = homepage([...FIVE].reverse()).map((e) => e.slug).join(",");
+  check(shuffled === atFive, "the order does not depend on how records arrived", shuffled);
+
+  /*
+    AND THE PAGE MUST ACTUALLY ASK FOR IT.
+
+    Everything above tests the helper. The regression was not in a helper: it
+    was the template reading the current year's bucket, so every assertion
+    above would have passed while the live homepage sat empty. This is the
+    one that fails if the template goes back.
+  */
+  {
+    const timeline = fs.readFileSync(
+      path.join(ROOT, "src/_includes/partials/home/event-timeline.njk"), "utf8");
+    const code = timeline.replace(/\{#[\s\S]*?#\}/g, "");
+    check(/eventListing\.all\s*\|\s*homepageEvents/.test(code),
+      "the homepage timeline reads every year", "eventListing.all");
+    check(!/eventListing\.current\.events/.test(code),
+      "…and not the current year's bucket alone",
+      "current.events would empty the band at a changeover");
+  }
+
+  /* 10. The events page is unaffected, and still uncapped. */
+  const groups = groupByAcademicYear([...FIVE, ev("f", "2026/27", "2026-10-01")], "2025/26",
+    { visible: (e) => e.published === true && e.show_in_listing === true });
+  const listed = groups.reduce((n, g) => n + g.records.length, 0);
+  check(listed === 6, "the events page still lists every event, uncapped", `${listed}`);
+  check(groups.length === 2 && groups[0].academicYear === "2026/27",
+    "…still grouped by year, newest first", groups.map((g) => g.academicYear).join(", "));
+  check(groups.find((g) => g.isCurrent).academicYear === "2025/26",
+    "…and the current year is still the one that opens", "2025/26");
+}
+
+/* ------------------------------------------------------------------------- */
+/*
+  8. The CTA is not conditional. Somebody whose event just fell off the bottom
+  of the five is exactly who needs the way through to the full list.
+*/
+section("10. See all events, in both languages");
+{
+  const timeline = fs.readFileSync(
+    path.join(ROOT, "src/_includes/partials/home/event-timeline.njk"), "utf8");
+  const ui = require(path.join(ROOT, "src/_data/ui.json"));
+
+  const body = timeline.replace(/\{#[\s\S]*?#\}/g, "");
+  const ctas = (body.match(/allEventsLabel/g) || []).length;
+  check(ctas >= 1, "the timeline renders the CTA", `${ctas} reference(s)`);
+
+  /* It must sit outside the if/else, so every state gets it. */
+  const elseAt = body.indexOf("{%- else %}");
+  const endifAt = body.lastIndexOf("{%- endif %}");
+  const ctaAt = body.lastIndexOf("allEventsLabel");
+  check(elseAt !== -1 && endifAt !== -1 && ctaAt > endifAt,
+    "…after the empty-state branch closes, so it shows in every state",
+    ctaAt > endifAt ? "outside the branch" : "INSIDE a branch");
+
+  check(Boolean(ui.en.home.allEventsLabel) && Boolean(ui.pl.home.allEventsLabel),
+    "the label exists in both languages",
+    `${ui.en.home.allEventsLabel} / ${ui.pl.home.allEventsLabel}`);
+}
+
 section("7. Announcement cards keep their grid");
 {
   /* Enough DOM for the renderer, and enough to inspect what it built. */
@@ -454,6 +600,131 @@ section("6. The homepage shows at most five events");
 }
 
 /* ------------------------------------------------------------------- report */
+
+/* ------------------------------------------------------------------------- */
+/*
+  A CURRENT YEAR THAT IS STILL EMPTY.
+
+  A new academic year starts before anybody has entered anything for it. That is
+  a normal fortnight in the life of this site, not an edge case — and it is the
+  state the multi-year work exists to make survivable: the new year opens,
+  says it is empty, and last year stays one click away with everything in it.
+
+  Each of these went wrong in exactly the same way at least once: something that
+  should have spanned years was scoped to the current one, and emptied itself
+  the moment the setting moved.
+*/
+section("11. A sparse current year keeps the archive intact");
+{
+  const dist = path.join(ROOT, "dist");
+  const built = fs.existsSync(path.join(dist, "index.html"));
+  if (!built) {
+    check(true, "no production build present to inspect (run npm run build:production)",
+      "skipped");
+  } else {
+    const read = (f) => fs.readFileSync(path.join(dist, f), "utf8");
+    const configured = String((require("js-yaml").load(fs.readFileSync(
+      path.join(ROOT, "content", "settings", "academic-year.yaml"), "utf8")) || {}).current || "");
+    check(/^\d{4}\/\d{2}$/.test(configured),
+      "the build was made with a configured academic year", configured);
+
+    /* -- the homepage does not belong to a year --------------------------- */
+    for (const [label, file] of [["EN", "index.html"], ["PL", "pl/index.html"]]) {
+      const html = read(file);
+      const items = (html.match(/class="tl-item/g) || []).length;
+      check(items > 0 && items <= 5,
+        `${label} homepage shows events regardless of the current year`,
+        `${items} item(s)`);
+      check(!/being planned|przygotowani/.test(html),
+        `${label} homepage is not showing the empty state`, "events present");
+      check((html.match(/btn btn-ghost" href="events\.html"/g) || []).length === 1,
+        `${label} homepage keeps the CTA`, "See all events");
+      const marks = [...html.matchAll(/<span class="watermark" aria-hidden="true">([^<]*)</g)]
+        .map((m) => m[1]);
+      check(!marks.some((m) => /^\d{4}\/\d{2}$/.test(m)),
+        `${label} homepage prints no academic year over a cross-year band`,
+        marks.join(", "));
+    }
+
+    /* -- events: current open and empty, archive intact -------------------- */
+    for (const [label, file] of [["EN", "events.html"], ["PL", "pl/events.html"]]) {
+      const parts = read(file).split(/<details class="event-year/).slice(1);
+      check(parts.length >= 2, `${label} events shows every year as its own section`,
+        `${parts.length} section(s)`);
+      const open = parts.filter((x) => /^[^>]*\bopen\b/.test(x));
+      check(open.length === 1, `${label} events opens exactly one year`, `${open.length}`);
+      check(open[0].includes(configured),
+        `${label} events opens the configured year`, configured);
+      const archived = parts.filter((x) => !/^[^>]*\bopen\b/.test(x));
+      const archivedCards = archived.reduce(
+        (n, x) => n + (x.match(/class="event-card/g) || []).length, 0);
+      check(archivedCards > 0,
+        `${label} events keeps the previous year's events, collapsed`,
+        `${archivedCards} card(s)`);
+      /* Each section still owns its own watermark — unlike the homepage. */
+      const perYear = parts.every(
+        (x) => /<span class="watermark" aria-hidden="true">\d{4}\/\d{2}</.test(x));
+      check(perYear, `${label} every events year keeps its own watermark`, "one each");
+    }
+
+    /* -- team: one clean empty state, archive intact ----------------------- */
+    for (const [label, file] of [["EN", "team.html"], ["PL", "pl/team.html"]]) {
+      const html = read(file);
+      const parts = html.split(/<details class="year-section/).slice(1);
+      const open = parts.filter((x) => /^[^>]*\bopen\b/.test(x));
+      check(open.length === 1, `${label} team opens exactly one year`, `${open.length}`);
+      const openBody = open[0] || "";
+      check((openBody.match(/class="team-section"/g) || []).length === 0,
+        `${label} the empty year renders no group headings`, "no '0 people' clutter");
+      check((openBody.match(/class="filter-bar/g) || []).length === 0,
+        `${label} …and no filter bar with nothing to filter`, "omitted");
+      check(/not been announced|nie został jeszcze/.test(openBody),
+        `${label} …but one sentence saying so`, "empty-state line");
+      const people = (html.match(/<h3/g) || []).length;
+      check(people > 0, `${label} every previous member is still on the page`,
+        `${people} people`);
+    }
+
+    /* -- announcements: the payload the browser renders from --------------- */
+    for (const [label, file] of [["EN", "js/announcements-data-en.js"],
+      ["PL", "js/announcements-data-pl.js"]]) {
+      const src = read(file);
+      const flat = JSON.parse((src.match(/const ANNOUNCEMENTS = (\[[\s\S]*?\n\]);/) || [])[1]);
+      const years = JSON.parse((src.match(/ANNOUNCEMENT_YEARS\s*=\s*(\[[\s\S]*?\n\]);/) || [])[1]);
+
+      /*
+        THE ONE THAT BROKE. The flat list is the page's fallback and what the
+        comparison scripts read; scoped to the current year it went empty while
+        28 announcements sat in the archive.
+      */
+      check(flat.length > 0,
+        `${label} the flat announcement list is not empty in a sparse year`,
+        `${flat.length} item(s)`);
+      check(flat.length === years.reduce((n, y) => n + y.items.length, 0),
+        `${label} …and it is exactly every year's items`, `${flat.length}`);
+      const current = years.filter((y) => y.isCurrent);
+      check(current.length === 1 && current[0].academicYear === configured,
+        `${label} exactly the configured year is marked current`, configured);
+      const archived = years.filter((y) => !y.isCurrent)
+        .reduce((n, y) => n + y.items.length, 0);
+      check(archived > 0, `${label} the archive still carries its announcements`,
+        `${archived} item(s)`);
+      const ids = flat.map((a) => a.slug || a.id);
+      check(new Set(ids).size === ids.length,
+        `${label} no announcement appears twice`, "unique");
+    }
+
+    /* The renderer says something when the open year is empty. */
+    const renderer = fs.readFileSync(
+      path.join(ROOT, "src", "js", "announcements-page.js"), "utf8");
+    check(/if \(!year\.items\.length\)/.test(renderer),
+      "an empty announcement year renders a message rather than blank space",
+      "ann-empty-year");
+    const ui = require(path.join(ROOT, "src", "_data", "ui.json"));
+    check(Boolean(ui.en.announcements.emptyYear) && Boolean(ui.pl.announcements.emptyYear),
+      "…in both languages", "EN + PL");
+  }
+}
 
 console.log("\n" + "=".repeat(70));
 console.log(problems.length === 0

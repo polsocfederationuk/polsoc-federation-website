@@ -16,8 +16,28 @@
 
 "use strict";
 
-/** Roughly the largest photograph the existing site actually carries. */
-const MAX_BYTES = 8 * 1024 * 1024;
+/**
+ * The largest upload that can actually REACH this function.
+ *
+ * It was 8 MB, which no request could ever deliver. Decap sends an upload
+ * base64-encoded inside the persistEntry JSON, and base64 is 4/3 the size — so
+ * 8 MB of photograph became 10.67 MB on the wire, against a 6 MB platform limit
+ * for a synchronous function request. The request died at the network layer,
+ * the browser reported "TypeError: Failed to fetch", and the friendly message
+ * below could never fire because nothing arrived to run it.
+ *
+ * 4 MB encodes to 5.33 MB, which fits with room for the record itself. It is
+ * also about twelve times the largest photograph the site actually carries
+ * (322 KB), so it constrains nobody in practice.
+ *
+ * Decap is told the same number (max_file_size in src/_data/cmsConfig.js) so an
+ * oversized file is refused at selection, and src/admin/session.js checks the
+ * whole request, because several images can travel in one Publish.
+ */
+const MAX_BYTES = 4 * 1024 * 1024;
+
+/** What base64 does to a payload: four bytes out for every three in. */
+const BASE64_RATIO = 4 / 3;
 
 /**
  * Signatures, checked against the first bytes of the file.
@@ -96,4 +116,4 @@ function check(name, bytes) {
   return { ok: true, filename: `${safeStem}.${ext === "jpeg" ? "jpg" : ext}`, mime: type.mime };
 }
 
-module.exports = { check, MAX_BYTES, TYPES };
+module.exports = { check, MAX_BYTES, BASE64_RATIO, TYPES };

@@ -747,6 +747,130 @@ console.log("=".repeat(78));
       "…and the token is returned to the caller only", "not logged");
   }
 
+  /* -- what a request may carry --------------------------------------------- */
+
+  /*
+    A LIMIT NOTHING COULD EVER REACH.
+
+    media.js refused an upload over 8 MB with a sentence written for an editor.
+    It could never say it: Decap base64-encodes an upload into the persistEntry
+    JSON, 8 MB becomes 10.67 MB on the wire, and a synchronous function receives
+    at most 6 MB. The request died in the network stack, the browser said
+    "TypeError: Failed to fetch", and the friendly message never ran because
+    nothing arrived to run it.
+
+    The three limits now agree and all sit under what the platform accepts.
+  */
+  section("1g. Uploads that can actually be delivered");
+  {
+    const media = require(path.join(__dirname, "..", "netlify", "lib", "media.js"));
+    const built = require("../src/_data/cmsConfig.js").buildConfig();
+
+    const PLATFORM_LIMIT = 6 * 1024 * 1024;   // a synchronous function request
+    const onWire = media.MAX_BYTES * media.BASE64_RATIO;
+
+    check(media.BASE64_RATIO === 4 / 3,
+      "base64 is four bytes out for every three in", `${media.BASE64_RATIO}`);
+    check(onWire < PLATFORM_LIMIT,
+      "the server's own limit is one a request can actually deliver",
+      `${(media.MAX_BYTES / 1024 / 1024).toFixed(0)} MB raw -> ` +
+      `${(onWire / 1024 / 1024).toFixed(2)} MB encoded, under ` +
+      `${PLATFORM_LIMIT / 1024 / 1024} MB`);
+
+    /*
+      THE ASSERTION THAT WOULD HAVE CAUGHT IT. The old 8 MB encoded to 10.67 MB
+      and was therefore unreachable — the check above fails for it.
+    */
+    check(8 * 1024 * 1024 * media.BASE64_RATIO > PLATFORM_LIMIT,
+      "…and the limit it replaced was not",
+      "8 MB raw encoded to 10.67 MB, which no request could deliver");
+
+    check(built.max_file_size === media.MAX_BYTES,
+      "Decap refuses the same size at selection, before anything is sent",
+      `${built.max_file_size} === ${media.MAX_BYTES}`);
+
+    /* The whole request is checked too: several images travel together. */
+    const gate = require("fs").readFileSync(
+      path.join(__dirname, "..", "src", "admin", "session.js"), "utf8");
+    check(/MAX_REQUEST_BYTES/.test(gate),
+      "the browser checks the size of the whole request", "session.js");
+    const declared = /MAX_REQUEST_BYTES = (\d+) \* 1024 \* 1024/.exec(gate);
+    check(declared && Number(declared[1]) * 1024 * 1024 < PLATFORM_LIMIT,
+      "…against a total that is also under the platform limit",
+      declared ? `${declared[1]} MB` : "not found");
+    check(/Promise\.reject\(tooLarge\(/.test(gate),
+      "…and refuses it before it is sent, with a sentence naming the problem",
+      "no bare network failure");
+    /*
+      Asserted positively: the message an editor sees names the size and says
+      what to do. Searching for the absence of "Failed to fetch" would only
+      find the comment that explains what this prevents.
+    */
+    check(/too large to save in one go/.test(gate),
+      "…and the message says what happened, in words",
+      "names the size and the way forward");
+  }
+
+  /* -- a date inside a borrowed registration --------------------------------- */
+
+  /*
+    THE SAME js-yaml DEFECT, ONE LAYER OUT.
+
+    An announcement may take its registration from an event. Those dates are
+    read by eleventy.config.js's own event cache — the one place that loads
+    event YAML without going through records.js — and it did not canonicalise.
+    A CMS-written event writes `opens_on: 2026-02-01` unquoted, so the
+    announcement card would have rendered
+    "Sun Feb 01 2026 01:00:00 GMT+0100 (Central European Standard Time)".
+  */
+  section("1h. Dates borrowed from an event");
+  {
+    const yamlLib = require("js-yaml");
+    const { normaliseDatesDeep } = require(
+      path.join(__dirname, "..", "src", "_data", "dateOnly.js"));
+    const { effectiveRegistration } = require(
+      path.join(__dirname, "..", "src", "_data", "registration.js"));
+
+    const eventYaml = `slug: spring-ball
+event_family: standard
+academic_year: 2026/27
+published: true
+start_date: 2026-05-04
+registration:
+  state: open
+  url: "https://forms.gle/abc123"
+  opens_on: 2026-02-01
+  closes_on: 2026-04-01
+`;
+
+    /* Uncanonicalised, exactly as the cache used to hold it. */
+    const bare = yamlLib.load(eventYaml);
+    check(bare.registration.opens_on instanceof Date,
+      "an unquoted date in an event really does parse as a Date",
+      "that is the defect");
+
+    /* As the cache holds it now. */
+    const cached = normaliseDatesDeep(yamlLib.load(eventYaml));
+    check(cached.registration.opens_on === "2026-02-01",
+      "the event cache hands on a calendar day", cached.registration.opens_on);
+    check(cached.start_date === "2026-05-04",
+      "…including the top-level date", cached.start_date);
+
+    const borrowed = effectiveRegistration(
+      { registration: { source: "event", event_slug: "spring-ball" } }, () => cached);
+    check(borrowed.opensOn === "2026-02-01",
+      "an announcement borrowing that registration shows a date, not a timestamp",
+      borrowed.opensOn);
+    check(!/GMT|\bJan\b|\bFeb\b/.test(String(borrowed.opensOn)),
+      "…with nothing of the machine's timezone in it", String(borrowed.opensOn));
+
+    /* And the build actually applies it. */
+    const config = require("fs").readFileSync(
+      path.join(__dirname, "..", "eleventy.config.js"), "utf8");
+    check(/normaliseDatesDeep\(\s*\n?\s*yaml\.load/.test(config),
+      "the event cache canonicalises as it loads", "eleventy.config.js");
+  }
+
   /* -- the browser sign-in gate -------------------------------------------- */
 
   /*
@@ -1137,8 +1261,22 @@ console.log("=".repeat(78));
         refused.length ? refused.slice(0, 2).join(" | ") : `${considered} records`);
     }
 
-    check(rules.currentAcademicYear() === "2025/26",
-      "the rules read the real current academic year", rules.currentAcademicYear());
+    /*
+      THE SETTING, NOT A YEAR.
+
+      This used to compare against the literal "2025/26", which made a normal
+      academic-year rollover fail the build — the one event the multi-year work
+      exists to support. What matters is that the rules read the central
+      setting rather than a copy of their own, so that is what is asserted.
+    */
+    const configured = String((require("js-yaml").load(require("fs").readFileSync(
+      path.join(__dirname, "..", "content", "settings", "academic-year.yaml"),
+      "utf8")) || {}).current || "");
+    check(rules.currentAcademicYear() === configured,
+      "the rules read the current academic year from Site settings",
+      `rules say ${rules.currentAcademicYear()}, settings say ${configured}`);
+    check(/^\d{4}\/\d{2}$/.test(configured),
+      "…and it is a well-formed academic year", configured);
   }
 
   /* -- request integrity --------------------------------------------------- */

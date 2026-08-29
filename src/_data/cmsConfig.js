@@ -2092,6 +2092,20 @@ function buildConfig() {
 
     // Where the built-in media library uploads by default. The Team photograph
     // field overrides both of these so headshots stay in assets/team/.
+    /*
+      THE LARGEST FILE AN EDITOR CAN CHOOSE.
+
+      Decap checks this when the file is picked and says so plainly, which is
+      the only moment an editor can still do something about it. Without it the
+      first sign of trouble was "TypeError: Failed to fetch" after Publish —
+      Decap base64-encodes an upload into the persistEntry request, and 4/3 of a
+      large photograph exceeds what a synchronous function may receive.
+
+      Kept in step with netlify/lib/media.js, which refuses the same size on the
+      server for anything that gets past the browser.
+    */
+    max_file_size: 4 * 1024 * 1024,
+
     media_folder: "assets",
     public_folder: "/assets",
 

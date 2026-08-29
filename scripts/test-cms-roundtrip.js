@@ -375,15 +375,32 @@ section("5. The site's own data layer accepts Decap's output");
   check(ok, "every round-tripped record still satisfies what the team template reads",
     problems.slice(0, 5).join("; "));
 
-  // The filters compare academic_year with ===, so a type change would silently
-  // empty the page rather than error.
+  /*
+    THE TYPE, NOT THE YEAR.
+
+    The team filters compare academic_year with ===, so a round trip that turned
+    "2025/26" into anything else — a Date, a number, a differently-quoted string
+    — would empty the page silently rather than error. That is what this guards.
+
+    It used to compare every record against the CURRENT year instead, which held
+    only while every record happened to belong to it. The moment Site settings
+    moved to 2026/27 — an ordinary rollover, and the thing the multi-year work
+    exists to support — 21 perfectly good records failed a test about types.
+
+    Each record is now compared with its own original value, which is the
+    invariant that was always meant, and which no rollover can break.
+  */
+  const originalYears = teamFiles.map((f) =>
+    jsyaml.load(readText(`${TEAM_DIR}/${f}`)).academic_year);
   const years = teamFiles.map((f) =>
     jsyaml.load(decapSave(decapLoad(readText(`${TEAM_DIR}/${f}`)), ORDER)).academic_year);
-  const current = jsyaml.load(readText("content/settings/academic-year.yaml")).current;
-  const matching = years.filter((y) => y === current).length;
-  check(matching === teamFiles.length,
-    `all ${teamFiles.length} round-tripped records still match the current year by strict equality`,
-    `${matching}/${teamFiles.length} matched ${JSON.stringify(current)}`);
+  const preserved = years.filter(
+    (y, i) => typeof y === "string" && y === originalYears[i]).length;
+  check(preserved === teamFiles.length,
+    `all ${teamFiles.length} round-tripped records keep academic_year identical, by strict equality`,
+    preserved === teamFiles.length
+      ? `${new Set(originalYears).size} distinct year(s), every one unchanged`
+      : `${teamFiles.length - preserved} record(s) changed type or value`);
 }
 
 /* ===========================================================================

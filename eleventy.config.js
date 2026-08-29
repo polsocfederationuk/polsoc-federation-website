@@ -18,6 +18,7 @@
 const fs = require("fs");
 const path = require("path");
 const yaml = require("js-yaml");
+const { normaliseDatesDeep } = require("./src/_data/dateOnly.js");
 const MarkdownIt = require("markdown-it");
 const registrationModel = require("./src/_data/registration.js");
 const { groupByAcademicYear } = require("./src/_data/academicYearGroups.js");
@@ -737,7 +738,22 @@ module.exports = function (eleventyConfig) {
       if (fs.existsSync(dir)) {
         for (const file of fs.readdirSync(dir)) {
           if (!/\.ya?ml$/i.test(file)) continue;
-          const data = yaml.load(fs.readFileSync(path.join(dir, file), "utf8")) || {};
+          /*
+            CANONICALISED, LIKE EVERY OTHER READ OF A RECORD.
+
+            This is the one place that loads event YAML without going through
+            src/_data/records.js, and it was the one place that skipped
+            normalisation. An announcement that borrows an event's registration
+            reads its dates from here, so a CMS-written event — which writes
+            `opens_on: 2026-02-01` unquoted — put a Date into the announcement
+            payload and the card rendered
+            "Sun Feb 01 2026 01:00:00 GMT+0100 (Central European Standard Time)".
+
+            Deep, because the dates that reach an announcement this way are
+            inside the registration block rather than at the top level.
+          */
+          const data = normaliseDatesDeep(
+            yaml.load(fs.readFileSync(path.join(dir, file), "utf8")) || {});
           if (data.slug) eventCache.set(String(data.slug), data);
         }
       }
@@ -757,6 +773,23 @@ module.exports = function (eleventyConfig) {
     itself is untouched, which also leaves scripts/validate.js and
     scripts/compare-announcements.js reading exactly what they always did.
   */
+  /**
+   * Every visible announcement for a locale, newest first, across all years.
+   *
+   * The flat list is described as "the ordered array for this page's locale",
+   * and it is what the page falls back to when the year data is missing and
+   * what the comparison and validation scripts read. It was built from the
+   * CURRENT academic year alone, so the moment Site settings moved to a year
+   * with nothing in it yet, the array went empty: a fallback that would have
+   * rendered nothing, and scripts that saw no announcements at all while 28
+   * were sitting in the archive.
+   *
+   * Ordering is inherited from announcementsFor, applied once across the whole
+   * set rather than within a year.
+   */
+  eleventyConfig.addFilter("announcementsAcrossYears", (records, localeCode) =>
+    eleventyConfig.getFilter("announcementsFor")(records, localeCode, undefined, true));
+
   eleventyConfig.addFilter("announcementYears", (records, localeCode, currentYear) => {
     const published = (records || []).filter((a) => a && a.published === true);
     const groups = groupByAcademicYear(published, currentYear, {});
@@ -769,9 +802,15 @@ module.exports = function (eleventyConfig) {
     }));
   });
 
-  eleventyConfig.addFilter("announcementsFor", (records, localeCode, academicYear) =>
+  /*
+    `everyYear` selects the whole visible set instead of one year. The ordering
+    and the projection below are identical either way, so the flat list and a
+    year's list can never describe the same announcement differently.
+  */
+  eleventyConfig.addFilter("announcementsFor", (records, localeCode, academicYear, everyYear) =>
     (records || [])
-      .filter((a) => a.published === true && a.academic_year === academicYear)
+      .filter((a) => a.published === true
+        && (everyYear === true || a.academic_year === academicYear))
       .sort((a, b) => {
         if (a.order !== b.order) return a.order - b.order;
         return String(a.slug) < String(b.slug) ? -1 : 1;

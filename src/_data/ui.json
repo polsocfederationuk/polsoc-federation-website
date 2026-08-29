@@ -50,7 +50,8 @@
       "registerLabel": "Register",
       "registrationComingSoon": "Registration opening soon",
       "registrationOpensOn": "Sign-ups open {date}",
-      "registrationClosesOn": "Sign-ups close {date}"
+      "registrationClosesOn": "Sign-ups close {date}",
+      "emptyYear": "Nothing has been posted for this academic year yet — the first announcements will appear here soon."
     },
     "members": {
       "emailLabel": "Email",
@@ -146,7 +147,8 @@
       "registerLabel": "Zarejestruj się",
       "registrationComingSoon": "Zapisy wkrótce",
       "registrationOpensOn": "Zapisy otwierają się {date}",
-      "registrationClosesOn": "Zapisy kończą się {date}"
+      "registrationClosesOn": "Zapisy kończą się {date}",
+      "emptyYear": "W tym roku akademickim nie ma jeszcze żadnych wpisów — pierwsze ogłoszenia pojawią się tutaj wkrótce."
     },
     "_membersComment": "Transcribed verbatim from the live pl/members.html. Unlike the team page (see the aria note above), the Polish society cards were already correctly localised — both the visible labels and the aria-labels.",
     "members": {

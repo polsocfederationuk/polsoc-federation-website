@@ -16,7 +16,10 @@ permalink: "js/announcements-data-{{ locale.code }}.js"
 
 eleventyExcludeFromCollections: true
 ---
-{%- set items = records.announcements | announcementsFor(locale.code, records.settings.academicYear.current) -%}
+{#- Every visible announcement, newest first, whatever year it belongs to.
+    Scoped to the current year this went empty at a changeover, taking the
+    fallback renderer and the validation scripts with it. -#}
+{%- set items = records.announcements | announcementsAcrossYears(locale.code) -%}
 {%- set years = records.announcements | announcementYears(locale.code, records.settings.academicYear.current) -%}
 /* ===========================================================================
    GENERATED FILE — DO NOT EDIT.
@@ -34,8 +37,9 @@ eleventyExcludeFromCollections: true
    =========================================================================== */
 
 /*
-  ANNOUNCEMENTS is the CURRENT year, unchanged, and is what everything that
-  already read this file still sees.
+  ANNOUNCEMENTS is every visible announcement, newest first, whatever academic
+  year it belongs to — which is what everything that already read this file
+  expects of it.
 
   ANNOUNCEMENT_YEARS is every year the records cover, newest first, each marked
   with whether it is the configured current one. The page renders from this; the

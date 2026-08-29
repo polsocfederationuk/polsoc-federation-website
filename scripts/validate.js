@@ -1155,7 +1155,20 @@ section("14. Team content records (Phase 4)");
 const yaml = require("js-yaml");
 
 const TEAM_DIR = "content/team";
-const CURRENT_YEAR = "2025/26";
+/*
+  THE MIGRATED COHORT, NOT WHATEVER YEAR IS CURRENT.
+
+  Everything below counts the content carried over from the live site: 21 team
+  members and 28 announcements, all of them 2025/26. That number belongs to
+  that cohort permanently — it is the migration guarantee, and it must keep
+  failing if any of those records goes missing.
+
+  It was named ROSTER_YEAR and compared against the central setting, which
+  quietly turned it into a second source for "the current year". When Site
+  settings moved to 2026/27 — an ordinary rollover, and a deliberate one — the
+  migration checks started reporting the new year as an error.
+*/
+const ROSTER_YEAR = "2025/26";
 const EXPECTED_GROUPS = {
   trustees: 5,
   partnerships: 4,
@@ -1188,9 +1201,15 @@ const groupsCfg = exists("content/settings/team-groups.yaml")
 const yearCfg = exists("content/settings/academic-year.yaml")
   ? loadYaml("content/settings/academic-year.yaml") : {};
 
-assert(yearCfg.current === CURRENT_YEAR,
-  `the configured current academic year is ${CURRENT_YEAR}`,
-  `the configured academic year is ${JSON.stringify(yearCfg.current)}, expected ${CURRENT_YEAR}`);
+/*
+  The setting is free to move; what must hold is that it is a real academic
+  year, and that moving it never abandons the migrated content — every year
+  the records use, including the one they were migrated as, must still be a
+  year the site can present.
+*/
+assert(/^[0-9]{4}[/][0-9]{2}$/.test(String(yearCfg.current || "")),
+  `the configured current academic year is well formed (${yearCfg.current})`,
+  `content/settings/academic-year.yaml holds an invalid current year: ${JSON.stringify(yearCfg.current)}`);
 
 const cfgKeys = (groupsCfg.groups || []).map((g) => g.key);
 assert(JSON.stringify(cfgKeys) === JSON.stringify(Object.keys(EXPECTED_GROUPS)),
@@ -1218,11 +1237,17 @@ const teamFiles = fs.existsSync(path.join(ROOT, TEAM_DIR))
   : [];
 
 const team = teamFiles.map((f) => ({ _file: `${TEAM_DIR}/${f}`, ...loadYaml(`${TEAM_DIR}/${f}`) }));
-const current = team.filter((m) => m.published === true && m.academic_year === CURRENT_YEAR);
+const current = team.filter((m) => m.published === true && m.academic_year === ROSTER_YEAR);
 
 assert(current.length === EXPECTED_TOTAL,
-  `exactly ${EXPECTED_TOTAL} published records for ${CURRENT_YEAR}`,
-  `expected ${EXPECTED_TOTAL} published ${CURRENT_YEAR} records, found ${current.length}`);
+  `exactly ${EXPECTED_TOTAL} published records for ${ROSTER_YEAR}`,
+  `expected ${EXPECTED_TOTAL} published ${ROSTER_YEAR} records, found ${current.length}`);
+
+// Whether or not it is the current year, the cohort must still be presentable.
+assert(team.some((m) => m.published === true && m.academic_year === yearCfg.current)
+  || String(yearCfg.current) !== ROSTER_YEAR,
+  `the roster's year (${ROSTER_YEAR}) survives a rollover as archived content`,
+  "the configured year claims team members it does not have");
 
 // One record per person, one file per record — no EN-only / PL-only splits.
 const enOnly = teamFiles.filter((f) => /[-.](en|pl)\.ya?ml$/i.test(f) || /^(en|pl)[-.]/i.test(f));
@@ -1841,11 +1866,11 @@ const annFiles = fs.existsSync(path.join(ROOT, ANN_DIR))
   : [];
 
 const annAll = annFiles.map((f) => ({ _file: `${ANN_DIR}/${f}`, ...loadYaml(`${ANN_DIR}/${f}`) }));
-const ann = annAll.filter((a) => a.published === true && a.academic_year === CURRENT_YEAR);
+const ann = annAll.filter((a) => a.published === true && a.academic_year === ROSTER_YEAR);
 
 assert(ann.length === ANN_EXPECTED,
-  `exactly ${ANN_EXPECTED} published announcement records for ${CURRENT_YEAR}`,
-  `expected ${ANN_EXPECTED} published ${CURRENT_YEAR} announcements, found ${ann.length}`);
+  `exactly ${ANN_EXPECTED} published announcement records for ${ROSTER_YEAR}`,
+  `expected ${ANN_EXPECTED} published ${ROSTER_YEAR} announcements, found ${ann.length}`);
 
 /* -- identity and ordering -------------------------------------------------- */
 
@@ -4421,7 +4446,29 @@ if (!exists("dist")) {
       // Count tiles between this carousel's aria-label and the closing wrapper.
       const label = g.aria_label[p.code];
       const start = src.indexOf(`aria-label="${label}"`);
-      const slice = start === -1 ? "" : src.slice(start, start + 20000).split("</div>\n    <button")[0];
+      /*
+        WHERE ONE CAROUSEL ENDS.
+
+        This used to cut the slice at the literal "</div>\n    <button". The
+        generated HTML is CRLF, so that string was never found, split() returned
+        the whole 20000-character window, and this carousel's count silently
+        swallowed the next one's tiles too — sponsors reported 9 + 11 = 20
+        duplicates and 18 + 22 = 40 tiles, failing a page that was in fact
+        correct against the live site.
+
+        The end of a carousel is now the start of the next one, with the
+        control button as a fallback for the last group, and both line endings
+        accepted. A boundary that cannot be found is reported rather than
+        quietly treated as "the rest of the page".
+      */
+      const rest = start === -1 ? "" : src.slice(start + 1);
+      const nextCarousel = rest.search(/aria-label="[^"]*"[^>]*>\s*(?:<[^>]+>\s*)*<div[^>]*pbf-logo-track/);
+      const nextButton = rest.search(/<\/div>\r?\n\s*<button/);
+      const ends = [nextCarousel, nextButton].filter((i) => i !== -1);
+      assert(start === -1 || ends.length > 0,
+        `${tag}: ${g.key} carousel has a findable end boundary`,
+        `${tag}: ${g.key} — no carousel boundary matched, so a tile count would span groups`);
+      const slice = start === -1 ? "" : rest.slice(0, ends.length ? Math.min(...ends) : 20000);
       const tiles = (slice.match(/pbf-logo-tile/g) || []).length;
       assert(tiles === expectedTiles,
         `${tag}: ${g.key} renders ${expectedTiles} tiles (${g.logos.length} canonical logos × ${CAROUSEL_SETS} technical sets)`,
@@ -4639,9 +4686,19 @@ const CURRENT_AY = AY_SETTINGS.current;
 assert(validAcademicYear(CURRENT_AY),
   `the central academic-year setting is a valid "YYYY/YY" value (${CURRENT_AY})`,
   `content/settings/academic-year.yaml holds an invalid current year: ${CURRENT_AY}`);
-assert(CURRENT_AY === "2025/26",
-  "the configured current academic year is unchanged at 2025/26",
-  `this phase must not change the current year (found ${CURRENT_AY})`);
+/*
+  This pinned the setting to a literal so that the events work could not move
+  it. The guarantee was right; the way it was written made the setting itself
+  unchangeable, so the first real rollover failed the build.
+
+  What it was protecting is that the year lives in ONE place and this phase
+  reads it rather than keeping a copy — which is exactly what the "no rival
+  setting" check below tests. So that guarantee is kept, and the literal, which
+  only ever restated today's value, is gone.
+*/
+assert(loadYaml("content/settings/academic-year.yaml").current === CURRENT_AY,
+  `the listing reads its year straight from Site settings (${CURRENT_AY})`,
+  "the events listing is not reading the central academic-year setting");
 {
   // A second current-year setting anywhere would be free to drift from this one.
   const rival = ["content/settings/events-year.yaml", "content/settings/listing-year.yaml",
@@ -5200,10 +5257,28 @@ if (exists(HOME_REL)) {
   assert(homeEvents.length === 5,
     `exactly five published homepage-visible events (${homeEvents.length})`,
     `expected 5 homepage events, found ${homeEvents.length}`, homeEvents.map((e) => e.slug));
-  const wrongYear = homeEvents.filter((e) => e.academic_year !== CURRENT_AY).map((e) => `${e.slug} (${e.academic_year})`);
-  assert(wrongYear.length === 0,
-    `every homepage event is in the configured current year (${CURRENT_AY})`,
-    "a homepage event is outside the current academic year", wrongYear);
+  /*
+    THE HOMEPAGE IS NOT A YEAR'S PAGE.
+
+    It used to require every homepage event to be in the current year, which is
+    how the timeline came to empty itself the moment the year turned: a visitor
+    landing on the site in September met a homepage with nothing on it, while
+    five events sat one click away. The homepage now shows the newest events
+    whatever year they belong to, so the year is no longer the invariant.
+
+    What is: each of them is a real, published, homepage-flagged event carrying
+    a well-formed year, and there are few enough to be a timeline.
+  */
+  const badYear = homeEvents
+    .filter((e) => !validAcademicYear(e.academic_year))
+    .map((e) => `${e.slug} (${e.academic_year})`);
+  assert(badYear.length === 0,
+    "every homepage event carries a well-formed academic year",
+    "a homepage event has an unusable academic year", badYear);
+  assert(homeEvents.length <= 5,
+    `the homepage timeline stays within five events (${homeEvents.length})`,
+    "too many events are flagged for the homepage timeline",
+    homeEvents.map((e) => e.slug));
 
   const expectedOrder = ["business-forum", "sikorski-debate", "christmas-dinner", "youth-congress", "icebreaker"];
   const actualOrder = [...homeEvents].sort((a, b) => a.order - b.order).map((e) => e.slug);

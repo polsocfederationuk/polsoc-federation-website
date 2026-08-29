@@ -31,7 +31,6 @@ permalink: "{{ locale.urlPrefix }}index.html"
 {%- set t = ui[locale.code] -%}
 {%- set home = records.pages.home -%}
 {%- set c = home[locale.code] -%}
-{%- set seasonShort = eventListing.current.academicYear -%}
 {% include "partials/home/hero.njk" %}
 {% include "partials/home/ticker.njk" %}
 {% include "partials/home/about.njk" %}

@@ -149,6 +149,32 @@ function years(records, currentYear) {
   });
 }
 
+/**
+ * Every listing-visible event, newest first, WHATEVER ACADEMIC YEAR IT IS IN.
+ *
+ * The homepage is not an archive and it is not a season either. It shows the
+ * most recent handful of events the Federation has run, and that question has
+ * nothing to do with which year the site currently considers current.
+ *
+ * It used to read the current year's bucket, which meant the timeline emptied
+ * itself the moment Site settings moved to a year nobody had added events to
+ * yet — the homepage went blank while the events page was still full. Reading
+ * across every year makes the changeover invisible: a new year's events appear
+ * at the top as they are added and push the oldest off the end, one at a time.
+ *
+ * Ordering is unchanged and deliberate: `start_date` descending, ties broken by
+ * slug, so the sequence never depends on the order files were read. Sorting
+ * globally rather than year-by-year is what keeps that true across a boundary.
+ */
+function allEvents(records) {
+  return (records || [])
+    .filter((e) => e && e.published === true && e.show_in_listing === true)
+    .sort((a, b) => {
+      const d = String(b.start_date).localeCompare(String(a.start_date));
+      return d || (String(a.slug) < String(b.slug) ? -1 : 1);
+    });
+}
+
 /* ------------------------------------------------------------------ 11ty data */
 
 const EVENTS_DIR = path.join(__dirname, "..", "..", "content", "events");
@@ -173,10 +199,12 @@ module.exports = () => {
   const records = loadRecords();
   return { ...group(records, settings.current),
     years: years(records, settings.current),
+    all: allEvents(records),
     currentYear: settings.current };
 };
 
 // Exposed for scripts/test-event-listing-groups.js.
 module.exports.group = group;
+module.exports.allEvents = allEvents;
 module.exports.years = years;
 module.exports.parseAcademicYear = parseAcademicYear;
