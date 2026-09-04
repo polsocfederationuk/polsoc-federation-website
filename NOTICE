@@ -1,0 +1,216 @@
+NOTICE
+======
+
+Federation of Polish Student Societies in the UK — website
+Copyright (c) 2026 Federation of Polish Student Societies in the UK
+
+This repository contains BOTH open-source software AND proprietary material.
+The MIT licence in the LICENSE file applies to the SOURCE CODE ONLY. It does
+NOT apply to the images, logos, photographs or editorial text described below.
+Those remain the exclusive property of their respective owners, ALL RIGHTS
+RESERVED, and no licence to use them is granted by this repository, by the MIT
+licence, or by the fact that the repository is publicly readable.
+
+Publishing this source code does not place any logo, photograph or piece of
+site copy into the public domain and does not make it free to use.
+
+
+1. WHAT THE MIT LICENCE COVERS
+------------------------------
+
+The MIT licence covers the software in this repository, namely:
+
+  * the Eleventy configuration and build pipeline (eleventy.config.js)
+  * the Nunjucks templates, layouts and partials (src/, including
+    src/_includes/ and src/admin/)
+  * the JavaScript in js/ and src/js/, and the data and configuration modules
+    in src/_data/ (including the CMS configuration src/_data/cmsConfig.js)
+  * the stylesheets in css/
+  * the Netlify configuration and Netlify Functions (netlify.toml,
+    netlify/functions/cms.mjs, netlify/functions/bulk.mjs)
+  * the build, validation and test scripts in scripts/
+  * the hand-written HTML page shells at the repository root and in pl/
+  * the technical documentation in docs/
+
+You may reuse, modify and redistribute that code under the MIT terms. If you
+do, you must remove or replace the excluded material listed in section 2 with
+material of your own.
+
+
+2. WHAT THE MIT LICENCE DOES NOT COVER
+--------------------------------------
+
+The following are EXCLUDED from the MIT licence and are ALL RIGHTS RESERVED.
+
+2.1 Every image file in this repository
+
+  Without exception, every file under assets/ (143 files) and the root
+  favicon.ico are excluded from the MIT licence. This includes every
+  photograph, every logo, every icon and every brand asset, in all versions
+  and all file formats (.jpg, .png, .webp, .svg, .ico).
+
+2.2 Federation of Polish Student Societies in the UK logo, wordmark and brand
+
+  The Federation logo and wordmark, in ALL versions and formats:
+
+    assets/logo.svg
+    assets/icons/apple-touch-icon.png
+    assets/icons/favicon-16x16.png
+    assets/icons/favicon-32x32.png
+    assets/icons/favicon-48x48.png
+    assets/icons/icon-192.png
+    assets/icons/icon-512.png
+    assets/icons/icon-512-maskable.png
+    assets/social/og-image.png
+    favicon.ico
+
+  These are trade marks and identifying marks of the Federation. They may not
+  be used to identify, endorse or brand any other organisation, project, event
+  or website.
+
+2.3 Photographs, including photographs of identifiable people
+
+  All photographs in this repository are excluded. Many of them show
+  identifiable individuals — committee members, students, speakers, guests and
+  event attendees — who were photographed for the use of the Federation. They
+  are not stock imagery and are not cleared for reuse by third parties. Data
+  protection and personality rights apply in addition to copyright.
+
+    assets/team/            (21 files) headshots of named, identifiable
+                            committee members
+    assets/announcements/   (24 files) event photographs, plus the third-party
+                            organisation logos listed in 2.7
+    assets/pbf/             (18 files) Polish Business Forum brand assets
+                            (2.4) and event photographs
+    assets/yc/              (6 files)  Polish Youth Congress photographs, plus
+                            the partner logos listed in 2.7
+    assets/wigilia/         (6 files)  Christmas dinner photographs
+    assets/debata/          (5 files)  debate photographs
+    assets/home/            (3 files)  homepage photographs
+    assets/photos/          (1 file)   christmas-dinner-group.jpg
+
+2.4 Polish Business Forum (PBF) logo and brand assets
+
+    assets/pbf/pbf-logo-full.jpg
+    assets/pbf/pbf-logo-full.png
+    assets/pbf/pbf-logo-icon.jpg
+    assets/pbf/pbf-logo-nav.png
+    assets/pbf/pbf-logo-nav-navy.png
+    assets/pbf/pbf-logo-nav-white.png
+
+2.5 Member Polish society logos — the property of those societies
+
+  The 30 logos in assets/polsocs/ belong to the individual member Polish
+  societies they represent, NOT to the Federation. The Federation displays
+  them with the permission of those societies, to identify them as members.
+  The Federation cannot and does not license them to anyone else.
+
+    assets/polsocs/aberdeen.jpg      assets/polsocs/lancaster.jpg
+    assets/polsocs/bath.jpg          assets/polsocs/leeds.jpg
+    assets/polsocs/cambridge.jpg     assets/polsocs/leicester.jpg
+    assets/polsocs/cardiff.jpg       assets/polsocs/liverpool.jpg
+    assets/polsocs/city.jpg          assets/polsocs/loughborough.jpg
+    assets/polsocs/durham.jpg        assets/polsocs/lse.jpg
+    assets/polsocs/edinburgh.jpg     assets/polsocs/manchester.jpg
+    assets/polsocs/essex.jpg         assets/polsocs/nottingham.jpg
+    assets/polsocs/exeter.jpg        assets/polsocs/oxford.jpg
+    assets/polsocs/glasgow.jpg       assets/polsocs/queen-mary.jpg
+    assets/polsocs/huddersfield.jpg  assets/polsocs/sheffield.jpg
+    assets/polsocs/imperial.jpg      assets/polsocs/southampton.jpg
+    assets/polsocs/kent.jpg          assets/polsocs/st-andrews.jpg
+    assets/polsocs/kings.jpg         assets/polsocs/ucl.jpg
+                                     assets/polsocs/warwick.jpg
+                                     assets/polsocs/york.jpg
+
+2.6 Press and media organisation logos
+
+  The 11 logos in assets/pbf/media/ are the trade marks of the press and media
+  organisations concerned, and include the Lambert logo:
+
+    assets/pbf/media/british-poles.png
+    assets/pbf/media/business-insider.png
+    assets/pbf/media/comparic.webp
+    assets/pbf/media/focus-on-business.jpg
+    assets/pbf/media/fxmag.webp
+    assets/pbf/media/lambert.webp          (the Lambert logo)
+    assets/pbf/media/mypolska.png
+    assets/pbf/media/pap-biznes.jpg
+    assets/pbf/media/przeglad.webp
+    assets/pbf/media/puls-biznesu.png
+    assets/pbf/media/stockwatch.png
+
+2.7 Sponsor, partner and other third-party logos
+
+  The 9 corporate sponsor logos in assets/pbf/sponsors/ are the trade marks of
+  those companies:
+
+    assets/pbf/sponsors/bank-pekao.png
+    assets/pbf/sponsors/heatpex.jpg
+    assets/pbf/sponsors/lbs.jpg
+    assets/pbf/sponsors/legimi.jpg
+    assets/pbf/sponsors/ntfy.png
+    assets/pbf/sponsors/occ.webp
+    assets/pbf/sponsors/pko-bp.jpg
+    assets/pbf/sponsors/velobank.png
+    assets/pbf/sponsors/wspolnota-polska.png
+
+  Further third-party organisation logos appear outside that directory and are
+  equally excluded:
+
+    assets/yc/embassy-logo.jpg              (Embassy of the Republic of Poland)
+    assets/yc/ognisko-logo.webp             (Ognisko Polskie)
+    assets/announcements/ebrd-logo.png      (EBRD)
+    assets/announcements/cultural-foundation.jpg
+    assets/announcements/fed-of-poles.jpg   (Federation of Poles in Great
+                                             Britain)
+    assets/pbf/senat-polonia-2026.png
+
+2.8 Site text and editorial content
+
+  The editorial content of the website is excluded from the MIT licence:
+
+    content/           all site copy, page text, announcements, event
+                       descriptions, team biographies and society records
+                       (YAML and Markdown)
+    src/_data/ui.json  the translated English and Polish user-interface strings
+
+  The code that renders this content is MIT-licensed; the words themselves are
+  not.
+
+
+3. THIRD-PARTY MARKS
+--------------------
+
+Logos belonging to member societies, sponsors, partners, press outlets and
+other organisations are reproduced in this repository with the permission of
+those organisations, or for the purpose of identifying them as members,
+sponsors, partners, or press coverage of the activities of the Federation.
+Their inclusion does not transfer any rights, does not imply that those
+organisations endorse this software, and does not grant any third party
+permission to use those marks.
+
+
+4. IF YOU ARE A RIGHTS HOLDER
+-----------------------------
+
+If you own rights in any image, logo, photograph or text in this repository
+and you would like it removed, corrected or re-attributed, please contact:
+
+    it@polsocfederation.pl
+
+We will act on such requests promptly.
+
+
+5. IF YOU WANT TO REUSE THIS PROJECT
+------------------------------------
+
+You are welcome to reuse the code. To do so cleanly:
+
+  * delete the contents of assets/ and the root favicon.ico, and replace them
+    with imagery of your own
+  * replace the editorial content under content/ and the strings in
+    src/_data/ui.json with your own
+  * remove the Federation name, logo and wordmark from the templates, and do
+    not present your site as being that of the Federation
+
+Requests for permission to use any excluded material: it@polsocfederation.pl

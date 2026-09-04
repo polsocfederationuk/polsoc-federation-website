@@ -1,8 +1,13 @@
 {
   "name": "polsoc-federation-website",
   "version": "1.0.0",
-  "private": true,
-  "description": "Static bilingual website for the Federation of Polish Student Societies in the UK. The live site is still the hand-written HTML at the repository root; the Eleventy build under src/ + content/ currently generates only architectural proof pages into dist/. See docs/BUILD_ARCHITECTURE.md.",
+  "private": false,
+  "description": "Bilingual (English/Polish) website for the Federation of Polish Student Societies in the UK: Eleventy 3 and Nunjucks templates in src/ render canonical YAML content from content/ into dist/, which Netlify publishes. Content is edited through Decap CMS at /admin/, whose writes are authenticated with Netlify Identity and committed to GitHub server-side by Netlify Functions using a GitHub App, so the browser never receives GitHub credentials; see docs/BUILD_ARCHITECTURE.md and docs/CMS_PRODUCTION.md.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/polsocfederationuk/polsoc-federation-website.git"
+  },
+  "homepage": "https://polsocfederation.pl",
   "scripts": {
     "build": "eleventy",
     "build:identity": "node scripts/build-identity.js",
@@ -48,7 +53,7 @@
   "engines": {
     "node": ">=18"
   },
-  "license": "UNLICENSED",
+  "license": "MIT",
   "devDependencies": {
     "@11ty/eleventy": "^3.1.6",
     "decap-cms": "3.15.1",
