@@ -653,13 +653,21 @@ console.log("=".repeat(78));
     /* -- what actually reaches the log -------------------------------------- */
 
     /** Capture console.error while a refusal happens. */
+    /*
+      The App ID and installation ID below are PLACEHOLDERS, not the real
+      ones. They are identifiers rather than secrets, and the assertion that
+      matters is that whatever we asked with comes back in the log line and
+      nothing else does — which any pair of values proves equally well. Kept
+      out of a public repository as hygiene, so the identifiers of a live
+      GitHub App installation are not published alongside the code.
+    */
     const refusalLog = async (status, body) => {
       const lines = [];
       const realError = console.error;
       console.error = (...args) => lines.push(args.join(" "));
       const repo = new gh.GitHubRepo({
         owner: "polsocfederationuk", repo: "polsoc-federation-website", branch: "main",
-        appId: "4703355", installationId: "156228587", privateKey: pair.privateKey,
+        appId: "1111111", installationId: "222222222", privateKey: pair.privateKey,
       }, async () => new Response(JSON.stringify(body), { status }));
       let thrown = null;
       try { await repo.accessToken(); } catch (err) { thrown = err; }
@@ -681,7 +689,7 @@ console.log("=".repeat(78));
     check(/"status":401/.test(logged), "the log carries the upstream status", "401");
     check(/A JSON web token could not be decoded/.test(logged),
       "…the allow-listed classification", "classified");
-    check(/"appId":"4703355"/.test(logged) && /"installationId":"156228587"/.test(logged),
+    check(/"appId":"1111111"/.test(logged) && /"installationId":"222222222"/.test(logged),
       "…the identifiers we asked with", "appId + installationId");
     check(/polsocfederationuk\/polsoc-federation-website/.test(logged),
       "…and the repository", "owner/repo");
@@ -735,7 +743,7 @@ console.log("=".repeat(78));
     console.error = (...args) => quiet.push(args.join(" "));
     const ok = new gh.GitHubRepo({
       owner: "polsocfederationuk", repo: "polsoc-federation-website", branch: "main",
-      appId: "4703355", installationId: "156228587", privateKey: pair.privateKey,
+      appId: "1111111", installationId: "222222222", privateKey: pair.privateKey,
     }, async () => new Response(JSON.stringify({
       token: "ghs_NOT_A_REAL_TOKEN", expires_at: new Date(Date.now() + 3600e3).toISOString(),
     }), { status: 201 }));
