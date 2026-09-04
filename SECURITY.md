@@ -6,8 +6,9 @@ Please report security problems **privately**, by e-mail, to
 **it@polsocfederation.pl**.
 
 Do not open a public issue, post the details in a pull request, or discuss them
-publicly before we have had a chance to fix them. (GitHub Issues are switched
-off on this repository in any case.)
+publicly before we have had a chance to fix them. GitHub Issues are open on
+this repository for ordinary bug reports, but a security problem must never go
+there.
 
 Please include, as far as you can:
 

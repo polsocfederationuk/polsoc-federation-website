@@ -9,10 +9,11 @@ Everyone taking part is expected to follow our [Code of Conduct](CODE_OF_CONDUCT
 
 ## Reporting a problem
 
-**GitHub Issues are switched off on this repository.** Please e-mail
-**it@polsocfederation.pl** instead. Tell us what happened, what you expected,
-which page you were on and whether you were viewing it in English or Polish,
-and what browser and device you were using.
+Please open a GitHub issue using the bug report template, or e-mail
+**it@polsocfederation.pl** if you would rather not use GitHub. Either way, tell
+us what happened, what you expected, which page you were on and whether you
+were viewing it in English or Polish, and what browser and device you were
+using.
 
 For anything security-related, do **not** e-mail a general report — follow
 [SECURITY.md](SECURITY.md) instead.

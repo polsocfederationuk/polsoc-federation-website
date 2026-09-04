@@ -1,7 +1,7 @@
 {
   "name": "polsoc-federation-website",
   "version": "1.0.0",
-  "private": false,
+  "private": true,
   "description": "Bilingual (English/Polish) website for the Federation of Polish Student Societies in the UK: Eleventy 3 and Nunjucks templates in src/ render canonical YAML content from content/ into dist/, which Netlify publishes. Content is edited through Decap CMS at /admin/, whose writes are authenticated with Netlify Identity and committed to GitHub server-side by Netlify Functions using a GitHub App, so the browser never receives GitHub credentials; see docs/BUILD_ARCHITECTURE.md and docs/CMS_PRODUCTION.md.",
   "repository": {
     "type": "git",

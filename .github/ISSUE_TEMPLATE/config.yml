@@ -2,4 +2,4 @@ blank_issues_enabled: false
 contact_links:
   - name: Contact the Federation IT team by e-mail
     url: mailto:it@polsocfederation.pl
-    about: GitHub Issues are not monitored on this repository. Please e-mail us instead — for bug reports, questions about the site, and content corrections. Security vulnerabilities also go here, privately, never in a public issue.
+    about: Would rather not use GitHub, or have a question rather than a bug? E-mail us — this is also the route for content corrections, which are made in the CMS rather than by pull request. Security vulnerabilities must come here, privately, and never in a public issue.
