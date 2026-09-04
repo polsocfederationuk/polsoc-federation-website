@@ -76,18 +76,25 @@ function compareRegion(label, livePath, genPath, startTag, endTag) {
   }
   const live = normalise(region(read(livePath), startTag, endTag));
   /*
-    THE STAFF LOGIN SPAN (Phase 17D.1), human-approved.
+    THE TWO APPROVED FOOTER SPANS, both human-approved.
 
-    The one intentional public change of that phase is a link in the footer.
-    This region comparison is character-exact, so the span is removed from the
-    generated side and nothing else is relaxed: every other character of the
-    footer must still match the live page byte for byte. The link itself is
-    asserted separately in compareFeatures(), so removing it here cannot hide
-    its disappearance.
+      1. STAFF LOGIN (Phase 17D.1) — the one intentional public change of that
+         phase, a way in to the content manager for committee officers.
+      2. THE NETLIFY ATTRIBUTION (open-source release) — Netlify's open-source
+         policy requires "a link to our service on your main page, or all
+         internal pages", and the shared footer partial is how this site
+         satisfies it on every page in both languages.
+
+    This region comparison is character-exact, so exactly these two spans are
+    removed from the generated side and nothing else is relaxed: every other
+    character of the footer must still match the live page byte for byte. Both
+    links are asserted separately in compareFeatures(), so removing them here
+    cannot hide either one disappearing.
   */
-  const withoutStaffLogin = (html) => html.replace(
-    new RegExp('<span><a class="footer-staff-login"[^>]*>[^<]*</a></span>'), "");
-  const gen = normalise(withoutStaffLogin(region(read(genPath), startTag, endTag)));
+  const withoutApprovedSpans = (html) => html
+    .replace(new RegExp('<span><a class="footer-staff-login"[^>]*>[^<]*</a></span>'), "")
+    .replace(new RegExp('<span><a href="https://www\.netlify\.com"[^>]*>[^<]*</a></span>'), "");
+  const gen = normalise(withoutApprovedSpans(region(read(genPath), startTag, endTag)));
 
   if (!live) return record(false, `${label}: region not found in ${livePath}`);
   if (!gen) return record(false, `${label}: region not found in ${genPath}`);
@@ -168,14 +175,17 @@ function compareFeatures(label, livePath, genPath) {
       .sort();
   };
   /*
-    THE STAFF LOGIN LINK (Phase 17D.1), human-approved. Removed from the
+    THE TWO APPROVED FOOTER LINKS, human-approved: Staff login (Phase 17D.1)
+    and the Netlify attribution (open-source release). Each is removed from the
     generated list so the rest of the footer is still compared exactly, and
-    asserted on its own so it cannot quietly disappear either.
+    each is asserted on its own so neither can quietly disappear. A THIRD new
+    link would still fail the equality check.
   */
   const STAFF_LOGIN = "staff-login/";
+  const NETLIFY = "https://www.netlify.com";
   const c = footLinks(live);
   const all = footLinks(gen);
-  const d = all.filter((href) => !href.endsWith(STAFF_LOGIN));
+  const d = all.filter((href) => !href.endsWith(STAFF_LOGIN) && href !== NETLIFY);
   record(JSON.stringify(c) === JSON.stringify(d),
     `${label}: footer links match`,
     [`live: ${c.join(" ")}`, `gen : ${d.join(" ")}`]);
@@ -184,6 +194,16 @@ function compareFeatures(label, livePath, genPath) {
     [`gen : ${all.join(" ")}`]);
   record(!c.some((href) => href.endsWith(STAFF_LOGIN)),
     `${label}: APPROVED: the live footer did not`, []);
+  /*
+    NETLIFY OPEN SOURCE PLAN, REQUIREMENT (c). The plan the charity's hosting
+    credits depend on requires this link. It is asserted, not merely tolerated,
+    so a future refactor of the footer cannot silently drop it.
+  */
+  record(all.includes(NETLIFY),
+    `${label}: APPROVED: the footer credits Netlify (Open Source Plan requirement)`,
+    [`gen : ${all.join(" ")}`]);
+  record(!c.includes(NETLIFY),
+    `${label}: APPROVED: the live footer did not credit Netlify`, []);
 }
 
 /* --------------------------------------------------------------- run pairs */

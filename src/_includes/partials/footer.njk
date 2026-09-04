@@ -58,6 +58,24 @@
       -#}
       <span><a class="footer-staff-login" href="/staff-login/" rel="nofollow">{{ t.footer.staffLogin }}</a></span>
       <span>polsocfederation.pl</span>
+      {#-
+        NETLIFY ATTRIBUTION (open-source release). Netlify's open-source
+        policy requires "a link to our service on your main page, or all
+        internal pages". This partial is shared, so putting it here satisfies
+        that in its strongest form: every page, in both languages.
+
+        DO NOT DELETE THIS LINK. It is a condition of the Netlify Open Source
+        Plan the charity's hosting credits depend on, not decoration. Its
+        presence is asserted by scripts/compare-chrome.js,
+        scripts/compare-404.js, scripts/compare-homepage.js,
+        scripts/compare-events-listing.js, scripts/compare-business-forum.js
+        and scripts/validate.js, so it cannot be dropped silently.
+
+        Wording is Netlify's own suggested sentence in English and its
+        translation in Polish (ui[locale].footer.poweredBy). target and rel
+        match the social links in the column above.
+      -#}
+      <span><a href="https://www.netlify.com" target="_blank" rel="noopener">{{ t.footer.poweredBy }}</a></span>
     </div>
   </div>
 </footer>

@@ -30,7 +30,9 @@
       "exploreHeading": "Explore",
       "connectHeading": "Connect",
       "copyright": "© 2026 Federation of Polish Student Societies in the UK. Registered charity in England &amp; Wales.",
-      "staffLogin": "Staff login"
+      "staffLogin": "Staff login",
+      "_poweredByComment": "A NEW string, not a reword of a live one - the live pages predate it. The Netlify Open Source Plan requires an attribution link on the main page or on all internal pages, so it is rendered from the shared footer partial. The English wording is Netlify's own suggested sentence and must not be reworded; the Polish is a translation of it.",
+      "poweredBy": "This site is powered by Netlify"
     },
     "team": {
       "filterBarLabel": "Filter team by group",
@@ -125,7 +127,8 @@
       "exploreHeading": "Poznaj",
       "connectHeading": "Śledź nas",
       "copyright": "© 2026 Federacja Polskich Stowarzyszeń Studenckich w Wielkiej Brytanii. Organizacja charytatywna zarejestrowana w Anglii i Walii.",
-      "staffLogin": "Logowanie dla zespołu"
+      "staffLogin": "Logowanie dla zespołu",
+      "poweredBy": "Ta strona działa na Netlify"
     },
     "_teamComment": "The aria patterns below were English until Phase 5 — a real defect that made a Polish screen reader announce every one of the 42 contact links in English. They are now Polish. The colon construction is deliberate: 'do' and 'profil' would otherwise require the genitive ('do Szymona'), which cannot be produced from an uninflected name, so a label:value form is used instead. See docs/TEAM_ACCESSIBILITY_REMEDIATION.md §7.",
     "team": {

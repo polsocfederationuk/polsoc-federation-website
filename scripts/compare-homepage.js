@@ -53,22 +53,33 @@ const labelText = (h) => (text(h) || "").replace(/\s*→\s*$/, "").trim() || nul
 
 
 /*
-  THE STAFF LOGIN LINK (Phase 17D.1), human-approved.
+  THE TWO APPROVED FOOTER LINKS, both human-approved.
 
-  The public footer gained exactly one link, in both languages, pointing at the
-  Staff login page for committee officers. It is the only intentional public
-  change in that phase.
+    1. STAFF LOGIN (Phase 17D.1) — the way in to the content manager for
+       committee officers, and the only intentional public change of that phase.
+    2. THE NETLIFY ATTRIBUTION (open-source release) — Netlify's open-source
+       policy requires "a link to our service on your main page, or all
+       internal pages". The link lives in the shared footer partial, so every
+       page in both languages carries it.
 
-  Handled as an enumerated addition rather than by relaxing the comparison: the
-  generated footer must contain it, the live footer must NOT (the live pages
-  predate it), and everything else about the footer must still match exactly. A
-  second new link, or this one going missing, still fails.
+  Both are handled as ENUMERATED additions rather than by relaxing the
+  comparison: the generated footer must contain each one, the live footer must
+  NOT (the live pages predate both), and everything else about the footer must
+  still match exactly. A THIRD new link, or either of these going missing,
+  still fails.
 */
 const STAFF_LOGIN = "staff-login/";
+const NETLIFY = "https://www.netlify.com";
 
-/** The footer as it should be, ignoring only the one approved addition. */
-function footerWithoutStaffLogin(links) {
-  return links.filter((href) => !String(href).endsWith(STAFF_LOGIN));
+/** The footer as it should be, ignoring only the two approved additions. */
+function footerWithoutApproved(links) {
+  return links.filter((href) =>
+    !String(href).endsWith(STAFF_LOGIN) && String(href) !== NETLIFY);
+}
+
+/** Page-wide external links, ignoring only the approved Netlify attribution. */
+function externalsWithoutApproved(links) {
+  return links.filter((entry) => !String(entry).startsWith(NETLIFY + "|"));
 }
 
 function parse(html) {
@@ -447,11 +458,20 @@ for (const page of PAGES) {
   check(`${tag} navigation items`, L.navItems, G.navItems);
   check(`${tag} active nav item`, L.activeNav, G.activeNav);
   check(`${tag} language switcher destinations`, L.langSwitch, G.langSwitch);
-  check(`${tag} footer links`, L.footerLinks, footerWithoutStaffLogin(G.footerLinks));
+  check(`${tag} footer links`, L.footerLinks, footerWithoutApproved(G.footerLinks));
   check(`${tag} APPROVED: the footer offers Staff login`,
     true, G.footerLinks.some((href) => String(href).endsWith(STAFF_LOGIN)));
   check(`${tag} APPROVED: the live footer did not`,
     false, L.footerLinks.some((href) => String(href).endsWith(STAFF_LOGIN)));
+  /*
+    NETLIFY OPEN SOURCE PLAN, REQUIREMENT (c). Asserted rather than tolerated:
+    the charity's hosting credits depend on this link, so no future refactor of
+    the footer may drop it silently.
+  */
+  check(`${tag} APPROVED: the footer credits Netlify (Open Source Plan requirement)`,
+    true, G.footerLinks.some((href) => String(href) === NETLIFY));
+  check(`${tag} APPROVED: the live footer did not credit Netlify`,
+    false, L.footerLinks.some((href) => String(href) === NETLIFY));
 
   /* ---- section order ---- */
 
@@ -572,7 +592,13 @@ for (const page of PAGES) {
   check(`${tag} no image is missing an alt attribute`, [], G.imagesWithoutAlt);
   check(`${tag} no /pl/assets/ path`, [], G.plAssetPaths);
   check(`${tag} no timeline link is root-relative`, [], G.rootRelativeTimelineLinks);
-  check(`${tag} external links keep their target and rel`, L.externalLinks, G.externalLinks);
+  check(`${tag} external links keep their target and rel`,
+    L.externalLinks, externalsWithoutApproved(G.externalLinks));
+  // …and the one approved addition carries the same target/rel convention as
+  // the social links beside it, so it is not a window.opener regression.
+  check(`${tag} APPROVED: the Netlify link is target=_blank with rel=noopener`,
+    [`${NETLIFY}|target=_blank|rel=noopener`],
+    G.externalLinks.filter((e) => String(e).startsWith(NETLIFY + "|")));
 }
 
 /* ---- cross-locale invariants ---- */

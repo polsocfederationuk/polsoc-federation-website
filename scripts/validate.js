@@ -1118,6 +1118,39 @@ if (!exists("dist")) {
       `required header/nav/footer/asset structures present on both chrome pages (${STRUCT.length} each)`,
       "chrome structure problems", structMissing);
 
+    /*
+      NETLIFY ATTRIBUTION (open-source release), POLICY REQUIREMENT (c).
+
+      Netlify's open-source policy requires "a link to our service on your main
+      page, or all internal pages". The link sits in the shared footer partial,
+      so every page in both languages carries it — and these two chrome pages
+      are the proof that the partial emits it at all.
+
+      The expected sentences are stated HERE, independently of ui.json: a check
+      that read its expectation from ui.json would still pass if ui.json were
+      reworded, and Netlify's own suggested English wording is exactly the thing
+      being protected. The charity's hosting credits depend on this link, so it
+      is asserted rather than merely tolerated by the comparison suites.
+    */
+    const NETLIFY_HREF = 'href="https://www.netlify.com"';
+    const noAttribution = [["en", en], ["pl", pl]]
+      .filter(([, html]) => !html.includes(NETLIFY_HREF)).map(([c]) => c);
+    assert(noAttribution.length === 0,
+      "both chrome pages carry the Netlify attribution link (Open Source Plan requirement)",
+      "a chrome page is missing the Netlify attribution link", noAttribution);
+
+    const ATTRIBUTION = {
+      en: "This site is powered by Netlify",
+      pl: "Ta strona działa na Netlify",
+    };
+    const wrongAttribution = [["en", en], ["pl", pl]]
+      .filter(([code, html]) => !html.includes(
+        `<a href="https://www.netlify.com" target="_blank" rel="noopener">${ATTRIBUTION[code]}</a>`))
+      .map(([c]) => c);
+    assert(wrongAttribution.length === 0,
+      `the attribution reads "${ATTRIBUTION.en}" / "${ATTRIBUTION.pl}" with target=_blank rel=noopener`,
+      "the Netlify attribution wording or its link attributes are wrong", wrongAttribution);
+
     const svgFavicon = [["en", en], ["pl", pl]]
       .filter(([, h]) => /rel="icon"[^>]*image\/svg\+xml/.test(h)).map(([c]) => c);
     assert(svgFavicon.length === 0,

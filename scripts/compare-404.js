@@ -123,17 +123,23 @@ function parse(html) {
     : [];
   const footLinks = html.match(/<footer class="site-footer">([\s\S]*?)<\/footer>/);
   /*
-    THE STAFF LOGIN LINK (Phase 17D.1), human-approved.
+    THE TWO APPROVED FOOTER LINKS, human-approved.
 
-    The public footer gained exactly one link, in both languages. It is removed
-    here so everything ELSE about the footer is still compared strictly, and its
-    presence is asserted separately below — a relaxed comparison would also hide
-    a second new link, which this does not.
+      1. STAFF LOGIN (Phase 17D.1).
+      2. THE NETLIFY ATTRIBUTION (open-source release) — required by Netlify's
+         open-source policy on the main page or on all internal pages.
+
+    The public footer gained exactly these two links, in both languages. Both
+    are removed here so everything ELSE about the footer is still compared
+    strictly, and each one's presence is asserted separately below — a relaxed
+    comparison would also hide a THIRD new link, which this does not.
   */
   out.chrome.staffLogin = /href="[^"]*\/staff-login\/"/.test(html);
+  out.chrome.netlifyLink = /href="https:\/\/www\.netlify\.com"/.test(html);
   out.chrome.footerHrefs = footLinks
     ? [...footLinks[1].matchAll(/href="([^"]+)"/g)].map((m) => m[1])
-      .filter((href) => !href.endsWith("/staff-login/")) : [];
+      .filter((href) => !href.endsWith("/staff-login/"))
+      .filter((href) => href !== "https://www.netlify.com") : [];
   out.chrome.footerLogo = footLinks
     ? (footLinks[1].match(/<img src="([^"]+)" alt="([^"]*)">/) || []).slice(1, 3) : null;
 
@@ -217,13 +223,21 @@ function comparePage(name, livePath, genPath, expect) {
     gen.cards.map((c) => c.href).filter((h) => !h.startsWith("/")));
 
   for (const k of Object.keys(live.chrome)) {
-    // staffLogin is an APPROVED difference, asserted as a pair just below
-    // rather than compared for equality — it is meant to differ.
-    if (k === "staffLogin") continue;
+    // staffLogin and netlifyLink are APPROVED differences, asserted as pairs
+    // just below rather than compared for equality — they are meant to differ.
+    if (k === "staffLogin" || k === "netlifyLink") continue;
     check(p(`chrome: ${k}`), live.chrome[k], gen.chrome[k]);
   }
   check(p("APPROVED: the live footer had no Staff login link"), false, live.chrome.staffLogin);
   check(p("APPROVED: the generated footer offers Staff login"), true, gen.chrome.staffLogin);
+  /*
+    NETLIFY OPEN SOURCE PLAN, REQUIREMENT (c). Asserted rather than tolerated:
+    the charity's hosting credits depend on this link, so a future refactor of
+    the footer must not be able to drop it silently. The 404 pages matter here
+    too — the requirement is "all internal pages".
+  */
+  check(p("APPROVED: the live footer did not credit Netlify"), false, live.chrome.netlifyLink);
+  check(p("APPROVED: the generated footer credits Netlify"), true, gen.chrome.netlifyLink);
 
   check(p("stylesheet references"), live.refs.stylesheets, gen.refs.stylesheets);
   check(p("script references"), live.refs.scripts, gen.refs.scripts);
