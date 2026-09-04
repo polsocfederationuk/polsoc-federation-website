@@ -26,3 +26,12 @@ dist/
 # output only; the CMS SOURCE lives in src/admin/ and src/_data/cmsConfig.js and
 # stays tracked.
 .cms/
+
+# Local environment files. Nothing in this repository has ever read a .env,
+# and none has ever been committed — this is a guard, not a fix. The CMS's
+# GitHub App private key lives only in Netlify's environment variables, and
+# now that this repository is public an accidental `git add .` must not be
+# able to publish a local copy of it.
+.env
+.env.*
+!.env.example
