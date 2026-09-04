@@ -29,7 +29,9 @@ The MIT licence covers the software in this repository, namely:
   * the Netlify configuration and Netlify Functions (netlify.toml,
     netlify/functions/cms.mjs, netlify/functions/bulk.mjs)
   * the build, validation and test scripts in scripts/
-  * the hand-written HTML page shells at the repository root and in pl/
+  * the HTML structure and markup of the hand-written pages at the repository
+    root and in pl/ — but NOT the editorial copy embedded in those files,
+    which is excluded under 2.8
   * the technical documentation in docs/
 
 You may reuse, modify and redistribute that code under the MIT terms. If you
