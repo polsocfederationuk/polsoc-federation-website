@@ -1,0 +1,27 @@
+/* One clean date field (calendar-date.js): the date box, Today / Clear, and
+   the day written out underneath. Matches the choice cards and text inputs. */
+.fed-date { margin: 4px 0 2px; }
+.fed-date-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.fed-date-input {
+  flex: 1 1 160px; min-width: 0; max-width: 240px; min-height: 44px; margin: 0;
+  padding: 8px 12px; border: 1px solid #dfe5eb; border-radius: 8px; background: #fff;
+  color: #253248; font: 400 15px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif;
+  box-shadow: none; cursor: pointer;
+}
+.fed-date-input:hover { border-color: #b9b0ee; }
+.fed-date-input:focus { outline: 2px solid #6554dd; outline-offset: 1px; border-color: #7563e5; }
+.fed-date-input[aria-invalid="true"] { border-color: #bb354b; }
+.fed-date-input::-webkit-calendar-picker-indicator { cursor: pointer; opacity: 0.6; }
+.fed-date-input::-webkit-calendar-picker-indicator:hover { opacity: 1; }
+.fed-date-button {
+  min-height: 44px; margin: 0; padding: 8px 14px;
+  border: 1px solid #dfe5eb; border-radius: 8px; background: #fff; color: #46566e;
+  font: 500 13px/1.3 system-ui, -apple-system, "Segoe UI", sans-serif; cursor: pointer;
+}
+.fed-date-button:hover:not(:disabled) { border-color: #7563e5; color: #4332aa; background: #f6f4ff; }
+.fed-date-button:disabled { opacity: 0.45; cursor: default; }
+.fed-date-button:focus-visible { outline: 2px solid #6554dd; outline-offset: 2px; }
+.fed-date-clear:hover:not(:disabled) { border-color: #d7a3ad; color: #8f2f45; background: #fbf1f3; }
+.fed-date-said { margin: 6px 0 0; font: 400 13px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; color: #46566e; }
+.fed-date-empty { color: #8a96a8; }
+.fed-date-warn { color: #a42337; }

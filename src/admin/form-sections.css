@@ -1,171 +1,318 @@
-/*
-  form-sections.css — headings, collapsing and the compact visibility row.
-
-  Admin only. The public stylesheets are live deployed files and stay frozen.
-*/
-
-.fed-sec {
-  margin: 0 0 1.1rem;
-  border: 2px solid #e4e6ea;
-  border-radius: 8px;
-  background: #fff;
-  overflow: hidden;
+/* Administrative editor only. Essentials are visible; extras use disclosures. */
+.fed-editor {
+  container-name: fed-editor;
+  container-type: inline-size;
+  color: #243044;
 }
-
-.fed-sec-head {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  width: 100%;
-  min-height: 2.75rem;
-  padding: 0.6rem 0.9rem;
+.fed-editor-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 32px;
+  align-items: start;
+  padding: 4px 0 28px;
+}
+.fed-editor-main, .fed-editor-side { min-width: 0; }
+.fed-editor-side {
+  padding: 22px;
+  background: #f7f8fa;
+  border: 1px solid #e3e7ed;
+  border-radius: 8px;
+}
+.fed-editor .fed-sec {
+  padding: 0 0 28px;
+  margin: 0 0 28px;
   border: 0;
-  border-bottom: 2px solid #e4e6ea;
-  background: #f4f5f7;
-  font: inherit;
-  text-align: left;
+  border-bottom: 1px solid #e5e9ef;
+  background: transparent;
+  /* Never clip an open media picker, dropdown or date calendar. */
+  overflow: visible;
+}
+.fed-editor .fed-sec:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: 0; }
+.fed-editor .fed-sec-heading {
+  margin: 0 0 20px;
+  padding: 0;
+  color: #202c3d;
+  font: 650 18px/1.4 system-ui, sans-serif;
+  letter-spacing: -.02em;
+}
+.fed-editor .fed-editor-side .fed-sec-heading { font-size: 15px; }
+.fed-editor .fed-sec-body { min-width: 0; }
+.fed-editor .fed-sec-body > [aria-label$="field"] { margin: 0 0 22px; min-width: 0; }
+.fed-editor .fed-sec-body > [aria-label$="field"]:last-child { margin-bottom: 0; }
+.fed-editor .fed-sec-pair {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+}
+.fed-editor .fed-sec-pair > [aria-label$="field"] { margin: 0; }
+.fed-editor .fed-sec-disclosure { padding: 0 0 18px; margin-bottom: 18px; }
+.fed-editor .fed-sec-disclosure > summary {
+  display: list-item;
+  min-height: 28px;
+  margin: 0;
   cursor: pointer;
-}
-
-.fed-sec-head:hover { background: #eceef2; }
-
-.fed-sec-head:focus-visible {
-  outline: 2px solid #3a69ff;
-  outline-offset: -2px;
-}
-
-.fed-sec-closed .fed-sec-head { border-bottom-color: transparent; }
-
-.fed-sec-title {
-  font-size: 0.82rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: #16181d;
-}
-
-.fed-sec-caret {
-  font-size: 0.7rem;
-  color: #5a5f6b;
-  transition: transform 0.15s;
-}
-
-.fed-sec-closed .fed-sec-caret { transform: rotate(-90deg); }
-
-.fed-sec-body { padding: 0.9rem; }
-
-.fed-sec-note {
-  margin: 0 0 0.75rem;
-  font-size: 0.86rem;
-  color: #5a5f6b;
-}
-
-/*
-  COMPACT VISIBILITY.
-
-  Five boolean switches at full width was most of a screen for five words. They
-  are laid out as a wrapping row of small cards instead — still Decap's own
-  controls, only narrower.
-*/
-.fed-sec-compact .fed-sec-body {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.fed-sec-compact .fed-sec-body > [aria-label$="field"] {
-  flex: 0 1 auto;
-  min-width: 0;
-  margin: 0;
-  padding: 0.35rem 0.7rem;
-  border: 1px solid #e4e6ea;
-  border-radius: 6px;
-  background: #fafbfc;
-}
-
-/* Decap stacks a boolean's label above its switch; side by side is far tighter
-   and reads as one control. */
-.fed-sec-compact .fed-sec-body > [aria-label$="field"] > div {
-  display: flex;
-  flex-direction: row-reverse;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.fed-sec-compact .fed-sec-body label {
-  margin: 0;
-  white-space: nowrap;
-  font-size: 0.88rem;
-}
-
-/* Hints would defeat the point of a compact row. */
-.fed-sec-compact .fed-sec-body p[class*="ControlHint"] { display: none; }
-
-@media (max-width: 34rem) {
-  .fed-sec-compact .fed-sec-body > [aria-label$="field"] { flex: 1 1 100%; }
-  .fed-sec-body { padding: 0.75rem 0.6rem; }
-}
-
-/* -- image units: a picture beside the words that describe it -------------- */
-
-.fed-sec-image {
-  margin: 0 0 1rem;
-  padding: 0.85rem;
-  border: 2px solid #e4e6ea;
-  border-radius: 8px;
-  background: #fafbfc;
-}
-
-.fed-sec-image-title {
-  margin: 0 0 0.6rem;
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: #16181d;
-}
-
-.fed-sec-alt {
-  margin-top: 0.75rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid #e9ebef;
-}
-
-.fed-sec-alt-title {
-  margin: 0;
-  font-size: 0.88rem;
+  font-size: 14px;
   font-weight: 600;
-  color: #16181d;
+  letter-spacing: 0;
+  list-style: disclosure-closed inside;
+  color: #47556c;
 }
-
-.fed-sec-alt-help {
-  margin: 0.15rem 0 0.5rem;
-  font-size: 0.83rem;
-  color: #5a5f6b;
+.fed-editor .fed-sec-disclosure[open] > summary {
+  list-style-type: disclosure-open;
+  margin-bottom: 20px;
+  color: #202c3d;
 }
-
-.fed-sec-alt-tabs {
+.fed-editor .fed-sec-disclosure > summary:hover { color: #2455a4; }
+.fed-editor .fed-sec-disclosure::details-content { overflow: visible; }
+.fed-editor input:not([type="checkbox"]), .fed-editor textarea {
+  border-radius: 6px;
+  max-width: 100%;
+}
+.fed-editor input:focus-visible, .fed-editor textarea:focus-visible,
+.fed-editor summary:focus-visible, .fed-editor button:focus-visible {
+  outline: 3px solid #3566b8;
+  outline-offset: 3px;
+}
+.fed-editor .fed-lang-tabs {
+  width: fit-content;
+  max-width: 100%;
   display: flex;
-  gap: 0.35rem;
-  margin-bottom: 0.5rem;
+  gap: 4px;
+  margin: 0 0 24px;
+  padding: 4px;
+  border: 1px solid #dce2ec;
+  border-radius: 7px;
+  background: #f1f4f8;
 }
-
-.fed-sec-alt-tab {
-  min-height: 2rem;
-  padding: 0.2rem 0.7rem;
-  border: 2px solid #dfe1e6;
-  border-radius: 999px;
-  background: #fff;
-  font: inherit;
-  font-size: 0.82rem;
+.fed-editor .fed-lang-tab {
+  min-height: 38px;
+  padding: 7px 16px;
+  margin: 0;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: transparent;
+  color: #536175;
+  box-shadow: none;
+  font-size: 13px;
+}
+.fed-editor .fed-lang-tab-active {
+  background: white;
+  border-color: #dce2ec;
+  color: #253851;
+  box-shadow: 0 1px 3px #14223812;
+}
+.fed-editor .fed-lang-warn .fed-lang-mark { color: #8a6000; }
+.fed-editor .fed-adv {
+  border: 0;
+  border-top: 1px solid #e5e9ef;
+  border-radius: 0;
+  background: transparent;
+  margin: 24px 0 0;
+}
+.fed-editor .fed-adv-summary {
+  padding: 16px 0;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #536175;
+}
+.fed-editor .fed-adv-note, .fed-editor .fed-adv > [aria-label$="field"] {
+  margin-left: 0;
+  margin-right: 0;
+}
+.fed-editor .fed-imgunit {
+  border: 0;
+  padding: 0;
+  background: transparent;
+}
+.fed-editor .fed-imgunit-title {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 14px;
+}
+.fed-editor .fed-imgunit-alt {
+  padding: 16px;
+  background: #f7f8fa;
+  border: 1px solid #e5e9ef;
+  border-radius: 6px;
+}
+.fed-editor .fed-sec-disclosure details[data-fed-imgunit="album"] > summary { display: none; }
+.fed-editor .fed-title {
+  margin: 0 0 24px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.fed-editor .fed-title-label {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 14px;
+}
+.fed-editor .fed-title-input {
+  min-height: 48px;
+  font-size: 21px;
+  line-height: 1.4;
+  border-width: 1px;
+}
+.fed-editor .fed-title-options > summary {
+  padding: 8px 0;
+  font-size: 12px;
+  color: #536175;
   cursor: pointer;
 }
-
-.fed-sec-alt-tab-on {
-  background: #16181d;
-  border-color: #16181d;
-  color: #fff;
+.fed-editor .fed-title-options[open] > * + * { margin-top: 10px; }
+.fed-editor .fed-record-id__note { font-size: 12px; line-height: 1.6; }
+@container fed-editor (min-width: 560px) {
+  .fed-editor .fed-sec-pair { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@container fed-editor (min-width: 860px) {
+  .fed-editor-layout { grid-template-columns: minmax(0, 1fr) 280px; gap: 40px; }
+}
+@container fed-editor (max-width: 420px) {
+  .fed-editor-side { padding: 16px; }
+  .fed-editor .fed-title-input { font-size: 18px; }
 }
 
-/* Hidden, never unmounted — the other language keeps its value. */
-.fed-sec-hidden { display: none !important; }
+
+/* Events: wide, open form panels inspired by the supplied references. */
+.fed-editor.fed-events-form {
+  width: 100%;
+  max-width: 1360px !important; /* overrides Decap's 800px control-pane limit */
+  box-sizing: border-box;
+  padding: 36px 28px;
+  margin: 0 auto;
+  background: #f5f8fb;
+  color: #172334;
+}
+div:has(> .fed-events-form) { background: #f5f8fb; }
+.fed-events-form .fed-editor-layout { display: block; padding: 0; }
+.fed-events-form .fed-editor-side { display: none; }
+.fed-events-form .fed-sec {
+  display: grid;
+  grid-template-columns: 168px minmax(0, 1fr);
+  align-items: start;
+  gap: 28px;
+  margin: 0 0 28px;
+  padding: 0;
+  border: 0;
+}
+.fed-events-form .fed-sec-heading {
+  padding: 22px 0 0;
+  margin: 0;
+  font-size: 16px;
+  font-weight: 650;
+  letter-spacing: -.015em;
+  color: #152031;
+}
+.fed-events-form .fed-sec-body {
+  min-width: 0;
+  padding: 26px;
+  border: 1px solid #e8edf2;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 2px 3px #17233408;
+}
+.fed-events-form .fed-sec-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+.fed-events-form .fed-span-all { grid-column: 1 / -1; }
+.fed-events-form .fed-flat-object {
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+/* These classes mark the verified ObjectControl wrapper, not list Add buttons. */
+.fed-events-form .fed-object-toggle { display: none !important; }
+.fed-events-form .fed-object-fields { display: block !important; }
+.fed-events-form .fed-object-fields > [aria-label$="field"] {
+  margin-top: 0;
+  margin-bottom: 24px;
+  min-width: 0;
+}
+.fed-events-form .fed-object-fields > [aria-label$="field"]:last-child { margin-bottom: 0; }
+.fed-events-form .fed-object-fields.fed-bilingual-pair,
+.fed-events-form .fed-object-fields.fed-registration-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+}
+.fed-events-form .fed-bilingual-pair > [aria-label$="field"],
+.fed-events-form .fed-registration-grid > [aria-label$="field"] { margin: 0; }
+.fed-events-form .fed-event-languages > .fed-sec-body > [aria-label="object field"] {
+  margin: 0;
+  min-width: 0;
+}
+.fed-events-form [aria-label$="field"] > div:first-child > label {
+  background: transparent;
+  border: 0;
+  padding: 0 0 8px;
+  margin: 0;
+  color: #152031;
+  font-size: 13px;
+  line-height: 1.5;
+  font-weight: 550;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.fed-events-form [aria-label="object field"] > div:first-child { margin-bottom: 12px; }
+.fed-events-form input:not([type="checkbox"]):not([type="radio"]):not([role="combobox"]),
+.fed-events-form textarea {
+  border: 1px solid #dfe5eb;
+  border-radius: 6px;
+  min-height: 44px;
+  color: #172334;
+  background: #fff;
+  box-shadow: 0 1px 2px #17233406;
+}
+.fed-events-form input:focus-visible,
+.fed-events-form textarea:focus-visible { outline: 2px solid #6554dd; outline-offset: 2px; }
+.fed-events-form [aria-label$="field"] > p {
+  font-size: 12px;
+  line-height: 1.55;
+  color: #667589;
+}
+.fed-events-form .fed-title-input { font-size: 17px; font-weight: 500; }
+.fed-events-form .fed-title-options {
+  padding: 12px;
+  background: #fafbfd;
+  border-radius: 6px;
+}
+.fed-events-form .fed-title-options > h3 {
+  padding: 0;
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 550;
+  color: #59677a;
+}
+.fed-events-form .fed-title-sub { font-size: 12px; line-height: 1.5; }
+.fed-events-form .fed-title-preview { font-size: 19px; }
+.fed-events-form .fed-adv-summary::before { content: none; }
+.fed-events-form .fed-adv-summary { cursor: default; }
+.fed-events-form .fed-adv-summary:hover { background: transparent; }
+.fed-events-form .fed-imgunit-drawer > h3 { display: none; }
+.fed-events-form .fed-imgunit-alt { background: #fafbfd; }
+/* Choice cards are styled for every form in choice-cards.css. */
+/* List rows start open. Keep row remove/reorder actions available. */
+.fed-events-form [aria-label="list field"] [data-testid="expand-button"] { display: none; }
+@container fed-editor (max-width: 950px) {
+  .fed-events-form .fed-sec { grid-template-columns: 132px minmax(0, 1fr); gap: 20px; }
+}
+@container fed-editor (max-width: 760px) {
+  .fed-events-form .fed-sec { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .fed-events-form .fed-sec-heading { padding: 0; }
+  .fed-events-form .fed-sec-body { padding: 20px; }
+  .fed-events-form .fed-event-languages > .fed-sec-body { grid-template-columns: minmax(0, 1fr); }
+}
+@container fed-editor (max-width: 520px) {
+  .fed-events-form .fed-sec-pair,
+  .fed-events-form .fed-object-fields.fed-bilingual-pair,
+  .fed-events-form .fed-object-fields.fed-registration-grid { grid-template-columns: minmax(0, 1fr); }
+  .fed-events-form .fed-sec-body { padding: 16px; }
+}
+@media (max-width: 600px) {
+  .fed-editor.fed-events-form { padding: 24px 12px; }
+}

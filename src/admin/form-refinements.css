@@ -1,0 +1,202 @@
+/* Loaded last: quiet tab and disclosure styling for staff forms only. */
+.fed-editor .fed-lang-tabs {
+  width: 100%; border: 0; border-bottom: 1px solid #dfe5ed;
+  border-radius: 0; padding: 0; gap: 20px; background: transparent;
+}
+.fed-editor .fed-lang-tab {
+  border: 0; border-bottom: 3px solid transparent; border-radius: 0;
+  margin: 0 0 -1px; min-height: 46px; padding: 10px 4px;
+  background: transparent; box-shadow: none; color: #526176;
+}
+.fed-editor .fed-lang-tab[aria-selected="true"] {
+  background: transparent; color: #5140bb; border-bottom-color: #6554dd; box-shadow: none;
+}
+.fed-editor details.fed-sec-disclosure {
+  display: block; border: 1px solid #e0e6ee; border-radius: 10px;
+  background: #fff; padding: 0; margin-bottom: 18px; overflow: visible;
+}
+.fed-editor details.fed-sec-disclosure > summary,
+.fed-editor .fed-facts > summary,
+.fed-editor .fed-adv > summary,
+.fed-editor .fed-title-options > summary {
+  display: flex; align-items: center; gap: 10px; min-height: 52px;
+  padding: 14px 18px; margin: 0; list-style: none; cursor: pointer;
+  color: #253248; font: 600 14px/1.5 system-ui, sans-serif;
+  letter-spacing: 0; text-transform: none;
+}
+.fed-editor details > summary::-webkit-details-marker { display: none; }
+.fed-editor details.fed-sec-disclosure > summary::before,
+.fed-editor .fed-facts > summary::before,
+.fed-editor .fed-adv > summary::before,
+.fed-editor .fed-title-options > summary::before {
+  content: ""; width: 7px; height: 7px; border-right: 2px solid #64748b;
+  border-bottom: 2px solid #64748b; transform: rotate(-45deg); flex-shrink: 0; margin-right: 6px;
+}
+.fed-editor details[open].fed-sec-disclosure > summary::before,
+.fed-editor .fed-facts[open] > summary::before,
+.fed-editor .fed-adv[open] > summary::before,
+.fed-editor .fed-title-options[open] > summary::before { transform: rotate(45deg); }
+.fed-editor details > summary:hover { background: #f8f9fc; }
+.fed-editor details.fed-sec-disclosure > .fed-sec-body {
+  border: 0; border-top: 1px solid #edf0f5; border-radius: 0 0 10px 10px;
+  box-shadow: none; padding: 22px;
+}
+.fed-editor details:not([open]) > :not(summary) { display: none !important; }
+.fed-optional-label { color: #68768a; font-size: 12px; font-weight: 400; margin-left: auto; }
+.fed-editor .fed-adv, .fed-editor .fed-facts, .fed-editor .fed-title-options {
+  border: 1px solid #e0e6ee; border-radius: 8px; background: #fff; padding: 0; margin: 18px 0;
+}
+.fed-editor .fed-adv > :not(summary) { margin: 12px 18px 18px; }
+.fed-editor .fed-title-options > :not(summary) { margin: 12px 18px; }
+.fed-editor [aria-label$="field"]:has(> .fed-facts) > div:first-child > label,
+.fed-editor [aria-label$="field"]:has(> .fed-facts) > p { display: none; }
+.fed-facts-content { padding: 0 18px 18px; }
+.fed-facts-tabs { display: flex; gap: 4px; overflow-x: auto; border-bottom: 1px solid #dfe5ed; padding-top: 2px; }
+.fed-facts button { font: 500 13px/1.4 system-ui, sans-serif; cursor: pointer; }
+.fed-facts-tabs button {
+  flex: 0 0 auto; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  min-height: 46px; border: 0; border-bottom: 3px solid transparent;
+  border-radius: 6px 6px 0 0; background: transparent; color: #526176; padding: 12px 16px;
+}
+.fed-facts-tabs button[aria-selected="true"] { color: #5140bb; border-bottom-color: #6554dd; background: #f7f5ff; }
+.fed-facts-tabs button:hover { background: #f5f7fb; }
+.fed-facts-count { padding: 2px 8px; border-radius: 12px; background: #eef0f5; font-size: 12px; }
+.fed-fact-panel { padding-top: 20px; }
+.fed-fact-panel[hidden] { display: none !important; }
+.fed-fact-fields { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; }
+.fed-fact-fields label { display: block; margin-bottom: 8px; font: 550 13px/1.5 system-ui, sans-serif; }
+.fed-fact-fields input { width: 100%; box-sizing: border-box; padding: 10px 12px; }
+.fed-fact-actions, .fed-facts-footer { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+.fed-fact-actions button, .fed-facts-footer button {
+  border: 1px solid #dfe5ed; border-radius: 6px; background: #fff; color: #46566e; min-height: 40px; padding: 9px 12px;
+}
+.fed-fact-actions .fed-remove { margin-left: auto; color: #a63145; }
+.fed-facts-footer .fed-facts-add { color: #5140bb; background: #f7f5ff; border-color: #ded7ff; }
+.fed-facts button:disabled { opacity: .45; cursor: not-allowed; }
+.fed-facts-empty { color: #627087; font-size: 13px; }
+.fed-fact-error { color: #a42337; font-size: 13px; }
+.fed-editor .fed-facts input[aria-invalid="true"] { border-color: #bb354b; }
+@container fed-editor (max-width: 520px) {
+  .fed-fact-fields { grid-template-columns: minmax(0, 1fr); }
+  .fed-editor details.fed-sec-disclosure > .fed-sec-body { padding: 16px; }
+}
+
+/* Remove redundant grey object headers in Team and Announcements too. */
+.fed-editor .fed-flat-object { padding: 0 !important; border: 0 !important; background: transparent !important; box-shadow: none !important; }
+.fed-editor .fed-object-toggle { display: none !important; }
+.fed-editor .fed-object-fields { display: block !important; }
+.fed-editor [aria-label$="field"] > div:first-child > label {
+  background: transparent; border: 0; padding: 0 0 8px; margin: 0;
+  color: #253248; font: 550 13px/1.5 system-ui, sans-serif; text-transform: none; letter-spacing: 0;
+}
+.fed-editor [aria-label="list field"] > div[id] { border: 1px solid #e0e6ee; border-radius: 8px; background: #fff; box-shadow: none; }
+.fed-editor [aria-label="list field"] > div[id] > div:first-child { background: #f9fafc; border-color: #e0e6ee; color: #405069; }
+.fed-editor [aria-label="object field"] > div:first-child { margin-bottom: 10px; }
+.fed-editor [aria-label="select field"] [class*="-control"] { background: #fff; border: 1px solid #dfe5ed; border-radius: 6px; min-height: 44px; box-shadow: none; }
+.fed-editor [aria-label="select field"] [class*="-control"]:focus-within { outline: 2px solid #6554dd; outline-offset: 2px; }
+.fed-editor .fed-object-fields > [aria-label$="field"] { margin: 0 0 22px; }
+button[title="Sync scrolling"], .fed-preview-native { display: none !important; }
+.fed-toolbar-preview { display: inline-flex; align-items: center; justify-content: center; min-height: 36px; padding: 7px 14px; margin: 0 12px; border: 1px solid #dce2ed; border-radius: 6px; color: #43536c; background: #fff; cursor: pointer; font: 600 13px/1.4 system-ui, sans-serif; }
+.fed-toolbar-preview[aria-pressed="true"] { background: #f1edff; color: #5140aa; border-color: #c9bdf5; }
+.fed-toolbar-preview:focus-visible { outline: 3px solid #6554dd; outline-offset: 2px; }
+
+.fed-editor [role="tabpanel"][aria-label="object field"] > div:first-child { display: none; }
+
+/* Date fields are drawn by calendar-date.js and styled in calendar-date.css. */
+
+/* ---------------------------------------------------------------------------
+   Lists ("Add photograph", "Add co-organiser", "Add extra images"). Decap's
+   grey bar with a black bold button becomes a light bar with the same outline
+   pill the choice controls use. Anchored on the list's accessible label and
+   its expand button, not on generated class names.
+   --------------------------------------------------------------------------- */
+[aria-label="list field"] div:has(> div > button[data-testid="expand-button"]) {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  min-height: 52px; padding: 8px 8px 8px 14px;
+  border: 1px solid #dfe5eb; border-radius: 8px; background: #fafbfd;
+  color: #66748a; font: 400 13px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+/* The Add button looks exactly like "+ Add information" (facts-tabs.js): the
+   same size, tint and radius, with the plus sign in front. */
+[aria-label="list field"] div:has(> div > button[data-testid="expand-button"]) > button:not([data-testid]) {
+  display: inline-flex; flex-direction: row-reverse; align-items: center; gap: 6px; flex-shrink: 0;
+  min-height: 40px; margin: 0; padding: 9px 14px 9px 12px;
+  border: 1px solid #ded7ff !important; border-radius: 6px;
+  background: #f7f5ff !important; color: #5140bb !important; box-shadow: none !important;
+  font: 500 13px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif !important;
+  text-transform: none; letter-spacing: 0; cursor: pointer;
+}
+[aria-label="list field"] div:has(> div > button[data-testid="expand-button"]) > button:not([data-testid]):hover {
+  background: #efebff !important; border-color: #c9bdf5 !important;
+}
+[aria-label="list field"] div:has(> div > button[data-testid="expand-button"]) > button:not([data-testid]):focus-visible {
+  outline: 2px solid #6554dd; outline-offset: 2px;
+}
+[aria-label="list field"] div:has(> div > button[data-testid="expand-button"]) > button:not([data-testid]) svg {
+  width: 14px; height: 14px; fill: currentColor;
+}
+[aria-label="list field"] div:has(> div > button[data-testid="expand-button"]) > button:not([data-testid]) > span {
+  display: inline-flex; width: 14px; height: 14px;
+}
+
+/* ---------------------------------------------------------------------------
+   Image and file pickers ("Choose an image", "Choose different image",
+   "Remove image"). Decap's small grey and pink badges become the same buttons
+   as the rest of the form, in a light frame. Anchored on the field's
+   accessible label and the widget's own structure, not generated class names.
+   --------------------------------------------------------------------------- */
+:is([aria-label="image field"], [aria-label="file field"]) div:has(> span > button),
+:is([aria-label="image field"], [aria-label="file field"]) div:has(> span > div > div > button) {
+  border: 1px dashed #d5dce6 !important; border-radius: 8px !important;
+  background: #fbfcfe !important; box-shadow: none !important; padding: 14px !important;
+}
+:is([aria-label="image field"], [aria-label="file field"]) span > button,
+:is([aria-label="image field"], [aria-label="file field"]) span > div > div > button {
+  display: inline-flex; align-items: center; min-height: 40px; margin: 10px 8px 0 0; padding: 9px 14px;
+  border: 1px solid #dfe5ed !important; border-radius: 6px !important;
+  background: #fff !important; color: #46566e !important; box-shadow: none !important;
+  font: 500 13px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif !important;
+  text-transform: none; letter-spacing: 0; cursor: pointer;
+}
+/* The empty state's single button, and "Choose different image": the main action. */
+:is([aria-label="image field"], [aria-label="file field"]) span > button,
+:is([aria-label="image field"], [aria-label="file field"]) span > div > div > button:first-child {
+  border-color: #ded7ff !important; background: #f7f5ff !important; color: #5140bb !important;
+}
+:is([aria-label="image field"], [aria-label="file field"]) span > button { margin-top: 0; }
+:is([aria-label="image field"], [aria-label="file field"]) span > button:hover,
+:is([aria-label="image field"], [aria-label="file field"]) span > div > div > button:first-child:hover {
+  background: #efebff !important; border-color: #c9bdf5 !important;
+}
+/* "Remove image": quiet until pointed at. */
+:is([aria-label="image field"], [aria-label="file field"]) span > div > div > button + button { color: #a63145 !important; }
+:is([aria-label="image field"], [aria-label="file field"]) span > div > div > button + button:hover {
+  background: #fbf1f3 !important; border-color: #e3b8c1 !important;
+}
+:is([aria-label="image field"], [aria-label="file field"]) button:focus-visible { outline: 2px solid #6554dd; outline-offset: 2px; }
+
+/* Each list entry: a light card with a quiet header (collapse, drag, remove)
+   instead of Decap's heavy grey bar. */
+[aria-label="list field"] div:has(> div > [aria-roledescription="sortable"]) {
+  margin-top: 10px !important; border: 1px solid #dfe5eb !important; border-radius: 8px !important;
+  background: #fff !important; box-shadow: none !important; overflow: hidden;
+}
+[aria-label="list field"] div:has(> [aria-roledescription="sortable"]) {
+  display: flex; align-items: center; justify-content: space-between;
+  min-height: 38px; padding: 2px 6px !important;
+  background: #f6f7fb !important; border: 0 !important; border-bottom: 1px solid #e6ebf1 !important;
+  border-radius: 0 !important;
+}
+[aria-label="list field"] div:has(> [aria-roledescription="sortable"]) > button {
+  width: 32px; height: 32px; padding: 0; border-radius: 6px;
+  background: transparent !important; color: #66748a !important;
+}
+[aria-label="list field"] div:has(> [aria-roledescription="sortable"]) > button:hover { background: #eceff6 !important; color: #253248 !important; }
+[aria-label="list field"] div:has(> [aria-roledescription="sortable"]) > button:last-child:hover { background: #fbecef !important; color: #8f2f45 !important; }
+[aria-label="list field"] div:has(> [aria-roledescription="sortable"]) > [aria-roledescription="sortable"] {
+  color: #8a96a8; cursor: grab;
+}
+/* The entry's fields sit directly in the card, without Decap's second frame. */
+[aria-label="list field"] div:has(> div > [aria-roledescription="sortable"]) > div:last-child {
+  border: 0 !important; border-radius: 0 !important; padding: 10px 16px 16px !important;
+}

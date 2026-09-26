@@ -98,8 +98,8 @@ section("2. Academic-year handling");
   assert(ay && ay.widget !== "hidden",
     "academic_year is visible to the editor (not hidden)",
     "academic_year is hidden — the editor could not see which year they are editing");
-  assert(ay && ay.widget === "select",
-    "academic_year is chosen from a list, so a mistyped year cannot be saved",
+  assert(ay && ay.widget === "choiceCards",
+    "academic_year is chosen from a fixed set of years, so a mistyped year cannot be saved",
     `academic_year uses the ${ay && ay.widget} widget, which lets an editor type free text`);
   assert(ay && Array.isArray(ay.options) && ay.options.length > 1,
     "the academic-year dropdown offers a list of years",
@@ -135,7 +135,7 @@ section("2. Academic-year handling");
   const walk = (fields, where) => {
     for (const f of fields || []) {
       if (f.name === "academic_year" || f.name === "current" || f.name === "year") {
-        if (f.widget === "select") yearFields.push({ where, options: f.options });
+        if (f.widget === "select" || f.widget === "choiceCards") yearFields.push({ where, options: f.options });
       }
       if (f.fields) walk(f.fields, where);
       if (f.field) walk([f.field], where);
@@ -298,8 +298,8 @@ section("6. Group and ordering fields");
 
 {
   const group = field("group");
-  assert(group && group.widget === "select",
-    "the team group is a select, so a typo cannot invent a group",
+  assert(group && group.widget === "choiceCards",
+    "the team group is chosen from cards, so a typo cannot invent a group",
     "the team group is free text");
   const cfgGroups = (jsyaml.load(read("content/settings/team-groups.yaml")) || {}).groups || [];
   const keys = cfgGroups.map((g) => g.key);
@@ -344,7 +344,7 @@ assert(exists("content/settings/academic-year.yaml"),
   // setting that changes what the whole site treats as "now", so a mistyped
   // value here would be the most damaging free-text field in the CMS.
   const cur = (settingsFile.fields || []).find((f) => f.name === "current");
-  assert(cur && cur.required === true && cur.widget === "select",
+  assert(cur && cur.required === true && cur.widget === "choiceCards" && typeof cur.confirm === "string",
     "the current-year field is required and chosen from a list",
     "the current-year field is optional or accepts free text");
   assert(cur && Array.isArray(cur.options) &&
@@ -712,8 +712,8 @@ assert(ann && /academic_year/.test(String(ann.summary)),
   // assertions here tested a regex that no longer exists, because free text no
   // longer exists.
   const y = annField("academic_year");
-  assert(y && y.required === true && y.widget === "select",
-    "academic_year is a required, visible dropdown",
+  assert(y && y.required === true && y.widget === "choiceCards" && y.follow_date === "published_date",
+    "academic_year is a required, visible choice that follows the publication date",
     "academic_year is missing, optional, hidden or free text");
   assert(y && Array.isArray(y.options) &&
     y.options.every((v) => cms.parseAcademicYear(v) !== null),
@@ -824,9 +824,14 @@ assert(ann && /academic_year/.test(String(ann.summary)),
 /* -- image presentation ------------------------------------------------------ */
 {
   const fit = annField("image_fit");
-  assert(fit && fit.widget === "select", "image fit is a select, not free text",
+  assert(fit && fit.widget === "choiceCards", "image fit is chosen from cards, not free text",
     "image fit is free text and could take any CSS value");
-  const values = (fit.options || []).map((o) => o.value);
+  // "Fill the frame" is the null option: the empty value every uncropped-by-
+  // choice record already holds. The validator lists only the real CSS values.
+  assert((fit.options || []).filter((o) => o.value === null).length === 1,
+    "image fit offers exactly one empty choice (Fill the frame), stored as null",
+    "image fit has no empty choice, or more than one");
+  const values = (fit.options || []).map((o) => o.value).filter((v) => v !== null);
   const supported = (read("scripts/validate.js").match(/SUPPORTED_FIT = new Set\(\[([^\]]*)\]/) || [])[1] || "";
   const fromValidator = supported.split(",").map((s) => s.trim().replace(/^["']|["']$/g, "")).filter(Boolean);
   assert(JSON.stringify(values) === JSON.stringify(fromValidator),
@@ -968,7 +973,7 @@ assert(ann && /academic_year/.test(String(ann.summary)),
   const sub = (n) => (link.fields || []).find((f) => f.name === n);
 
   const type = sub("type");
-  assert(type && type.widget === "select", "the link destination is a select",
+  assert(type && type.widget === "choiceCards", "the link destination is chosen from cards",
     "the link destination is free text");
   const types = (type.options || []).map((o) => o.value);
   const vSupported = (read("scripts/validate.js").match(/SUPPORTED_LINK_TYPES = new Set\(\[([^\]]*)\]/) || [])[1] || "";
@@ -1025,9 +1030,13 @@ assert(ann && /academic_year/.test(String(ann.summary)),
   }
 
   const ev = sub("event_slug");
-  assert(ev && ev.widget === "select", "the event link is a select of real events",
-    "the event link is free text");
-  const evValues = (ev.options || []).map((o) => o.value).sort();
+  assert(ev && ev.widget === "eventPicker" && ev.published_only === true,
+    "the event link is a list of real, visible events",
+    "the event link is free text or offers hidden events");
+  // The list starts from cms.eventChoices(); the live read only adds records
+  // saved since the page was built.
+  const evChoices = cms.eventChoices().filter((e) => e.published);
+  const evValues = evChoices.map((e) => e.slug).sort();
   const onDisk = fs.readdirSync(rel("content/events")).filter((f) => /\.ya?ml$/i.test(f))
     .map((f) => jsyaml.load(read(`content/events/${f}`)) || {})
     .filter((e) => e.published === true).map((e) => e.slug).sort();
@@ -1035,10 +1044,10 @@ assert(ann && /academic_year/.test(String(ann.summary)),
     `event options are derived from the canonical event records (${evValues.length})`,
     "the event options have drifted from content/events/",
     `cms: ${evValues.join(", ")} | disk: ${onDisk.join(", ")}`);
-  assert((ev.options || []).every((o) => o.label && o.label !== o.value),
+  assert(evChoices.every((e) => e.title && e.title !== e.slug),
     "each event shows its human title rather than its slug",
     "an event option exposes the raw slug as its label");
-  assert(!(ev.options || []).some((o) => /\.html$/.test(String(o.value))),
+  assert(!evChoices.some((e) => /\.html$/.test(String(e.slug))),
     "event links store a slug, never a generated .html URL",
     "an event option stores a generated URL");
 
@@ -1060,8 +1069,10 @@ assert(ann && /academic_year/.test(String(ann.summary)),
 /* -- publication state -------------------------------------------------------- */
 {
   const pub = annField("published");
-  assert(pub && pub.widget === "boolean", "publication state is a boolean toggle",
-    "publication state is not a boolean");
+  assert(pub && pub.widget === "choiceCards" &&
+    JSON.stringify((pub.options || []).map((o) => o.value)) === "[false,true]" && pub.default === false,
+    "publication state is a Hidden / Live choice that stores a boolean, hidden by default",
+    "publication state is not a boolean choice");
   /*
     REGISTRATION replaced the `signups_closed` on/off switch in Phase 17C.3.
 
@@ -1082,8 +1093,8 @@ assert(ann && /academic_year/.test(String(ann.summary)),
   const regSub = (n) => ((reg && reg.fields) || []).find((f) => f.name === n);
 
   const state = regSub("state");
-  assert(state && state.widget === "select",
-    "the registration status is chosen from a list, not typed",
+  assert(state && state.widget === "choiceCards",
+    "the registration status is chosen from cards, not typed",
     `the status uses the ${state && state.widget} widget`);
   assert(state && Array.isArray(state.options) &&
     state.options.length === cms.REGISTRATION_STATES.length &&
@@ -1108,8 +1119,7 @@ assert(ann && /academic_year/.test(String(ann.summary)),
   // Both dates use the same safe calendar control as every other date.
   for (const n of ["opens_on", "closes_on"]) {
     const d = regSub(n);
-    assert(d && d.widget === "datetime" && d.picker_utc === true &&
-      d.time_format === false && d.format === "YYYY-MM-DD",
+    assert(d && d.widget === "calendarDate" && d.format === "YYYY-MM-DD",
       `${n} is a timezone-safe calendar day, like every other date in the CMS`,
       `${n} is not a safe date-only control`);
   }
@@ -1173,16 +1183,24 @@ assert(ann && /academic_year/.test(String(ann.summary)),
     timezone bug that produced "Mon Dec 08 2025 01:00:00 GMT+0100" in a YAML
     file in Phase 17C-a.
   */
+  /*
+    Since the choice-controls phase the control is src/admin/calendar-date.js:
+    a native <input type="date">, which has no clock and no time zone and
+    always reports YYYY-MM-DD. The three settings above were how Decap's own
+    datetime widget was made to behave that way; the new control cannot behave
+    any other way, so what is asserted is the widget and the stored format.
+  */
   const date = annField("published_date");
-  assert(date && date.widget === "datetime",
+  assert(date && date.widget === "calendarDate",
     "the publication date is a calendar control, so no date can be typed by hand",
     `the publication date uses the ${date && date.widget} widget`);
-  assert(date && date.picker_utc === true,
-    "the date picker works in UTC, so a date cannot shift to the previous day",
-    "picker_utc is not set — the stored day can differ from the day chosen");
-  assert(date && date.time_format === false,
-    "the date picker shows no clock, so no time can be attached to a calendar day",
-    "the date picker offers a time, which would be written into the file");
+  const dateSource = read("src/admin/calendar-date.js");
+  assert(/type:\s*"date"/.test(dateSource),
+    "the calendar control is a native date input with no clock and no time zone",
+    "the calendar control is not a plain native date input");
+  assert(/function today\(\)[\s\S]*getFullYear\(\)[\s\S]*getMonth\(\)[\s\S]*getDate\(\)/.test(dateSource),
+    "\"Today\" is the editor's own calendar day, not the UTC day (which can be yesterday)",
+    "\"Today\" is computed in UTC");
   assert(date && date.format === "YYYY-MM-DD",
     "the stored value is a plain calendar day",
     `the stored format is ${JSON.stringify(date && date.format)}, not YYYY-MM-DD`);
@@ -1196,7 +1214,7 @@ assert(ann && /academic_year/.test(String(ann.summary)),
   const found = [];
   const walk = (fields, where) => {
     for (const f of fields || []) {
-      if (names.includes(f.name) && f.widget === "datetime") found.push({ f, where });
+      if (names.includes(f.name) && (f.widget === "calendarDate" || f.widget === "datetime")) found.push({ f, where });
       if (f.fields) walk(f.fields, where);
       if (f.field) walk([f.field], where);
     }
@@ -1219,8 +1237,10 @@ assert(ann && /academic_year/.test(String(ann.summary)),
     `these have no calendar control: ${names.filter((n) => !covered.includes(n)).join(", ")}`,
     `${found.length} controls for ${names.length} fields`);
 
-  const unsafe = found.filter(({ f }) =>
-    f.picker_utc !== true || f.time_format !== false || f.format !== "YYYY-MM-DD");
+  // calendarDate is safe by construction; a datetime widget, if one ever
+  // returns, must still carry the three settings that made it safe.
+  const unsafe = found.filter(({ f }) => f.format !== "YYYY-MM-DD" || (f.widget === "datetime" &&
+    (f.picker_utc !== true || f.time_format !== false)));
   assert(unsafe.length === 0,
     "every date control is timezone-safe and stores a plain calendar day",
     `these are not timezone-safe: ${unsafe.map((u) => `${u.where}.${u.f.name}`).join(", ")}`,
@@ -1312,8 +1332,8 @@ assert(ev && /academic_year/.test(String(ev.summary)),
 
   // A dropdown since Phase 17C.2 — see the note in section 2.
   const y = evField("academic_year");
-  assert(y && y.required === true && y.widget === "select",
-    "academic year is a required, visible dropdown",
+  assert(y && y.required === true && y.widget === "choiceCards" && y.follow_date === "start_date",
+    "academic year is a required, visible choice that follows the start date",
     "academic year is missing, hidden or free text");
   assert(y && Array.isArray(y.options) &&
     y.options.every((v) => cms.parseAcademicYear(v) !== null),
@@ -1358,13 +1378,16 @@ assert(ev && /academic_year/.test(String(ev.summary)),
   */
   for (const name of ["start_date", "end_date"]) {
     const d = evField(name);
-    assert(d && d.widget === "datetime",
+    assert(d && d.widget === "calendarDate",
       `${name} is a calendar control, so no date can be typed by hand`,
       `${name} uses the ${d && d.widget} widget`);
-    assert(d && d.picker_utc === true && d.time_format === false && d.format === "YYYY-MM-DD",
+    assert(d && d.format === "YYYY-MM-DD",
       `${name} is timezone-safe and stores a plain calendar day`,
-      `${name} is missing picker_utc, time_format: false or the YYYY-MM-DD format`);
+      `${name} does not store the YYYY-MM-DD format`);
   }
+  assert(evField("end_date") && evField("end_date").after_field === "start_date",
+    "the end date warns when it is before the start date",
+    "an end date before the start date gets no warning");
   assert(evField("start_date") && evField("start_date").required === true,
     "a standard event must have a start date",
     "the start date is optional");
@@ -1554,7 +1577,9 @@ assert(ev && /academic_year/.test(String(ev.summary)),
 
   for (const name of ["published", "show_in_listing", "show_on_homepage", "show_in_archive", "flagship"]) {
     const f = evField(name);
-    assert(f && f.widget === "boolean", `${name} is an editorial on/off control`,
+    const booleanChoice = f && f.widget === "choiceCards" &&
+      JSON.stringify((f.options || []).map((o) => o.value)) === "[false,true]";
+    assert(f && (f.widget === "boolean" || booleanChoice), `${name} is an editorial on/off control`,
       `${name} is not a boolean`);
     assert(f && f.label && f.label !== name,
       `${name} has a human label`, `${name} shows its storage key`);
@@ -1627,8 +1652,9 @@ section("15. The fixed event page and the conditional Registration block (17C.5A
 
   const annReg = ((ann && ann.fields) || []).find((f) => f.name === "registration");
   const source = ((annReg || {}).fields || []).find((f) => f.name === "source");
-  assert(source && source.widget === "select",
-    "an announcement chooses where its registration comes from", "no source chooser");
+  assert(source && source.widget === "choiceCards" && source.empty_shows_default === false,
+    "an announcement chooses where its registration comes from, and an older record shows no invented answer",
+    "no source chooser, or it draws a default on records that never answered");
   const values = ((source || {}).options || []).map((o) => o.value);
   assert(JSON.stringify(values) === JSON.stringify(["none", "event", "own"]),
     "the chooser offers no registration, a Federation event, or this announcement",
@@ -1645,9 +1671,10 @@ section("15. The fixed event page and the conditional Registration block (17C.5A
     duplication this model exists to remove.
   */
   const picker = ((annReg || {}).fields || []).find((f) => f.name === "event_slug");
-  assert(picker && picker.widget === "relation" && picker.collection === "standard_events",
-    "the event picker reads the events collection through the backend",
-    "the picker is not a relation on standard_events");
+  assert(picker && picker.widget === "eventPicker" && picker.collection === "standard_events" &&
+    JSON.stringify(picker.families) === JSON.stringify([cms.STANDARD_FAMILY]),
+    "the event picker reads the standard events collection through the backend",
+    "the picker is not a live list of standard events");
   assert(picker && picker.filter === undefined,
     "the picker lists every standard event, unfiltered",
     "the picker hides some events");
@@ -1789,9 +1816,9 @@ section("12. Netlify configuration");
   assert(loginFallback > -1 && roleRule < loginFallback,
     "an unauthorised visitor falls through to the login page, not into the CMS",
     "the role rule does not precede the login fallback — order decides which wins");
-  assert(/Role = \["editor", "admin"\]/.test(toml),
-    "only editors and admins may open the content manager",
-    "the admin role condition is not editor/admin");
+  assert(/Role = \["editor", "admin", "superadmin"\]/.test(toml),
+    "only editors, admins and superadmins may open the content manager",
+    "the admin role condition is not editor/admin/superadmin");
 
   /* The API is a function, and nothing may frame the CMS. */
   assert(/from = "\/api\/cms"/.test(toml) && /functions\/cms/.test(toml),

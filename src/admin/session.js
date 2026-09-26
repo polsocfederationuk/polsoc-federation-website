@@ -37,7 +37,7 @@
 
   var api = window.netlifyIdentityApi;
   var LOGIN = "/staff-login/";
-  var ROLES = { admin: "Administrator", editor: "Editor" };
+  var ROLES = { superadmin: "Superadmin", admin: "Administrator", editor: "Editor" };
 
   /* -- leaving --------------------------------------------------------------- */
 
@@ -72,12 +72,11 @@
 
   /** The role this account holds, or null. Display only. */
   function roleOf(user) {
-    var roles = (user && user.roles) || [];
-    for (var i = 0; i < roles.length; i++) {
-      var role = String(roles[i]).toLowerCase();
-      if (role === "admin") return "admin";
-      if (role === "editor") return "editor";
-    }
+    var roles = ((user && user.roles) || []).map(function (r) { return String(r).toLowerCase(); });
+    // The highest role wins, whatever order Identity lists them in.
+    if (roles.indexOf("superadmin") !== -1) return "superadmin";
+    if (roles.indexOf("admin") !== -1) return "admin";
+    if (roles.indexOf("editor") !== -1) return "editor";
     return null;
   }
 
@@ -257,6 +256,19 @@
     site.href = "/";
     site.textContent = "View website";
     list.insertBefore(site, first);
+
+    /*
+      Superadmins only. The link is a convenience: the invite screen asks the
+      server again, and the server refuses everybody else regardless.
+    */
+    if (role === "superadmin") {
+      var invite = document.createElement("a");
+      invite.className = "fed-account-item";
+      invite.setAttribute("role", "menuitem");
+      invite.href = "/admin/invite/";
+      invite.textContent = "Invite someone";
+      list.insertBefore(invite, site);
+    }
   }
 
   /* -- start ----------------------------------------------------------------- */

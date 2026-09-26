@@ -68,8 +68,10 @@ function teamGroupOptions() {
 }
 
 /* ---------------------------------------------------------------------------
-   Event options for announcement links, derived from the canonical event
-   records rather than hard-coded.
+   The events offered by the event list (src/admin/event-picker.js), derived
+   from the canonical event records rather than hard-coded. The list also reads
+   the Events collection live; this snapshot is what it draws first, and the
+   only source for families without a collection (the Business Forum).
 
    An announcement stores an event SLUG, never a generated URL: the templates
    build `event-<slug>.html` for English and `../event-<slug>.html` from the
@@ -82,21 +84,33 @@ function teamGroupOptions() {
    with a SPACE is deliberate — concatenating them with "" is the exact defect
    that produced "Polish Youth Congress2025" in Phase 11.
    --------------------------------------------------------------------------- */
-function eventLinkOptions() {
+function eventChoices() {
   const dir = path.join(ROOT, "content", "events");
   if (!fs.existsSync(dir)) return [];
   return fs
     .readdirSync(dir)
     .filter((f) => /\.ya?ml$/i.test(f))
     .sort()
-    .map((f) => yaml.load(fs.readFileSync(path.join(dir, f), "utf8")) || {})
-    .filter((e) => e.slug && e.published === true)
+    .map((f) => {
+      try { return yaml.load(fs.readFileSync(path.join(dir, f), "utf8")) || {}; } catch (err) { return {}; }
+    })
+    .filter((e) => e.slug)
     .map((e) => {
       const en = e.en || {};
-      const label = en.title ||
+      const title = en.title ||
         [en.title_lead, en.title_fancy, en.title_tail]
           .filter(Boolean).map((s) => String(s).trim()).filter(Boolean).join(" ");
-      return { label: label || e.slug, value: e.slug };
+      const date = e.start_date instanceof Date
+        ? e.start_date.toISOString().slice(0, 10) : String(e.start_date || "").slice(0, 10);
+      return {
+        slug: e.slug,
+        family: e.event_family || "",
+        title: title || en.timeline_title || e.slug,
+        start_date: date,
+        academic_year: e.academic_year || "",
+        published: e.published === true,
+        registration: ((e.registration || {}).state) || "none",
+      };
     });
 }
 
@@ -132,25 +146,64 @@ function academicYearField(name, label, hint, extra) {
   return Object.assign({
     label,
     name,
-    widget: "select",
+    // Chips rather than a dropdown (see src/admin/choice-cards.js). Only the
+    // years an editor is likely to want are on screen; the full generated range
+    // is one click away behind "Other year…", and the stored value is always
+    // shown, so an old record never hides its own year.
+    widget: "choiceCards",
+    layout: "chips",
     required: true,
     options: academicYear.academicYearOptions(currentAcademicYear()),
+    featured: featuredAcademicYears(),
+    more_label: "Other year…",
     hint,
   }, extra || {});
 }
 
+/** Last year, this year and next year: the chips shown before "Other year…". */
+function featuredAcademicYears() {
+  const start = academicYear.parseAcademicYear(currentAcademicYear());
+  const all = academicYear.academicYearOptions(currentAcademicYear());
+  if (!start) return all.slice(0, 3);
+  return [start - 1, start, start + 1]
+    .map((y) => `${y}/${String((y + 1) % 100).padStart(2, "0")}`)
+    .filter((y) => all.includes(y));
+}
+
 /**
- * A date-only calendar control.
+ * Hidden / Live on website, as two cards instead of an on/off switch.
  *
- * `datetime` with a date-only format and `picker_utc` gives a calendar without a
- * clock and, critically, without timezone conversion — the stored string stays
+ * Stores the same boolean the toggle stored. The card text says what each
+ * state means, so the hint no longer has to.
+ */
+function visibilityField(thing, extraHint) {
+  return {
+    label: "Show on website",
+    name: "published",
+    widget: "choiceCards",
+    required: false,
+    default: false,
+    columns: 2,
+    options: [
+      { label: "Hidden", value: false, description: `Only staff can see this ${thing}.` },
+      { label: "Live on website", value: true, description: "Visible to everyone once you publish." },
+    ],
+    hint: extraHint || "Your changes are saved with Publish in the toolbar, whichever you choose.",
+  };
+}
+
+/**
+ * A date-only calendar control — src/admin/calendar-date.js.
+ *
+ * A native date picker with no clock and no time zone, so the stored string is
  * exactly YYYY-MM-DD, which dateOnly.js, the validators and the JSON-LD all
- * depend on. Free typing was the previous behaviour and let a value like
- * 20/05/2026 reach a file.
+ * depend on. It replaced Decap's `datetime` widget (made safe with
+ * `picker_utc`, but drawn as a box in a box with a "UTC" label). Free typing,
+ * the original behaviour, let a value like 20/05/2026 reach a file.
  *
- * Year-month-day ordering is stated in the hint: the picker renders in Decap's
- * own format, and forcing a slashed display is not worth risking the stored
- * value. See docs/CMS_EVENTS.md.
+ * `format` is kept as a statement of what is stored; the widget always writes
+ * that form. `extra` carries `after_field` / `after_label` for a date that must
+ * not precede another.
  *
  * Every field built here registers its name in DATE_FIELD_NAMES, which the
  * pre-save guard uses to turn a cleared date into `null`. Registering at
@@ -159,19 +212,16 @@ function academicYearField(name, label, hint, extra) {
  */
 const DATE_FIELD_NAMES = [];
 
-function dateOnlyField(name, label, required, hint) {
+function dateOnlyField(name, label, required, hint, extra) {
   if (DATE_FIELD_NAMES.indexOf(name) === -1) DATE_FIELD_NAMES.push(name);
-  return {
+  return Object.assign({
     label,
     name,
-    widget: "datetime",
+    widget: "calendarDate",
     required: Boolean(required),
-    date_format: "YYYY-MM-DD",
-    time_format: false,
     format: "YYYY-MM-DD",
-    picker_utc: true,
     hint,
-  };
+  }, extra || {});
 }
 
 const YEAR_HINT =
@@ -210,23 +260,25 @@ function teamFields() {
     {
       label: "Record ID — must be unique",
       name: "slug",
-      widget: "string",
+      widget: "eventRecordId",
+      id_source: "name",
       required: true,
-      hint: SLUG_HINT,
+      hint: "Created from the person's name and committee year. Usually no changes are needed. Create a new profile for each committee year.",
       pattern: ["^[a-z0-9]+(-[a-z0-9]+)*$",
         "Lowercase letters, numbers and single hyphens only — e.g. jane-example-2026-27."],
     },
-    academicYearField("academic_year", "Academic year", YEAR_HINT),
+    academicYearField("academic_year", "Committee year", "Create a new profile when a member returns for another year.", { default: currentAcademicYear() }),
     {
       label: "Team group",
       name: "group",
-      widget: "select",
+      widget: "choiceCards",
+      columns: 3,
       required: true,
       options: teamGroupOptions(),
       hint: "Which section of the team page this person appears under.",
     },
     {
-      label: "Display position within the group",
+      label: "Position in the team",
       name: "order",
       widget: "number",
       required: true,
@@ -236,14 +288,7 @@ function teamFields() {
       hint: "1 is first. Positions are counted within this group and this academic " +
         "year only, so two people in different groups may both be 1.",
     },
-    {
-      label: "Published",
-      name: "published",
-      widget: "boolean",
-      required: false,
-      default: true,
-      hint: "Unpublish to remove somebody from the site while keeping the record.",
-    },
+    visibilityField("profile"),
     {
       label: "Full name",
       name: "name",
@@ -342,6 +387,7 @@ function teamFields() {
       name: "pl",
       widget: "object",
       required: true,
+      collapsed: false,
       fields: [
         {
           label: "Role title (Polish)",
@@ -686,25 +732,29 @@ const CANONICAL_REGISTRATION_NONE = Object.freeze({
  */
 function registrationFields(kind) {
   const onEvent = kind === "event";
-  const thing = onEvent ? "event" : "announcement";
   return [
     {
       label: "Registration status",
       name: "state",
-      widget: "select",
+      widget: "choiceCards",
+      columns: 4,
       required: false,
       default: REGISTRATION_NONE,
       options: REGISTRATION_STATES.map((v) => ({
-        label: v === "none" ? "No registration — no sign-up button"
-          : v === "coming_soon" ? "Coming soon — sign-ups have not opened"
-            : v === "open" ? "Open — people can register now"
-              : "Closed — sign-ups have ended",
+        label: ({ none: "No registration", coming_soon: "Coming soon", open: "Open", closed: "Closed" })[v],
+        description: ({
+          none: "No sign-up button",
+          coming_soon: "Sign-ups have not opened",
+          open: "People can register now",
+          closed: "Sign-ups have ended",
+        })[v],
         value: v,
       })),
-      hint: "You choose this. It does NOT change on its own when a date passes: " +
-        "the website is built as fixed files, so a status that changed by itself " +
-        `would be wrong until somebody rebuilt the site. Blank means no ` +
-        `registration, which is normal for most ${thing}s.`,
+      // The status never changes by itself when a date passes: the site is
+      // built as fixed files, so a self-changing status would be wrong until
+      // the next rebuild. The hint says what to do about that, not why.
+      hint: "Choose the current status. It does not change on its own when a date passes — " +
+        "update it when registration opens or closes.",
     },
     {
       label: "Registration web address",
@@ -723,7 +773,8 @@ function registrationFields(kind) {
       "Setting it does NOT open registration — change the status for that."),
     dateOnlyField("closes_on", "Sign-ups close on", false,
       "Optional. Shown to readers as a deadline. Setting it does NOT close " +
-      "registration — change the status for that."),
+      "registration — change the status for that.",
+      { after_field: "registration.opens_on", after_label: "the day sign-ups open" }),
   ];
 }
 
@@ -906,17 +957,18 @@ function announcementFields() {
     {
       label: "Record ID — must be unique",
       name: "slug",
-      widget: "string",
+      widget: "eventRecordId",
+      id_source: "en.title",
       required: true,
-      hint: ANN_SLUG_HINT,
+      hint: "Created from the English title and academic year. Usually no changes are needed. Create a new announcement for each new edition.",
       pattern: ["^[a-z0-9]+(-[a-z0-9]+)*$",
         "Lowercase letters, numbers and single hyphens only."],
     },
-    academicYearField("academic_year", "Academic year", ANN_YEAR_HINT),
+    academicYearField("academic_year", "Academic year", "Picked from the publication date on a new announcement. Change it only if the announcement belongs to a different year.", { default: currentAcademicYear(), follow_date: "published_date" }),
     dateOnlyField("published_date", "Publication date", true,
-      "Pick the date from the calendar. Stored as year-month-day, e.g. 2026-05-14."),
+      "Pick the day from the calendar."),
     {
-      label: "Display position",
+      label: "Position in the list",
       name: "order",
       widget: "number",
       required: true,
@@ -926,15 +978,7 @@ function announcementFields() {
       hint: "1 appears first. Positions are counted within this academic year only, " +
         "so next year's announcements start again at 1.",
     },
-    {
-      label: "Published",
-      name: "published",
-      widget: "boolean",
-      required: false,
-      default: true,
-      hint: "Unpublish to hide an announcement without deleting it. This is separate " +
-        "from the academic year: a future year's announcement is already hidden.",
-    },
+    visibilityField("announcement"),
     {
       label: "Main image",
       name: "image",
@@ -985,11 +1029,16 @@ function announcementFields() {
     {
       label: "Image fit",
       name: "image_fit",
-      widget: "select",
+      widget: "choiceCards",
+      columns: 2,
       required: false,
-      options: [...SUPPORTED_IMAGE_FIT].map((v) => ({ label: "Contain (show the whole image)", value: v })),
-      hint: "Leave empty for the normal cropped fit. Choose Contain for posters and " +
-        "graphics that must not be cropped.",
+      // "Fill the frame" stores null — the value every uncropped-by-choice
+      // announcement already holds — so no existing file changes.
+      options: [
+        { label: "Fill the frame", value: null, description: "Best for photographs. The edges may be cropped." },
+      ].concat([...SUPPORTED_IMAGE_FIT].map((v) => ({
+        label: "Show the whole image", value: v, description: "For posters and logos that must not be cut off.",
+      }))),
     },
     {
       // The ONE field in the current CMS whose stored value is genuinely a CSS
@@ -1064,31 +1113,32 @@ function announcementFields() {
         {
           label: "Where registration is handled",
           name: "source",
-          widget: "select",
+          widget: "choiceCards",
+          columns: 3,
+          // Older announcements have no answer here; drawing one would hide the
+          // registration they already carry (see registration-ux.js, branchOf).
+          empty_shows_default: false,
           required: false,
           default: "none",
           options: [
-            { label: "No registration — nothing to sign up for", value: "none" },
-            { label: "A Federation event — use that event's registration", value: "event" },
-            { label: "This announcement — enter the details here", value: "own" },
+            { label: "No sign-up", value: "none", description: "Nothing to register for." },
+            { label: "Through a Federation event", value: "event", description: "Uses that event's sign-up, dates and status." },
+            { label: "Set up here", value: "own", description: "Only for this announcement." },
           ],
-          hint: "Most announcements need nothing here. Choose the Federation " +
-            "event when this announcement is about one — its status and dates " +
-            "are then managed on the event and this announcement follows them, " +
-            "including sign-ups that have not opened yet.",
+          hint: "Most announcements need no sign-up. If this one is about a Federation " +
+            "event, choose that event and its sign-up status and dates are used automatically.",
         },
         {
           label: "Federation event",
           name: "event_slug",
-          widget: "relation",
+          // A readable list (src/admin/event-picker.js). It reads the collection
+          // through Decap's own query, as the relation dropdown did, so an event
+          // saved a minute ago appears without rebuilding the CMS.
+          widget: "eventPicker",
           required: false,
           collection: "standard_events",
-          value_field: "slug",
-          // What the editor reads in the list. The date distinguishes annual
-          // editions of an event that share a name.
-          display_fields: [EVENT_PICKER_LABEL],
-          search_fields: ["en.timeline_title", "slug", "start_date"],
-          options_length: 20,
+          families: [STANDARD_FAMILY],
+          show_registration: true,
           hint: "Every Federation event can be chosen, including ones whose " +
             "sign-ups have not opened yet — this announcement will show a " +
             "registration panel as soon as the event has one.",
@@ -1107,14 +1157,18 @@ function announcementFields() {
         {
           label: "Link destination",
           name: "type",
-          widget: "select",
+          widget: "choiceCards",
+          columns: 3,
           required: false,
           // "No link" first, and offered as a real choice rather than as an
           // empty select: it is how an editor undoes a destination.
           options: OFFERED_LINK_TYPES.map((v) => ({
-            label: v === LINK_TYPE_NONE ? "No link — no button on the card"
-              : v === "event" ? "Federation event"
-                : "External website",
+            label: v === LINK_TYPE_NONE ? "No button"
+              : v === "event" ? "A Federation event"
+                : "Another website",
+            description: v === LINK_TYPE_NONE ? "The card has no link."
+              : v === "event" ? "Opens the event page in the reader's language."
+                : "Any https:// address.",
             value: v,
           })),
           default: LINK_TYPE_NONE,
@@ -1123,20 +1177,18 @@ function announcementFields() {
           // because there is no link object to read a value from. The stored
           // shape is deliberately `link: null` rather than an object full of
           // empty strings, so the blank is explained rather than designed away.
-          hint: "Blank means this announcement has no button — that is normal for " +
-            "an announcement saved without a destination. Choose No link to remove " +
-            "a destination you added by mistake. Federation event keeps the " +
-            "reader's language automatically.",
+          hint: "Choose No button to remove a destination you added by mistake.",
         },
         {
           label: "Federation event",
           name: "event_slug",
-          widget: "select",
+          widget: "eventPicker",
           required: false,
-          options: eventLinkOptions(),
-          hint: "Used ONLY when the destination is Federation event. The English page " +
-            "links to the English event and the Polish page to the Polish one. " +
-            "Ignored and discarded for any other destination.",
+          // Every family (the Business Forum has no collection of its own and
+          // comes from the built list), live standard events on top.
+          collection: "standard_events",
+          published_only: true,
+          hint: "The English page links to the English event and the Polish page to the Polish one.",
         },
         {
           label: "External web address",
@@ -1147,8 +1199,7 @@ function announcementFields() {
           // point: an announcement button is rendered into the page.
           pattern: [HTTPS_URL,
             "Must be a full https:// address. Other schemes are not accepted."],
-          hint: "Used ONLY when the destination is External website. Must start with " +
-            "https:// — ignored and discarded for any other destination.",
+          hint: "Must start with https://.",
         },
       ],
     },
@@ -1165,8 +1216,8 @@ function announcementFields() {
           hint: "One sentence, shown on the card under the title.",
         },
         {
-          label: "Body", name: "body", widget: "markdown", required: true,
-          hint: ANN_BODY_HINT,
+          label: "Full announcement", name: "body", widget: "markdown", required: true,
+          hint: "Write your announcement here. Use the toolbar for bold text, links and lists. Press Enter to start a new paragraph.",
           // The rendered preview is what an editor reads; raw HTML must not be
           // offered anywhere, so the toolbar is limited to what markdown-it
           // renders with html:false.
@@ -1194,8 +1245,7 @@ function announcementFields() {
         },
         {
           label: "Treść", name: "body", widget: "markdown", required: true,
-          hint: "Markdown: pusty wiersz między akapitami, **pogrubienie**, *kursywa*, " +
-            "[odnośnik](https://…), - dla list. HTML nie jest obsługiwany.",
+          hint: "Wpisz treść ogłoszenia. Pasek narzędzi pozwala dodać pogrubienie, odnośniki i listy. Enter rozpoczyna nowy akapit.",
           buttons: ["bold", "italic", "link", "bulleted-list", "numbered-list", "quote"],
           editor_components: [],
           modes: ["rich_text"],
@@ -1214,10 +1264,12 @@ function announcementFields() {
    --------------------------------------------------------------------------- */
 
 const EVENT_SLUG_HINT =
-  "The unique identifier for THIS edition of the event. It becomes the filename, " +
-  "so it must not match one that already exists. A recurring event gets a NEW " +
-  "record each year: christmas-dinner for 2025/26, then christmas-dinner-2026-27 " +
-  "for the next. The earlier edition stays exactly as it is.";
+  "The unique identifier for THIS edition of the event. It is filled in from the " +
+  "English title and the academic year — Chleb Asi in 2026/27 becomes " +
+  "chleb-asi-26-27 — and becomes the filename and the web address, so it must not " +
+  "match one that already exists and cannot be changed once the event is saved. " +
+  "A recurring event gets a NEW record each year; the earlier edition stays exactly " +
+  "as it is.";
 
 /*
   ANY FULL https:// ADDRESS, WRITTEN ONCE.
@@ -1388,7 +1440,8 @@ function eventLocaleFields(lang) {
         "Zostaw puste, aby użyć opisu z karty.") },
     {
       label: t("Quick information", "Krótkie informacje"), name: "facts",
-      widget: "list", required: false,
+      widget: "factsTabs", required: false,
+      locale: lang,
       // The summary is what the collapsed row shows. "Attendance — 100 students"
       // tells an editor which fact they are looking at; "1 key facts" did not.
       summary: "{{fields.label}} — {{fields.value}}",
@@ -1542,7 +1595,9 @@ function standardEventFields() {
   return [
     /* -- identity, hidden invariants --------------------------------------- */
     {
-      label: "Record ID — must be unique", name: "slug", widget: "string", required: true,
+      // Generated from the English title + academic year on a new event, and
+      // read-only on a saved one. See src/admin/event-record-id.js.
+      label: "Record ID — must be unique", name: "slug", widget: "eventRecordId", required: true,
       hint: EVENT_SLUG_HINT,
       pattern: ["^[a-z0-9]+(-[a-z0-9]+)*$", "Lowercase letters, numbers and single hyphens only."],
     },
@@ -1555,12 +1610,14 @@ function standardEventFields() {
     { label: "date_precision", name: "date_precision", widget: "hidden", default: "day" },
     { label: "organiser", name: "organiser", widget: "hidden", default: "Federation of Polish Student Societies UK" },
 
-    academicYearField("academic_year", "Academic year", EVENT_YEAR_HINT),
+    academicYearField("academic_year", "Academic year", "Picked from the start date on a new event. Create a new event for each annual edition.", { default: currentAcademicYear(), follow_date: "start_date" }),
     dateOnlyField("start_date", "Start date", true,
-      "Pick the day from the calendar. Stored as year-month-day, e.g. 2026-02-10. " +
-      "The wording readers see comes from \"Date, as written\" below."),
+      // The picker shows the day in the editor's own format; it is stored as
+      // YYYY-MM-DD whatever that format is, so the hint need not mention it.
+      "Pick the day from the calendar."),
     dateOnlyField("end_date", "End date", false,
-      "Only for events spanning more than one day. Leave empty otherwise."),
+      "Only for events spanning more than one day. Leave empty otherwise.",
+      { after_field: "start_date", after_label: "the start date" }),
     /*
       DISPLAY POSITION IS GONE (Phase 17C.5A).
 
@@ -1576,10 +1633,8 @@ function standardEventFields() {
     { label: "Display position", name: "order", widget: "hidden" },
 
     /* -- visibility --------------------------------------------------------- */
-    { label: "Published", name: "published", widget: "boolean", required: false, default: true,
-      hint: "Unpublish to hide the event everywhere while keeping the record. An " +
-        "event for a FUTURE academic year must stay unpublished until that year " +
-        "becomes current — src/_data/eventListing.js refuses to build otherwise." },
+    visibilityField("event", "Keep events for future academic years hidden. Your changes are " +
+      "saved with Publish in the toolbar, whichever you choose."),
     { label: "Show in the events listing", name: "show_in_listing", widget: "boolean", required: false, default: true },
     { label: "Show on the homepage timeline", name: "show_on_homepage", widget: "boolean", required: false, default: true },
     { label: "Keep in the season archive", name: "show_in_archive", widget: "boolean", required: false, default: true,
@@ -1949,31 +2004,10 @@ function standardEventFields() {
 /* ---------------------------------------------------------------------------
    The configuration object.
    --------------------------------------------------------------------------- */
-/**
- * Turn Decap's built-in preview pane off, for every collection.
- *
- * Two reasons, and either alone would be enough:
- *
- *   - It crashes. Saving an event raises "Failed to load preview: Cannot read
- *     properties of undefined (reading 'get')" — Decap's generic preview cannot
- *     render the index-aligned `sections` / `en.sections` / `pl.sections`
- *     structure. The save itself succeeds, so the editor is shown a red error
- *     for an operation that actually worked. Nothing is more corrosive to trust
- *     in a tool than that.
- *   - It would be misleading even when it works. These pages are rendered by
- *     Eleventy from Nunjucks templates; Decap's preview knows none of that and
- *     shows an unstyled field dump. An editor comparing it to the real page
- *     would reasonably conclude the CMS had broken the design.
- *
- * A faithful preview would mean reimplementing the site's templates in React
- * and keeping the two in step forever. Showing nothing is honest; showing
- * something wrong is not. `npm run build` renders the real page.
- *
- * Applied by mapping over the collections rather than written into each one, so
- * a collection added later cannot reintroduce the crash by omission.
- */
-function withoutPreviewPane(collections) {
-  return collections.map((c) => Object.assign({}, c, { editor: { preview: false } }));
+/** Enable previews only where a dedicated, null-safe template is registered. */
+function withContentPreviews(collections) {
+  const names = ["team", "standard_events", "announcements"];
+  return collections.map((c) => Object.assign({}, c, { editor: { preview: names.includes(c.name) } }));
 }
 
 /**
@@ -2250,24 +2284,22 @@ function buildConfig() {
             file: "content/settings/academic-year.yaml",
             description: ROLLOVER_WARNING,
             fields: [
-              academicYearField("current", "Current academic year", ROLLOVER_WARNING),
+              academicYearField("current", "Current academic year",
+                "Change this only when the new season is ready to go live. It does NOT move " +
+                "or delete old content — last year's team and events simply stop being shown.",
+                { confirm: "Change the academic year the whole website treats as current? " +
+                  "Last year's team and events will stop being shown (nothing is deleted)." }),
               {
                 // Present so that saving this file cannot silently drop it.
                 // Decap serialises the fields it knows about; an unconfigured key
                 // would be lost on the first save.
                 label: "Known academic years",
                 name: "known",
-                widget: "list",
+                // Kept, not shown: nothing reads it yet and nobody needs to edit
+                // it by hand. A hidden field is still a configured field, so
+                // Decap writes the existing list back unchanged on save.
+                widget: "hidden",
                 required: false,
-                field: {
-                  label: "Academic year",
-                  name: "year",
-                  widget: "select",
-                  options: academicYear.academicYearOptions(currentAcademicYear()),
-                },
-                hint: "Every year that has content in the repository. Add the new " +
-                  "year here when you roll over. Nothing reads this yet — it is the " +
-                  "record of which archives exist.",
               },
             ],
           },
@@ -2276,7 +2308,17 @@ function buildConfig() {
     ],
   };
 
-  config.collections = withoutPreviewPane(config.collections);
+  // Keep event objects and repeatable rows open; this is presentation only.
+  function expandEventFields(fields) {
+    (fields || []).forEach((field) => {
+      if (field.widget === "object" || field.widget === "list") field.collapsed = false;
+      expandEventFields(field.fields);
+      if (field.field) expandEventFields([field.field]);
+      expandEventFields(field.types);
+    });
+  }
+  expandEventFields(config.collections.find((collection) => collection.name === "standard_events").fields);
+  config.collections = withContentPreviews(config.collections);
   return config;
 }
 
@@ -2574,6 +2616,28 @@ module.exports = () => ({
   brandColourScript: adminAsset("brand-colour.js"),
   // The image focus control — one widget, configured per field.
   focalPointScript: adminAsset("focal-point.js"),
+  // The standard event Record ID: generated on a new event, locked on a saved one.
+  eventRecordIdScript: adminAsset("event-record-id.js"),
+  // Skips Decap's ceremonial "Login" button. See the file's header.
+  autoLoginScript: adminAsset("auto-login.js"),
+  choiceCardsScript: adminAsset("choice-cards.js"),
+  choiceCardsStyles: adminAsset("choice-cards.css"),
+  // One clean date field for every date in the CMS.
+  calendarDateScript: adminAsset("calendar-date.js"),
+  calendarDateStyles: adminAsset("calendar-date.css"),
+  // Plainer wording for a few of Decap's own buttons ("Now" -> "Today").
+  // The event list that replaced both event dropdowns, and the data it starts from.
+  eventPickerScript: adminAsset("event-picker.js"),
+  eventChoices: eventChoices(),
+  // Shows only the link field the chosen destination uses.
+  linkUxScript: adminAsset("link-ux.js"),
+  factsTabsScript: adminAsset("facts-tabs.js"),
+  frontendPreviewBundle: require("../../lib/preview-build.js").buildPreviewBundle(),
+  previewToolbarScript: adminAsset("preview-toolbar.js"),
+  contentPreviewScript: adminAsset("content-preview.js"),
+  contentPreviewStyles: adminAsset("content-preview.css"),
+  formRefinementsStyles: adminAsset("form-refinements.css"),
+  eventRecordIdStyles: adminAsset("event-record-id.css"),
   // One title field with a highlight picker, in place of three text boxes.
   eventTitleScript: adminAsset("event-title.js"),
   eventTitleStyles: adminAsset("event-title.css"),
@@ -2590,6 +2654,9 @@ module.exports = () => ({
   bulkScript: adminAsset("bulk.js"),
   bulkStyles: adminAsset("bulk.css"),
   bulkLinkScript: adminAsset("bulk-link.js"),
+  // Invite someone — superadmins only. See netlify/functions/invite.mjs.
+  inviteScript: adminAsset("invite.js"),
+  inviteStyles: adminAsset("invite.css"),
   // The production sign-in gate and account panel. Only the production admin
   // page includes these; local development has no Identity to ask.
   sessionScript: adminAsset("session.js"),
@@ -2813,6 +2880,8 @@ module.exports.OFFERED_LINK_TYPES = OFFERED_LINK_TYPES;
 module.exports.SUPPORTED_LINK_TYPES = SUPPORTED_LINK_TYPES;
 module.exports.LINK_TYPE_NONE = LINK_TYPE_NONE;
 module.exports.teamGroupOptions = teamGroupOptions;
+module.exports.eventChoices = eventChoices;
+module.exports.featuredAcademicYears = featuredAcademicYears;
 module.exports.PROXY_PORT = PROXY_PORT;
 module.exports.PROXY_URL = PROXY_URL;
 /** Top-level key order a saved Team record will have. */

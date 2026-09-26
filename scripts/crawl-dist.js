@@ -102,7 +102,10 @@ function resolveRef(fromFile, raw) {
 
 /* -------------------------------------------------------------- the crawl */
 
-const htmlFiles = FILES.filter((f) => f.endsWith(".html"));
+// Identity e-mail templates are not pages: their links are placeholders that
+// Netlify fills in when it sends a message, so they are not crawled.
+const EMAIL_TEMPLATES = new Set(publicRoutes.emailTemplates().map((t) => t.file));
+const htmlFiles = FILES.filter((f) => f.endsWith(".html") && !EMAIL_TEMPLATES.has(f));
 check("HTML pages found to crawl", htmlFiles.length > 0, htmlFiles.length);
 
 const brokenLinks = [];

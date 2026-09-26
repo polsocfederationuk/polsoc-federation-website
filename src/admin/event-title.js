@@ -131,6 +131,8 @@
     var input = document.createElement("input");
     input.type = "text";
     input.className = ROOT + "-input";
+    input.id = trio.lead.id + "-combined";
+    titleLabel.htmlFor = input.id;
 
     var pickLabel = document.createElement("p");
     pickLabel.className = ROOT + "-sub";
@@ -153,11 +155,18 @@
 
     wrap.appendChild(titleLabel);
     wrap.appendChild(input);
-    wrap.appendChild(pickLabel);
-    wrap.appendChild(tokens);
-    wrap.appendChild(clear);
+    var options = document.createElement("details");
+    options.className = ROOT + "-options";
+    var summary = document.createElement("summary");
+    summary.textContent = labels.style;
+    options.appendChild(summary);
+    options.appendChild(pickLabel);
+    options.appendChild(tokens);
+    options.appendChild(clear);
+    options.appendChild(preview);
+    wrap.appendChild(options);
+    // Warnings remain visible even while formatting options are closed.
     wrap.appendChild(warn);
-    wrap.appendChild(preview);
 
     // State lives here, not in the DOM.
     var range = null;
@@ -260,12 +269,14 @@
   var LABELS = {
     en: {
       title: "Event title",
+      style: "Title appearance",
       choose: "Click a word to highlight it. Hold Shift and click to include more words.",
       none: "No highlighted text",
       lost: "The title changed, so the highlight was cleared. Choose which part should be highlighted.",
     },
     pl: {
       title: "Tytuł wydarzenia",
+      style: "Wygląd tytułu",
       choose: "Kliknij słowo, aby je wyróżnić. Przytrzymaj Shift, aby dodać kolejne.",
       none: "Bez wyróżnienia",
       lost: "Tytuł się zmienił, więc wyróżnienie zostało usunięte. Wybierz, która część ma być wyróżniona.",

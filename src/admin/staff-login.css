@@ -148,3 +148,9 @@ body {
   Empty and hidden when there are none, which is the usual case.
 */
 .login-providers { display: flex; flex-direction: column; gap: 0.5rem; }
+
+/* An address that came from the invitation or reset link: shown, not edited. */
+.login-field input[readonly] { background: #f3f4f6; color: #3a3f4b; cursor: default; }
+.login-field-note { margin: 0; font-size: 0.82rem; color: #5a5f6b; }
+.login-field-error { margin: 0; font-size: 0.85rem; font-weight: 600; color: #a32020; }
+.login-field input[aria-invalid="true"] { border-color: #a32020; }

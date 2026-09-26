@@ -165,6 +165,7 @@ console.log("=".repeat(78));
 
   cms = await import("../netlify/functions/cms.mjs");
   bulk = await import("../netlify/functions/bulk.mjs");
+  const invite = await import("../netlify/functions/invite.mjs");
 
   /* -- the module format ---------------------------------------------------- */
 
@@ -176,7 +177,7 @@ console.log("=".repeat(78));
       a v1 function had to verify the session itself. These assertions are what
       stops the repository sliding back.
     */
-    for (const [name, mod] of [["cms", cms], ["bulk", bulk]]) {
+    for (const [name, mod] of [["cms", cms], ["bulk", bulk], ["invite", invite]]) {
       check(typeof mod.default === "function",
         `${name} exports a default handler`, typeof mod.default);
       check(mod.handler === undefined,
@@ -185,8 +186,8 @@ console.log("=".repeat(78));
     const fsMod = require("fs");
     const dir = path.join(__dirname, "..", "netlify", "functions");
     const files = fsMod.readdirSync(dir).sort();
-    check(files.join(",") === "bulk.mjs,cms.mjs",
-      "both functions are .mjs and nothing else remains", files.join(", "));
+    check(files.join(",") === "bulk.mjs,cms.mjs,invite.mjs",
+      "all three functions are .mjs and nothing else remains", files.join(", "));
     for (const file of files) {
       const raw = fsMod.readFileSync(path.join(dir, file), "utf8");
       /*
@@ -1973,6 +1974,115 @@ registration:
     check(/127\.0\.0\.1|localhost/.test(built.backend.proxy_url),
       "so a developer with those variables set still gets the local backend",
       built.backend.proxy_url);
+  }
+
+  section("14. Inviting people — superadmins only");
+  {
+    /*
+      netlify/functions/invite.mjs creates an account and sends Identity's
+      standard password e-mail, so an invitation works on Netlify's free plan.
+      The whole point of these checks is WHO may do that: a superadmin, and
+      nobody else, decided from the verified session and never from the body.
+    */
+    const people = {
+      super: { id: "s1", email: "boss@polsocfederation.pl", roles: ["superadmin"] },
+      admin: ACCOUNTS["admin-token"],
+      editor: ACCOUNTS["editor-token"],
+    };
+    const inviteRequest = (body, extra) => new Request(`${SITE}/api/invite`, {
+      method: (extra || {}).method || "POST",
+      headers: { "Content-Type": "application/json", Origin: (extra || {}).origin || SITE },
+      body: (extra || {}).method === "GET" ? undefined : JSON.stringify(body),
+    });
+    const runInvite = async (who, body, opts, extra) => {
+      const log = { created: [], mailed: [] };
+      const o = opts || {};
+      const response = await invite.default(inviteRequest(body, extra), {}, {
+        getUser: async () => people[who] || null,
+        env: { URL: SITE },
+        admin: { createUser: async (params) => {
+          if (o.createError) throw o.createError;
+          log.created.push(params);
+          return { id: "new", email: params.email };
+        } },
+        sendPasswordEmail: async (address) => {
+          if (o.mailFails) return false;
+          log.mailed.push(address);
+          return true;
+        },
+      });
+      return { status: response.status, body: await response.json(), log };
+    };
+
+    let r = await runInvite("super", { check: true });
+    check(r.status === 200 && r.body.canInvite === true, "a superadmin may invite", `${r.status}`);
+    r = await runInvite("admin", { check: true });
+    check(r.status === 200 && r.body.canInvite === false, "an admin is told they may not", `${r.status}`);
+    r = await runInvite(null, { check: true });
+    check(r.status === 401, "somebody signed out gets 401", `${r.status}`);
+
+    for (const who of ["admin", "editor"]) {
+      r = await runInvite(who, { email: "new@example.com", role: "editor" });
+      check(r.status === 403 && !r.log.created.length && !r.log.mailed.length,
+        `an ${who} is refused, and nothing is created or sent`, `${r.status}`);
+      r = await runInvite(who, { email: "new@example.com", resend: true });
+      check(r.status === 403 && !r.log.mailed.length, `an ${who} cannot resend either`, `${r.status}`);
+    }
+    r = await runInvite("editor", { email: "x@example.com", role: "editor", roles: ["superadmin"] });
+    check(r.status === 403, "roles sent in the body are ignored", `${r.status}`);
+
+    r = await runInvite("super", { email: " Jan+PBF@Example.com ", role: "admin", name: "Jan\nKowalski" });
+    const made = r.log.created[0] || { data: { app_metadata: {}, user_metadata: {} } };
+    check(r.status === 200 && made.email === "jan+pbf@example.com" && r.log.mailed[0] === "jan+pbf@example.com",
+      "a superadmin's invitation creates the account and sends the e-mail", `${r.status}`);
+    check((made.data.app_metadata.roles || []).join() === "admin" &&
+      made.data.app_metadata.invited_by === "boss@polsocfederation.pl",
+      "the role and the inviter are recorded on the account", JSON.stringify(made.data.app_metadata));
+    check(made.data.user_metadata.fed_welcome === true && made.data.user_metadata.full_name === "Jan Kowalski",
+      "the login page will greet them as new", JSON.stringify(made.data.user_metadata));
+    check(typeof made.password === "string" && made.password.length >= 40 &&
+      !JSON.stringify(r.body).includes(made.password),
+      "the temporary password is random and never returned", "hidden");
+
+    r = await runInvite("super", { email: "a@example.com", role: "superadmin" });
+    check(r.status === 400 && !r.log.created.length, "nobody can be made a superadmin from here", `${r.status}`);
+    r = await runInvite("super", { email: "not-an-address", role: "editor" });
+    check(r.status === 400 && !r.log.created.length, "a malformed address is refused", `${r.status}`);
+
+    const taken = Object.assign(new Error("A user with this email address has already been registered"), { status: 422 });
+    r = await runInvite("super", { email: "old@example.com", role: "editor" }, { createError: taken });
+    check(r.status === 409 && r.body.error.code === "exists" && !r.log.mailed.length,
+      "an address that already has an account is reported, not re-invited", `${r.status}`);
+    const noToken = new Error("Admin operations require an operator token (only available in Netlify Functions)");
+    const quiet = console.error; console.error = () => {};
+    r = await runInvite("super", { email: "x@example.com", role: "editor" }, { createError: noToken });
+    console.error = quiet;
+    check(r.status === 503 && r.body.error.code === "no_operator_token",
+      "a missing operator token is explained, and points at the dashboard", `${r.status}`);
+    r = await runInvite("super", { email: "x@example.com", role: "editor" }, { mailFails: true });
+    check(r.status === 502 && r.body.created === true && r.body.error.code === "email_failed",
+      "an e-mail that fails after the account exists says exactly that", `${r.status}`);
+    r = await runInvite("super", { email: "old@example.com", resend: true });
+    check(r.status === 200 && r.log.mailed[0] === "old@example.com" && !r.log.created.length,
+      "resending sends the e-mail and touches nothing else", `${r.status}`);
+    r = await runInvite("super", { check: true }, {}, { origin: "https://evil.example" });
+    check(r.status === 403, "a cross-site request is refused", `${r.status}`);
+
+    // The real e-mail call goes to this site's own Identity, never to the Host header.
+    const calls = [];
+    const forged = new Request("https://evil.example/api/invite", {
+      method: "POST", headers: { "Content-Type": "application/json", Origin: "https://evil.example" },
+      body: JSON.stringify({ email: "old@example.com", resend: true }),
+    });
+    const origin = require("../netlify/lib/session.js").identityOrigin(forged, { URL: SITE });
+    check(origin === SITE, "the password e-mail is requested from the site's own address", origin);
+    void calls;
+
+    const perms = authz.permissions({ id: "s", email: "s@x", roles: ["superadmin"] });
+    check(perms.isEditor && perms.isAdmin && perms.isSuperadmin,
+      "a superadmin can also do everything an admin and an editor can", JSON.stringify(perms));
+    check(!authz.permissions(ACCOUNTS["admin-token"]).isSuperadmin,
+      "an admin is not a superadmin", "admin");
   }
 
   /* -- finish -------------------------------------------------------------- */

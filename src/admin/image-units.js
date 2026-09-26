@@ -194,19 +194,12 @@
       panels.push(ctl);
     }
 
-    /*
-      CLOSED BY DEFAULT (Phase 17C.5A.3).
-
-      Four of the five events have no album at all, and the ones that do get it
-      weeks after the event. A native <details> is closed before any script runs,
-      the browser handles the toggle, and it stays keyboard- and
-      screen-reader-correct without us reimplementing any of that.
-    */
-    var block = document.createElement("details");
+    // Keep album fields visible alongside the other event sections.
+    var block = document.createElement("section");
     block.className = ROOT + " " + ROOT + "-drawer";
     block.setAttribute("data-" + ROOT, "album");
 
-    var title = document.createElement("summary");
+    var title = document.createElement("h3");
     title.className = ROOT + "-title " + ROOT + "-summary";
     title.textContent = "Photo album";
     block.appendChild(title);

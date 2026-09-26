@@ -47,11 +47,20 @@ eleventyExcludeFromCollections: true
       /* The image focus control, from src/admin/focal-point.css. */
 {{ cmsConfig.focalPointStyles | safe }}
 
+      /* The event Record ID control, from src/admin/event-record-id.css. */
+{{ cmsConfig.eventRecordIdStyles | safe }}
+
       /* The one-field event title control, from src/admin/event-title.css. */
 {{ cmsConfig.eventTitleStyles | safe }}
 
       /* Section grouping and compact visibility, from src/admin/form-sections.css. */
 {{ cmsConfig.formSectionsStyles | safe }}
+
+      /* Choice cards, year chips and the event list, from src/admin/choice-cards.css. */
+{{ cmsConfig.choiceCardsStyles | safe }}
+
+      /* Date fields, from src/admin/calendar-date.css. */
+{{ cmsConfig.calendarDateStyles | safe }}
 
       /* Live length captions, from src/admin/char-count.css. */
 {{ cmsConfig.charCountStyles | safe }}
@@ -70,6 +79,7 @@ eleventyExcludeFromCollections: true
 {% if cmsConfig.proxyUrl == "/api/cms" %}
 {{ cmsConfig.sessionStyles | safe }}
 {% endif %}
+{{ cmsConfig.formRefinementsStyles | safe }}
     </style>
   </head>
   <body>
@@ -154,9 +164,25 @@ eleventyExcludeFromCollections: true
          widget as data rather than written into the widget, so nobody has to
          remember to update two places when a brand colour changes.
          ------------------------------------------------------------------- */
+      /* No "Login" button in front of the CMS — src/admin/auto-login.js. First,
+         because Decap must find the remembered user when it looks for it. */
+      window.FED_LOCAL_CMS = {{ (cmsConfig.proxyUrl != "/api/cms") | dump | safe }};
+{{ cmsConfig.autoLoginScript | safe }}
       window.FED_BRAND_PALETTE = {{ cmsConfig.brandPalette | dump | safe }};
 {{ cmsConfig.brandColourScript | safe }}
 {{ cmsConfig.focalPointScript | safe }}
+{{ cmsConfig.eventRecordIdScript | safe }}
+{{ cmsConfig.choiceCardsScript | safe }}
+{{ cmsConfig.calendarDateScript | safe }}
+      /* The event list. Starts from the events in content/events/ as they were
+         when this page was built, then reads the Events collection live. */
+      window.FED_EVENT_CHOICES = {{ cmsConfig.eventChoices | dump | safe }};
+{{ cmsConfig.eventPickerScript | safe }}
+{{ cmsConfig.factsTabsScript | safe }}
+      window.FED_CONTENT_PREVIEW_CSS = {{ cmsConfig.contentPreviewStyles | dump | safe }};
+{{ cmsConfig.frontendPreviewBundle | safe }}
+{{ cmsConfig.contentPreviewScript | safe }}
+{{ cmsConfig.previewToolbarScript | safe }}
 
       (function () {
         "use strict";
@@ -479,6 +505,24 @@ eleventyExcludeFromCollections: true
                 break;
               }
             }
+
+            /*
+              A SAVED RECORD KEEPS ITS RECORD ID.
+
+              The ID is the filename and the public address (event-<id>.html).
+              The Record ID control is read-only on a saved event; this is the
+              same rule enforced at save time, so it holds even if the control
+              is bypassed. Decap would not rename the file, so the save would
+              otherwise leave a slug that disagrees with its filename.
+            */
+            if (collection &&
+                ownPath !== collection.folder + "/" + slug + "." + collection.extension) {
+              throw new Error(
+                'This record\'s Record ID cannot be changed after saving. To use a different ID, ' +
+                'create a new record. Nothing has been saved.'
+              );
+            }
+
             // A record being created has no path yet. Checking every folder is
             // correct rather than lazy: an ID must be unique within its own
             // collection, and testing them all costs one request each.
@@ -557,7 +601,7 @@ eleventyExcludeFromCollections: true
          never clones them. Presentation only. */
 {{ cmsConfig.imageUnitsScript | safe }}
 
-      /* Overrides, collapsed until asked for. Moves the real controls. */
+      /* Optional event wording, grouped together. Moves the real controls. */
 {{ cmsConfig.advancedDrawerScript | safe }}
 
       /* -------------------------------------------------------------------
@@ -573,6 +617,8 @@ eleventyExcludeFromCollections: true
       window.FED_CMS_PROXY = {{ cmsConfig.proxyUrl | dump | safe }};
       window.FED_CMS_BRANCH = {{ cmsConfig.guard.branch | dump | safe }};
 {{ cmsConfig.registrationUxScript | safe }}
+      /* Only the link field the chosen destination uses. Presentation only. */
+{{ cmsConfig.linkUxScript | safe }}
 
       /* One anchor pointing at the Bulk manage page. Additive; see the file. */
 {{ cmsConfig.bulkLinkScript | safe }}

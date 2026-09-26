@@ -1,334 +1,301 @@
 /**
- * form-sections.js — turn a long field list into a form with a shape.
- *
- * The standard event form is the worst case: dozens of top-level fields in one
- * undifferentiated column, so an editor cannot tell which part of the page they
- * are editing, and everything advanced is as prominent as everything ordinary.
- *
- * This groups the fields Decap has already rendered under headings, collapses
- * the sections that are rarely touched, and lays the visibility switches out as
- * one compact row instead of five full-width blocks.
- *
- * PRESENTATION ONLY. Fields are MOVED, never rebuilt: the same DOM nodes are
- * re-parented, so every control stays mounted, keeps its React state and keeps
- * its unsaved value. Nothing here reads or writes entry data.
- *
- * WHY NOT DECAP'S OWN GROUPING
- *
- * Decap can only group fields by nesting them in an `object`, and an object
- * nests in the STORED YAML too. Grouping the event form that way would rewrite
- * every event file and change the canonical schema for a purely visual reason,
- * which the brief rules out. So the grouping lives here, keyed on field NAMES —
- * values this repository controls — and never on generated class names.
+ * Content-first administrative forms. Existing Decap controls are moved as
+ * intact units; values, validation and the saved YAML structure stay unchanged.
  */
-
 (function () {
   "use strict";
-
-  var ROOT = "fed-sec";
-
-  /**
-   * The plan, per collection.
-   *
-   * Each section lists the field names it owns, in the order they should appear.
-   * A field not named here stays where it is, so a field added later is visible
-   * by default rather than silently disappearing — the safe direction to fail.
-   */
   var PLANS = {
-    standard_events: [
-      { title: "Basic information", open: true,
-        fields: ["slug", "academic_year", "start_date", "end_date", "order", "eyebrow"] },
-      { title: "Where it happens", open: true, fields: ["venue"] },
-      { title: "Visibility", open: true, compact: true,
-        fields: ["published", "show_in_listing", "show_on_homepage", "show_in_archive", "flagship"] },
-      { title: "Images", open: true,
-        fields: ["card_image", "card_image_focus", "og_image"] },
-      /*
-        Album controls belong together (Phase 17C.5A.2).
-
-        The shared album address used to sit in a section called "Photo album
-        and social", while the heading, blurb and button label lived in the
-        language blocks. One conceptual thing in two places. The address moves
-        into the album unit built below; what is left here is genuinely social.
-      */
-      { title: "Social", open: false,
-        note: "Public post addresses only. Each post also shows a plain link, so " +
-          "the page still works if the platform will not embed it.",
-        fields: ["instagram_permalink", "facebook_permalink", "linkedin_permalink"] },
-      { title: "Co-organisers", open: false, fields: ["co_organisers"] },
-      /*
-        Registration became a real feature in Phase 17C.5A.2, so it is a real
-        section rather than a leftover under "search and sharing" — where it
-        had been parked while it was hidden and rendered nothing.
-      */
-      { title: "Registration", open: true, fields: ["registration"] },
-      /*
-        THE GALLERY (Phase 17C.5A.3).
-
-        It replaced the tri-array `sections` machinery, and it is optional: most
-        events have no gallery, and the ones that do get the photographs after
-        the page is already written. Closed, so the form does not open on a
-        picture list that is usually empty.
-
-        The object's own `collapsed: true` is in the config and reads correctly,
-        but Decap renders this object expanded regardless, so the collapsing is
-        done here — by the same mechanism as every other section on the form,
-        which is one behaviour to understand rather than two.
-      */
-      { title: "Gallery", open: false,
-        note: "Photographs shown in a grid below the main text. Leave it empty " +
-          "if there are none.",
-        fields: ["gallery"] },
-    ],
-    announcements: [
-      { title: "Basic information", open: true,
-        fields: ["slug", "academic_year", "published_date", "order"] },
-      { title: "Visibility", open: true, compact: true, fields: ["published"] },
-      { title: "Image", open: true,
-        fields: ["image", "image_position", "image_fit", "image_background", "extra_images"] },
-      { title: "Registration", open: true, fields: ["registration"] },
-      { title: "Destination link", open: false, fields: ["link"] },
-    ],
     team: [
-      { title: "Basic information", open: true,
-        fields: ["slug", "academic_year", "group", "order", "name"] },
-      { title: "Visibility", open: true, compact: true, fields: ["published"] },
-      { title: "Photograph", open: true, fields: ["photo", "photo_focus"] },
-      { title: "Contact", open: true, fields: ["email", "linkedin"] },
+      { title: "Profile", lane: "main", columns: true, fields: ["name", "group"] },
+      { title: "Role", lane: "main", languages: true, fields: ["en", "pl"] },
+      { title: "Contact", lane: "main", columns: true, fields: ["email", "linkedin"] },
+      { title: "Photo", lane: "side", disclosure: true, fields: ["photo", "photo_focus"] },
+      { title: "Website", lane: "side", fields: ["published", "academic_year", "order"] },
+      { title: "Record ID", lane: "side", disclosure: true, fields: ["slug"] }
     ],
+    standard_events: [
+  {
+    "title": "Event details",
+    "lane": "main",
+    "languages": true,
+    "columns": false,
+    "fields": [
+      "en",
+      "pl"
+    ]
+  },
+  {
+    "title": "Date and venue",
+    "lane": "main",
+    "columns": true,
+    "fields": [
+      "start_date",
+      "end_date",
+      "academic_year",
+      "venue"
+    ],
+    "wide": [
+      "venue"
+    ]
+  },
+  {
+    "title": "Images",
+    "lane": "main",
+    "columns": true,
+    "fields": [
+      "card_image",
+      "card_image_focus",
+      "og_image"
+    ]
+  },
+  {
+    "title": "Registration",
+    "disclosure": true,
+    "lane": "main",
+    "fields": [
+      "registration"
+    ]
+  },
+  {
+    "title": "Gallery",
+    "disclosure": true,
+    "lane": "main",
+    "fields": [
+      "gallery"
+    ]
+  },
+  {
+    "title": "Photo album",
+    "disclosure": true,
+    "lane": "main",
+    "fields": [
+      "album_url"
+    ]
+  },
+  {
+    "title": "Social posts",
+    "disclosure": true,
+    "lane": "main",
+    "columns": true,
+    "fields": [
+      "instagram_permalink",
+      "facebook_permalink",
+      "linkedin_permalink"
+    ]
+  },
+  {
+    "title": "Co-organisers",
+    "disclosure": true,
+    "lane": "main",
+    "fields": [
+      "co_organisers"
+    ]
+  },
+  {
+    "title": "Website visibility",
+    "lane": "main",
+    "columns": true,
+    "fields": [
+      "published",
+      "show_in_listing",
+      "show_on_homepage",
+      "show_in_archive",
+      "flagship"
+    ]
+  },
+  {
+    "title": "Record ID",
+    "disclosure": true,
+    "lane": "main",
+    "fields": [
+      "slug",
+      "order"
+    ]
+  }
+],
+    announcements: [
+      { title: "Announcement", lane: "main", languages: true, fields: ["en", "pl"] },
+      { title: "Image", lane: "main", disclosure: true, fields: ["image"] },
+      { title: "Registration", lane: "main", disclosure: true, fields: ["registration"] },
+      { title: "Button link", lane: "main", disclosure: true, fields: ["link"] },
+      { title: "More images", lane: "main", disclosure: true, fields: ["extra_images"] },
+      { title: "Image appearance", lane: "main", disclosure: true,
+        fields: ["image_position", "image_fit", "image_background"] },
+      { title: "Website", lane: "side", fields: ["published", "published_date", "academic_year", "order"] },
+      { title: "Record ID", lane: "side", disclosure: true, fields: ["slug"] }
+    ]
   };
 
-  /*
-    THE PER-LANGUAGE ADVANCED DRAWER LIVES IN src/admin/advanced-drawer.js.
+  if (typeof module !== "undefined" && module.exports) module.exports = { plans: PLANS };
+  if (typeof window === "undefined") return;
+  var observer, pending = null, serial = 0, runs = 0, lastError = null;
 
-    It was tried here first, twice, and never appeared — with every precondition
-    verified true by hand each time. Rather than keep guessing at a module that
-    does several other jobs, it was rebuilt as its own file on the pattern
-    image-units.js already proved: one observer, one job, its own state.
-
-    Nothing is left here for it. Two modules moving the same controls would
-    race, and only one of them was ever working.
-  */
-
-  /** Which collection is on screen? Read from the route, not from the markup. */
   function collectionName() {
-    var m = /#\/collections\/([^/]+)/.exec(location.hash || "");
-    return m ? m[1] : null;
+    var match = /#\/collections\/([^/]+)\/(?:new|entries\/)/.exec(location.hash || "");
+    return match ? match[1] : null;
   }
-
-  /** Decap's wrapper for one field, and the field name inside it. */
-  function fieldName(container) {
-    var el = container.querySelector("input, textarea, select, [data-slate-editor]");
-    if (el && el.id) {
-      var m = /^([a-z0-9_]+)-field-/i.exec(el.id);
-      if (m) return m[1];
-    }
-    // Objects and lists may have no input of their own; fall back to the id of
-    // the first descendant that does, which belongs to a child field, so those
-    // are matched by label instead.
-    return null;
+  function element(tag, className, text) {
+    var el = document.createElement(tag);
+    el.className = className;
+    if (text) el.textContent = text;
+    return el;
   }
-
-  /**
-   * The top-level field containers of the open entry form, in document order.
-   *
-   * Top-level means "not nested inside another field", which is what stops a
-   * sub-field of `venue` being torn out of it.
-   */
-  function topLevelFields(form) {
-    var all = form.querySelectorAll('[aria-label$="field"]');
-    var out = [];
-    for (var i = 0; i < all.length; i++) {
-      var el = all[i];
-      var parent = el.parentElement ? el.parentElement.closest('[aria-label$="field"]') : null;
-      if (!parent) out.push(el);
-    }
-    return out;
-  }
-
-  /**
-   * Match a container to a field name.
-   *
-   * Tries the input id first, then the label text against a name-to-label map
-   * built from the labels the config actually uses — both are values this
-   * repository owns.
-   */
-  /**
-   * The LABEL is tried first, deliberately.
-   *
-   * For an object or a list, the first descendant `input` belongs to a CHILD
-   * field — the venue group's first input is its town, not the venue — so
-   * reading the id would name the wrong field and the group would never be
-   * matched. The label belongs to the container itself.
-   */
-  function nameOf(container, labelMap) {
+  function nameOf(container) {
     var label = container.querySelector("label");
-    if (label) {
-      var owner = label.closest('[aria-label$="field"]');
-      if (owner === container) {
-        var text = label.textContent.trim().replace(/\s*\(optional\)\s*$/i, "");
-        if (labelMap[text]) return labelMap[text];
-      }
+    if (label && label.closest('[aria-label$="field"]') === container) {
+      var text = label.textContent.trim().replace(/\s*\(optional\)\s*$/i, "");
+      var name = (window.FED_FIELD_LABELS || {})[text];
+      if (name) return name;
     }
-    return fieldName(container);
+    var input = container.querySelector("input, textarea, select, [data-slate-editor]");
+    var match = input && /^([a-z0-9_]+)-field-/i.exec(input.id || "");
+    return match ? match[1] : null;
   }
-
-  function buildSection(spec) {
-    var sec = document.createElement("section");
-    sec.className = ROOT + (spec.compact ? " " + ROOT + "-compact" : "");
-
-    var head = document.createElement("button");
-    head.type = "button";
-    head.className = ROOT + "-head";
-    head.setAttribute("aria-expanded", spec.open ? "true" : "false");
-
-    var caret = document.createElement("span");
-    caret.className = ROOT + "-caret";
-    caret.setAttribute("aria-hidden", "true");
-    caret.textContent = "▾";
-
-    var title = document.createElement("span");
-    title.className = ROOT + "-title";
-    title.textContent = spec.title;
-
-    head.appendChild(caret);
-    head.appendChild(title);
-
-    var body = document.createElement("div");
-    body.className = ROOT + "-body";
-    if (!spec.open) body.hidden = true;
-
-    if (spec.note) {
-      var note = document.createElement("p");
-      note.className = ROOT + "-note";
-      note.textContent = spec.note;
-      body.appendChild(note);
-    }
-
-    head.addEventListener("click", function () {
-      var open = head.getAttribute("aria-expanded") === "true";
-      head.setAttribute("aria-expanded", open ? "false" : "true");
-      body.hidden = open;
-      sec.classList.toggle(ROOT + "-closed", open);
+  function rootFields(form) {
+    return Array.prototype.filter.call(form.querySelectorAll('[aria-label$="field"]'), function (field) {
+      return !field.parentElement.closest('[aria-label$="field"]');
     });
-
-    if (!spec.open) sec.classList.add(ROOT + "-closed");
-
+  }
+  function buildSection(spec) {
+    var sec = element(spec.disclosure ? "details" : "section",
+      "fed-sec" + (spec.disclosure ? " fed-sec-disclosure" : ""));
+    var head = element(spec.disclosure ? "summary" : "h2", "fed-sec-heading", spec.title);
+    if (spec.disclosure) head.appendChild(element("span", "fed-optional-label", spec.title === "Record ID" ? "Advanced" : "Optional"));
+    head.id = "fed-section-" + (++serial);
+    sec.setAttribute("aria-labelledby", head.id);
     sec.appendChild(head);
+    var body = element("div", "fed-sec-body" + (spec.columns ? " fed-sec-pair" : ""));
     sec.appendChild(body);
     return { sec: sec, body: body };
   }
 
-  var lastForm = null;
-  var enhancedFor = null;
-
-  function enhance(labelMap) {
-    var route = location.hash || "";
+  function enhance() {
     var plan = PLANS[collectionName()];
-    if (!plan) return;
-
-    /*
-      DONE ALREADY?
-
-      Guarding on the container was not enough. Moving a field into a section
-      makes that section's body its new parent, so on the next pass the "form"
-      looked like a different element, the guard missed, and the sections were
-      built again — twenty times over in testing. The route plus the presence of
-      our own markup is the reliable signal: this editor is already arranged.
-    */
-    if (enhancedFor === route && document.querySelector("." + ROOT)) return;
-    if (enhancedFor !== route) lastForm = null;
-
-    // The control list of the open editor. Anchored on Decap's own aria role.
-    var anyField = document.querySelector('[aria-label$="field"]:not(.' + ROOT + ' [aria-label$="field"])');
-    if (!anyField) return;
-    var form = anyField.parentElement;
-    if (!form) return;
-
-    var fields = topLevelFields(form);
-    if (!fields.length) return;
-
-    // Index the containers by field name.
+    if (!plan || document.querySelector(".fed-editor-layout")) return;
+    var any = document.querySelector('[aria-label$="field"]');
+    if (!any) return;
+    while (any.parentElement.closest('[aria-label$="field"]')) {
+      any = any.parentElement.closest('[aria-label$="field"]');
+    }
+    var form = any.parentElement;
     var byName = {};
-    fields.forEach(function (c) {
-      var n = nameOf(c, labelMap);
-      if (n && !byName[n]) byName[n] = c;
+    rootFields(form).forEach(function (field) {
+      var name = nameOf(field);
+      if (name && !byName[name]) byName[name] = field;
     });
+    if (!byName.en || !byName.pl || !byName.published || !byName.academic_year) return;
 
-    // Nothing recognisable? Leave the form exactly as Decap rendered it.
-    var recognised = plan.reduce(function (acc, s) {
-      return acc + s.fields.filter(function (f) { return byName[f]; }).length;
-    }, 0);
-    if (recognised < 3) return;
-
-    form.dataset.fedSections = "done";
-    lastForm = form;
-    enhancedFor = route;
+    // Use the actual editor width (not the browser width) for the layout:
+    // Decap can place this form in a narrower pane.
+    form.classList.add("fed-editor");
+    if (collectionName() === "standard_events") form.classList.add("fed-events-form");
+    var layout = element("div", "fed-editor-layout");
+    var main = element("div", "fed-editor-main");
+    var side = element("aside", "fed-editor-side");
+    side.setAttribute("aria-label", "Record settings");
+    layout.appendChild(main);
+    layout.appendChild(side);
+    form.insertBefore(layout, form.firstChild);
+    var moved = [];
 
     plan.forEach(function (spec) {
-      var owned = spec.fields.map(function (f) { return byName[f]; }).filter(Boolean);
+      var owned = spec.fields.map(function (name) {
+        var field = byName[name];
+        // Preserve already-built image/album units, including translations.
+        return field && (field.closest(".fed-imgunit") || field);
+      }).filter(function (field, index, all) {
+        return field && all.indexOf(field) === index && moved.indexOf(field) === -1;
+      });
       if (!owned.length) return;
       var built = buildSection(spec);
-      // Insert the section where its first field currently sits, so the overall
-      // order of the form is preserved rather than reshuffled.
-      owned[0].parentElement.insertBefore(built.sec, owned[0]);
-      owned.forEach(function (c) { built.body.appendChild(c); });
+      if (spec.languages && collectionName() === "standard_events") built.sec.classList.add("fed-event-languages");
+      if (spec.languages) {
+        var bar = form.querySelector(".fed-lang-tabs");
+        if (bar) built.body.appendChild(bar);
+      }
+      owned.forEach(function (field) {
+        built.body.appendChild(field);
+        if (spec.wide && spec.wide.some(function (name) { return byName[name] === field; })) field.classList.add("fed-span-all");
+        moved.push(field);
+      });
+      // An album unit already supplies a disclosure. A second nested
+      // disclosure would make users expand the same feature twice.
+      if (spec.fields.indexOf("album_url") !== -1) {
+        var album = built.body.querySelector("details.fed-imgunit");
+        if (album) album.open = true;
+      }
+      (spec.lane === "side" ? side : main).appendChild(built.sec);
     });
-
+    // New or unrecognised fields remain in their original form. Never hide them.
   }
 
-  /* -- wiring --------------------------------------------------------------- */
-
-  var LABEL_MAP = window.FED_FIELD_LABELS || {};
-
-  var runs = 0;
-  var lastError = null;
-  var pending = null;
-  var lastRun = 0;
-
-  // Throttle with a ceiling — see the note in event-title.js. Decap's editor
-  // mutates often enough that a plain debounce never settles.
-  var QUIET = 120;
-  var CEILING = 600;
-
+  function flattenObjects() {
+    var form = document.querySelector(".fed-editor");
+    if (!form) return;
+    Array.prototype.forEach.call(form.querySelectorAll('[aria-label="object field"]'), function (field) {
+      // Decap 3.15.1 ObjectControl: direct ID wrapper, then top bar and fields.
+      // Only mark that verified structure. List Add/remove controls are untouched.
+      var control = Array.prototype.find.call(field.children, function (child) { return Boolean(child.id); });
+      if (!control || control.children.length !== 2) return;
+      var top = control.children[0], body = control.children[1];
+      if (!top.querySelector('[data-testid="expand-button"]')) return;
+      control.classList.add("fed-flat-object");
+      top.classList.add("fed-object-toggle");
+      body.classList.add("fed-object-fields");
+      var children = Array.prototype.filter.call(body.children, function (child) {
+        return /field$/.test(child.getAttribute("aria-label") || "");
+      });
+      if (children.length === 2 && children[0].querySelector('[id^="en-field-"]') && children[1].querySelector('[id^="pl-field-"]')) {
+        body.classList.add("fed-bilingual-pair");
+      }
+      if (/^registration-field-/.test(control.id)) {
+        body.classList.add("fed-registration-grid");
+        children.forEach(function (child) {
+          if (child.querySelector('[id^="state-field-"], [id^="url-field-"]')) child.classList.add("fed-span-all");
+        });
+      }
+    });
+  }
+  function revealErrors() {
+    var form = document.querySelector(".fed-editor");
+    if (!form) return;
+    var errors = form.querySelectorAll('[aria-invalid="true"], [role="alert"], [class*="ControlError"]');
+    Array.prototype.forEach.call(errors, function (error) {
+      if (!error.textContent.trim() && error.getAttribute("aria-invalid") !== "true") return;
+      var parent = error.parentElement;
+      while (parent && parent !== form) {
+        if (parent.tagName === "DETAILS" && !parent.open) parent.open = true;
+        parent = parent.parentElement;
+      }
+    });
+  }
+  function finishUnits() {
+    // image-units.js may attach the album after the form has been arranged.
+    var album = document.querySelector(".fed-sec-disclosure details[data-fed-imgunit='album']");
+    if (album && !album.open) album.open = true;
+  }
   function run() {
     pending = null;
-    lastRun = Date.now();
     runs++;
-    // Grouping happens once per route; the image units are attempted on every
-    // pass because the alt controls live inside the language panels and are not
-    // necessarily rendered at the moment the sections are built.
-    try { enhance(LABEL_MAP); } catch (e) { lastError = String(e && e.message || e); }
-    // The per-language drawers are attempted on every pass: enhance() returns
-    // early once the top-level sections exist, and the language panels are not
-    // necessarily rendered at that moment.
+    if (observer) observer.disconnect();
+    try { enhance(); flattenObjects(); finishUnits(); revealErrors(); }
+    catch (error) { lastError = String(error.message || error); }
+    if (observer) observer.observe(document.body, { childList: true, subtree: true });
   }
-
   function schedule() {
-    if (Date.now() - lastRun > CEILING) { if (pending) clearTimeout(pending); return run(); }
-    if (pending) clearTimeout(pending);
-    pending = setTimeout(run, QUIET);
+    if (pending === null) pending = setTimeout(run, 120);
   }
-
-  // Observer plus a backstop poll — see the note in event-title.js.
   function start() {
-    schedule();
-    new MutationObserver(schedule).observe(document.body, { childList: true, subtree: true });
-    setInterval(function () {
-      if (PLANS[collectionName()] && !document.querySelector("." + ROOT)) schedule();
-    }, 700);
-    window.addEventListener("hashchange", function () { lastForm = null; schedule(); });
+    observer = new MutationObserver(schedule);
+    observer.observe(document.body, { childList: true, subtree: true });
+    window.addEventListener("hashchange", schedule);
+    run();
   }
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", start);
-  } else {
-    start();
-  }
-
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start);
+  else start();
   window.fedFormSections = {
     plans: PLANS,
-    count: function () { return document.querySelectorAll("." + ROOT).length; },
-    diagnostics: function () { return { runs: runs, lastError: lastError }; },
+    count: function () { return document.querySelectorAll(".fed-sec").length; },
+    diagnostics: function () { return { runs: runs, lastError: lastError }; }
   };
 })();

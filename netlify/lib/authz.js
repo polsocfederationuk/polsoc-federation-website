@@ -26,7 +26,17 @@
 
 const paths = require("./paths.js");
 
-const ROLES = { EDITOR: "editor", ADMIN: "admin" };
+/*
+  Three roles, each including the one below it:
+
+    editor      edits content
+    admin       + deletes records, changes site settings
+    superadmin  + invites people (netlify/functions/invite.mjs)
+
+  Superadmin is given only in the Netlify dashboard; nothing in this
+  repository can grant it.
+*/
+const ROLES = { EDITOR: "editor", ADMIN: "admin", SUPERADMIN: "superadmin" };
 
 /** Only an admin may permanently remove a record. */
 const ADMIN_ONLY_ACTIONS = new Set(["deleteFiles"]);
@@ -43,8 +53,10 @@ function permissions(user) {
     email: (user && user.email) || "",
     name: (user && (user.name || user.email)) || "",
     roles,
-    isEditor: roles.includes(ROLES.EDITOR) || roles.includes(ROLES.ADMIN),
-    isAdmin: roles.includes(ROLES.ADMIN),
+    isEditor: roles.includes(ROLES.EDITOR) || roles.includes(ROLES.ADMIN) ||
+      roles.includes(ROLES.SUPERADMIN),
+    isAdmin: roles.includes(ROLES.ADMIN) || roles.includes(ROLES.SUPERADMIN),
+    isSuperadmin: roles.includes(ROLES.SUPERADMIN),
   };
 }
 

@@ -146,6 +146,20 @@ const NOINDEX_ROUTES = LOCALES.map((l) => ({
   operational: true,
 }]);
 
+/**
+ * E-mail templates Netlify Identity reads from the deployed site.
+ *
+ * They are HTML files but NOT pages: nobody visits them, they carry Go template
+ * placeholders ({{ .SiteURL }}, {{ .Token }}, {{ .Email }}) that Netlify fills
+ * in when it sends a message, and they have no <head> to check. So the
+ * deployment audits allow them by this list instead of treating them as routes.
+ * Configured in Netlify under Identity → Emails.
+ */
+const EMAIL_TEMPLATES = [
+  { file: "staff-login/emails/invitation.html", source: "src/email-templates/invitation.html",
+    netlifySetting: "Invitation template" },
+];
+
 module.exports = () => ({
   domain: "https://polsocfederation.pl",
   routes: routes(),
@@ -155,5 +169,6 @@ module.exports = () => ({
 // Importable by scripts/*.js without going through Eleventy.
 module.exports.routes = routes;
 module.exports.noindexRoutes = () => NOINDEX_ROUTES;
+module.exports.emailTemplates = () => EMAIL_TEMPLATES;
 module.exports.domain = "https://polsocfederation.pl";
 module.exports.PAGE_ROUTES = PAGE_ROUTES;

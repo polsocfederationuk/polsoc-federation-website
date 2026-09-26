@@ -50,6 +50,34 @@
   var notice = document.getElementById("login-notice");
   var heading = document.getElementById("login-lead");
   var exit = document.getElementById("login-exit");
+  var emailNote = document.getElementById("login-email-note");
+  var passwordLabel = document.getElementById("login-password-label");
+  var confirmField = document.getElementById("login-confirm-field");
+  var confirm = document.getElementById("login-confirm");
+  var confirmError = document.getElementById("login-confirm-error");
+
+  /*
+    THE ADDRESS AN INVITATION WAS SENT TO.
+
+    Netlify's invitation token says nothing about who it is for, so the address
+    has to travel in the link itself: our invitation e-mail template
+    (src/email-templates/invitation.html) adds `&email=` beside the token. It is
+    read here, before handleAuthCallback() clears the URL.
+
+    Display only. acceptInvite() uses the token alone, so an edited address
+    changes nothing but what is shown — and a person following an older link,
+    or one from Netlify's default template, simply is not shown one.
+
+    Parsed by hand rather than with URLSearchParams, which turns "+" into a
+    space and would show jan+pbf@example.com as "jan pbf@example.com".
+  */
+  var invitedAddress = (function () {
+    var match = /(?:^|&)email=([^&]*)/.exec((window.location.hash || "").slice(1));
+    if (!match) return "";
+    var value;
+    try { value = decodeURIComponent(match[1]).trim(); } catch (err) { return ""; }
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) ? value : "";
+  })();
 
   /*
     The providers Netlify Identity supports, with the wording a person reads.
@@ -67,6 +95,14 @@
   /** What the form is currently for. Set by the callback handler on load. */
   var mode = "login";          // login | invite | recovery
   var inviteToken = null;
+  /*
+    A person invited from the content manager's own invite screen arrives
+    through a password-reset link (netlify/functions/invite.mjs explains why),
+    but has never had a password to reset. Their account carries
+    `fed_welcome`, so they are greeted as new, and the flag is cleared when
+    they choose their password.
+  */
+  var welcoming = false;
 
   function say(message, kind) {
     var box = kind === "notice" ? notice : problem;
@@ -112,7 +148,7 @@
     var roles = (user && user.roles) || [];
     for (var i = 0; i < roles.length; i++) {
       var role = String(roles[i]).toLowerCase();
-      if (role === "editor" || role === "admin") return true;
+      if (role === "editor" || role === "admin" || role === "superadmin") return true;
     }
     return false;
   }
@@ -137,20 +173,44 @@
 
   /* -- what the form is for ------------------------------------------------ */
 
-  function askForNewPassword(what) {
+  /**
+   * Ask for a new password, twice.
+   *
+   * `address` is who the password is for, when known: from the invitation
+   * link, or from the account a reset link has just signed in. It is shown
+   * read-only — the account is already decided by the token — and it lets a
+   * password manager save the new password against the right address.
+   */
+  function askForNewPassword(what, address) {
     mode = what;
+    var fresh = what === "invite" || welcoming;
     form.hidden = false;
-    email.closest(".login-field").hidden = true;
+    var emailField = email.closest(".login-field");
     email.required = false;
+    if (address) {
+      email.value = address;
+      email.readOnly = true;
+      emailField.hidden = false;
+      emailNote.textContent = fresh
+        ? "This is the address your invitation was sent to."
+        : "This is the account you are choosing a new password for.";
+      emailNote.hidden = false;
+    } else {
+      emailField.hidden = true;
+    }
+    passwordLabel.textContent = "Choose a password";
     password.setAttribute("autocomplete", "new-password");
     password.value = "";
-    heading.textContent = what === "invite" ? "Choose a password" : "Set a new password";
+    confirmField.hidden = false;
+    confirm.required = true;
+    confirm.value = "";
+    heading.textContent = fresh ? "Choose a password" : "Set a new password";
     submit.setAttribute("data-label",
-      what === "invite" ? "Create my account" : "Save new password");
+      fresh ? "Create my account" : "Save new password");
     submit.textContent = submit.getAttribute("data-label");
     providers.hidden = true;
     if (forgot) forgot.hidden = true;
-    say(what === "invite"
+    say(fresh
       ? "Welcome. Choose a password to finish setting up your account."
       : "Choose a new password for your account.", "notice");
     password.focus();
@@ -173,12 +233,14 @@
       if (result.type === "invite" && result.token) {
         // NOT signed in yet — an invited person sets a password first.
         inviteToken = result.token;
-        askForNewPassword("invite");
+        askForNewPassword("invite", invitedAddress);
         return "handled";
       }
       if (result.type === "recovery") {
         // Signed in, but the password is still the old one.
-        askForNewPassword("recovery");
+        var meta = (result.user && result.user.userMetadata) || {};
+        welcoming = meta.fed_welcome === true;
+        askForNewPassword("recovery", result.user && result.user.email);
         return "handled";
       }
       // oauth, confirmation, email_change: signed in and finished.
@@ -207,9 +269,32 @@
 
   /* -- the form ------------------------------------------------------------ */
 
+  function mismatch(show) {
+    confirmError.hidden = !show;
+    if (show) confirm.setAttribute("aria-invalid", "true");
+    else confirm.removeAttribute("aria-invalid");
+  }
+  // The warning goes as soon as the editor starts correcting it.
+  confirm.addEventListener("input", function () { mismatch(false); });
+  // …and appears when they leave a box that does not match, not only on submit.
+  confirm.addEventListener("blur", function () {
+    if (mode !== "login" && confirm.value && confirm.value !== password.value) mismatch(true);
+  });
+
   form.addEventListener("submit", function (event) {
     event.preventDefault();
     clearMessages();
+    /*
+      Checked here, before anything is sent: the service has no idea a second
+      box exists, and a typo in a password nobody can see would otherwise
+      lock the new account out on its first sign-in.
+    */
+    if (mode !== "login" && password.value !== confirm.value) {
+      mismatch(true);
+      confirm.focus();
+      return;
+    }
+    mismatch(false);
     busy(true);
 
     var finish = function (error) {
@@ -228,7 +313,10 @@
         they will use next time. updateUser() is the documented completion of
         that flow.
       */
-      api.updateUser({ password: password.value })
+      var changes = { password: password.value };
+      // A welcomed person is welcomed once.
+      if (welcoming) changes.data = { fed_welcome: null };
+      api.updateUser(changes)
         .then(function (user) { admitted(user); })
         .catch(finish);
       return;

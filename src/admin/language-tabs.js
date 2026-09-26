@@ -47,6 +47,7 @@
   var ROOT_CLASS = "fed-lang";
   var HIDDEN_CLASS = "fed-lang-hidden";
   var ACTIVE_CLASS = "fed-lang-tab-active";
+  var tabSequence = 0;
 
   /* -- finding the panels --------------------------------------------------- */
 
@@ -122,6 +123,9 @@
 
   /** Does this panel currently show a Decap validation error? */
   function hasError(panel) {
+    if (panel.querySelector('[aria-invalid="true"]')) return true;
+    var alerts = panel.querySelectorAll('[role="alert"]');
+    for (var i = 0; i < alerts.length; i++) if (alerts[i].textContent.trim()) return true;
     return /is required|must |cannot /i.test(panel.textContent || "") &&
       Boolean(panel.querySelector('[class*="error"], [class*="Error"]'));
   }
@@ -135,6 +139,7 @@
     bar.setAttribute("aria-label", "Editing language");
 
     var tabs = {};
+    var tabPrefix = "fed-language-" + (++tabSequence);
 
     LANGUAGES.forEach(function (lang) {
       var b = document.createElement("button");
@@ -142,6 +147,11 @@
       b.className = ROOT_CLASS + "-tab";
       b.setAttribute("role", "tab");
       b.dataset.lang = lang.code;
+      b.id = tabPrefix + "-tab-" + lang.code;
+      panels[lang.code].id = tabPrefix + "-panel-" + lang.code;
+      panels[lang.code].setAttribute("role", "tabpanel");
+      panels[lang.code].setAttribute("aria-labelledby", b.id);
+      b.setAttribute("aria-controls", panels[lang.code].id);
 
       var name = document.createElement("span");
       name.className = ROOT_CLASS + "-name";
@@ -160,9 +170,9 @@
 
     // Left/right arrows move between tabs, as a tablist should.
     bar.addEventListener("keydown", function (e) {
-      if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+      if (["ArrowLeft", "ArrowRight", "Home", "End"].indexOf(e.key) === -1) return;
       e.preventDefault();
-      select(current === "en" ? "pl" : "en");
+      select(e.key === "Home" ? "en" : e.key === "End" ? "pl" : current === "en" ? "pl" : "en");
       tabs[current].button.focus();
     });
 

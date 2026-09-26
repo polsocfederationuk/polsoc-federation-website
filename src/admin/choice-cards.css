@@ -1,0 +1,101 @@
+/* Choice cards, chips and the event list: every option visible, no dropdowns.
+   Not scoped to one collection — the same control appears on every form. */
+.fed-choice-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+  margin: 4px 0 2px;
+}
+/* At most N per row, but never narrower than 140px: fewer columns on a
+   narrow form instead of squashed text. */
+.fed-choice-cards.has-columns {
+  grid-template-columns: repeat(auto-fit, minmax(max(140px,
+    calc((100% - (var(--fed-choice-columns) - 1) * 10px) / var(--fed-choice-columns))), 1fr));
+}
+.fed-choice-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 10px 12px;
+  border: 1px solid #dfe5eb;
+  border-radius: 8px;
+  background: #fff;
+  color: #34435a;
+  font: 500 13px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif;
+  cursor: pointer;
+  transition: border-color 120ms ease, background-color 120ms ease;
+}
+.fed-choice-card.has-description { align-items: flex-start; }
+.fed-choice-card:hover { border-color: #b9b0ee; }
+.fed-choice-card.is-selected {
+  border-color: #7563e5;
+  background: #f6f4ff;
+  color: #3b2d99;
+  box-shadow: inset 0 0 0 1px #7563e5;
+}
+/* Keyboard focus only: a mouse click already shows the selected state. */
+.fed-choice-card:has(input:focus-visible) { outline: 2px solid #6554dd; outline-offset: 2px; }
+.fed-choice-card input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: #6554dd;
+  flex-shrink: 0;
+}
+.fed-choice-card.has-description input { margin-top: 1px; }
+.fed-choice-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.fed-choice-description { font-weight: 400; font-size: 12px; line-height: 1.45; color: #66748a; }
+.fed-choice-card.is-selected .fed-choice-description { color: #5546b8; }
+.fed-choice-card input:disabled + .fed-choice-text { opacity: 0.6; }
+
+/* Chips: short labels in a row. The radio stays for keyboards and screen
+   readers; the pill itself shows which one is chosen. */
+.fed-choice-cards.fed-choice-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.fed-choice-chips .fed-choice-card {
+  position: relative;
+  min-height: 36px;
+  padding: 7px 16px;
+  border-radius: 999px;
+}
+.fed-choice-chips .fed-choice-card input {
+  position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none;
+}
+.fed-choice-more {
+  min-height: 36px;
+  padding: 7px 16px;
+  border: 1px dashed #b8c1ce;
+  border-radius: 999px;
+  background: transparent;
+  color: #526078;
+  font: 500 13px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif;
+  cursor: pointer;
+}
+.fed-choice-cards:not(.fed-choice-chips) .fed-choice-more { border-radius: 8px; min-height: 48px; }
+.fed-choice-more:hover { border-color: #7563e5; color: #4332aa; }
+.fed-choice-more:focus-visible { outline: 2px solid #6554dd; outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .fed-choice-card { transition: none; }
+}
+
+/* The event list: the same cards, one per row, with a search box. */
+.fed-event-picker { display: flex; flex-direction: column; gap: 10px; margin: 4px 0 2px; }
+.fed-event-list { display: flex; flex-direction: column; gap: 6px; }
+.fed-event-row { min-height: 52px; }
+.fed-event-row .fed-choice-description { display: flex; flex-wrap: wrap; column-gap: 14px; }
+.fed-event-search {
+  width: 100%; min-height: 40px; padding: 8px 12px;
+  border: 1px solid #dfe5eb; border-radius: 8px; background: #fff;
+  font: 400 14px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; color: #253248;
+}
+.fed-event-search:focus { outline: 2px solid #6554dd; outline-offset: 1px; border-color: #7563e5; }
+.fed-event-more { align-self: flex-start; }
+.fed-event-empty { margin: 0; font: 400 13px/1.5 system-ui, sans-serif; color: #66748a; }
+.fed-event-missing {
+  padding: 10px 12px; border-left: 4px solid #c9a227; background: #fdf8e6;
+  font: 400 13px/1.5 system-ui, sans-serif; color: #5a4a12;
+}
+
+/* A field that does not apply to the current choice (see link-ux.js). */
+.fed-when-hidden { display: none !important; }

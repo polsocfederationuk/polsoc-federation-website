@@ -1,0 +1,14 @@
+/* Only the preview controls. Public styles live inside their own document. */
+html, body { margin: 0; background: #f5f7fb; font: 13px/1.5 system-ui, sans-serif; color: #34435a; }
+* { box-sizing: border-box; }
+.fed-preview-controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; padding: 12px; border-bottom: 1px solid #dde4ed; background: #fff; }
+.fed-preview-controls > div { display: flex; gap: 3px; }
+.fed-preview-controls button { min-height: 36px; padding: 7px 10px; border: 1px solid #dfe5ed; background: #fff; color: #526078; border-radius: 5px; font: inherit; cursor: pointer; }
+.fed-preview-controls button[aria-pressed="true"] { background: #f1edff; border-color: #c9bef4; color: #5140aa; }
+.fed-preview-controls button:focus-visible { outline: 3px solid #6554dd; outline-offset: 2px; }
+.fed-preview-note, .fed-preview-error { margin: 0; padding: 8px 12px; font-size: 12px; }
+.fed-preview-error { color: #a42b43; }
+.fed-preview-scroll { width: 100%; overflow-x: auto; }
+.fed-website-frame { display: block; width: 100%; height: calc(100vh - 130px); min-height: 540px; border: 0; background: white; margin: 0 auto; }
+.fed-website-frame.is-desktop { width: 1280px; }
+.fed-website-frame.is-phone { width: 390px; max-width: 100%; }

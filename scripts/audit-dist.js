@@ -130,6 +130,8 @@ const htmlFiles = files.filter((f) => f.endsWith(".html"));
 const expectedHtml = new Set([
   ...publicRoutes.routes().map((r) => r.file),
   ...publicRoutes.noindexRoutes().map((r) => r.file),
+  // Identity e-mail templates: HTML, but read by Netlify, never visited.
+  ...publicRoutes.emailTemplates().map((t) => t.file),
 ]);
 
 {

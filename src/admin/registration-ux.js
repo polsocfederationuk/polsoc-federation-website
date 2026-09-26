@@ -96,6 +96,8 @@
   function selected(scope, name) {
     var field = fieldIn(scope, name);
     if (!field) return "";
+    var checked = field.querySelector('input[type="radio"]:checked');
+    if (checked) return checked.value;
     var shown = field.querySelector('[class*="singleValue"]');
     if (!shown) return "";
     var table = CHOICES[name] || {};
@@ -252,6 +254,9 @@
   function chosenEventSlug(scope) {
     var field = fieldIn(scope, "event_slug");
     if (!field) return "";
+    // The event list (event-picker.js) is a set of radios whose value IS the slug.
+    var picked = field.querySelector('input[type="radio"]:checked');
+    if (picked) return picked.value;
     var shown = field.querySelector('[class*="singleValue"]');
     if (!shown) return "";
     var label = shown.textContent.trim();
@@ -432,6 +437,10 @@
   }
 
   window.addEventListener("hashchange", function () { armedFor = null; arm(); });
+  // Radio selection changes a checked property, not necessarily the child tree.
+  document.addEventListener("change", function (event) {
+    if (event.target && event.target.matches('input[type="radio"]') && KINDS[collectionName()]) schedule();
+  });
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", arm);

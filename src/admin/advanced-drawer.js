@@ -1,35 +1,6 @@
 /**
- * advanced-drawer.js — hide the override fields until somebody asks for them.
- *
- * WHAT IT HIDES, AND WHY
- *
- * Every field this collects is an OVERRIDE of something the record already
- * works out for itself: the card and page summaries fall back to Summary, the
- * homepage title to the event title, the search metadata to Summary again. An
- * ordinary event needs none of them. Meeting six near-identical description
- * boxes on the way to writing one is what made the form feel like work.
- *
- * Collapsed, never removed — the four existing events use all of these, and
- * their authored wording still wins.
- *
- * WHY THIS IS ITS OWN MODULE
- *
- * A drawer built inside form-sections.js failed twice, in a way I could not
- * explain: every precondition held when queried by hand — both language panels
- * found, all the fields locatable, the plan correct, the function reached and
- * throwing nothing — and yet no drawer appeared. Rather than keep guessing at a
- * module that has been edited many times, this follows image-units.js, which
- * demonstrably works: its own observer, its own state, and one job.
- *
- * LIFECYCLE
- *
- * Idempotent work on every batch of mutations, and the observer DISCONNECTS as
- * soon as both drawers exist. No interval, no polling, no delay constant — the
- * exit condition is the work being finished, not time passing. Route changes
- * re-arm it.
- *
- * The controls are MOVED, never cloned: the same DOM nodes Decap created, so
- * there is one editable control per value and React keeps owning it.
+ * Groups optional event wording into a collapsed section. The original Decap
+ * controls remain mounted and their values are never rewritten by this helper.
  */
 
 (function () {
@@ -39,12 +10,12 @@
 
   /* The fields an ordinary editor should not meet first, per language block. */
   var FIELDS = [
-    "hero_summary", "card_summary", "timeline_title",
+    "hero_summary", "card_summary", "timeline_summary", "eyebrow",
     "seo_title", "seo_description", "schema_description", "schema_name",
     "co_organisers_label",
   ];
 
-  var TITLE = { en: "Advanced", pl: "Zaawansowane" };
+  var TITLE = { en: "Optional wording for cards and search", pl: "Opcjonalne teksty na kartach i w wyszukiwarce" };
   var NOTE = {
     en: "Only needed when this event should say something different from the " +
       "Summary above. Leave these empty and the Summary is used.",
@@ -107,13 +78,7 @@
     note.textContent = NOTE[entry.lang] || NOTE.en;
     details.appendChild(note);
 
-    /*
-      A native <details> rather than a button and a hidden div: it is closed by
-      default with no JavaScript at all, the browser handles the toggle, and it
-      stays keyboard- and screen-reader-correct without us reimplementing any of
-      that. The failure mode of the previous attempt — a drawer that never
-      opened because our own toggle never ran — is not available here.
-    */
+    // Native details starts closed; the form helper reveals validation errors.
     found[0].parentElement.insertBefore(details, found[0]);
     for (var j = 0; j < found.length; j++) details.appendChild(found[j]);
     return true;
@@ -166,7 +131,7 @@
     built: function () { return document.querySelectorAll("." + ROOT).length; },
     open: function () {
       return [].filter.call(document.querySelectorAll("." + ROOT), function (d) {
-        return d.open;
+        return d.tagName !== "DETAILS" || d.open;
       }).length;
     },
     observing: function () { return Boolean(observer); },

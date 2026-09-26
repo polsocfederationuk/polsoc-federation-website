@@ -929,7 +929,10 @@ if (!exists("dist")) {
       corresponds to them — so they belong beside the build-test exclusion
       rather than on a list of pages that replaced something.
     */
-    const OPERATIONAL = (f) => f === "staff-login/index.html" || f.startsWith("admin/");
+    const EMAIL_TEMPLATE_FILES = require(path.join(ROOT, "src", "_data", "publicRoutes.js"))
+      .emailTemplates().map((t) => t.file);
+    const OPERATIONAL = (f) => f === "staff-login/index.html" || f.startsWith("admin/") ||
+      EMAIL_TEMPLATE_FILES.includes(f);
     const generatedHtml = distFiles.filter((f) => f.endsWith(".html"));
     const strayHtml = generatedHtml.filter(
       (f) => !f.startsWith("build-test/") && !OPERATIONAL(f) && !MIGRATED.includes(f)
@@ -976,6 +979,8 @@ if (!exists("dist")) {
         package, and the copy must still be byte-identical to what that produced.
       */
       "staff-login/netlify-identity.js": "src/admin/netlify-identity.bundle.js",
+      // The Identity invitation e-mail, copied beside the login page.
+      "staff-login/emails/invitation.html": "src/email-templates/invitation.html",
     };
     // Build PRODUCTS, not copies: these are rendered from templates and have no
     // byte-identical source, so they are excluded from the copy check and

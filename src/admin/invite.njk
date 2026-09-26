@@ -1,0 +1,78 @@
+---
+# Invite someone — superadmins only.
+#
+# A page of our own, like Bulk manage beside it: Decap has no way to add one.
+# The server decides who may invite (netlify/functions/invite.mjs); this page
+# only asks it, and shows the form to a superadmin.
+permalink: /admin/invite/index.html
+eleventyExcludeFromCollections: true
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow, noarchive, noimageindex" />
+    <title>Invite someone — Federation Content Manager</title>
+    <style>
+{{ cmsConfig.inviteStyles | safe }}
+    </style>
+  </head>
+  <body>
+{% if cmsConfig.proxyUrl != "/api/cms" %}
+    <p class="cms-local-banner">
+      Local development only — there are no accounts here, so inviting works on
+      the live site only.
+    </p>
+{% endif %}
+    <header class="invite-header">
+      <a class="invite-back" href="/admin/">&larr; Content manager</a>
+      <h1>Invite someone</h1>
+    </header>
+
+    <main class="invite" id="invite-app">
+      <p class="invite-status" id="invite-status" role="status">Checking your access…</p>
+
+      <form class="invite-card" id="invite-form" novalidate hidden>
+        <p class="invite-intro">
+          They get an e-mail from Netlify with a link to choose their password.
+          Their address is filled in for them. <strong>Netlify's e-mail is titled
+          as a password reset</strong> — tell them to expect it, and to check spam.
+        </p>
+
+        <div class="invite-field">
+          <label for="invite-email">E-mail address</label>
+          <input type="email" id="invite-email" autocomplete="off" autocapitalize="none"
+                 spellcheck="false" required aria-describedby="invite-email-error" />
+          <p class="invite-error" id="invite-email-error" hidden>Enter an e-mail address, like name@example.com.</p>
+        </div>
+
+        <div class="invite-field">
+          <label for="invite-name">Name <span class="invite-optional">(optional)</span></label>
+          <input type="text" id="invite-name" autocomplete="off" maxlength="100" />
+        </div>
+
+        <fieldset class="invite-field invite-roles">
+          <legend>What can they do?</legend>
+          <label class="invite-role">
+            <input type="radio" name="invite-role" value="editor" checked />
+            <span><strong>Editor</strong>Add and change team members, events and announcements.</span>
+          </label>
+          <label class="invite-role">
+            <input type="radio" name="invite-role" value="admin" />
+            <span><strong>Administrator</strong>Also delete records and change site settings.</span>
+          </label>
+        </fieldset>
+
+        <button type="submit" class="invite-button" id="invite-submit">Send invitation</button>
+      </form>
+
+      <div class="invite-result" id="invite-result" role="alert" hidden></div>
+    </main>
+
+    <script>
+      window.FED_INVITE_ENDPOINT = "/api/invite";
+{{ cmsConfig.inviteScript | safe }}
+    </script>
+  </body>
+</html>
