@@ -71,11 +71,6 @@
     return b;
   }
 
-  function role() {
-    var picked = form.querySelector('input[name="invite-role"]:checked');
-    return picked ? picked.value : "editor";
-  }
-
   email.addEventListener("input", function () {
     emailError.hidden = true;
     email.removeAttribute("aria-invalid");
@@ -93,7 +88,7 @@
     }
     submit.disabled = true;
     submit.textContent = "Sending…";
-    post({ email: address, name: name.value, role: role() }).then(function (r) {
+    post({ email: address, name: name.value }).then(function (r) {
       var m = r.data.message || {};
       if (r.status === 200) {
         show("ok", "Invitation sent to " + r.data.email + ".",

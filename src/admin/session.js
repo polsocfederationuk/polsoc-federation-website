@@ -229,6 +229,34 @@
     return true;
   }
 
+  /*
+    MAY THIS PERSON INVITE? ASK THE SERVER.
+
+    The role above comes from the account as it was when this person signed
+    in — the browser keeps that copy. A role added in the Netlify dashboard
+    afterwards is not in it until they sign in again, so a new superadmin saw
+    "Administrator" and no invite link. The invite service reads the account
+    fresh from Identity on every request, so its answer is the one used here.
+    Asked once per page load; any failure simply means "no link".
+  */
+  var inviteCheck = null;
+  function canInvite() {
+    if (inviteCheck) return inviteCheck;
+    inviteCheck = Promise.resolve().then(function () {
+      if (typeof window.fetch !== "function") return false;
+      return window.fetch("/api/invite", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ check: true }),
+      }).then(function (response) {
+        if (!response || response.status !== 200 || typeof response.json !== "function") return false;
+        return response.json().then(function (data) { return Boolean(data && data.canInvite); });
+      });
+    }).catch(function () { return false; });
+    return inviteCheck;
+  }
+
   /** The email, the role, and a way back to the site, inside the open menu. */
   function fillMenu(user, role) {
     var menu = document.querySelector('[role="menu"]');
@@ -242,8 +270,9 @@
     who.className = "fed-account-who";
     who.textContent = user.email || "";
     head.appendChild(who);
+    var what = null;
     if (role) {
-      var what = document.createElement("div");
+      what = document.createElement("div");
       what.className = "fed-account-role";
       what.textContent = ROLES[role];
       head.appendChild(what);
@@ -258,17 +287,20 @@
     list.insertBefore(site, first);
 
     /*
-      Superadmins only. The link is a convenience: the invite screen asks the
-      server again, and the server refuses everybody else regardless.
+      Superadmins only, as the server sees them (see canInvite above). The link
+      is a convenience: the invite screen asks again, and the server refuses
+      everybody else regardless.
     */
-    if (role === "superadmin") {
+    canInvite().then(function (allowed) {
+      if (!allowed || !site.parentElement || list.querySelector(".fed-invite-link")) return;
       var invite = document.createElement("a");
-      invite.className = "fed-account-item";
+      invite.className = "fed-account-item fed-invite-link";
       invite.setAttribute("role", "menuitem");
       invite.href = "/admin/invite/";
       invite.textContent = "Invite someone";
       list.insertBefore(invite, site);
-    }
+      if (what) what.textContent = ROLES.superadmin;
+    });
   }
 
   /* -- start ----------------------------------------------------------------- */
@@ -280,6 +312,7 @@
 
   function boot(user, role) {
     useOwnBackend();
+    canInvite();   // started early, so the answer is ready when the menu opens
     watchForExpiry();
 
     if (typeof window.initCMS === "function") window.initCMS();

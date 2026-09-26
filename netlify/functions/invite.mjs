@@ -24,9 +24,13 @@
  * else, but that is presentation; an editor or admin calling this endpoint by
  * hand gets 403 and nothing is created.
  *
- * A superadmin can create EDITORS and ADMINS. Not superadmins: that role is
- * given only in the Netlify dashboard, so one compromised superadmin session
- * cannot mint more of them.
+ * EVERYBODY INVITED HERE IS AN ADMIN, from the moment the account exists: the
+ * role is written when the account is created, so their first sign-in already
+ * carries it and nobody has to add a role in the dashboard afterwards. There
+ * is no choice to make, so the screen offers none, and any `role` a browser
+ * sends is ignored. Superadmin is never granted here: that role is given only
+ * in the Netlify dashboard, so one compromised superadmin session cannot mint
+ * more of them.
  *
  * THE TEMPORARY PASSWORD
  *
@@ -51,8 +55,9 @@ import authz from "../lib/authz.js";
 import { requestProblem, JSON_HEADERS } from "../functions/cms.mjs";
 
 const RECOVER_PATH = "/.netlify/identity/recover";
-/** The roles a superadmin may give. Superadmin itself is dashboard-only. */
-const GRANTABLE = ["editor", "admin"];
+/** The one role an invitation gives. Superadmin itself is dashboard-only. */
+const INVITED_ROLE = "admin";
+const GRANTABLE = [INVITED_ROLE];
 const EMAIL = /^[^\s@<>()[\]\\,;:"]+@[^\s@<>()[\]\\,;:"]+\.[A-Za-z]{2,}$/;
 
 const reply = (status, body) =>
@@ -152,10 +157,8 @@ export default async function handler(request, context, injected) {
       : say(502, "email_failed", "The e-mail could not be sent.", "Wait a minute and try again. Netlify limits how often it sends these.");
   }
 
-  const role = String(body.role || "");
-  if (!GRANTABLE.includes(role)) {
-    return say(400, "bad_role", "Choose Editor or Administrator.", "Nobody was invited.");
-  }
+  // Fixed, never read from the request.
+  const role = INVITED_ROLE;
   const name = cleanName(body.name);
 
   const identityAdmin = deps.admin || admin;

@@ -2031,21 +2031,26 @@ registration:
     r = await runInvite("editor", { email: "x@example.com", role: "editor", roles: ["superadmin"] });
     check(r.status === 403, "roles sent in the body are ignored", `${r.status}`);
 
-    r = await runInvite("super", { email: " Jan+PBF@Example.com ", role: "admin", name: "Jan\nKowalski" });
+    r = await runInvite("super", { email: " Jan+PBF@Example.com ", name: "Jan\nKowalski" });
     const made = r.log.created[0] || { data: { app_metadata: {}, user_metadata: {} } };
     check(r.status === 200 && made.email === "jan+pbf@example.com" && r.log.mailed[0] === "jan+pbf@example.com",
       "a superadmin's invitation creates the account and sends the e-mail", `${r.status}`);
     check((made.data.app_metadata.roles || []).join() === "admin" &&
       made.data.app_metadata.invited_by === "boss@polsocfederation.pl",
-      "the role and the inviter are recorded on the account", JSON.stringify(made.data.app_metadata));
+      "everybody invited is an admin from the start, and the inviter is recorded",
+      JSON.stringify(made.data.app_metadata));
     check(made.data.user_metadata.fed_welcome === true && made.data.user_metadata.full_name === "Jan Kowalski",
       "the login page will greet them as new", JSON.stringify(made.data.user_metadata));
     check(typeof made.password === "string" && made.password.length >= 40 &&
       !JSON.stringify(r.body).includes(made.password),
       "the temporary password is random and never returned", "hidden");
 
-    r = await runInvite("super", { email: "a@example.com", role: "superadmin" });
-    check(r.status === 400 && !r.log.created.length, "nobody can be made a superadmin from here", `${r.status}`);
+    for (const asked of ["superadmin", "editor"]) {
+      r = await runInvite("super", { email: "a@example.com", role: asked });
+      const roles = ((r.log.created[0] || { data: { app_metadata: {} } }).data.app_metadata.roles || []).join();
+      check(r.status === 200 && roles === "admin",
+        `a role of "${asked}" sent by the browser is ignored — the account is an admin`, roles);
+    }
     r = await runInvite("super", { email: "not-an-address", role: "editor" });
     check(r.status === 400 && !r.log.created.length, "a malformed address is refused", `${r.status}`);
 

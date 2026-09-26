@@ -13,7 +13,7 @@ eleventyExcludeFromCollections: true
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex, nofollow, noarchive, noimageindex" />
-    <title>Invite someone — Federation Content Manager</title>
+    <title>Invite someone - Federation Content Manager</title>
     <style>
 {{ cmsConfig.inviteStyles | safe }}
     </style>
@@ -37,7 +37,7 @@ eleventyExcludeFromCollections: true
         <p class="invite-intro">
           They get an e-mail from Netlify with a link to choose their password.
           Their address is filled in for them. <strong>Netlify's e-mail is titled
-          as a password reset</strong> — tell them to expect it, and to check spam.
+          as a password reset</strong> tell them to expect it, and to check spam.
         </p>
 
         <div class="invite-field">
@@ -52,17 +52,11 @@ eleventyExcludeFromCollections: true
           <input type="text" id="invite-name" autocomplete="off" maxlength="100" />
         </div>
 
-        <fieldset class="invite-field invite-roles">
-          <legend>What can they do?</legend>
-          <label class="invite-role">
-            <input type="radio" name="invite-role" value="editor" checked />
-            <span><strong>Editor</strong>Add and change team members, events and announcements.</span>
-          </label>
-          <label class="invite-role">
-            <input type="radio" name="invite-role" value="admin" />
-            <span><strong>Administrator</strong>Also delete records and change site settings.</span>
-          </label>
-        </fieldset>
+        <p class="invite-access">
+          They become an <strong>administrator</strong> straight away — they can
+          edit, delete and change site settings as soon as they have chosen a
+          password.
+        </p>
 
         <button type="submit" class="invite-button" id="invite-submit">Send invitation</button>
       </form>
