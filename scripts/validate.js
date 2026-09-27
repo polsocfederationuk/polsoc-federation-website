@@ -981,6 +981,12 @@ if (!exists("dist")) {
       "staff-login/netlify-identity.js": "src/admin/netlify-identity.bundle.js",
       // The Identity invitation e-mail, copied beside the login page.
       "staff-login/emails/invitation.html": "src/email-templates/invitation.html",
+      // The cookie banner: the pinned library, copied from node_modules, and
+      // our settings and theme (src/js/consent.js).
+      "js/cookieconsent.umd.js": "node_modules/vanilla-cookieconsent/dist/cookieconsent.umd.js",
+      "css/cookieconsent.css": "node_modules/vanilla-cookieconsent/dist/cookieconsent.css",
+      "js/consent.js": "src/js/consent.js",
+      "css/consent.css": "src/css/consent.css",
     };
     // Build PRODUCTS, not copies: these are rendered from templates and have no
     // byte-identical source, so they are excluded from the copy check and

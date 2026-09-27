@@ -30,3 +30,8 @@
 <script src="{{ (entry.src | default(entry)) | replace("{locale}", locale.code) }}"{% if entry.integrity %}
         integrity="{{ entry.integrity }}" crossorigin="{{ entry.crossorigin | default("") }}"{% endif %}></script>
 {%- endfor %}
+{#- The cookie banner, on every page: the pinned library, then our settings. #}
+{%- if not noConsentBanner %}
+<script src="/js/cookieconsent.umd.js"></script>
+<script src="/js/consent.js"></script>
+{%- endif %}

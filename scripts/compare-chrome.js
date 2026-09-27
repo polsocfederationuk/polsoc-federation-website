@@ -84,8 +84,10 @@ function compareRegion(label, livePath, genPath, startTag, endTag) {
          policy requires "a link to our service on your main page, or all
          internal pages", and the shared footer partial is how this site
          satisfies it on every page in both languages.
+      3. COOKIE SETTINGS — the button that reopens the cookie banner's
+         settings (src/js/consent.js), on every page in both languages.
 
-    This region comparison is character-exact, so exactly these two spans are
+    This region comparison is character-exact, so exactly these three spans are
     removed from the generated side and nothing else is relaxed: every other
     character of the footer must still match the live page byte for byte. Both
     links are asserted separately in compareFeatures(), so removing them here
@@ -93,7 +95,8 @@ function compareRegion(label, livePath, genPath, startTag, endTag) {
   */
   const withoutApprovedSpans = (html) => html
     .replace(new RegExp('<span><a class="footer-staff-login"[^>]*>[^<]*</a></span>'), "")
-    .replace(new RegExp('<span><a href="https://www\.netlify\.com"[^>]*>[^<]*</a></span>'), "");
+    .replace(new RegExp('<span><a href="https://www\.netlify\.com"[^>]*>[^<]*</a></span>'), "")
+    .replace(new RegExp('<span><button type="button" class="footer-cookie-settings"[^>]*>[^<]*</button></span>'), "");
   const gen = normalise(withoutApprovedSpans(region(read(genPath), startTag, endTag)));
 
   if (!live) return record(false, `${label}: region not found in ${livePath}`);
@@ -194,6 +197,8 @@ function compareFeatures(label, livePath, genPath) {
     [`gen : ${all.join(" ")}`]);
   record(!c.some((href) => href.endsWith(STAFF_LOGIN)),
     `${label}: APPROVED: the live footer did not`, []);
+  record(/<button type="button" class="footer-cookie-settings" data-fed-cookie-settings>/.test(gen),
+    `${label}: APPROVED: the footer offers Cookie settings`, []);
   /*
     NETLIFY OPEN SOURCE PLAN, REQUIREMENT (c). The plan the charity's hosting
     credits depend on requires this link. It is asserted, not merely tolerated,

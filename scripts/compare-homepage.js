@@ -20,6 +20,9 @@
 
 const fs = require("fs");
 const path = require("path");
+// The cookie banner is on every generated page and on no live one: left out of
+// the asset lists compared here, and checked for by scripts/audit-dist.js.
+const { isSiteWide } = require("./site-wide-assets.js");
 
 const ROOT = path.join(__dirname, "..");
 const read = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
@@ -125,8 +128,8 @@ function parse(html) {
   o.icons = [...head.matchAll(/<link rel="(icon|apple-touch-icon|manifest)"[^>]*>/g)].map((m) => norm(m[0]));
   o.themeColor = g(/<meta name="theme-color" content="([^"]*)">/);
   o.stylesheets = [...head.matchAll(/<link rel="stylesheet" href="([^"]*)">/g)]
-    .map((m) => m[1]).filter((h) => !/^https?:/.test(h)).map(assetKey);
-  o.scripts = [...html.matchAll(/<script[^>]*\bsrc="([^"]*)"/g)].map((m) => assetKey(m[1]));
+    .map((m) => m[1]).filter((h) => !/^https?:/.test(h)).filter((h) => !isSiteWide(h)).map(assetKey);
+  o.scripts = [...html.matchAll(/<script[^>]*\bsrc="([^"]*)"/g)].map((m) => m[1]).filter((h) => !isSiteWide(h)).map((h) => assetKey(h));
 
   /* ---- Organization JSON-LD ---- */
   const ld = g(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/, html);

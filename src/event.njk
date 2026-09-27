@@ -64,5 +64,6 @@ permalink: "{{ page_pair.locale.urlPrefix }}event-{{ page_pair.event.slug }}.htm
   </div>
 </section>
 {% if hasInstagram %}
-<script async src="https://www.instagram.com/embed.js"></script>
+{#- Inert until the visitor accepts social cookies — js/consent.js loads it. #}
+<script type="text/plain" data-consent-src="https://www.instagram.com/embed.js"></script>
 {%- endif %}

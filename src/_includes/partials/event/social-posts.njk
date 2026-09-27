@@ -39,7 +39,9 @@
 {%- if post.embed and post.embed.kind == "instagram" %}
       <blockquote class="instagram-media" data-instgrm-captioned data-instgrm-permalink="{{ post.url }}" data-instgrm-version="14"></blockquote>
 {%- elif post.embed and post.embed.kind == "iframe" %}
-      <iframe src="{{ post.embed.src }}" title="{{ t.socialPosts[post.platform] }}"
+      {#- No src until the visitor accepts social cookies: js/consent.js
+          moves data-consent-src into src then. #}
+      <iframe data-consent-src="{{ post.embed.src }}" title="{{ t.socialPosts[post.platform] }}" hidden
               loading="lazy" frameborder="0" scrolling="no"
               allowfullscreen sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
 {%- endif %}

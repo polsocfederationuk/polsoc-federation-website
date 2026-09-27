@@ -90,6 +90,12 @@
   <link rel="stylesheet" href="{{ sheet.href | default(sheet) }}"{% if sheet.integrity %}
         integrity="{{ sheet.integrity }}" crossorigin="{{ sheet.crossorigin | default("") }}"{% endif %}>
 {%- endfor %}
+  {#- The cookie banner (vanilla-cookieconsent, self-hosted) and its theme.
+      Last, so neither can be overridden by a page sheet. See src/js/consent.js. #}
+{%- if not noConsentBanner %}
+  <link rel="stylesheet" href="/css/cookieconsent.css">
+  <link rel="stylesheet" href="/css/consent.css">
+{%- endif %}
 {%- if extraHead %}
 
   {#- Page-specific head markup: JSON-LD, page-only meta, etc. -#}

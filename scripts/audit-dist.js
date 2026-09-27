@@ -196,6 +196,29 @@ const ASSET_RULES = [
     bad.length === 0, bad);
 }
 
+/* ------------------------------------------------------------- cookie banner */
+
+/*
+  Every public page loads the cookie banner: the library's stylesheet and our
+  theme, then the library and our settings, in that order. The page
+  comparisons leave these files out (the live pages never had them), so this is
+  what stops the banner being dropped from a page without anybody noticing.
+*/
+{
+  const siteWide = require("./site-wide-assets.js");
+  const pages = expectedHtml ? [...expectedHtml].filter((f) => files.includes(f) &&
+    !f.startsWith("staff-login/") && !f.startsWith("admin/")) : [];
+  const missing = [];
+  for (const f of pages) {
+    const html = fs.readFileSync(path.join(DIST, f), "utf8");
+    const order = (list, re) => [...html.matchAll(re)].map((m) => m[1]).filter((h) => list.includes(h));
+    const css = order(siteWide.STYLESHEETS, /<link rel="stylesheet" href="([^"]+)">/g);
+    const js = order(siteWide.SCRIPTS, /<script src="([^"]+)"><\/script>/g);
+    if (css.join() !== siteWide.STYLESHEETS.join() || js.join() !== siteWide.SCRIPTS.join()) missing.push(f);
+  }
+  check(`every public page loads the cookie banner (${pages.length} pages)`, pages.length > 0 && missing.length === 0, missing);
+}
+
 /* ------------------------------------------------------- referenced vs orphans */
 
 // Collect every local reference the tree makes, so unreferenced assets surface.

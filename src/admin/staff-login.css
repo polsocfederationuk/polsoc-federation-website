@@ -90,6 +90,11 @@ body {
 
 .login-field { display: flex; flex-direction: column; gap: 0.3rem; margin-bottom: 0.9rem; }
 
+/* `display: flex` above would otherwise beat the hidden attribute, and the
+   "Repeat password" box — meant only for choosing a password — would show on
+   the ordinary sign-in form too. */
+.login-field[hidden], .login-page [hidden] { display: none !important; }
+
 .login-field label { font-size: 0.85rem; font-weight: 700; color: #5a5f6b; }
 
 .login-field input {

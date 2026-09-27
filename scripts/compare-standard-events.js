@@ -26,6 +26,9 @@
 
 const fs = require("fs");
 const path = require("path");
+// The cookie banner is on every generated page and on no live one: left out of
+// the asset lists compared here, and checked for by scripts/audit-dist.js.
+const { isSiteWide } = require("./site-wide-assets.js");
 
 const ROOT = path.join(__dirname, "..");
 const read = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
@@ -167,8 +170,8 @@ function parse(html) {
   // ---- page-level refs ----
   o.refs.bottomBackHref = g(/<a class="btn btn-ghost" href="([^"]+)">/, body);
   o.refs.bottomBackLabel = text(g(/<a class="btn btn-ghost" href="[^"]+">([\s\S]*?)<\/a>/, body));
-  o.refs.stylesheets = [...html.matchAll(/<link rel="stylesheet" href="([^"]+)">/g)].map((m) => assetKey(m[1]));
-  o.refs.scripts = [...html.matchAll(/<script[^>]*src="([^"]+)"[^>]*>/g)].map((m) => assetKey(m[1]));
+  o.refs.stylesheets = [...html.matchAll(/<link rel="stylesheet" href="([^"]+)">/g)].map((m) => m[1]).filter((h) => !isSiteWide(h)).map((h) => assetKey(h));
+  o.refs.scripts = [...html.matchAll(/<script[^>]*src="([^"]+)"[^>]*>/g)].map((m) => m[1]).filter((h) => !isSiteWide(h)).map((h) => assetKey(h));
   o.refs.embedScript = /instagram\.com\/embed\.js/.test(html);
   o.refs.activeNav = /<a[^>]*class="[^"]*\bactive\b[^"]*"[^>]*href="events\.html"|<a[^>]*href="events\.html"[^>]*class="[^"]*\bactive\b[^"]*"/.test(html);
   o.refs.switcher = (html.match(/<nav class="lang-switch"[\s\S]*?<\/nav>/) || [""])[0].match(/href="([^"]+)"/g) || [];

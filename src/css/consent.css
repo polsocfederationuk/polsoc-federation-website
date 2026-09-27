@@ -1,0 +1,35 @@
+/* consent.css — the cookie banner in the site's own colours and type, plus the
+   note that stands in for a social post until it is allowed (js/consent.js).
+   The banner itself is css/cookieconsent.css, copied from the pinned library. */
+#cc-main {
+  --cc-font-family: var(--font-body, "Manrope", sans-serif);
+  --cc-modal-border-radius: 14px;
+  --cc-btn-border-radius: 999px;
+  --cc-primary-color: #16181d;
+  --cc-secondary-color: #3a3d45;
+  --cc-btn-primary-bg: #d7282f;
+  --cc-btn-primary-color: #fff;
+  --cc-btn-primary-border-color: #d7282f;
+  --cc-btn-primary-hover-bg: #a91d23;
+  --cc-btn-primary-hover-border-color: #a91d23;
+  --cc-btn-secondary-bg: #f4efe9;
+  --cc-btn-secondary-color: #16181d;
+  --cc-btn-secondary-border-color: #f4efe9;
+  --cc-btn-secondary-hover-bg: #e8e4e0;
+  --cc-btn-secondary-hover-border-color: #e8e4e0;
+  --cc-toggle-on-bg: #d7282f;
+  --cc-separator-border-color: #e8e4e0;
+  --cc-link-color: #a91d23;
+}
+#cc-main .cm__title, #cc-main .pm__title { font-family: var(--font-display, "Plus Jakarta Sans", sans-serif); }
+
+.fed-consent-note {
+  padding: 22px 20px; border: 1px dashed #d8d2cb; border-radius: 14px;
+  background: #faf7f4; text-align: center;
+}
+.fed-consent-note p { margin: 0 0 14px; color: #3a3d45; }
+
+.footer-cookie-settings {
+  background: none; border: 0; padding: 0; font: inherit; color: inherit;
+  text-decoration: underline; cursor: pointer;
+}

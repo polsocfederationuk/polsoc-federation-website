@@ -250,6 +250,17 @@ module.exports = function (eleventyConfig) {
   });
   // The filter behaviour. Source-controlled under src/, copied to dist/js/.
   eleventyConfig.addPassthroughCopy({ "src/js/team-filter.js": "js/team-filter.js" });
+  /*
+    The cookie banner. The library is vanilla-cookieconsent, pinned exactly in
+    package.json and copied from node_modules so it is served from this origin;
+    js/consent.js is our configuration and the gate on social embeds.
+  */
+  eleventyConfig.addPassthroughCopy({
+    "node_modules/vanilla-cookieconsent/dist/cookieconsent.umd.js": "js/cookieconsent.umd.js",
+    "node_modules/vanilla-cookieconsent/dist/cookieconsent.css": "css/cookieconsent.css",
+    "src/js/consent.js": "js/consent.js",
+    "src/css/consent.css": "css/consent.css",
+  });
 
   // ---------------------------------------------------------------------
   // Announcement page assets.

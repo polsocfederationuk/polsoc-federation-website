@@ -34,6 +34,9 @@
 
 const fs = require("fs");
 const path = require("path");
+// The cookie banner is on every generated page and on no live one: left out of
+// the asset lists compared here, and checked for by scripts/audit-dist.js.
+const { isSiteWide } = require("./site-wide-assets.js");
 const vm = require("vm");
 
 const ROOT = path.join(__dirname, "..");
@@ -175,8 +178,8 @@ function parsePage(html) {
     out.modal.hasAnnText = /<div class="ann-text" id="annModalBody">/.test(body);
   }
 
-  out.refs.stylesheets = [...html.matchAll(/<link rel="stylesheet" href="([^"]+)">/g)].map((m) => assetKey(m[1]));
-  out.refs.scripts = [...html.matchAll(/<script src="([^"]+)"><\/script>/g)].map((m) => assetKey(m[1]));
+  out.refs.stylesheets = [...html.matchAll(/<link rel="stylesheet" href="([^"]+)">/g)].map((m) => m[1]).filter((h) => !isSiteWide(h)).map((h) => assetKey(h));
+  out.refs.scripts = [...html.matchAll(/<script src="([^"]+)"><\/script>/g)].map((m) => m[1]).filter((h) => !isSiteWide(h)).map((h) => assetKey(h));
   out.refs.hasInlineScript = /<script>[\s\S]*?<\/script>/.test(html);
   out.refs.activeNav = /<a[^>]*class="[^"]*\bactive\b[^"]*"[^>]*href="announcements\.html"|<a[^>]*href="announcements\.html"[^>]*class="[^"]*\bactive\b[^"]*"/.test(html);
   out.refs.switcher = (html.match(/<nav class="lang-switch"[\s\S]*?<\/nav>/) || [""])[0]

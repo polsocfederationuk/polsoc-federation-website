@@ -22,6 +22,9 @@
 
 const fs = require("fs");
 const path = require("path");
+// The cookie banner is on every generated page and on no live one: left out of
+// the asset lists compared here, and checked for by scripts/audit-dist.js.
+const { isSiteWide } = require("./site-wide-assets.js");
 
 const ROOT = path.join(__dirname, "..");
 const read = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
@@ -99,8 +102,8 @@ function parse(html) {
   o.twitterCard = g(/<meta name="twitter:card" content="([^"]*)">/);
   o.twitterImageAlt = decode(g(/<meta name="twitter:image:alt" content="([^"]*)">/) || "");
   o.stylesheets = [...head.matchAll(/<link rel="stylesheet" href="([^"]*)">/g)]
-    .map((m) => m[1]).filter((h) => !/^https?:/.test(h)).map(assetKey);
-  o.scripts = [...html.matchAll(/<script[^>]*\bsrc="([^"]*)"/g)].map((m) => assetKey(m[1]));
+    .map((m) => m[1]).filter((h) => !/^https?:/.test(h)).filter((h) => !isSiteWide(h)).map(assetKey);
+  o.scripts = [...html.matchAll(/<script[^>]*\bsrc="([^"]*)"/g)].map((m) => m[1]).filter((h) => !isSiteWide(h)).map((h) => assetKey(h));
 
   /* ---- shared chrome ---- */
   o.navItems = [...html.matchAll(/<li><a\b([^>]*)>([\s\S]*?)<\/a><\/li>/g)]

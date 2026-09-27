@@ -63,6 +63,7 @@
     "markdown-it": "^14.3.0"
   },
   "dependencies": {
-    "@netlify/identity": "^2.0.0"
+    "@netlify/identity": "^2.0.0",
+    "vanilla-cookieconsent": "3.1.0"
   }
 }

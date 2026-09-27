@@ -50,7 +50,9 @@ function renderPreview(collection, draft, options) {
   const context = Object.assign({}, front, {
     site: source.site, ui: source.ui, locales: source.locales, locale, nav: source.nav, records,
     noindex: true, page_pair: { event: record, locale }, pageTitle: "Preview", pageDescription: "Preview",
-    scriptsBefore: [], scriptsAfter: [], urlPattern: front.urlPattern || "/{prefix}event-" + record.slug + ".html"
+    scriptsBefore: [], scriptsAfter: [],
+    // No cookie banner over the editor's preview (src/js/consent.js).
+    noConsentBanner: true, urlPattern: front.urlPattern || "/{prefix}event-" + record.slug + ".html"
   });
   if (front.copy) {
     context.pageTitle = front.copy[lang].title;
@@ -68,6 +70,15 @@ function renderPreview(collection, draft, options) {
       .join('href="mailto:' + escapeAttr(draftEmail) + '" data-fed-draft="1"');
   }
   if (options.raw) return html;
+  /*
+    Social posts. On the public site they wait for cookie consent
+    (src/js/consent.js); the preview has no banner, so it shows them as it
+    always did — the editor is looking at their own content, not visiting.
+  */
+  html = html.split("data-consent-src=").join("src=")
+    .replace(/<iframe\b[^>]*>/g, (tag) => tag.replace(/\shidden(?=[\s>])/, ""))
+    .split('<script type="text/plain" src="https://www.instagram.com/embed.js">')
+    .join('<script async src="https://www.instagram.com/embed.js">');
   const origin = options.origin || source.site.domain;
   html = html.replace("<head>", '<head><base href="' + origin.replace(/"/g, "&quot;") + "/" + locale.urlPrefix + '">');
   // Exact stylesheet text, refreshed from the public CSS on every CMS build.

@@ -38,6 +38,9 @@
 
 const fs = require("fs");
 const path = require("path");
+// The cookie banner is on every generated page and on no live one: left out of
+// the asset lists compared here, and checked for by scripts/audit-dist.js.
+const { isSiteWide } = require("./site-wide-assets.js");
 const vm = require("vm");
 
 const ROOT = path.join(__dirname, "..");
@@ -183,12 +186,14 @@ function parsePage(html) {
   }
 
   // ---- asset references, in document order ----
-  out.refs.stylesheets = [...html.matchAll(/<link rel="stylesheet"\s+([^>]*)>/g)].map((m) => ({
+  out.refs.stylesheets = [...html.matchAll(/<link rel="stylesheet"\s+([^>]*)>/g)]
+    .filter((m) => !isSiteWide(attrOf(m[1], "href"))).map((m) => ({
     href: assetKey(attrOf(m[1], "href")),
     integrity: attrOf(m[1], "integrity"),
     crossorigin: attrOf(m[1], "crossorigin"),
   }));
-  out.refs.scripts = [...html.matchAll(/<script\s+([^>]*?)>\s*<\/script>/g)].map((m) => ({
+  out.refs.scripts = [...html.matchAll(/<script\s+([^>]*?)>\s*<\/script>/g)]
+    .filter((m) => !isSiteWide(attrOf(m[1], "src"))).map((m) => ({
     src: assetKey(attrOf(m[1], "src")),
     integrity: attrOf(m[1], "integrity"),
     crossorigin: attrOf(m[1], "crossorigin"),

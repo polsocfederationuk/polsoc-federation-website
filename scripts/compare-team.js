@@ -36,6 +36,9 @@
 
 const fs = require("fs");
 const path = require("path");
+// The cookie banner is on every generated page and on no live one: left out of
+// the asset lists compared here, and checked for by scripts/audit-dist.js.
+const { isSiteWide } = require("./site-wide-assets.js");
 
 const ROOT = path.join(__dirname, "..");
 const read = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
@@ -195,10 +198,10 @@ function parse(html) {
   }
 
   // ---- asset references -------------------------------------------------
-  out.refs.stylesheets = [...html.matchAll(/<link rel="stylesheet" href="([^"]+)">/g)].map((m) =>
-    assetKey(m[1])
-  );
-  out.refs.scripts = [...html.matchAll(/<script src="([^"]+)"><\/script>/g)].map((m) => assetKey(m[1]));
+  out.refs.stylesheets = [...html.matchAll(/<link rel="stylesheet" href="([^"]+)">/g)].map((m) => m[1])
+    .filter((h) => !isSiteWide(h)).map((h) => assetKey(h));
+  out.refs.scripts = [...html.matchAll(/<script src="([^"]+)"><\/script>/g)].map((m) => m[1])
+    .filter((h) => !isSiteWide(h)).map((h) => assetKey(h));
   out.refs.hasInlineScript = /<script>[\s\S]*?<\/script>/.test(html);
   out.refs.gridCount = (html.match(/class="team-grid"/g) || []).length;
   out.refs.activeNav = [...html.matchAll(/<a[^>]*class="([^"]*\bactive\b[^"]*)"[^>]*href="([^"]*)"/g)]
