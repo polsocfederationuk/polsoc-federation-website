@@ -1994,17 +1994,31 @@ registration:
       headers: { "Content-Type": "application/json", Origin: (extra || {}).origin || SITE },
       body: (extra || {}).method === "GET" ? undefined : JSON.stringify(body),
     });
+    const rolesOf2 = (meta) => ((meta && meta.roles) || []).join();
     const runInvite = async (who, body, opts, extra) => {
-      const log = { created: [], mailed: [] };
+      const log = { created: [], updated: [], deleted: [], mailed: [] };
       const o = opts || {};
+      // By default the create call behaves as Netlify's does in production:
+      // it makes the account but does not keep the role (o.createKeepsRole
+      // simulates a service that does).
+      const rolesOf = (meta) => ((meta && meta.roles) || []).slice();
       const response = await invite.default(inviteRequest(body, extra), {}, {
         getUser: async () => people[who] || null,
         env: { URL: SITE },
-        admin: { createUser: async (params) => {
-          if (o.createError) throw o.createError;
-          log.created.push(params);
-          return { id: "new", email: params.email };
-        } },
+        admin: {
+          createUser: async (params) => {
+            if (o.createError) throw o.createError;
+            log.created.push(params);
+            return { id: "new", email: params.email,
+              roles: o.createKeepsRole ? rolesOf(params.data.app_metadata) : [] };
+          },
+          updateUser: async (id, attrs) => {
+            if (o.updateError) throw o.updateError;
+            log.updated.push({ id, attrs });
+            return { id, roles: o.updateIgnored ? [] : rolesOf(attrs.app_metadata) };
+          },
+          deleteUser: async (id) => { log.deleted.push(id); },
+        },
         sendPasswordEmail: async (address) => {
           if (o.mailFails) return false;
           log.mailed.push(address);
@@ -2041,13 +2055,31 @@ registration:
       JSON.stringify(made.data.app_metadata));
     check(made.data.user_metadata.fed_welcome === true && made.data.user_metadata.full_name === "Jan Kowalski",
       "the login page will greet them as new", JSON.stringify(made.data.user_metadata));
+    const given = r.log.updated[0] || { attrs: {} };
+    check(given.id === "new" && rolesOf2(given.attrs.app_metadata) === "admin",
+      "when the create call drops the role, it is given by updating the new account",
+      JSON.stringify(given));
+
+    r = await runInvite("super", { email: "kept@example.com" }, { createKeepsRole: true });
+    check(r.status === 200 && !r.log.updated.length,
+      "when the create call keeps the role, nothing more is done", `${r.log.updated.length} updates`);
+
+    r = await runInvite("super", { email: "stuck@example.com" }, { updateIgnored: true });
+    check(r.status === 502 && r.body.error.code === "role_failed" && r.log.deleted[0] === "new" && !r.log.mailed.length,
+      "an account that still has no role is deleted again, and no e-mail is sent",
+      `${r.status} deleted=${r.log.deleted.join()}`);
+    const quiet2 = console.error; console.error = () => {};
+    r = await runInvite("super", { email: "stuck@example.com" }, { updateError: new Error("boom") });
+    console.error = quiet2;
+    check(r.status === 502 && r.log.deleted[0] === "new" && !r.log.mailed.length,
+      "…and the same if giving the role fails outright", `${r.status}`);
     check(typeof made.password === "string" && made.password.length >= 40 &&
       !JSON.stringify(r.body).includes(made.password),
       "the temporary password is random and never returned", "hidden");
 
     for (const asked of ["superadmin", "editor"]) {
       r = await runInvite("super", { email: "a@example.com", role: asked });
-      const roles = ((r.log.created[0] || { data: { app_metadata: {} } }).data.app_metadata.roles || []).join();
+      const roles = rolesOf2(((r.log.updated[0] || { attrs: {} }).attrs.app_metadata));
       check(r.status === 200 && roles === "admin",
         `a role of "${asked}" sent by the browser is ignored — the account is an admin`, roles);
     }

@@ -162,22 +162,21 @@ export default async function handler(request, context, injected) {
   const name = cleanName(body.name);
 
   const identityAdmin = deps.admin || admin;
+  const appMetadata = {
+    provider: "email",
+    roles: [role],
+    invited_by: user.email,
+    invited_at: new Date().toISOString(),
+  };
+  // `fed_welcome` lets the login page greet a new person rather than talk
+  // about "resetting" a password they never had. Cleared when they choose one.
+  const userMetadata = Object.assign({ fed_welcome: true }, name ? { full_name: name } : {});
+  let created;
   try {
-    await identityAdmin.createUser({
+    created = await identityAdmin.createUser({
       email,
       password: randomBytes(32).toString("base64url"),
-      data: {
-        app_metadata: {
-          provider: "email",
-          roles: [role],
-          invited_by: user.email,
-          invited_at: new Date().toISOString(),
-        },
-        // `fed_welcome` lets the login page greet a new person rather than
-        // talk about "resetting" a password they never had. It is cleared
-        // when they choose their password.
-        user_metadata: Object.assign({ fed_welcome: true }, name ? { full_name: name } : {}),
-      },
+      data: { app_metadata: appMetadata, user_metadata: userMetadata },
     });
   } catch (err) {
     const status = err && err.status; // AuthError carries the HTTP status here
@@ -194,6 +193,45 @@ export default async function handler(request, context, injected) {
     // The message may describe the request; it never contains the password.
     console.error("invite: creating the account failed:", status || "", text.slice(0, 200));
     return say(502, "create_failed", "The account could not be created.", "Nobody was invited. Please try again.");
+  }
+
+  /*
+    THE ROLE, MADE CERTAIN.
+
+    Netlify's Identity accepted the metadata on the create call but did not
+    store the role: invited people appeared in the dashboard with no role, so
+    they could not open the CMS. Setting app_metadata with an update of the
+    new account is the established way to give a role from a function, so it
+    is done here whenever the created account does not already show the role
+    — and the answer is read back and checked.
+
+    If the role still cannot be given, the account is deleted again rather
+    than left behind half-made: an account with no role can sign in to
+    nothing, and it would block a second attempt with "already has an
+    account". Nothing is e-mailed in that case.
+  */
+  const hasRole = (account) => Boolean(account && Array.isArray(account.roles) && account.roles.includes(role));
+  if (!hasRole(created)) {
+    let updated = null;
+    try {
+      updated = created && created.id
+        ? await identityAdmin.updateUser(created.id, { app_metadata: appMetadata, user_metadata: userMetadata })
+        : null;
+    } catch (err) {
+      console.error("invite: giving the role failed:", String((err && err.message) || "").slice(0, 200));
+      updated = null;
+    }
+    if (!hasRole(updated)) {
+      try {
+        if (created && created.id) await identityAdmin.deleteUser(created.id);
+      } catch (err) {
+        console.error("invite: removing the account without a role failed:", String((err && err.message) || "").slice(0, 200));
+        return say(502, "role_failed", "The account was created, but it could not be made an administrator.",
+          "Open it in Netlify → Identity and add the role admin, or delete it and try again.", { email });
+      }
+      return say(502, "role_failed", "The account could not be made an administrator.",
+        "Nobody was invited. Please try again.");
+    }
   }
 
   let sent = false;
