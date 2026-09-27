@@ -4,7 +4,10 @@
 #cc-main {
   --cc-font-family: var(--font-body, "Manrope", sans-serif);
   --cc-modal-border-radius: 14px;
-  --cc-btn-border-radius: 999px;
+  /* The library uses this radius for the settings sections too, not only the
+     buttons: a pill value made those sections pill-shaped and cut off their
+     text. Sections get a card radius; the buttons stay pills below. */
+  --cc-btn-border-radius: 12px;
   --cc-primary-color: #16181d;
   --cc-secondary-color: #3a3d45;
   --cc-btn-primary-bg: #d7282f;
@@ -20,8 +23,18 @@
   --cc-toggle-on-bg: #d7282f;
   --cc-separator-border-color: #e8e4e0;
   --cc-link-color: #a91d23;
+  --cc-cookie-category-block-bg: #faf7f4;
+  --cc-cookie-category-block-border: #efe9e3;
+  --cc-cookie-category-block-hover-bg: #f4efe9;
+  --cc-cookie-category-block-hover-border: #e8e4e0;
+  --cc-cookie-category-expanded-block-hover-bg: #e8e4e0;
+  --cc-toggle-readonly-bg: #e8e4e0;
+  --cc-toggle-off-bg: #8a8d96;
 }
 #cc-main .cm__title, #cc-main .pm__title { font-family: var(--font-display, "Plus Jakarta Sans", sans-serif); }
+#cc-main .cm__btn, #cc-main .pm__btn { border-radius: 999px; }
+#cc-main .cm__footer { background: #faf7f4; }
+#cc-main .cm__link-group a, #cc-main .pm__section-desc a { color: #a91d23; }
 
 .fed-consent-note {
   padding: 22px 20px; border: 1px dashed #d8d2cb; border-radius: 14px;
@@ -29,7 +42,38 @@
 }
 .fed-consent-note p { margin: 0 0 14px; color: #3a3d45; }
 
+/* "Privacy policy" in the banner: a full-width outline button under the
+   three choices, instead of a plain text link in a grey strip. */
+#cc-main .cm__footer { background: var(--cc-bg, #fff); border-top: 0; padding: 0 0 1.1rem; margin-top: -0.4rem; }
+#cc-main .cm__links { padding: 0 1.3rem; }
+#cc-main .cm__link-group { font-size: 1em; }
+#cc-main .cm__link-group a {
+  display: flex; align-items: center; justify-content: center; width: 100%; min-height: 42px;
+  padding: 0.5em 1em; border: 1px solid #e3ddd6; border-radius: 999px; background: #fff;
+  background-image: none; color: #16181d; font-size: 0.82em; font-weight: 600;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+#cc-main .cm__link-group a:hover { border-color: #d7282f; color: #a91d23; background-size: 0; }
+#cc-main .cm__link-group a:focus-visible { outline: 2px solid #d7282f; outline-offset: 2px; }
+
+/* The footer's "Cookie settings" is a button (it opens a dialog, it goes
+   nowhere) but looks exactly like the links beside it. */
 .footer-cookie-settings {
-  background: none; border: 0; padding: 0; font: inherit; color: inherit;
-  text-decoration: underline; cursor: pointer;
+  background: none; border: 0; padding: 0; margin: 0; font: inherit; line-height: inherit;
+  color: var(--red, #d7282f); text-decoration: none; cursor: pointer;
+}
+.footer-cookie-settings:hover { text-decoration: underline; }
+.footer-cookie-settings:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+
+/* One line on wide screens: the links sit together on the right and never
+   wrap; if space runs short, the copyright sentence wraps within its own
+   column instead of pushing a link onto a second line. css/style.css (the
+   live file) is not edited, so this lives with the other site-wide additions. */
+@media (min-width: 1024px) {
+  /* At the full container width (1132px) everything fits on one line only
+     just, so the text is a touch smaller (0.82rem → 0.78rem) and the gaps
+     14px. Narrower desktops fall back to wrapping the copyright sentence. */
+  .footer-bottom { flex-wrap: nowrap; align-items: baseline; column-gap: 14px; font-size: 0.78rem; }
+  .footer-bottom > * { flex: none; white-space: nowrap; }
+  .footer-bottom > :first-child { flex: 0 1 auto; min-width: 0; white-space: normal; margin-right: auto; }
 }

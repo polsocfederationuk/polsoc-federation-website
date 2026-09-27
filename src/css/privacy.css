@@ -1,0 +1,70 @@
+/* privacy.css — the privacy policy page (src/privacy-policy.njk).
+   Uses the site's own variables from css/style.css. */
+.policy-updated { margin-top: 18px; font-size: 0.92rem; color: var(--gray); }
+.policy-updated time { font-weight: 700; color: var(--ink-soft); }
+
+.policy-layout { display: grid; grid-template-columns: minmax(0, 280px) minmax(0, 1fr); gap: 56px; align-items: start; }
+.policy-aside { position: sticky; top: 104px; display: flex; flex-direction: column; gap: 20px; max-height: calc(100vh - 128px); overflow-y: auto; }
+.policy-toc { background: var(--white); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px 22px 18px; }
+.policy-toc-title { margin: 0 0 12px; font-family: var(--font-display); font-weight: 700; font-size: 0.8rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--red); }
+.policy-toc ol { margin: 0; padding: 0; list-style: none; counter-reset: toc; }
+.policy-toc li { counter-increment: toc; }
+.policy-toc a { display: grid; grid-template-columns: 1.8em 1fr; gap: 4px; padding: 6px 0; font-size: 0.9rem; line-height: 1.35; color: var(--ink-soft); text-decoration: none; }
+.policy-toc a::before { content: counter(toc); font-weight: 700; color: var(--gray); }
+.policy-toc a:hover, .policy-toc a:focus-visible { color: var(--red); }
+.policy-toc a.is-current { color: var(--red); font-weight: 700; }
+.policy-help { padding: 0 4px; font-size: 0.92rem; color: var(--ink-soft); }
+.policy-help p { margin: 0 0 12px; }
+.policy-help a { color: var(--red-dark); font-weight: 600; word-break: break-word; }
+
+.policy-body { max-width: 780px; min-width: 0; }
+.policy-notice { margin: 0 0 32px; padding: 16px 18px; border-left: 4px solid var(--red); border-radius: 10px; background: var(--cream); color: var(--ink-soft); }
+.policy-section { scroll-margin-top: 100px; padding-bottom: 12px; }
+.policy-section + .policy-section { border-top: 1px solid var(--line); padding-top: 28px; }
+.policy-section h2 { display: flex; align-items: baseline; gap: 12px; font-size: clamp(1.35rem, 2.6vw, 1.7rem); margin: 0 0 18px; }
+.policy-num { flex: none; display: inline-grid; place-items: center; width: 2em; height: 2em; border-radius: 50%; background: var(--red); color: var(--white); font-size: 0.6em; font-weight: 800; transform: translateY(-0.15em); }
+.policy-section h3 { font-size: 1.08rem; margin: 26px 0 10px; }
+.policy-section p, .policy-section li { color: var(--ink-soft); font-size: 1.02rem; line-height: 1.7; }
+.policy-section p { margin: 0 0 1.1em; }
+.policy-section ul { margin: 0 0 1.2em; padding-left: 1.3em; }
+.policy-section li { margin-bottom: 0.55em; }
+.policy-section li ul { margin-top: 0.5em; }
+.policy-section a { color: var(--red-dark); font-weight: 600; text-underline-offset: 3px; }
+.policy-section strong { color: var(--ink); }
+
+.policy-table-wrap { margin: 8px 0 28px; overflow-x: auto; border: 1px solid var(--line); border-radius: 14px; }
+.policy-table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+.policy-table thead th { background: var(--cream); text-align: left; font-family: var(--font-display); font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink); padding: 14px 16px; }
+.policy-table th[scope="row"] { text-align: left; font-weight: 700; color: var(--ink); width: 38%; }
+.policy-table th[scope="row"], .policy-table td { padding: 14px 16px; vertical-align: top; border-top: 1px solid var(--line); color: var(--ink-soft); line-height: 1.5; }
+.policy-table ol { margin: 0; padding-left: 1.3em; }
+.policy-table li { margin: 0 0 4px; font-size: 0.95rem; line-height: 1.45; }
+
+.policy-contact { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+.policy-contact p { margin: 0; padding: 18px 20px; background: var(--cream); border-radius: 14px; }
+
+.policy-cookies { margin-top: 36px; padding: 24px 26px; border: 1px dashed #d8d2cb; border-radius: var(--radius); background: var(--cream); }
+.policy-cookies h2 { font-size: 1.2rem; margin: 0 0 8px; }
+.policy-cookies p { margin: 0 0 16px; color: var(--ink-soft); }
+
+@media (max-width: 900px) {
+  .policy-layout { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+  .policy-aside { position: static; max-height: none; overflow: visible; }
+  .policy-help { display: none; }
+}
+/* Narrow screens: each table row becomes a card with labelled parts. */
+@media (max-width: 640px) {
+  .policy-table-wrap { border: 0; overflow: visible; }
+  .policy-table thead { display: none; }
+  .policy-table, .policy-table tbody, .policy-table tr, .policy-table th[scope="row"], .policy-table td { display: block; width: auto; }
+  .policy-table tr { border: 1px solid var(--line); border-radius: 14px; margin-bottom: 12px; overflow: hidden; }
+  .policy-table th[scope="row"] { background: var(--cream); border-top: 0; }
+  .policy-table td::before { content: attr(data-label); display: block; margin-bottom: 6px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gray); }
+}
+@media print {
+  .site-header, .site-footer, .policy-aside, .policy-cookies, #cc-main, .back-to-top, .scroll-top { display: none !important; }
+  .policy-layout { display: block; }
+  .page-hero { padding: 0 0 12px; }
+  .policy-section { break-inside: auto; }
+  .policy-table-wrap { overflow: visible; }
+}

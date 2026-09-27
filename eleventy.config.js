@@ -260,6 +260,9 @@ module.exports = function (eleventyConfig) {
     "node_modules/vanilla-cookieconsent/dist/cookieconsent.css": "css/cookieconsent.css",
     "src/js/consent.js": "js/consent.js",
     "src/css/consent.css": "css/consent.css",
+    // The privacy policy page's own styles and script.
+    "src/css/privacy.css": "css/privacy.css",
+    "src/js/privacy-page.js": "js/privacy-page.js",
   });
 
   // ---------------------------------------------------------------------

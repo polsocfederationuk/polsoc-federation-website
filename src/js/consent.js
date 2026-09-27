@@ -29,6 +29,8 @@
   if (!CC || typeof CC.run !== "function") return;
 
   var polish = /^pl/i.test(document.documentElement.lang || "");
+  // The privacy policy, in the page's language (src/privacy-policy.njk).
+  var POLICY = polish ? "/pl/privacy-policy.html" : "/privacy-policy.html";
 
   var TEXT = {
     en: {
@@ -41,6 +43,7 @@
         acceptAllBtn: "Accept",
         acceptNecessaryBtn: "Decline",
         showPreferencesBtn: "Choose",
+        footer: '<a href="' + POLICY + '">Privacy policy</a>',
       },
       preferencesModal: {
         title: "Cookie settings",
@@ -62,6 +65,11 @@
               "decline, you get a link to each post instead.",
             linkedCategory: "social",
           },
+          {
+            title: "More information",
+            description: 'How we use and protect your personal data is set out in our <a href="' +
+              POLICY + '">privacy policy</a>.',
+          },
         ],
       },
       blocked: "This post comes from social media, which would set cookies.",
@@ -77,6 +85,7 @@
         acceptAllBtn: "Akceptuję",
         acceptNecessaryBtn: "Odrzucam",
         showPreferencesBtn: "Wybierz",
+        footer: '<a href="' + POLICY + '">Polityka prywatności</a>',
       },
       preferencesModal: {
         title: "Ustawienia plików cookie",
@@ -97,6 +106,11 @@
               "stronach wydarzeń. Te serwisy zapisują własne pliki cookie, gdy post " +
               "jest wyświetlany. Jeśli odmówisz, zobaczysz link do każdego posta.",
             linkedCategory: "social",
+          },
+          {
+            title: "Więcej informacji",
+            description: 'Jak wykorzystujemy i chronimy Twoje dane osobowe, opisujemy w naszej <a href="' +
+              POLICY + '">polityce prywatności</a>.',
           },
         ],
       },

@@ -63,7 +63,11 @@
       // frame instead of being floored to the next integer zoom (a lot of ocean)
       map = L.map("map", { scrollWheelZoom: false, maxBoundsViscosity: 1, zoomSnap: 0 });
 
-      L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+      // CARTO needs an API key on every tile since September 2026; it comes
+      // from the build (src/_data/mapTiles.js, CARTO_BASEMAPS_KEY).
+      var tilesKey = typeof MAP_TILES_KEY === "string" ? MAP_TILES_KEY : "";
+      L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" +
+        (tilesKey ? "?key=" + encodeURIComponent(tilesKey) : ""), {
         attribution:
           '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
         maxZoom: 19,

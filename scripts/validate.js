@@ -987,6 +987,8 @@ if (!exists("dist")) {
       "css/cookieconsent.css": "node_modules/vanilla-cookieconsent/dist/cookieconsent.css",
       "js/consent.js": "src/js/consent.js",
       "css/consent.css": "src/css/consent.css",
+      "css/privacy.css": "src/css/privacy.css",
+      "js/privacy-page.js": "src/js/privacy-page.js",
     };
     // Build PRODUCTS, not copies: these are rendered from templates and have no
     // byte-identical source, so they are excluded from the copy check and

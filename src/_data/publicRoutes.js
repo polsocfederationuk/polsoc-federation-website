@@ -53,6 +53,8 @@ const PAGE_ROUTES = [
   { key: "announcements", file: "announcements.html", template: "src/announcements.njk", changefreq: "weekly", priority: { en: "0.9", pl: "0.8" } },
   { key: "team", file: "team.html", template: "src/team.njk", changefreq: "yearly", priority: { en: "0.7", pl: "0.6" } },
   { key: "contact", file: "contact.html", template: "src/contact.njk", changefreq: "yearly", priority: { en: "0.7", pl: "0.6" } },
+  // New with the site (no live counterpart): the Federation's privacy policy.
+  { key: "privacy", file: "privacy-policy.html", template: "src/privacy-policy.njk", changefreq: "yearly", priority: { en: "0.3", pl: "0.2" } },
 ];
 
 /** Per-event sitemap weights, keyed by slug — the flagship outranks the rest. */

@@ -52,7 +52,18 @@ checks the footer carries the Cookie settings link.
 
 ## Still to do
 
-- **A privacy / cookie policy page.** The banner does not link to one because
-  the site has none. The Federation should write or approve that text.
+- **Cookies in the privacy policy.** The policy (`/privacy-policy.html`,
+  `src/_includes/partials/privacy/policy-en.njk`) does not yet mention cookies.
+  The banner and the policy page's "Cookies on this website" box explain them;
+  the Federation may want a short cookies section in the policy itself.
 - **Polish wording** should be checked by a native speaker (`src/js/consent.js`
   and `ui.json` → `footer.cookieSettings`).
+
+## Privacy policy page
+
+`/privacy-policy.html` and `/pl/privacy-policy.html` (`src/privacy-policy.njk`)
+show the Federation's approved English policy with a contents list, and are
+linked from the footer on every page, from the banner, and from its settings.
+The Polish page says the policy is available in English and shows it. To update
+the policy, replace the text in `partials/privacy/policy-en.njk` and the date in
+the page's front matter (`privacyPage.updated`, `updated_text`).

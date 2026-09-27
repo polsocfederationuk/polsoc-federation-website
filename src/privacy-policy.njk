@@ -1,0 +1,119 @@
+---
+layout: layouts/base.njk
+
+pagination:
+  data: locales
+  size: 1
+  alias: locale
+
+permalink: "{{ locale.urlPrefix }}privacy-policy.html"
+urlPattern: "/{prefix}privacy-policy.html"
+
+# Page styles: css/style.css is the live site's file and is not edited, so the
+# policy's layout lives in its own sheet (src/css/privacy.css).
+stylesheetsAfter:
+  - /css/privacy.css
+scriptsAfter:
+  - /js/privacy-page.js
+
+# The page's own wording, in both languages. The POLICY itself is the
+# Federation's approved English text (partials/privacy/policy-en.njk); the
+# Polish page says so and shows it, rather than an unapproved translation.
+privacyPage:
+  updated: "2026-09-23"
+  en:
+    title: "Privacy policy | Federation of Polish Student Societies in the UK"
+    description: "How the Federation of Polish Student Societies in the UK collects, uses and protects your personal data, and your rights."
+    eyebrow: "Your data"
+    h1_lead: "Privacy "
+    h1_fancy: "policy"
+    lead: "How we collect, use and protect your personal data — and the rights you have over it."
+    updated_label: "Last updated"
+    updated_text: "23 September 2026"
+    contents: "Contents"
+    questions: "Questions about your data?"
+    print: "Print this policy"
+    cookies_heading: "Cookies on this website"
+    cookies_text: "We use one cookie to remember your cookie choice. Social media posts on event pages load only if you allow them."
+    cookies_button: "Cookie settings"
+  pl:
+    title: "Polityka prywatności | Federacja Polskich Stowarzyszeń Studenckich w Wielkiej Brytanii"
+    description: "Jak Federacja Polskich Stowarzyszeń Studenckich w Wielkiej Brytanii zbiera, wykorzystuje i chroni Twoje dane osobowe oraz jakie masz prawa."
+    eyebrow: "Twoje dane"
+    h1_lead: "Polityka "
+    h1_fancy: "prywatności"
+    lead: "Jak zbieramy, wykorzystujemy i chronimy Twoje dane osobowe — i jakie masz do nich prawa."
+    notice: "Nasza polityka prywatności jest dostępna w języku angielskim. Jeśli masz pytania, napisz do nas po polsku — chętnie pomożemy."
+    updated_label: "Ostatnia aktualizacja"
+    updated_text: "23 września 2026"
+    contents: "Spis treści"
+    questions: "Pytania o Twoje dane?"
+    print: "Wydrukuj politykę"
+    cookies_heading: "Pliki cookie na tej stronie"
+    cookies_text: "Używamy jednego pliku cookie, aby zapamiętać Twój wybór. Posty z mediów społecznościowych na stronach wydarzeń wczytują się tylko za Twoją zgodą."
+    cookies_button: "Ustawienia plików cookie"
+
+# The contents list — the policy's own section titles, linked to their ids.
+policySections:
+  - { id: who-we-are, title: "Important information and who we are" }
+  - { id: data-we-collect, title: "The types of personal data we collect about you" }
+  - { id: how-collected, title: "How is your personal data collected?" }
+  - { id: how-we-use, title: "How we use your personal data" }
+  - { id: disclosures, title: "Disclosures of your personal data" }
+  - { id: international-transfers, title: "International transfers" }
+  - { id: data-security, title: "Data security" }
+  - { id: data-retention, title: "Data retention" }
+  - { id: your-rights, title: "Your legal rights" }
+  - { id: contact-details, title: "Contact details" }
+  - { id: complaints, title: "Complaints" }
+  - { id: changes, title: "Changes to the privacy policy and your duty to inform us of changes" }
+  - { id: third-party-links, title: "Third-party links" }
+
+eleventyComputed:
+  pageTitle: "{{ privacyPage[locale.code].title }}"
+  pageDescription: "{{ privacyPage[locale.code].description }}"
+  ogImageAlt: "{{ privacyPage[locale.code].title }}"
+---
+{%- set t = ui[locale.code] -%}
+{%- set c = privacyPage[locale.code] -%}
+<section class="page-hero">
+  <div class="container">
+    <span class="eyebrow">{{ c.eyebrow }}</span>
+    <h1>{{ c.h1_lead }}<span class="fancy">{{ c.h1_fancy }}</span></h1>
+    <p class="lead">{{ c.lead }}</p>
+    <p class="policy-updated">{{ c.updated_label }}: <time datetime="{{ privacyPage.updated }}">{{ c.updated_text }}</time></p>
+  </div>
+</section>
+
+<section class="section policy">
+  <div class="container policy-layout">
+    <aside class="policy-aside" aria-label="{{ c.contents }}">
+      <nav class="policy-toc">
+        <p class="policy-toc-title">{{ c.contents }}</p>
+        <ol>
+{%- for s in policySections %}
+          <li><a href="#{{ s.id }}"{% if locale.code != "en" %} lang="en"{% endif %}>{{ s.title }}</a></li>
+{%- endfor %}
+        </ol>
+      </nav>
+      <div class="policy-help">
+        <p><strong>{{ c.questions }}</strong><br>
+        <a href="mailto:contact@polsocfederation.pl">contact@polsocfederation.pl</a></p>
+        <button type="button" class="btn btn-ghost policy-print" data-fed-print>{{ c.print }}</button>
+      </div>
+    </aside>
+
+    <article class="policy-body"{% if locale.code != "en" %} lang="en"{% endif %}>
+{%- if c.notice %}
+      <p class="policy-notice" lang="{{ locale.htmlLang }}">{{ c.notice }}</p>
+{%- endif %}
+{% include "partials/privacy/policy-en.njk" %}
+
+      <aside class="policy-cookies" lang="{{ locale.htmlLang }}">
+        <h2>{{ c.cookies_heading }}</h2>
+        <p>{{ c.cookies_text }}</p>
+        <button type="button" class="btn btn-ghost" data-fed-cookie-settings>{{ c.cookies_button }}</button>
+      </aside>
+    </article>
+  </div>
+</section>

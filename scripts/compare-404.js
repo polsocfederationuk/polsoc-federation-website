@@ -34,7 +34,7 @@ const fs = require("fs");
 const path = require("path");
 // The cookie banner is on every generated page and on no live one: left out of
 // the asset lists compared here, and checked for by scripts/audit-dist.js.
-const { isSiteWide } = require("./site-wide-assets.js");
+const { isSiteWide, isSiteWideLink } = require("./site-wide-assets.js");
 
 const ROOT = path.join(__dirname, "..");
 const read = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
@@ -142,6 +142,7 @@ function parse(html) {
   out.chrome.footerHrefs = footLinks
     ? [...footLinks[1].matchAll(/href="([^"]+)"/g)].map((m) => m[1])
       .filter((href) => !href.endsWith("/staff-login/"))
+      .filter((href) => !isSiteWideLink(href))
       .filter((href) => href !== "https://www.netlify.com") : [];
   out.chrome.footerLogo = footLinks
     ? (footLinks[1].match(/<img src="([^"]+)" alt="([^"]*)">/) || []).slice(1, 3) : null;

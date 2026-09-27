@@ -26,6 +26,7 @@
 
 const fs = require("fs");
 const path = require("path");
+const { isSiteWideLink } = require("./site-wide-assets.js");
 
 const ROOT = path.resolve(__dirname, "..");
 const read = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
@@ -86,8 +87,10 @@ function compareRegion(label, livePath, genPath, startTag, endTag) {
          satisfies it on every page in both languages.
       3. COOKIE SETTINGS — the button that reopens the cookie banner's
          settings (src/js/consent.js), on every page in both languages.
+      4. PRIVACY POLICY — the link to the Federation's privacy policy
+         (src/privacy-policy.njk), on every page in both languages.
 
-    This region comparison is character-exact, so exactly these three spans are
+    This region comparison is character-exact, so exactly these four spans are
     removed from the generated side and nothing else is relaxed: every other
     character of the footer must still match the live page byte for byte. Both
     links are asserted separately in compareFeatures(), so removing them here
@@ -96,7 +99,8 @@ function compareRegion(label, livePath, genPath, startTag, endTag) {
   const withoutApprovedSpans = (html) => html
     .replace(new RegExp('<span><a class="footer-staff-login"[^>]*>[^<]*</a></span>'), "")
     .replace(new RegExp('<span><a href="https://www\.netlify\.com"[^>]*>[^<]*</a></span>'), "")
-    .replace(new RegExp('<span><button type="button" class="footer-cookie-settings"[^>]*>[^<]*</button></span>'), "");
+    .replace(new RegExp('<span><button type="button" class="footer-cookie-settings"[^>]*>[^<]*</button></span>'), "")
+    .replace(new RegExp('<span><a class="footer-privacy" href="[^"]*">[^<]*</a></span>'), "");
   const gen = normalise(withoutApprovedSpans(region(read(genPath), startTag, endTag)));
 
   if (!live) return record(false, `${label}: region not found in ${livePath}`);
@@ -188,7 +192,7 @@ function compareFeatures(label, livePath, genPath) {
   const NETLIFY = "https://www.netlify.com";
   const c = footLinks(live);
   const all = footLinks(gen);
-  const d = all.filter((href) => !href.endsWith(STAFF_LOGIN) && href !== NETLIFY);
+  const d = all.filter((href) => !href.endsWith(STAFF_LOGIN) && href !== NETLIFY && !isSiteWideLink(href));
   record(JSON.stringify(c) === JSON.stringify(d),
     `${label}: footer links match`,
     [`live: ${c.join(" ")}`, `gen : ${d.join(" ")}`]);
@@ -199,6 +203,8 @@ function compareFeatures(label, livePath, genPath) {
     `${label}: APPROVED: the live footer did not`, []);
   record(/<button type="button" class="footer-cookie-settings" data-fed-cookie-settings>/.test(gen),
     `${label}: APPROVED: the footer offers Cookie settings`, []);
+  record(/<a class="footer-privacy" href="privacy-policy\.html">/.test(gen),
+    `${label}: APPROVED: the footer links to the privacy policy`, []);
   /*
     NETLIFY OPEN SOURCE PLAN, REQUIREMENT (c). The plan the charity's hosting
     credits depend on requires this link. It is asserted, not merely tolerated,

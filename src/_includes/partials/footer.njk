@@ -77,6 +77,7 @@
       -#}
       <span><a href="https://www.netlify.com" target="_blank" rel="noopener">{{ t.footer.poweredBy }}</a></span>
       {#- Reopens the cookie banner's settings (js/consent.js). #}
+      <span><a class="footer-privacy" href="{{ "privacy-policy.html" | navHref(locale, linkMode) }}">{{ t.footer.privacyPolicy }}</a></span>
       <span><button type="button" class="footer-cookie-settings" data-fed-cookie-settings>{{ t.footer.cookieSettings }}</button></span>
     </div>
   </div>

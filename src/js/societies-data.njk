@@ -36,3 +36,8 @@ eleventyExcludeFromCollections: true
 const SOCIETIES = {{ items | dump(2) | safe }};
 
 const SOCIETIES_UI = {{ ui[locale.code].members | dump(2) | safe }};
+
+// The CARTO basemaps key for the map tiles (src/_data/mapTiles.js). Empty when
+// CARTO_BASEMAPS_KEY was not set for the build: the tiles then carry CARTO's
+// "API KEY REQUIRED" watermark, and everything else works.
+const MAP_TILES_KEY = {{ mapTiles.key | dump | safe }};

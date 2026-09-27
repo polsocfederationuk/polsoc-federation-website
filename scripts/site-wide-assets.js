@@ -23,4 +23,15 @@ function isSiteWide(ref) {
   return STYLESHEETS.concat(SCRIPTS).some((f) => t === f || t.endsWith(f));
 }
 
-module.exports = { STYLESHEETS, SCRIPTS, isSiteWide };
+/**
+ * Footer links the generated site adds to every page (the privacy policy).
+ * Link comparisons leave them out, as they do the staff-login and Netlify
+ * links; scripts/compare-chrome.js asserts the link is there.
+ */
+const FOOTER_LINKS = ["privacy-policy.html"];
+function isSiteWideLink(href) {
+  const t = String(href || "").split(/[?#]/)[0];
+  return FOOTER_LINKS.some((f) => t === f || t.endsWith("/" + f));
+}
+
+module.exports = { STYLESHEETS, SCRIPTS, isSiteWide, FOOTER_LINKS, isSiteWideLink };
