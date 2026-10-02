@@ -2764,6 +2764,7 @@ module.exports = () => ({
   // own stylesheets so a swatch cannot drift away from the real colour.
   brandColourScript: adminAsset("brand-colour.js"),
   // The image focus control — one widget, configured per field.
+  mediaPreviewsScript: adminAsset("media-previews.js"),
   focalPointScript: adminAsset("focal-point.js"),
   // The standard event Record ID: generated on a new event, locked on a saved one.
   eventRecordIdScript: adminAsset("event-record-id.js"),

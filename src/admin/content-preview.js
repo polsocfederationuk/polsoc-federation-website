@@ -32,11 +32,45 @@
   }
   var Preview = function (name) { return createClass({
     getInitialState: function () {
+      this.previewImages = Object.create(null);
       return { lang: "en", width: "fit", detail: true, related: null, warning: "",
+        imageRevision: 0,
         draft: plain(this.props.entry && this.props.entry.get("data")) || {} };
+    },
+    previewAsset: function (path, field) {
+      var asset = window.fedImageAsset(path, field, this.props.getAsset);
+      var url = asset ? String(asset) : "";
+      if (!/^blob:/.test(url)) return url;
+      // The sandboxed srcdoc has an opaque origin and cannot reliably read
+      // its parent's Blob URLs. Embed a copy for this preview only; neither
+      // the sandbox permissions nor the entry's saved paths need to change.
+      var cached = this.previewImages[url];
+      if (cached) return cached.data || null;
+      cached = this.previewImages[url] = {};
+      var self = this;
+      fetch(url).then(function (response) { return response.blob(); }).then(function (blob) {
+        // The proxy deserializes files without a MIME type.
+        var ext = String(path).split(/[?#]/)[0].split(".").pop().toLowerCase();
+        var mime = { png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg",
+          gif: "image/gif", webp: "image/webp", avif: "image/avif", svg: "image/svg+xml" }[ext];
+        if (!blob.type && mime) blob = blob.slice(0, blob.size, mime);
+        return new Promise(function (resolve, reject) {
+          var reader = new FileReader();
+          reader.onload = function () { resolve(reader.result); };
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+      }).then(function (data) {
+        cached.data = data;
+        if (self.alive) self.setState(function (state) { return { imageRevision: state.imageRevision + 1 }; });
+      }).catch(function () {
+        if (self.alive) self.setState({ warning: "An image could not be loaded for this preview. Try selecting it again." });
+      });
+      return null;
     },
     componentDidMount: function () {
       var self = this;
+      this.alive = true;
       this.scrollY = 0;
       this.onScroll = function (event) {
         if (self.frame && event.source === self.frame.contentWindow && event.data &&
@@ -48,7 +82,6 @@
       var requested = collection ? [collection] : [];
       if (name === "announcements") requested.push("standard_events");
       if (!this.props.getCollection || !requested.length) return;
-      this.alive = true;
       Promise.all(requested.map(function (key) {
         return self.props.getCollection(key).then(function (entries) {
           return { key: key === "standard_events" ? "events" : key,
@@ -82,7 +115,8 @@
       try {
         // Resolve a copy of the draft before rendering, including images drawn
         // later by the announcement scripts. The entry's stored paths stay intact.
-        var previewData = resolveImages(props.fields || setting(props.collection, "fields"), data, props.getAsset);
+        var previewData = resolveImages(props.fields || setting(props.collection, "fields"), data,
+          function (path, field) { return self.previewAsset(path, field); });
         html = runtime.render(name, previewData, { lang: this.state.lang, records: this.state.related || runtime.records,
           origin: window.location.origin, detail: this.state.detail, scrollY: this.scrollY,
           originalSlug: props.entry && props.entry.get("slug") });

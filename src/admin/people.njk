@@ -26,10 +26,14 @@ eleventyExcludeFromCollections: true
       <a class="people-back" href="/admin/">&larr; Content manager</a>
       <div class="people-title">
         <h1>People</h1>
-        <a class="people-invite" href="/admin/invite/">+ Invite someone</a>
+        <div class="people-tools">
+          <button class="people-refresh" id="people-refresh" type="button">Refresh</button>
+          <a class="people-invite" href="/admin/invite/">+ Invite someone</a>
+        </div>
       </div>
       <p class="people-lead">Everyone who has an account. Disabling takes access away at once and
         can be undone; deleting removes the account for good.</p>
+      <p class="people-lead">Sign-in times use your local time. “Not recorded” means no sign-in history is available.</p>
     </header>
 
     <main class="people" id="people-app">

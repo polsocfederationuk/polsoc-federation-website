@@ -11,6 +11,9 @@
   var filtersEl = document.getElementById("people-filters");
   var resultEl = document.getElementById("people-result");
 
+  var refreshEl = document.getElementById("people-refresh");
+  var loading = false;
+
   var STATUS = {
     active: "Active", pending: "Pending", disabled: "Disabled", no_access: "No access",
   };
@@ -37,10 +40,10 @@
   }
 
   function when(iso) {
-    if (!iso) return "never";
+    if (!iso) return "Not recorded";
     var d = new Date(iso);
-    if (isNaN(d)) return "never";
-    return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+    if (isNaN(d)) return "Not recorded";
+    return d.toLocaleString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
   }
 
   function show(kind, title, detail) {
@@ -149,25 +152,41 @@
     statusEl.hidden = true;
   }
 
-  post(ENDPOINT, { action: "list" }).then(function (r) {
-    if (r.status === 200 && Array.isArray(r.data.people)) {
-      people = r.data.people;
-      var pending = people.filter(function (p) { return p.status === "pending"; }).length;
-      if (pending) filter = "all";
-      draw();
-    } else if (r.status === 401) {
-      statusEl.textContent = "Your session has expired. Sign in again, then come back to this page.";
-    } else if (r.status === 403) {
-      statusEl.textContent = "Only a superadmin can manage people.";
-    } else if (r.status === 404) {
-      statusEl.textContent = "This page works on the live site only.";
-    } else {
-      var m = (r.data && r.data.message) || {};
-      statusEl.textContent = (m.title || "The list could not be loaded.") + (m.detail ? " " + m.detail : "");
-    }
-  }).catch(function () {
-    statusEl.textContent = "This page works on the live site only.";
-  });
+  function loadPeople() {
+    if (loading) return;
+    loading = true;
+    refreshEl.disabled = true;
+    statusEl.textContent = "Loading…";
+    statusEl.hidden = false;
+    return post(ENDPOINT, { action: "list" }).then(function (r) {
+      if (r.status === 200 && Array.isArray(r.data.people)) {
+        people = r.data.people;
+        draw();
+      } else {
+        if (r.status === 401 || r.status === 403) {
+          people = [];
+          listEl.textContent = "";
+          listEl.hidden = true;
+          filtersEl.hidden = true;
+          statusEl.textContent = r.status === 401
+            ? "Your session has expired. Sign in again, then come back to this page."
+            : "Only a superadmin can manage people.";
+        } else if (r.status === 404) {
+          statusEl.textContent = "This page works on the live site only.";
+        } else {
+          var m = (r.data && r.data.message) || {};
+          statusEl.textContent = (m.title || "The list could not be refreshed. Try again.") + (m.detail ? " " + m.detail : "");
+        }
+      }
+    }).catch(function () {
+      statusEl.textContent = "The list could not be refreshed. Check your connection and try again.";
+    }).then(function () {
+      loading = false;
+      refreshEl.disabled = false;
+    });
+  }
+  refreshEl.addEventListener("click", loadPeople);
+  loadPeople();
 
   window.fedPeople = { post: post };
 })();

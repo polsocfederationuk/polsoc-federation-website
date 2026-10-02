@@ -67,6 +67,15 @@ function roleOf(u) {
   return set && Array.isArray(set.roles) && set.roles[0] ? String(set.roles[0]) : "";
 }
 
+// Identity does not always persist its native lastSignInAt. The verified login
+// event records a server-owned fallback; user-editable metadata is never read.
+function lastSignIn(u) {
+  const dates = [u.lastSignInAt, metaOf(u).fed_last_sign_in_at]
+    .filter((value) => typeof value === "string" && value.trim())
+    .map((value) => Date.parse(value)).filter(Number.isFinite);
+  return dates.length ? new Date(Math.max(...dates)).toISOString() : null;
+}
+
 /** What the screen needs, and nothing more (no tokens, no raw metadata). */
 function describe(u, me) {
   const disabled = metaOf(u).fed_disabled || null;
@@ -77,7 +86,7 @@ function describe(u, me) {
     role: roleOf(u),
     status: statusOf(u),
     createdAt: u.createdAt || null,
-    lastSignInAt: u.lastSignInAt || null,
+    lastSignInAt: lastSignIn(u),
     invitedBy: metaOf(u).invited_by || null,
     disabledAt: disabled && disabled.at ? disabled.at : null,
     disabledBy: disabled && disabled.by ? disabled.by : null,

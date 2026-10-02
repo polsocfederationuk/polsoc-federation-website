@@ -210,6 +210,10 @@
   /* -- the control ---------------------------------------------------------- */
 
   var Control = createClass({
+    // Decap's outer Widget otherwise only watches this control's own value,
+    // so choosing a different photograph would never reach the crop control.
+    shouldComponentUpdate: function () { return true; },
+
     getInitialState: function () {
       return { image: null, natural: null, frame: 0, fineTune: false, failed: false };
     },
@@ -229,7 +233,7 @@
       var image = null, failed = false;
       if (path) {
         try {
-          var asset = this.props.getAsset(path, imageFieldFrom(this.props.collection, name));
+          var asset = window.fedImageAsset(path, imageFieldFrom(this.props.collection, name), this.props.getAsset);
           image = asset ? String(asset) : null;
         } catch (_) { failed = true; }
       }

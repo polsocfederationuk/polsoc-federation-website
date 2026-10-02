@@ -50,3 +50,8 @@ body { margin: 0; font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-seri
   .person-actions { justify-content: flex-start; }
   .person-locked { text-align: left; }
 }
+
+.people-tools { display: flex; gap: 8px; align-items: center; }
+.people-refresh { min-height: 40px; padding: 8px 14px; border: 1px solid #dfe5ed; border-radius: 6px; background: #fff; color: #46566e; font: inherit; cursor: pointer; }
+.people-refresh:disabled { opacity: 0.5; cursor: default; }
+.people-refresh:focus-visible { outline: 2px solid #6554dd; outline-offset: 2px; }
