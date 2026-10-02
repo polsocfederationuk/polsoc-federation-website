@@ -4,6 +4,32 @@
   if (!window.CMS || !window.FED_FRONTEND_PREVIEW) return;
   var h = window.h, createClass = window.createClass, runtime = window.FED_FRONTEND_PREVIEW;
   function plain(value) { return value && value.toJS ? value.toJS() : value; }
+  function setting(field, name) { return field && (field.get ? field.get(name) : field[name]); }
+  // Keep the original field objects: Decap uses their identity and media_folder
+  // to find the in-memory upload (for example assets/team, rather than assets).
+  function resolveImages(fields, data, getAsset) {
+    if (!fields || !data || !getAsset) return data;
+    var resolved = Object.assign({}, data);
+    function visit(field, value) {
+      if (setting(field, "widget") === "image" && typeof value === "string" && value) {
+        var asset = getAsset(value, field);
+        return asset ? String(asset) : null;
+      } else if (Array.isArray(value)) {
+        return value.map(function (item) {
+          var child = setting(field, "field");
+          return child ? visit(child, item) : resolveImages(setting(field, "fields"), item, getAsset);
+        });
+      } else if (value && typeof value === "object") {
+        return resolveImages(setting(field, "fields"), value, getAsset);
+      }
+      return value;
+    }
+    fields.forEach(function (field) {
+      var name = setting(field, "name");
+      if (Object.prototype.hasOwnProperty.call(data, name)) resolved[name] = visit(field, data[name]);
+    });
+    return resolved;
+  }
   var Preview = function (name) { return createClass({
     getInitialState: function () {
       return { lang: "en", width: "fit", detail: true, related: null, warning: "",
@@ -54,21 +80,12 @@
       var self = this, props = this.props, data = this.state.draft;
       var html = "", error = "";
       try {
-        html = runtime.render(name, data, { lang: this.state.lang, records: this.state.related || runtime.records,
+        // Resolve a copy of the draft before rendering, including images drawn
+        // later by the announcement scripts. The entry's stored paths stay intact.
+        var previewData = resolveImages(props.fields || setting(props.collection, "fields"), data, props.getAsset);
+        html = runtime.render(name, previewData, { lang: this.state.lang, records: this.state.related || runtime.records,
           origin: window.location.origin, detail: this.state.detail, scrollY: this.scrollY,
           originalSlug: props.entry && props.entry.get("slug") });
-        // Resolve newly uploaded images to Decap's in-memory assets. The public
-        // markup, image attributes, classes and CSS are otherwise left intact.
-        var doc = new DOMParser().parseFromString(html, "text/html");
-        Array.prototype.forEach.call(doc.querySelectorAll("img[src]"), function (img) {
-          var src = img.getAttribute("src");
-          if (!src || /^data:|^blob:|^https?:/i.test(src) || !props.getAsset) return;
-          try {
-            var asset = props.getAsset(src);
-            if (asset) img.setAttribute("src", String(asset));
-          } catch (_) { /* Existing public path remains valid. */ }
-        });
-        html = "<!DOCTYPE html>\n" + doc.documentElement.outerHTML;
       } catch (e) { error = "Preview could not render this draft: " + (e.message || e); }
       return h("div", { className: "fed-preview-shell" },
         h("div", { className: "fed-preview-controls" },

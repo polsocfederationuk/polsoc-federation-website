@@ -179,10 +179,9 @@
   /**
    * The image this crop applies to, read from the entry being edited.
    *
-   * `props.entry` is the entry as STORED, not the draft being typed — choosing a
-   * new image does not update it, and Decap exposes no documented way for one
-   * widget to read another field's unsaved value. So the previews appear for an
-   * image that has been saved; the empty state says so plainly.
+   * Decap passes the current entry draft to controls. Resolve its image through
+   * getAsset, using the image field's media folder, so a newly selected upload
+   * can be cropped before its public URL exists.
    */
   function imageFrom(entry, name) {
     if (!entry || !name) return null;
@@ -196,11 +195,47 @@
     }
   }
 
+  function imageFieldFrom(collection, name) {
+    var fields = collection && (collection.get ? collection.get("fields") : collection.fields);
+    var found;
+    String(name || "").split(".").forEach(function (part) {
+      found = fields && fields.find(function (field) {
+        return (field.get ? field.get("name") : field.name) === part;
+      });
+      fields = found && (found.get ? found.get("fields") : found.fields);
+    });
+    return found;
+  }
+
   /* -- the control ---------------------------------------------------------- */
 
   var Control = createClass({
     getInitialState: function () {
-      return { natural: null, frame: 0, fineTune: false, failed: false };
+      return { image: null, natural: null, frame: 0, fineTune: false, failed: false };
+    },
+
+    componentDidMount: function () { this.resolveImage(); },
+
+    componentDidUpdate: function (previous) {
+      if (previous.entry !== this.props.entry || previous.field !== this.props.field ||
+          previous.collection !== this.props.collection || previous.getAsset !== this.props.getAsset) {
+        this.resolveImage();
+      }
+    },
+
+    resolveImage: function () {
+      var name = cfg(this.props.field, "image_field", null);
+      var path = imageFrom(this.props.entry, name);
+      var image = null, failed = false;
+      if (path) {
+        try {
+          var asset = this.props.getAsset(path, imageFieldFrom(this.props.collection, name));
+          image = asset ? String(asset) : null;
+        } catch (_) { failed = true; }
+      }
+      if (image !== this.state.image || failed !== this.state.failed) {
+        this.setState({ image: image, natural: null, failed: failed });
+      }
     },
 
     point: function () {
@@ -212,14 +247,17 @@
       this.props.onChange(serialise(p, cfg(this.props.field, "value_format", "css")));
     },
 
-    onImageLoad: function (e) {
+    onImageLoad: function (e, image) {
+      if (image !== this.state.image) return;
       var img = e.target;
       if (img.naturalWidth && img.naturalHeight) {
         this.setState({ natural: { w: img.naturalWidth, h: img.naturalHeight } });
       }
     },
 
-    onImageError: function () { this.setState({ failed: true }); },
+    onImageError: function (image) {
+      if (image === this.state.image) this.setState({ failed: true, natural: null });
+    },
 
     /** A click or drag anywhere on the ORIGINAL sets the focus. */
     fromEvent: function (e, el) {
@@ -278,12 +316,12 @@
 
       var children = [
         h("img", {
-          key: "img",
+          key: image,
           src: image,
           alt: "",
           className: "fed-crop-original",
-          onLoad: function (e) { self.onImageLoad(e); },
-          onError: function () { self.onImageError(); },
+          onLoad: function (e) { self.onImageLoad(e, image); },
+          onError: function () { self.onImageError(image); },
           draggable: false,
         }),
       ];
@@ -349,7 +387,7 @@
       var self = this;
       var field = this.props.field;
       var frames = cfg(field, "frames", []) || [];
-      var image = imageFrom(this.props.entry, cfg(field, "image_field", null));
+      var image = this.state.image;
       var raw = this.props.value;
       var parsed = parse(raw);
       var p = parsed || Object.assign({}, CENTRE);
@@ -362,18 +400,16 @@
           "will stay exactly as it is.")
         : null;
 
-      if (!image) {
-        return h("div", { className: "fed-crop" }, unreadable,
-          h("p", { className: "fed-crop-empty" },
-            "The crop appears once an image has been saved on this record. If you " +
-            "have just chosen one, save first and then come back."));
-      }
-
       if (this.state.failed) {
         return h("div", { className: "fed-crop" }, unreadable,
           h("p", { className: "fed-crop-warn" },
             "That image could not be loaded, so the crop cannot be shown. The " +
             "saved setting has not been changed."));
+      }
+
+      if (!image) {
+        return h("div", { className: "fed-crop" }, unreadable,
+          h("p", { className: "fed-crop-empty" }, "Choose an image to preview its crop."));
       }
 
       var frame = frames[Math.min(this.state.frame, frames.length - 1)] || { ratio_w: 1, ratio_h: 1 };

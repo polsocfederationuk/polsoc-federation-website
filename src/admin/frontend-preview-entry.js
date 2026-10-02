@@ -46,6 +46,10 @@ function renderPreview(collection, draft, options) {
   const env = new nunjucks.Environment(new nunjucks.PrecompiledLoader(templates), { autoescape: true });
   registerPublicFilters({ addFilter: (n, fn) => env.addFilter(n, fn), getFilter: n => env.getFilter(n) },
     { lookupEventBySlug: slug => records.events.find(e => e.slug === slug) || null });
+  // Draft images are resolved by the CMS to temporary browser URLs. Preserve
+  // those in this preview only; public builds still emit repository asset paths.
+  const publicAsset = env.getFilter("asset");
+  env.addFilter("asset", value => /^(blob:|data:image\/)/i.test(String(value)) ? value : publicAsset(value));
   const front = source.pages[name];
   const context = Object.assign({}, front, {
     site: source.site, ui: source.ui, locales: source.locales, locale, nav: source.nav, records,
