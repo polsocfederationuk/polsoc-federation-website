@@ -15,7 +15,7 @@ latitude: 51.4874
 longitude: -3.1793
 instagram: "polishsocietycardiff"
 email: "PolishSociety@cardiff.ac.uk"
-logo: "cardiff.jpg"
+logo: "/assets/polsocs/cardiff.jpg"
 
 active: true
 member: false

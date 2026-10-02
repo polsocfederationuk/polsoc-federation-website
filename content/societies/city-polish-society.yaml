@@ -15,7 +15,7 @@ latitude: 51.5279
 longitude: -0.1029
 instagram: "citypolsoc"
 email: ""   # no public address — the card omits the e-mail control
-logo: "city.jpg"
+logo: "/assets/polsocs/city.jpg"
 
 active: true
 member: false

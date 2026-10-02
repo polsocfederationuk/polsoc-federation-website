@@ -15,7 +15,7 @@ latitude: 52.9385
 longitude: -1.1957
 instagram: "uon_polish"
 email: "polish@uonsu.com"
-logo: "nottingham.jpg"
+logo: "/assets/polsocs/nottingham.jpg"
 
 active: true
 member: false

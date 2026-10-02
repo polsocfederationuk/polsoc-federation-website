@@ -15,7 +15,7 @@ latitude: 54.01
 longitude: -2.7857
 instagram: "lu.polishsociety"
 email: "polish.su@groups.lancaster.ac.uk"
-logo: "lancaster.jpg"
+logo: "/assets/polsocs/lancaster.jpg"
 
 active: true
 member: false

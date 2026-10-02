@@ -15,7 +15,7 @@ latitude: 52.3793
 longitude: -1.5615
 instagram: "polsoc.warwick"
 email: "polishsocietywarwickuni@gmail.com"
-logo: "warwick.jpg"
+logo: "/assets/polsocs/warwick.jpg"
 
 active: true
 member: false

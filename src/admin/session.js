@@ -299,6 +299,12 @@
       invite.href = "/admin/invite/";
       invite.textContent = "Invite someone";
       list.insertBefore(invite, site);
+      var manage = document.createElement("a");
+      manage.className = "fed-account-item fed-invite-link";
+      manage.setAttribute("role", "menuitem");
+      manage.href = "/admin/people/";
+      manage.textContent = "People";
+      list.insertBefore(manage, invite);
       if (what) what.textContent = ROLES.superadmin;
     });
   }

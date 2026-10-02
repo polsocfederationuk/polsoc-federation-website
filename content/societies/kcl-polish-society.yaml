@@ -15,7 +15,7 @@ latitude: 51.5115
 longitude: -0.116
 instagram: "kclpolishsociety"
 email: "hello.kclpolishsociety@gmail.com"
-logo: "kings.jpg"
+logo: "/assets/polsocs/kings.jpg"
 
 active: true
 member: true

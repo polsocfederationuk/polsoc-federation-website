@@ -15,7 +15,7 @@ latitude: 53.3811
 longitude: -1.4879
 instagram: "polishsocietysheffield"
 email: "polish.society@sheffield.ac.uk"
-logo: "sheffield.jpg"
+logo: "/assets/polsocs/sheffield.jpg"
 
 active: true
 member: false

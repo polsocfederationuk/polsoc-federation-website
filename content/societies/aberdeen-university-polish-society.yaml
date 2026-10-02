@@ -15,7 +15,7 @@ latitude: 57.1645
 longitude: -2.1011
 instagram: "ausapolishsociety"
 email: "polish@ausa.org.uk"
-logo: "aberdeen.jpg"
+logo: "/assets/polsocs/aberdeen.jpg"
 
 active: true
 member: false

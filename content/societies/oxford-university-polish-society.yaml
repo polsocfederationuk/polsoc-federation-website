@@ -15,7 +15,7 @@ latitude: 51.7534
 longitude: -1.254
 instagram: "oxpolsoc"
 email: "oxfordpolishsoc@gmail.com"
-logo: "oxford.jpg"
+logo: "/assets/polsocs/oxford.jpg"
 
 active: true
 member: false

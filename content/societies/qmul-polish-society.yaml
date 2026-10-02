@@ -15,7 +15,7 @@ latitude: 51.5246
 longitude: -0.0384
 instagram: "qmulpolsoc"
 email: "polishsociety@qmsu.org"
-logo: "queen-mary.jpg"
+logo: "/assets/polsocs/queen-mary.jpg"
 
 active: true
 member: true

@@ -15,7 +15,7 @@ latitude: 52.2053
 longitude: 0.1167
 instagram: "cupolsoc"
 email: "cupolsoc@gmail.com"
-logo: "cambridge.jpg"
+logo: "/assets/polsocs/cambridge.jpg"
 
 active: true
 member: false

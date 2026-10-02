@@ -15,7 +15,7 @@ latitude: 51.5144
 longitude: -0.1165
 instagram: "lsesu.pbs"
 email: "info@polish-business.org"
-logo: "lse.jpg"
+logo: "/assets/polsocs/lse.jpg"
 
 active: true
 member: false

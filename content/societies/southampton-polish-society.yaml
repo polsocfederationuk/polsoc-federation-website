@@ -15,7 +15,7 @@ latitude: 50.935
 longitude: -1.396
 instagram: "polsoc.soton"
 email: "polsoc@soton.ac.uk"
-logo: "southampton.jpg"
+logo: "/assets/polsocs/southampton.jpg"
 
 active: true
 member: false

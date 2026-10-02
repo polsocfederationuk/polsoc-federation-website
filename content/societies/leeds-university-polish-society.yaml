@@ -15,7 +15,7 @@ latitude: 53.8067
 longitude: -1.555
 instagram: "polsocleeds"
 email: "polish@luu.group"
-logo: "leeds.jpg"
+logo: "/assets/polsocs/leeds.jpg"
 
 active: true
 member: false

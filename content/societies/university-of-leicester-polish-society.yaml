@@ -15,7 +15,7 @@ latitude: 52.6215
 longitude: -1.124
 instagram: "uol.polishsociety"
 email: ""   # no public address — the card omits the e-mail control
-logo: "leicester.jpg"
+logo: "/assets/polsocs/leicester.jpg"
 
 active: true
 member: false

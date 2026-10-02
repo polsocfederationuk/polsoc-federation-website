@@ -1,0 +1,48 @@
+---
+# People — who can open the content manager. Superadmins only.
+# The server decides (netlify/functions/people.mjs); this page only asks it.
+permalink: /admin/people/index.html
+eleventyExcludeFromCollections: true
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow, noarchive, noimageindex" />
+    <title>People — Federation Content Manager</title>
+    <style>
+{{ cmsConfig.peopleStyles | safe }}
+    </style>
+  </head>
+  <body>
+{% if cmsConfig.proxyUrl != "/api/cms" %}
+    <p class="cms-local-banner">
+      Local development only — there are no accounts here, so this page works on
+      the live site only.
+    </p>
+{% endif %}
+    <header class="people-header">
+      <a class="people-back" href="/admin/">&larr; Content manager</a>
+      <div class="people-title">
+        <h1>People</h1>
+        <a class="people-invite" href="/admin/invite/">+ Invite someone</a>
+      </div>
+      <p class="people-lead">Everyone who has an account. Disabling takes access away at once and
+        can be undone; deleting removes the account for good.</p>
+    </header>
+
+    <main class="people" id="people-app">
+      <p class="people-status" id="people-status" role="status">Loading…</p>
+      <div class="people-filters" id="people-filters" role="group" aria-label="Show" hidden></div>
+      <ul class="people-list" id="people-list" hidden></ul>
+      <div class="people-result" id="people-result" role="alert" hidden></div>
+    </main>
+
+    <script>
+      window.FED_PEOPLE_ENDPOINT = "/api/people";
+      window.FED_INVITE_ENDPOINT = "/api/invite";
+{{ cmsConfig.peopleScript | safe }}
+    </script>
+  </body>
+</html>

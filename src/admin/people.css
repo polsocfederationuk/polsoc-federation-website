@@ -1,0 +1,52 @@
+/* people.css — the People screen (people.njk). */
+* { box-sizing: border-box; }
+body { margin: 0; font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; color: #16181d; background: #f4f5f7; }
+.cms-local-banner { font: 600 13px/1.45 system-ui, sans-serif; background: #7a2020; color: #fff; padding: 8px 14px; margin: 0; text-align: center; }
+.people-header, .people { max-width: 52rem; margin: 0 auto; padding: 1.5rem 1rem 0; }
+.people { padding-top: 0.5rem; padding-bottom: 3rem; }
+.people-back { font-size: 0.9rem; font-weight: 600; color: #5140bb; text-decoration: none; }
+.people-back:hover { text-decoration: underline; }
+.people-title { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 0.4rem; }
+.people-title h1 { margin: 0; font-size: 1.6rem; }
+.people-invite { display: inline-flex; align-items: center; min-height: 40px; padding: 8px 14px; border: 1px solid #ded7ff; border-radius: 6px;
+  background: #f7f5ff; color: #5140bb; font-weight: 600; font-size: 0.9rem; text-decoration: none; }
+.people-invite:hover { background: #efebff; }
+.people-lead { margin: 0.5rem 0 1rem; color: #5a5f6b; font-size: 0.92rem; }
+.people-status { color: #5a5f6b; }
+.people-filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 14px; }
+.people-filters button { min-height: 36px; padding: 6px 14px; border: 1px solid #dfe5eb; border-radius: 999px; background: #fff;
+  font: 500 13px/1.3 system-ui, sans-serif; color: #34435a; cursor: pointer; }
+.people-filters button[aria-pressed="true"] { border-color: #7563e5; background: #f6f4ff; color: #3b2d99; box-shadow: inset 0 0 0 1px #7563e5; }
+.people-filters button:focus-visible { outline: 2px solid #6554dd; outline-offset: 2px; }
+.people-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.person { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px 16px; align-items: center;
+  padding: 14px 16px; background: #fff; border: 1px solid #dfe2e8; border-radius: 10px; }
+.person-who { min-width: 0; }
+.person-email { font-weight: 600; color: #16181d; word-break: break-all; }
+.person-name { color: #46566e; font-size: 0.9rem; }
+.person-meta { display: flex; flex-wrap: wrap; gap: 6px 12px; margin-top: 6px; font-size: 0.82rem; color: #66748a; }
+.badge { display: inline-flex; align-items: center; padding: 2px 9px; border-radius: 999px; font-size: 0.76rem; font-weight: 700; letter-spacing: 0.02em; }
+.badge-active { background: #e7f4ec; color: #1d5c37; }
+.badge-pending { background: #fff4d6; color: #7a5a00; }
+.badge-disabled { background: #fbe9ec; color: #8f1d33; }
+.badge-no_access { background: #eef0f3; color: #46566e; }
+.badge-role { background: #f1eefe; color: #4332aa; }
+.person-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+.person-actions button { min-height: 36px; padding: 6px 12px; border: 1px solid #dfe5ed; border-radius: 6px; background: #fff;
+  font: 500 13px/1.3 system-ui, sans-serif; color: #46566e; cursor: pointer; }
+.person-actions button:hover:not(:disabled) { border-color: #7563e5; color: #4332aa; }
+.person-actions .danger { color: #a63145; }
+.person-actions .danger:hover:not(:disabled) { border-color: #d7a3ad; background: #fbf1f3; color: #8f1d33; }
+.person-actions button:disabled { opacity: 0.5; cursor: default; }
+.person-actions button:focus-visible { outline: 2px solid #6554dd; outline-offset: 2px; }
+.person-locked { font-size: 0.82rem; color: #66748a; text-align: right; }
+.people-empty { padding: 18px; text-align: center; color: #66748a; background: #fff; border: 1px dashed #d5dce6; border-radius: 10px; }
+.people-result { margin-top: 14px; padding: 12px 14px; border-radius: 8px; border-left: 4px solid; }
+.people-result p { margin: 0 0 4px; }
+.people-result.is-ok { background: #eef8f1; border-color: #2c7a4b; color: #1d4d31; }
+.people-result.is-problem { background: #fdf1f1; border-color: #a32020; color: #5a1414; }
+@media (max-width: 560px) {
+  .person { grid-template-columns: minmax(0, 1fr); }
+  .person-actions { justify-content: flex-start; }
+  .person-locked { text-align: left; }
+}

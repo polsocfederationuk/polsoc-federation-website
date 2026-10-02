@@ -15,7 +15,7 @@ latitude: 53.4058
 longitude: -2.966
 instagram: "uolpolsoc"
 email: "polish@society.liverpoolguild.org"
-logo: "liverpool.jpg"
+logo: "/assets/polsocs/liverpool.jpg"
 
 active: true
 member: false

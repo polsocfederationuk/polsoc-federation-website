@@ -15,7 +15,7 @@ latitude: 51.4988
 longitude: -0.1749
 instagram: "imperialpolsoc"
 email: "pol-soc@imperial.ac.uk"
-logo: "imperial.jpg"
+logo: "/assets/polsocs/imperial.jpg"
 
 active: false
 member: false

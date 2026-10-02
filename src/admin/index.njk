@@ -62,6 +62,10 @@ eleventyExcludeFromCollections: true
       /* Date fields, from src/admin/calendar-date.css. */
 {{ cmsConfig.calendarDateStyles | safe }}
 
+      /* The society location map: Leaflet's own styles, then the picker's. */
+{{ cmsConfig.leafletStyles | safe }}
+{{ cmsConfig.mapPickerStyles | safe }}
+
       /* Live length captions, from src/admin/char-count.css. */
 {{ cmsConfig.charCountStyles | safe }}
 
@@ -174,6 +178,16 @@ eleventyExcludeFromCollections: true
 {{ cmsConfig.eventRecordIdScript | safe }}
 {{ cmsConfig.choiceCardsScript | safe }}
 {{ cmsConfig.calendarDateScript | safe }}
+    </script>
+    <script>
+      /* Leaflet 1.9.4 (MIT), from node_modules — its own script block. */
+{{ cmsConfig.leafletScript | safe }}
+    </script>
+    <script>
+      /* The society location map. The tiles key comes from the build
+         (src/_data/mapTiles.js, CARTO_BASEMAPS_KEY), as on the public page. */
+      window.FED_MAP_TILES_KEY = {{ cmsConfig.mapTilesKey | dump | safe }};
+{{ cmsConfig.mapPickerScript | safe }}
       /* The event list. Starts from the events in content/events/ as they were
          when this page was built, then reads the Events collection live. */
       window.FED_EVENT_CHOICES = {{ cmsConfig.eventChoices | dump | safe }};
@@ -384,6 +398,24 @@ eleventyExcludeFromCollections: true
             */
             var normalisedData = null;
             var working = entry && typeof entry.get === "function" ? entry.get("data") : null;
+
+            /*
+              A NEW MEMBER SOCIETY gets a display order and an e-mail key.
+              Order is not shown to editors (cards sort by name), but every
+              record carries a whole number; seconds since 1970 is unique enough
+              and never collides with the 1–30 the launch records hold. `email`
+              must be present even when empty: "" means "publishes no address".
+            */
+            if (working && ("latitude" in data) && ("past_member" in data)) {
+              if (!Number.isInteger(data.order)) {
+                working = working.set("order", Math.floor(Date.now() / 1000));
+                normalisedData = working;
+              }
+              if (!("email" in data) || data.email == null) {
+                working = working.set("email", "");
+                normalisedData = working;
+              }
+            }
 
             // Registration. Refusing here rather than letting a half-described
             // sign-up reach a file: a Register button with no address, or one

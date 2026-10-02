@@ -15,7 +15,7 @@ latitude: 51.2977
 longitude: 1.0699
 instagram: "ukc.polishsoc"
 email: "polishsoc@ksu.co.uk"
-logo: "kent.jpg"
+logo: "/assets/polsocs/kent.jpg"
 
 active: true
 member: false

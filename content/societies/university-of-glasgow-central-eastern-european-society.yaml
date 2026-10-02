@@ -15,7 +15,7 @@ latitude: 55.8721
 longitude: -4.2882
 instagram: "uofg.ceessoc"
 email: "ceessociety@gmail.com"
-logo: "glasgow.jpg"
+logo: "/assets/polsocs/glasgow.jpg"
 
 active: true
 member: false

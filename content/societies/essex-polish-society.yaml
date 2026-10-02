@@ -15,7 +15,7 @@ latitude: 51.8787
 longitude: 0.9481
 instagram: "essexpolishsociety"
 email: ""   # no public address — the card omits the e-mail control
-logo: "essex.jpg"
+logo: "/assets/polsocs/essex.jpg"
 
 active: true
 member: false

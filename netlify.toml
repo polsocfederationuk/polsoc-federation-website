@@ -63,6 +63,13 @@
   to = "/.netlify/functions/invite"
   status = 200
 
+# Managing people — superadmins only, checked inside the function on every
+# request. See netlify/functions/people.mjs.
+[[redirects]]
+  from = "/api/people"
+  to = "/.netlify/functions/people"
+  status = 200
+
 # ---------------------------------------------------------------------------
 # Who may open the content manager
 #
@@ -140,7 +147,7 @@
     Referrer-Policy = "no-referrer"
     X-Robots-Tag = "noindex, nofollow, noarchive"
     Cache-Control = "no-store"
-    Content-Security-Policy = "default-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.instagram.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://identity.netlify.com; frame-src 'self' https://www.instagram.com https://www.facebook.com https://www.linkedin.com"
+    Content-Security-Policy = "default-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.instagram.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' blob: https://identity.netlify.com; frame-src 'self' https://www.instagram.com https://www.facebook.com https://www.linkedin.com"
 
 # The login page.
 #

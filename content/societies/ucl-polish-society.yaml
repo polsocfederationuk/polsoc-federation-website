@@ -15,7 +15,7 @@ latitude: 51.5246
 longitude: -0.134
 instagram: "uclpolishsociety"
 email: "polishsociety@ucl.ac.uk"
-logo: "ucl.jpg"
+logo: "/assets/polsocs/ucl.jpg"
 
 active: true
 member: false

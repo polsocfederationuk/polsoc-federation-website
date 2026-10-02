@@ -15,7 +15,7 @@ latitude: 52.7658
 longitude: -1.2295
 instagram: "lsupolishsociety"
 email: "LSUPolSoc@outlook.com"
-logo: "loughborough.jpg"
+logo: "/assets/polsocs/loughborough.jpg"
 
 active: true
 member: false

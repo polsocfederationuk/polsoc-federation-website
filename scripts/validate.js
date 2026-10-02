@@ -2596,8 +2596,10 @@ const socFiles = fs.existsSync(path.join(ROOT, SOC_DIR))
 const socAll = socFiles.map((f) => ({ _file: `${SOC_DIR}/${f}`, ...loadYaml(`${SOC_DIR}/${f}`) }));
 const soc = socAll.filter((s) => s.published === true);
 
-assert(soc.length === SOC_EXPECTED,
-  `exactly ${SOC_EXPECTED} published society records`,
+// At least the societies the site launched with. Editors add societies in the
+// CMS now, so the count is a floor, not an exact number.
+assert(soc.length >= SOC_EXPECTED,
+  `at least ${SOC_EXPECTED} published society records (${soc.length})`,
   `expected ${SOC_EXPECTED} published societies, found ${soc.length}`);
 
 /* -- identity and ordering -------------------------------------------------- */
@@ -2685,13 +2687,16 @@ assert(socEmpty.length === SOC_STATUS.emptyEmail,
 
 // Records store a BARE FILENAME; the /assets/polsocs/ prefix is added at build
 // time. Storing a path here would let a page-relative one slip in.
-const socBadLogo = soc.filter((s) => !/^[A-Za-z0-9._-]+\.(jpe?g|png|webp|svg)$/i.test(String(s.logo)))
+// Logos are stored as the full path the CMS image picker writes,
+// "/assets/polsocs/<file>". The file name itself stays a plain one.
+const socLogoFile = (logo) => String(logo).replace(/^\/assets\/polsocs\//, "");
+const socBadLogo = soc.filter((s) => !/^\/assets\/polsocs\/[A-Za-z0-9._-]+\.(jpe?g|png|webp|svg)$/i.test(String(s.logo)))
   .map((s) => `${s.slug}: ${s.logo}`);
 assert(socBadLogo.length === 0,
-  "every logo is a bare filename with an image extension",
+  "every logo is /assets/polsocs/<file> with an image extension",
   "malformed logo values", socBadLogo);
 
-const socMissingLogo = soc.filter((s) => !exists(`assets/polsocs/${s.logo}`)).map((s) => `${s.slug}: ${s.logo}`);
+const socMissingLogo = soc.filter((s) => !exists(`assets/polsocs/${socLogoFile(s.logo)}`)).map((s) => `${s.slug}: ${s.logo}`);
 assert(socMissingLogo.length === 0,
   `all ${soc.length} referenced society logos exist in assets/polsocs/`,
   "logo files that do not exist", socMissingLogo);

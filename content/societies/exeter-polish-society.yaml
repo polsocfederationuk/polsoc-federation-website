@@ -15,7 +15,7 @@ latitude: 50.7371
 longitude: -3.534
 instagram: "exeterpolishsociety"
 email: "polish@groups.exeterguild.com"
-logo: "exeter.jpg"
+logo: "/assets/polsocs/exeter.jpg"
 
 active: true
 member: false

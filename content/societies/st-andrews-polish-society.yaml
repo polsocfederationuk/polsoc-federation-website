@@ -15,7 +15,7 @@ latitude: 56.3403
 longitude: -2.7936
 instagram: "sta.polsoc"
 email: "polishsocmail@st-andrews.ac.uk"
-logo: "st-andrews.jpg"
+logo: "/assets/polsocs/st-andrews.jpg"
 
 active: true
 member: false

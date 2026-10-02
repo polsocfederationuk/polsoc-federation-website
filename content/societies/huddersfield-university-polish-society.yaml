@@ -15,7 +15,7 @@ latitude: 53.6432
 longitude: -1.7787
 instagram: "polskahud"
 email: "u2365935@unimail.hud.ac.uk"
-logo: "huddersfield.jpg"
+logo: "/assets/polsocs/huddersfield.jpg"
 
 active: true
 member: false

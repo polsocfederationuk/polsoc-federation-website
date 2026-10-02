@@ -15,7 +15,7 @@ latitude: 55.9445
 longitude: -3.1892
 instagram: "edipolsoc"
 email: "pol.soc.ed@gmail.com"
-logo: "edinburgh.jpg"
+logo: "/assets/polsocs/edinburgh.jpg"
 
 active: true
 member: true

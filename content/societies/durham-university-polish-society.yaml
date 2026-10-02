@@ -15,7 +15,7 @@ latitude: 54.7736
 longitude: -1.5757
 instagram: "polsocdurham"
 email: "durhampolishsociety@gmail.com"
-logo: "durham.jpg"
+logo: "/assets/polsocs/durham.jpg"
 
 active: true
 member: false

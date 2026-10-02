@@ -15,7 +15,7 @@ latitude: 51.3801
 longitude: -2.3266
 instagram: "bathpolishsoc"
 email: "polishsoc@bath.ac.uk"
-logo: "bath.jpg"
+logo: "/assets/polsocs/bath.jpg"
 
 active: true
 member: false

@@ -255,6 +255,127 @@ const ROLLOVER_WARNING =
    saved file keeps. `en`/`pl` are explicit object widgets rather than Decap's
    i18n mode — see docs/CMS_FOUNDATION.md §7 for why.
    --------------------------------------------------------------------------- */
+/* ---------------------------------------------------------------------------
+   Member societies — the pins on the members map and the cards below it.
+
+   The records already existed (content/societies/*.yaml, Phase 8); this makes
+   them editable. The stored shape is unchanged: plain `latitude`/`longitude`
+   numbers, `active`/`member`/`past_member` flags that are data only, and a
+   bilingual location line. `logo` is the full image path the picker writes.
+   `order` is kept but not shown: cards are sorted by name on the page, and a
+   new society gets one in the pre-save hook (src/admin/index.njk).
+   --------------------------------------------------------------------------- */
+function societyFields() {
+  return [
+    {
+      label: "Society name",
+      name: "name",
+      widget: "string",
+      required: true,
+      hint: "As the society writes it, e.g. \"UCL Polish Society\". Shown on the card and on the map pin.",
+    },
+    {
+      label: "English",
+      name: "en",
+      widget: "object",
+      required: true,
+      fields: [{
+        label: "University and place (English)",
+        name: "university_location",
+        widget: "string",
+        required: true,
+        hint: "Shown under the name, e.g. \"London, England\".",
+      }],
+    },
+    {
+      label: "Polski",
+      name: "pl",
+      widget: "object",
+      required: true,
+      fields: [{
+        label: "University and place (Polski)",
+        name: "university_location",
+        widget: "string",
+        required: true,
+        hint: "Np. \"Londyn, Anglia\".",
+      }],
+    },
+    {
+      label: "Location on the map",
+      name: "latitude",
+      widget: "mapPicker",
+      value_type: "float",
+      required: true,
+      hint: "Put the pin on the university campus the society belongs to.",
+    },
+    // Stored by the map above (src/admin/map-picker.js); its row is hidden.
+    { label: "Longitude", name: "longitude", widget: "mapPartner", required: true },
+    {
+      label: "Logo",
+      name: "logo",
+      widget: "image",
+      required: true,
+      media_folder: "/assets/polsocs",
+      public_folder: "/assets/polsocs",
+      choose_url: false,
+      hint: "Square works best. Shown on the society's card.",
+    },
+    {
+      label: "Instagram handle",
+      name: "instagram",
+      widget: "string",
+      required: true,
+      hint: "Without the @, e.g. uclpolsoc. The link is made for you.",
+      pattern: ["^[A-Za-z0-9._]+$", "Letters, numbers, dots and underscores only — no @ and no link."],
+    },
+    {
+      label: "E-mail address",
+      name: "email",
+      widget: "string",
+      required: false,
+      default: "",
+      hint: "Leave empty if the society does not publish one; the card then shows no e-mail button.",
+    },
+    {
+      label: "Society is running",
+      name: "active",
+      widget: "boolean",
+      required: false,
+      default: true,
+      hint: "Recorded for the Federation only — not shown on the website.",
+    },
+    {
+      label: "Current Federation member",
+      name: "member",
+      widget: "boolean",
+      required: false,
+      default: false,
+      hint: "Recorded for the Federation only — not shown on the website.",
+    },
+    {
+      label: "Past Federation member",
+      name: "past_member",
+      widget: "boolean",
+      required: false,
+      default: false,
+      hint: "Recorded for the Federation only — not shown on the website.",
+    },
+    visibilityField("society"),
+    {
+      label: "Record ID — must be unique",
+      name: "slug",
+      widget: "eventRecordId",
+      id_source: "name",
+      required: true,
+      hint: "Created from the society's name. Usually no changes are needed.",
+      pattern: ["^[a-z0-9]+(-[a-z0-9]+)*$",
+        "Lowercase letters, numbers and single hyphens only — e.g. ucl-polish-society."],
+    },
+    // Kept as stored; given to a new society on save.
+    { label: "Display order", name: "order", widget: "hidden", required: false },
+  ];
+}
+
 function teamFields() {
   return [
     {
@@ -2197,6 +2318,28 @@ function buildConfig() {
         fields: teamFields(),
       },
       {
+        name: "societies",
+        label: "Member societies",
+        label_singular: "society",
+        description:
+          "The Polish student societies on the members map. Add a society, place " +
+          "its pin, and it appears on the map and in the list below it.",
+        folder: "content/societies",
+        // Hidden rather than deleted, like team members and events.
+        create: true,
+        delete: false,
+        extension: "yaml",
+        format: "yaml",
+        slug: "{{fields.slug}}",
+        identifier_field: "name",
+        summary: "{{fields.name}}",
+        sortable_fields: ["name"],
+        // The map in the form IS the preview: a society is one pin and one
+        // card, and the page preview has no template for it.
+        editor: { preview: false },
+        fields: societyFields(),
+      },
+      {
         name: "standard_events",
         label: "Events",
         label_singular: "event",
@@ -2531,6 +2674,12 @@ function inlinedSourceProblems() {
   return problems;
 }
 
+/** A file from an exact-pinned npm package, read at build time. */
+function vendorAsset(rel) {
+  const file = path.join(ROOT, "node_modules", rel);
+  return fs.existsSync(file) ? fs.readFileSync(file, "utf8") : "";
+}
+
 function adminAsset(name) {
   const file = path.join(ROOT, "src", "admin", name);
   return fs.existsSync(file) ? fs.readFileSync(file, "utf8") : "";
@@ -2654,6 +2803,16 @@ module.exports = () => ({
   bulkScript: adminAsset("bulk.js"),
   bulkStyles: adminAsset("bulk.css"),
   bulkLinkScript: adminAsset("bulk-link.js"),
+  // The society location map: Leaflet (pinned npm copy, inlined — the admin
+  // allows scripts from this site only) and the picker built on it.
+  leafletScript: vendorAsset("leaflet/dist/leaflet.js"),
+  leafletStyles: vendorAsset("leaflet/dist/leaflet.css"),
+  mapPickerScript: adminAsset("map-picker.js"),
+  mapPickerStyles: adminAsset("map-picker.css"),
+  mapTilesKey: require("./mapTiles.js")().key,
+  // People — superadmins only. See netlify/functions/people.mjs.
+  peopleScript: adminAsset("people.js"),
+  peopleStyles: adminAsset("people.css"),
   // Invite someone — superadmins only. See netlify/functions/invite.mjs.
   inviteScript: adminAsset("invite.js"),
   inviteStyles: adminAsset("invite.css"),

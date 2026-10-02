@@ -166,6 +166,7 @@ console.log("=".repeat(78));
   cms = await import("../netlify/functions/cms.mjs");
   bulk = await import("../netlify/functions/bulk.mjs");
   const invite = await import("../netlify/functions/invite.mjs");
+  const people = await import("../netlify/functions/people.mjs");
 
   /* -- the module format ---------------------------------------------------- */
 
@@ -177,7 +178,7 @@ console.log("=".repeat(78));
       a v1 function had to verify the session itself. These assertions are what
       stops the repository sliding back.
     */
-    for (const [name, mod] of [["cms", cms], ["bulk", bulk], ["invite", invite]]) {
+    for (const [name, mod] of [["cms", cms], ["bulk", bulk], ["invite", invite], ["people", people]]) {
       check(typeof mod.default === "function",
         `${name} exports a default handler`, typeof mod.default);
       check(mod.handler === undefined,
@@ -186,8 +187,8 @@ console.log("=".repeat(78));
     const fsMod = require("fs");
     const dir = path.join(__dirname, "..", "netlify", "functions");
     const files = fsMod.readdirSync(dir).sort();
-    check(files.join(",") === "bulk.mjs,cms.mjs,invite.mjs",
-      "all three functions are .mjs and nothing else remains", files.join(", "));
+    check(files.join(",") === "bulk.mjs,cms.mjs,invite.mjs,people.mjs",
+      "all four functions are .mjs and nothing else remains", files.join(", "));
     for (const file of files) {
       const raw = fsMod.readFileSync(path.join(dir, file), "utf8");
       /*
@@ -2120,6 +2121,89 @@ registration:
       "a superadmin can also do everything an admin and an editor can", JSON.stringify(perms));
     check(!authz.permissions(ACCOUNTS["admin-token"]).isSuperadmin,
       "an admin is not a superadmin", "admin");
+  }
+
+  section("15. Managing people — superadmins only");
+  {
+    const me = { id: "super-0001", email: "boss@polsocfederation.pl", roles: ["superadmin"] };
+    const who = {
+      super: me,
+      admin: ACCOUNTS["admin-token"],
+      editor: ACCOUNTS["editor-token"],
+    };
+    const accounts = () => ({
+      "super-0001": { id: "super-0001", email: me.email, roles: ["superadmin"], confirmedAt: "2026-01-01", appMetadata: { roles: ["superadmin"] } },
+      "super-0002": { id: "super-0002", email: "other@x.pl", roles: ["superadmin"], confirmedAt: "2026-01-01", appMetadata: { roles: ["superadmin"] } },
+      "admin-0001": { id: "admin-0001", email: "ada@x.pl", roles: ["admin"], confirmedAt: "2026-01-01", appMetadata: { roles: ["admin"] } },
+      "pend-00001": { id: "pend-00001", email: "new@x.pl", roles: ["admin"], confirmedAt: "2026-09-01",
+        userMetadata: { fed_welcome: true }, appMetadata: { roles: ["admin"], invited_by: me.email } },
+      "gone-00001": { id: "gone-00001", email: "gone@x.pl", roles: [], confirmedAt: "2026-01-01",
+        appMetadata: { roles: [], fed_disabled: { roles: ["editor"], by: me.email, at: "2026-09-02" } } },
+    });
+    const runPeople = async (as, body, opts) => {
+      const o = opts || {};
+      const db = accounts();
+      const log = { updated: [], deleted: [] };
+      const response = await people.default(new Request(`${SITE}/api/people`, {
+        method: "POST", headers: { "Content-Type": "application/json", Origin: SITE }, body: JSON.stringify(body),
+      }), {}, {
+        getUser: async () => who[as] || null,
+        env: { URL: SITE },
+        admin: {
+          listUsers: async () => Object.values(db),
+          getUser: async (id) => { if (!db[id]) throw Object.assign(new Error("nf"), { status: 404 }); return db[id]; },
+          updateUser: async (id, attrs) => {
+            log.updated.push({ id, attrs });
+            if (o.notKept) return db[id];
+            const meta = Object.assign({}, db[id].appMetadata, attrs.app_metadata);
+            return Object.assign({}, db[id], { appMetadata: meta, roles: meta.roles });
+          },
+          deleteUser: async (id) => { log.deleted.push(id); },
+        },
+      });
+      return { status: response.status, body: await response.json(), log };
+    };
+
+    let r = await runPeople("super", { action: "list" });
+    const byEmail = Object.fromEntries((r.body.people || []).map((p) => [p.email, p]));
+    check(r.status === 200 && (r.body.people || []).length === 5, "a superadmin sees every account", `${r.status}`);
+    check(byEmail["new@x.pl"].status === "pending" && byEmail["ada@x.pl"].status === "active" &&
+      byEmail["gone@x.pl"].status === "disabled" && byEmail["gone@x.pl"].role === "editor",
+      "pending, active and disabled are told apart, and a disabled account remembers its role",
+      JSON.stringify(Object.values(byEmail).map((p) => [p.email, p.status, p.role])));
+    check(byEmail[me.email].locked && byEmail["other@x.pl"].locked && !byEmail["ada@x.pl"].locked,
+      "your own account and other superadmins are shown as not changeable here", "locked flags");
+    check(!JSON.stringify(r.body).includes("appMetadata") && !JSON.stringify(r.body).includes("token"),
+      "the list carries no raw metadata or tokens", "clean");
+
+    for (const as of ["admin", "editor"]) {
+      r = await runPeople(as, { action: "list" });
+      check(r.status === 403, `an ${as} cannot see the list`, `${r.status}`);
+      r = await runPeople(as, { action: "disable", id: "admin-0001" });
+      check(r.status === 403 && !r.log.updated.length, `an ${as} cannot take anybody's access away`, `${r.status}`);
+    }
+    r = await runPeople(null, { action: "list" });
+    check(r.status === 401, "somebody signed out gets 401", `${r.status}`);
+
+    r = await runPeople("super", { action: "disable", id: "super-0001" });
+    check(r.status === 403 && r.body.error.code === "self" && !r.log.updated.length, "nobody can change their own access", `${r.status}`);
+    r = await runPeople("super", { action: "delete", id: "super-0002" });
+    check(r.status === 403 && !r.log.deleted.length, "a superadmin cannot be deleted or disabled from here", `${r.status}`);
+
+    r = await runPeople("super", { action: "disable", id: "admin-0001" });
+    const set = (r.log.updated[0] || { attrs: { app_metadata: {} } }).attrs.app_metadata;
+    check(r.status === 200 && JSON.stringify(set.roles) === "[]" && JSON.stringify(set.fed_disabled.roles) === "[\"admin\"]" &&
+      r.body.person.status === "disabled", "disabling removes the role and keeps it aside to give back", JSON.stringify(set));
+    r = await runPeople("super", { action: "enable", id: "gone-00001" });
+    const back = (r.log.updated[0] || { attrs: { app_metadata: {} } }).attrs.app_metadata;
+    check(r.status === 200 && JSON.stringify(back.roles) === "[\"editor\"]" && back.fed_disabled === null,
+      "giving access back restores the role it had", JSON.stringify(back));
+    r = await runPeople("super", { action: "disable", id: "admin-0001" }, { notKept: true });
+    check(r.status === 502 && r.body.error.code === "not_kept", "a change Identity did not keep is reported, not claimed", `${r.status}`);
+    r = await runPeople("super", { action: "delete", id: "pend-00001" });
+    check(r.status === 200 && r.log.deleted[0] === "pend-00001", "a superadmin can delete an account", `${r.status}`);
+    r = await runPeople("super", { action: "delete", id: "../../x" });
+    check(r.status === 400 && !r.log.deleted.length, "a malformed account id is refused", `${r.status}`);
   }
 
   /* -- finish -------------------------------------------------------------- */

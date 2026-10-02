@@ -15,7 +15,7 @@ latitude: 53.4668
 longitude: -2.2339
 instagram: "polsocmanchester"
 email: "polish.society@manchesterstudentsunion.com"
-logo: "manchester.jpg"
+logo: "/assets/polsocs/manchester.jpg"
 
 active: true
 member: false
