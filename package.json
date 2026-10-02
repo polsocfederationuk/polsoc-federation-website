@@ -60,7 +60,7 @@
     "decap-server": "3.10.0",
     "esbuild": "^0.28.2",
     "js-yaml": "^4.3.0",
-    "markdown-it": "^14.3.0"
+    "markdown-it": "^14.3.2"
   },
   "dependencies": {
     "@netlify/identity": "^2.0.0",
