@@ -292,12 +292,36 @@ eleventyExcludeFromCollections: true
           The message names the cause and the fix, because "Failed to fetch" told
           editors nothing. Nothing is lost: the editor's work is still on screen.
         */
-        function offlineError(what) {
-          return new Error(
-            "The CMS cannot reach the local content service, so this item was not saved.\n\n" +
-            "Check that `npm run cms:dev` is still running in your terminal, then try again.\n\n" +
-            "(The check that could not run was: " + what + ".)"
-          );
+        function lookupError(what, cause) {
+          var local = PROXY !== "/api/cms";
+          var status = cause && cause.status;
+          var detail;
+          if (status === 401) {
+            detail = "Your sign-in has expired. Keep this editor open, sign in again in another tab, then retry.";
+          } else if (status === 403) {
+            detail = "The server refused access. Ask an administrator to check your account permissions.";
+          } else if (status) {
+            detail = "The content service returned HTTP " + status + "." +
+              (cause.message ? " " + cause.message : "") + " Please try again or tell an administrator.";
+          } else if (local) {
+            detail = "Check that \`npm run cms:dev\` is still running in your terminal, then try again.";
+          } else {
+            detail = "The website's content service could not be reached. Check your connection and try again.";
+          }
+          return new Error("This item was not saved. " + detail + "\n\n" +
+            "(The check that could not run was: " + what + ".)");
+        }
+
+        function lookupResponse(response) {
+          return response.json().catch(function () { return null; }).then(function (body) {
+            if (!response.ok || !Array.isArray(body)) {
+              var message = body && typeof body.error === "string" ? body.error : "The server returned an unexpected response.";
+              var error = new Error(message);
+              error.status = response.status;
+              throw error;
+            }
+            return body;
+          });
         }
 
         /** The entry's own file path, or "" for a record being created. */
@@ -332,10 +356,7 @@ eleventyExcludeFromCollections: true
               },
             }),
           })
-            .then(function (r) {
-              if (!r.ok) throw new Error("HTTP " + r.status);
-              return r.json();
-            })
+            .then(lookupResponse)
             .then(function (entries) {
               return (entries || []).map(function (e) {
                 return e && e.file && e.file.path;
@@ -531,9 +552,12 @@ eleventyExcludeFromCollections: true
               return futureCheck.then(function () { return normalisedData || undefined; });
             }
 
+            var collectionName = entry && typeof entry.get === "function"
+              ? entry.get("collection") : entry && entry.collection;
             var collection = null;
             for (var i = 0; i < COLLECTIONS.length; i++) {
-              if (ownPath && ownPath.indexOf(COLLECTIONS[i].folder + "/") === 0) {
+              if (ownPath ? ownPath.indexOf(COLLECTIONS[i].folder + "/") === 0
+                  : COLLECTIONS[i].name === collectionName) {
                 collection = COLLECTIONS[i];
                 break;
               }
@@ -548,7 +572,7 @@ eleventyExcludeFromCollections: true
               is bypassed. Decap would not rename the file, so the save would
               otherwise leave a slug that disagrees with its filename.
             */
-            if (collection &&
+            if (collection && ownPath &&
                 ownPath !== collection.folder + "/" + slug + "." + collection.extension) {
               throw new Error(
                 'This record\'s Record ID cannot be changed after saving. To use a different ID, ' +
@@ -556,10 +580,13 @@ eleventyExcludeFromCollections: true
               );
             }
 
-            // A record being created has no path yet. Checking every folder is
-            // correct rather than lazy: an ID must be unique within its own
-            // collection, and testing them all costs one request each.
-            var candidates = collection ? [collection] : COLLECTIONS;
+            // New entries have no file path, but Decap supplies their collection
+            // name. IDs only need to be unique inside that collection. Looking
+            // through unrelated folders can fail or report an unrelated clash.
+            if (!collection) {
+              throw new Error("The CMS could not identify this item's section, so it was not saved. Keep a copy of your changes and reopen the editor.");
+            }
+            var candidates = [collection];
 
             for (var j = 0; j < candidates.length; j++) {
               if (!new RegExp(candidates[j].pattern).test(slug)) {
@@ -573,7 +600,7 @@ eleventyExcludeFromCollections: true
             return futureCheck.then(function () {
             return Promise.all(candidates.map(function (c) {
               return existingPaths(c)
-                .catch(function () { throw offlineError("whether that Record ID is already taken"); })
+                .catch(function (error) { throw lookupError("whether that Record ID is already taken", error); })
                 .then(function (paths) {
                 var target = c.folder + "/" + slug + "." + c.extension;
                 if (paths.indexOf(target) === -1) return null; // no such record
