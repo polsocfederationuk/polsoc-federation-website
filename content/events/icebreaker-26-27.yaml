@@ -1,0 +1,63 @@
+slug: icebreaker-26-27
+event_family: standard
+template: standard
+date_precision: day
+organiser: Federation of Polish Student Societies UK
+academic_year: 2026/27
+start_date: 2026-10-13
+end_date: null
+published: true
+show_in_listing: true
+show_on_homepage: true
+show_in_archive: true
+flagship: false
+venue:
+  country: GB
+  name:
+    en: Mamuśka
+    pl: Mamuśka
+  locality:
+    en: London
+    pl: Londyn
+card_image: /assets/events/posty-2627-3-.png
+card_image_focus:
+  x: 53
+  y: 25
+og_image: /assets/events/posty-2627-3-.png
+instagram_permalink: https://www.instagram.com/p/DdghBfexb8l/?exln=d3FodWtxenRiMGx5
+linkedin_permalink: https://www.linkedin.com/posts/we-invite-all-polish-students-studying-in-share-7507406100795719680-F05O/?rcm=ACoAAFYn6L4BYjZnOOxPVSXVb8kY7vNzet0ruKI
+registration:
+  state: none
+  type: null
+  url: null
+  email: null
+gallery:
+  images: []
+en:
+  body: ""
+  title_fancy: Icebreaker
+  title_lead: ""
+  date_label: Date
+  venue_label: Venue
+  summary: Whether you are just starting at university or are a returning student
+    - everyone is welcome to join! It’s the perfect opportunity to connect with
+    your fellow Polish students in a relaxed atmosphere! 🇵🇱
+  back_link: ← All events
+  card_image_alt: "Event invitation "
+  back_link_bottom: ← Back to all events
+  timeline_title: Icebreaker
+  og_image_alt: "Event invitation "
+pl:
+  body: ""
+  title_fancy: Icebreaker
+  title_lead: ""
+  date_label: Data
+  venue_label: Miejsce
+  summary: Niezależnie od tego, czy dopiero zaczynasz studia, czy już na nich
+    jesteś – zapraszamy wszystkich! To doskonała okazja, by w luźnej atmosferze
+    poznać innych polskich studentów! 🇵🇱
+  back_link: ← Wszystkie wydarzenia
+  card_image_alt: Zaproszenie na event
+  back_link_bottom: ← Wróć do wszystkich wydarzeń
+  timeline_title: Icebreaker
+  og_image_alt: Zaproszenie na event
