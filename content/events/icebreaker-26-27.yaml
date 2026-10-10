@@ -28,8 +28,10 @@ instagram_permalink: https://www.instagram.com/p/DdghBfexb8l/?exln=d3FodWtxenRiM
 linkedin_permalink: https://www.linkedin.com/posts/we-invite-all-polish-students-studying-in-share-7507406100795719680-F05O/?rcm=ACoAAFYn6L4BYjZnOOxPVSXVb8kY7vNzet0ruKI
 registration:
   state: none
-  type: null
   url: null
+  opens_on: null
+  closes_on: null
+  type: null
   email: null
 gallery:
   images: []
@@ -39,9 +41,9 @@ en:
   title_lead: ""
   date_label: Date
   venue_label: Venue
-  summary: Whether you are just starting at university or are a returning student
+  summary: "Whether you are just starting at university or are a returning student
     - everyone is welcome to join! It’s the perfect opportunity to connect with
-    your fellow Polish students in a relaxed atmosphere! 🇵🇱
+    your fellow Polish students in a relaxed atmosphere! "
   back_link: ← All events
   card_image_alt: "Event invitation "
   back_link_bottom: ← Back to all events
