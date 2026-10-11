@@ -1,23 +1,15 @@
-# Team member — 2025/26 committee.
-# Generated from the live pages during the Phase 4 migration; edit freely.
-# Fields above the `en:` block are shared and must be identical in both
-# languages by construction. Fields under `en:`/`pl:` are translated.
-
 slug: karolina-dabrowska
-academic_year: "2025/26"
-group: events
+academic_year: 2025/26
+group: marketing
 order: 3
 published: true
-
-name: "Karolina Dąbrowska"
-photo: "/assets/team/karolina-dabrowska.jpg"
-email: "karolina.dabrowska@polsocfederation.pl"
-linkedin: "https://www.linkedin.com/in/karolina-d%C4%85browska-576588277/"
-
+name: Karolina Dąbrowska
+photo: /assets/team/karolina-dabrowska.jpg
+email: karolina.dabrowska@polsocfederation.pl
+linkedin: https://www.linkedin.com/in/karolina-d%C4%85browska-576588277/
 en:
-  role: "Events Officer"
-  photo_alt: "Karolina Dąbrowska"
-
+  role: Events Officer
+  photo_alt: Karolina Dąbrowska
 pl:
-  role: "Specjalista ds. wydarzeń"
-  photo_alt: "Karolina Dąbrowska"
+  role: Specjalista ds. wydarzeń
+  photo_alt: Karolina Dąbrowska
