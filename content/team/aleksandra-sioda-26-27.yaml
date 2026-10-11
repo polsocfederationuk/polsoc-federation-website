@@ -4,7 +4,10 @@ group: trustees
 order: 4
 published: true
 name: Aleksandra Sioda
-photo: /assets/team/ola-headshot-1-.jpg
+photo: /assets/team/projekt-bez-nazwy-3-copy-5.jpg
+photo_focus:
+  x: 56
+  y: 41
 email: aleksandra.sioda@polsocfederation.pl
 linkedin: https://www.linkedin.com/in/aleksandra-sioda-94340b341/
 en:
