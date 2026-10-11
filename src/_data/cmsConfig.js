@@ -30,6 +30,7 @@ const fs = require("fs");
 const path = require("path");
 const yaml = require("js-yaml");
 const academicYear = require("./academicYear");
+const { MAX_BYTES } = require("../../netlify/lib/media.js");
 
 const ROOT = path.join(__dirname, "..", "..");
 
@@ -2259,7 +2260,7 @@ function buildConfig() {
       Kept in step with netlify/lib/media.js, which refuses the same size on the
       server for anything that gets past the browser.
     */
-    max_file_size: 4 * 1024 * 1024,
+    max_file_size: MAX_BYTES,
 
     media_folder: "assets",
     public_folder: "/assets",

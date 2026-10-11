@@ -171,6 +171,13 @@ function teamPhotoPaths() {
 }
 
 module.exports = function (eleventyConfig) {
+  // Publish aliases for old references whose uploads were silently renamed.
+  // Source records and photographs stay untouched; exact filenames win.
+  eleventyConfig.on("eleventy.after", ({ dir, runMode }) => {
+    if (runMode === "build" || runMode === "watch" || runMode === "serve") {
+      require("./lib/media-references.js").copyLegacyAliases(__dirname, dir.output);
+    }
+  });
   // Content records are YAML (see BUILD_ARCHITECTURE.md §9). Eleventy reads
   // .json/.js natively but needs to be told about .yaml.
   eleventyConfig.addDataExtension("yaml", (contents) => yaml.load(contents));

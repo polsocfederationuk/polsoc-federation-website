@@ -16,24 +16,7 @@
 
 "use strict";
 
-/**
- * The largest upload that can actually REACH this function.
- *
- * It was 8 MB, which no request could ever deliver. Decap sends an upload
- * base64-encoded inside the persistEntry JSON, and base64 is 4/3 the size — so
- * 8 MB of photograph became 10.67 MB on the wire, against a 6 MB platform limit
- * for a synchronous function request. The request died at the network layer,
- * the browser reported "TypeError: Failed to fetch", and the friendly message
- * below could never fire because nothing arrived to run it.
- *
- * 4 MB encodes to 5.33 MB, which fits with room for the record itself. It is
- * also about twelve times the largest photograph the site actually carries
- * (322 KB), so it constrains nobody in practice.
- *
- * Decap is told the same number (max_file_size in src/_data/cmsConfig.js) so an
- * oversized file is refused at selection, and src/admin/session.js checks the
- * whole request, because several images can travel in one Publish.
- */
+/** New uploads are limited to 4 MB. Existing larger files remain readable. */
 const MAX_BYTES = 4 * 1024 * 1024;
 
 /** What base64 does to a payload: four bytes out for every three in. */
@@ -74,7 +57,7 @@ function check(name, bytes) {
   }
   if (bytes.length > MAX_BYTES) {
     return { ok: false, code: "too_large",
-      detail: `${Math.round(bytes.length / 1024 / 1024)} MB` };
+      detail: `${(bytes.length / 1024 / 1024).toFixed(2)} MB` };
   }
 
   const raw = String(name || "");
@@ -84,7 +67,6 @@ function check(name, bytes) {
   if (dot <= 0) return { ok: false, code: "no_extension" };
 
   const ext = base.slice(dot + 1).toLowerCase();
-  const stem = base.slice(0, dot);
 
   const type = TYPES.find((t) => t.ext.includes(ext));
   if (!type) return { ok: false, code: "unsupported_type", detail: ext };
@@ -99,21 +81,31 @@ function check(name, bytes) {
     return { ok: false, code: "content_mismatch", detail: ext };
   }
 
-  /*
-    THE NAME IS REBUILT, NOT SANITISED.
-
-    Stripping bad characters from a name invites arguments about which
-    characters are bad. Instead the stem is reduced to the alphabet the existing
-    assets already use, which cannot express a path, a leading dot or a second
-    extension.
-  */
-  const safeStem = stem.toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 80);
-  if (!safeStem) return { ok: false, code: "unusable_name" };
-
-  return { ok: true, filename: `${safeStem}.${ext === "jpeg" ? "jpg" : ext}`, mime: type.mime };
+  const filename = canonicalName(base);
+  if (!filename) return { ok: false, code: "unusable_name" };
+  return { ok: true, filename, mime: type.mime };
 }
 
-module.exports = { check, MAX_BYTES, BASE64_RATIO, TYPES };
+/** One filename rule for new uploads and recovery of historical references. */
+function canonicalName(name) {
+  const dot = name.lastIndexOf(".");
+  if (dot <= 0) return null;
+  const ext = name.slice(dot + 1).toLowerCase();
+  if (!TYPES.some(type => type.ext.includes(ext))) return null;
+  const stem = name.slice(0, dot).toLowerCase().replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "").slice(0, 80);
+  return stem ? stem + "." + (ext === "jpeg" ? "jpg" : ext) : null;
+}
+
+/** The historical upload rename, used only within the allowed media folders. */
+function canonicalPath(repoPath) {
+  const paths = require("./paths.js");
+  const folder = paths.mediaFolderOf(repoPath);
+  if (!folder) return null;
+  const filename = canonicalName(repoPath.slice(folder.length + 1));
+  if (!filename) return null;
+  const candidate = folder + "/" + filename;
+  return paths.classify(candidate).ok ? candidate : null;
+}
+
+module.exports = { check, canonicalPath, MAX_BYTES, BASE64_RATIO, TYPES };

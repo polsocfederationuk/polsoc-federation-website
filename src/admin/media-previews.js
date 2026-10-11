@@ -10,7 +10,14 @@
     // our upload folders; other public and external images keep their URLs.
     var lookup = typeof path === "string" && /^\/assets\/(team|events|announcements|polsocs)\//.test(path)
       ? path.slice(1) : path;
-    return getAsset(lookup, field);
+    var asset = getAsset(lookup, field);
+    var url = asset ? String(asset) : "";
+    // Decap falls back to the repository path after a failed API request.
+    // It must never become a URL relative to /admin/.
+    if (/^assets\/(team|events|announcements|polsocs)\//.test(url)) {
+      return getAsset("/" + url, field);
+    }
+    return asset;
   }
   window.fedImageAsset = resolve;
 

@@ -233,10 +233,18 @@ class GitHubRepo {
   /** One file as raw bytes, or null. Used for media. */
   async readBytes(repoPath) {
     const found = await this.call(
-      `/contents/${encodePath(repoPath)}?ref=${encodeURIComponent(this.branch)}`);
-    if (!found || Array.isArray(found) || !found.content) return null;
+      `/contents/${encodePath(repoPath)}?ref=${encodeURIComponent(this.branch)}`,
+      { headers: { Accept: "application/vnd.github.object+json" } });
+    if (!found || Array.isArray(found)) return null;
+    // The Contents API omits inline bytes above 1 MB. Read the immutable blob
+    // by SHA so previously uploaded larger photographs still load.
+    const blob = found.content && found.encoding === "base64" ? found
+      : found.sha ? await this.call("/git/blobs/" + encodeURIComponent(found.sha)) : null;
+    if (!blob || blob.encoding !== "base64" || typeof blob.content !== "string") {
+      throw new GitHubError("could not read the image from the repository", 502);
+    }
     return { path: repoPath, sha: found.sha,
-      bytes: Buffer.from(found.content, "base64"), size: found.size };
+      bytes: Buffer.from(blob.content, "base64"), size: found.size };
   }
 
   /** Everything directly inside a folder. */

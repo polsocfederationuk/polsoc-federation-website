@@ -43,6 +43,7 @@ import media from "../lib/media.js";
 import github from "../lib/github.js";
 import rules from "../lib/rules.js";
 import authz from "../lib/authz.js";
+import mediaReferences from "../../lib/media-references.js";
 
 const JSON_HEADERS = {
   "Content-Type": "application/json; charset=utf-8",
@@ -162,9 +163,17 @@ async function run(action, params, ctx) {
     }
 
     case "getMediaFile": {
-      const repoPath = String(params.path || "").replace(/^\//, "");
-      if (!paths.classify(repoPath).ok) return { error: "unknown file" };
-      const found = await repo.readBytes(repoPath);
+      let repoPath = String(params.path || "").replace(/^\//, "");
+      const verdict = paths.classify(repoPath);
+      if (!verdict.ok || verdict.kind !== "media") return { error: "unknown file" };
+      let found = await repo.readBytes(repoPath);
+      // Old saves renamed the upload without changing its reference. Prefer
+      // the exact file; fall back only to the historical rename in this folder.
+      const canonical = media.canonicalPath(repoPath);
+      if (!found && canonical && canonical !== repoPath) {
+        found = await repo.readBytes(canonical);
+        if (found) repoPath = canonical;
+      }
       if (!found) return { error: "not found" };
       return { id: found.sha, name: repoPath.split("/").pop(), path: `/${repoPath}`,
         content: found.bytes.toString("base64"), encoding: "base64", size: found.size };
@@ -229,6 +238,8 @@ async function persistEntry(params, ctx) {
 
   const changes = [];
   let subject = "a record";
+  const renamed = new Map();
+  const uploadPaths = new Set();
 
   for (const file of dataFiles) {
     const repoPath = String(file.path || "").replace(/^\//, "");
@@ -269,9 +280,20 @@ async function persistEntry(params, ctx) {
     if (!verdict.ok || verdict.kind !== "media") {
       return { error: "That image cannot be saved there." };
     }
+    if (uploadPaths.has(finalPath)) {
+      return { error: "Two images have the same filename after cleanup. Rename one and try again." };
+    }
+    uploadPaths.add(finalPath);
+    if (finalPath !== repoPath) renamed.set(repoPath, finalPath);
     changes.push({ path: finalPath, content: asset.content, encoding: "base64" });
   }
 
+  // The YAML and the uploaded bytes must name the same file in this commit.
+  for (const change of changes) {
+    if (change.encoding !== "base64") {
+      change.content = mediaReferences.rewriteReferences(change.content, renamed);
+    }
+  }
   const result = await repo.commit(changes,
     commitMessage("updated", subject, user), commitAuthor(user));
   return { commit: result.commit };
@@ -307,7 +329,7 @@ async function persistMedia(params, ctx) {
 function mediaMessage(checked) {
   switch (checked.code) {
     case "too_large":
-      return `That image is too large (${checked.detail}). Please use one under 8 MB.`;
+      return "That image is too large. This website accepts images up to 4 MB. Please compress or resize it and try again. Nothing has been saved.";
     case "unsupported_type":
       return "Only JPEG, PNG, WebP and GIF images can be uploaded.";
     case "content_mismatch":
