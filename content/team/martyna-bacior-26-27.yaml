@@ -2,9 +2,12 @@ slug: martyna-bacior-26-27
 academic_year: 2026/27
 group: events
 order: 4
-published: false
+published: true
 name: Martyna Bacior
-photo: /assets/team/martyna_bacior.jpg
+photo: /assets/team/martyna-bacior.jpg
+photo_focus:
+  x: 52
+  y: 38
 email: martyna.bacior@polsocfederation.pl
 linkedin: https://www.linkedin.com/in/martyna-bacior-408608381/
 en:
